@@ -1,1 +1,1 @@
-Répertoire contenant la documentation du module CMR.
+Répertoire contenant la documentation du module PSDRF.
