@@ -1,0 +1,16 @@
+db_host=localhost
+
+# PostgreSQL port
+db_port=5432
+
+# GeoNature database name
+db_name=geonature2db
+
+# GeoNature database owner username
+user_pg=monuser
+
+# GeoNature database owner password
+user_pg_pass=monpass
+
+# Local projection SRID
+srid_local=2154
