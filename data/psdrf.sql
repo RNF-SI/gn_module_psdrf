@@ -1,4 +1,4 @@
-
+﻿
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET client_encoding = 'UTF8';
@@ -76,6 +76,7 @@ CREATE TABLE t_cycles (
 
 CREATE TABLE t_arbres (
   id_arbre serial NOT NULL,
+  id_placette integer NOT NULL,
   code_essence character varying(4),
   azimut real,
   distance real,
@@ -84,7 +85,8 @@ CREATE TABLE t_arbres (
 );
 
 CREATE TABLE t_arbres_mesures (
-  id_arbre_mesure serial NOT NULL
+  id_arbre_mesure serial NOT NULL,
+  id_arbre integer NOT NULL,
   id_cycle integer NOT NULL,
   diametre1 real,
   diametre2 real,
@@ -109,6 +111,16 @@ CREATE TABLE t_regenerations (
   taillis boolean,
   abroutissement boolean,
   observation text
+);
+
+-- Table contenant les limites des catégories de BM selon les dispositifs
+CREATE TABLE t_categories (
+	id_category serial NOT NULL,
+	id_dispositif integer NOT NULL,
+	pb real,
+	bm real,
+	gb real,
+	tgb real
 );
 
 -- Table contenant les différentes essences
@@ -144,7 +156,6 @@ CREATE TABLE t_bm_sup_30_mesures (
   stade_ecorce integer,
   observation text
 );
-
 
 -- Table des transects : une ligne par bois mort
 CREATE TABLE t_transects (
@@ -222,6 +233,9 @@ ADD CONSTRAINT pk_t_transects PRIMARY KEY (id_transect);
 ALTER TABLE ONLY t_tarifs
 ADD CONSTRAINT pk_t_tarifs PRIMARY KEY (id_tarif);
 
+ALTER TABLE ONLY t_categories
+ADD CONSTRAINT pk_t_categories PRIMARY KEY (id_category);
+
 ALTER TABLE ONLY cor_dispositif_area
 ADD CONSTRAINT pk_cor_dispositifs_area PRIMARY KEY (id_dispositif, id_area);
 
@@ -280,7 +294,7 @@ ALTER TABLE ONLY t_tarifs
 
 ALTER TABLE ONLY cor_placettes_roles
   ADD CONSTRAINT fk_cor_placettes_roles_t_placettes
-  FOREIGN KEY (id_placette) REFERENCES t_placettes (id_placettes)
+  FOREIGN KEY (id_placette) REFERENCES t_placettes (id_placette)
   ON UPDATE CASCADE;
 
 ALTER TABLE ONLY cor_placettes_roles
@@ -335,7 +349,7 @@ ALTER TABLE ONLY t_bm_sup_30
 
 ALTER TABLE ONLY t_bm_sup_30
   ADD CONSTRAINT fk_t_bm_sup_30_t_arbres
-  FOREIGN KEY (id_arbre) REFERENCES bib_essences (id_arbre)
+  FOREIGN KEY (id_arbre) REFERENCES t_arbres (id_arbre)
   ON UPDATE CASCADE;
 
 ALTER TABLE ONLY t_bm_sup_30_mesures
