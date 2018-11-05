@@ -20,7 +20,6 @@ SET default_with_oids = false;
 -- Table des dispositifs
 CREATE TABLE t_dispositifs (
   id_dispositif serial NOT NULL,
-  id_dispositif_orig integer,
   name character varying NOT NULL,
   id_organisme integer
 );
@@ -28,28 +27,31 @@ CREATE TABLE t_dispositifs (
 CREATE TABLE t_placettes (
   id_placette serial NOT NULL,
   id_dispositif integer NOT NULL,
-  id_placette_orig integer,
+  id_placette_orig character varying(10),
   strate integer,
   pente real,
   poids_placette real,
-  correction_pente boolean NOT NULL DEFAULT TRUE,
+  correction_pente boolean,
   exposition integer,
-  habitat character varying (50),
+  profondeur_app character varying,
+  profondeur_hydr real,
+  texture character varying,
+  habitat character varying,
   station character varying,
   typologie character varying,
   groupe character varying,
   groupe1 character varying,
   groupe2 character varying,
-  ref_habitat character varying (20),
+  ref_habitat character varying,
   precision_habitat text,
   ref_station character varying,
   ref_typologie character varying,
   descriptif_groupe text,
   descriptif_groupe1 text,
   descriptif_groupe2 text,
-  precision_gps integer,
+  precision_gps character varying,
   cheminement text,
-  geom geometry(POINT, 4326)
+  geom geometry(POINT, 2154)
 );
 
 CREATE TABLE t_reperes (
@@ -63,24 +65,23 @@ CREATE TABLE t_reperes (
 
 CREATE TABLE t_cycles (
   id_cycle serial NOT NULL,
-  id_placette integer NOT NULL,
-  num_cycle integer,
+  id_dispositif integer NOT NULL,
+  num_cycle integer NOT NULL,
   coeff integer,
   date_debut date,
   date_fin date,
   diam_lim real,
-  date_intervention date,
-  nature_intervention character varying,
-  gestion character varying
+  monitor character varying (50)
 );
 
 CREATE TABLE t_arbres (
   id_arbre serial NOT NULL,
+  id_arbre_orig integer,
   id_placette integer NOT NULL,
   code_essence character varying(4),
   azimut real,
   distance real,
-  tallis boolean,
+  taillis boolean,
   observation text
 );
 
@@ -90,19 +91,26 @@ CREATE TABLE t_arbres_mesures (
   id_cycle integer NOT NULL,
   diametre1 real,
   diametre2 real,
-  type integer,
+  type character varying(2),
   hauteur_totale real,
+  hauteur_branche real,
   stade_durete integer,
   stade_ecorce integer,
+  liane character varying(25),
+  diametre_liane real,
   coupe char(1),
   limite boolean,
+  id_nomenclature_code_sanitaire integer,
   code_ecolo character varying,
-  ref_code_ecolo character varying
+  ref_code_ecolo character varying,
+  ratio_hauteur boolean,
+  observation text
 );
 
 CREATE TABLE t_regenerations (
   id_regeneration serial NOT NULL,
-  id_cycle integer,
+  id_cycle_placette integer,
+  sous_placette integer,
   code_essence character varying(4),
   recouvrement real,
   classe1 integer,
@@ -110,6 +118,7 @@ CREATE TABLE t_regenerations (
   classe3 integer,
   taillis boolean,
   abroutissement boolean,
+  id_nomenclature_abroutissement integer,
   observation text
 );
 
@@ -128,17 +137,22 @@ CREATE TABLE bib_essences (
   code_essence character varying(4) NOT NULL,
   cd_nom integer,
   nom character varying,
+  nom_latin character varying,
   ess_reg character varying(4),
-  couleur character varying(10)
+  couleur character varying(25)
 );
 
 CREATE TABLE t_bm_sup_30 (
   id_bm_sup_30 serial NOT NULL,
+  id_bm_sup_30_orig integer,
   id_placette integer NOT NULL,
-  id_arbre integer NOT NULL,
+  id_arbre integer,
   code_essence character varying(4),
   azimut real,
   distance real,
+  orientation real,
+  azimut_souche real,
+  distance_souche real,
   observation text
 );
 
@@ -149,8 +163,10 @@ CREATE TABLE t_bm_sup_30_mesures (
   diametre_ini real,
   diametre_med real,
   diametre_fin real,
+  diametre_130 real,
   longueur real,
-  contact boolean,
+  ratio_hauteur boolean,
+  contact real,
   chablis boolean,
   stade_durete integer,
   stade_ecorce integer,
@@ -160,11 +176,16 @@ CREATE TABLE t_bm_sup_30_mesures (
 -- Table des transects : une ligne par bois mort
 CREATE TABLE t_transects (
   id_transect serial NOT NULL,
-  id_cycle integer NOT NULL,
+  id_cycle_placette integer NOT NULL,
   code_essence character varying(4),
-  ref_transect char(2),
+  ref_transect character varying(2),
   distance real,
+  orientation real,
+  azimut_souche real,
+  distance_souche real,
   diametre real,
+  diametre_130 real,
+  ratio_hauteur boolean,
   contact boolean,
   angle real,
   chablis boolean,
@@ -178,17 +199,42 @@ CREATE TABLE t_tarifs (
   id_dispositif integer NOT NULL,
   code_essence  character varying(4) NOT NULL,
   type_tarif character varying(10),
-  num_tarif  character varying(4)
+  num_tarif  real
+);
+
+CREATE TABLE t_regroupements_essences (
+  id_dispositif integer NOT NULL,
+  code_essence  character varying(4) NOT NULL,
+  code_regroupement character varying(10),
+  couleur  character varying(25)
+);
+
+CREATE TABLE cor_cycles_placettes (
+    id_cycle_placette serial NOT NULL,
+    id_cycle integer NOT NULL,
+    id_placette integer NOT NULL,
+    date_releve date,
+    date_intervention character varying,
+    nature_intervention character varying,
+    gestion_placette character varying,
+    id_nomenclature_castor integer,
+    id_nomenclature_frottis integer,
+    id_nomenclature_boutis integer,
+    recouv_herbes_basses real,
+    recouv_herbes_hautes real,
+    recouv_buissons real,
+    recouv_arbres real
 );
 
 CREATE TABLE cor_dispositif_area (
   id_dispositif integer NOT NULL,
-  id_area integer NOT NULL
+  id_area integer NOT NULL,
+  "order" integer
 );
 
 -- Lien vers la table roles (utilisateurs)
-CREATE TABLE cor_placettes_roles (
-  id_placette integer NOT NULL,
+CREATE TABLE cor_cycles_roles (
+  id_cycle integer NOT NULL,
   id_role integer NOT NULL
 );
 
@@ -233,15 +279,21 @@ ADD CONSTRAINT pk_t_transects PRIMARY KEY (id_transect);
 ALTER TABLE ONLY t_tarifs
 ADD CONSTRAINT pk_t_tarifs PRIMARY KEY (id_tarif);
 
+ALTER TABLE ONLY t_regroupements_essences
+ADD CONSTRAINT pk_t_regroupements_essences PRIMARY KEY (id_dispositif, code_essence);
+
 ALTER TABLE ONLY t_categories
 ADD CONSTRAINT pk_t_categories PRIMARY KEY (id_category);
+
+ALTER TABLE ONLY cor_cycles_placettes
+ADD CONSTRAINT pk_cor_cycles_placettes PRIMARY KEY (id_cycle_placette);
+
+ALTER TABLE ONLY cor_cycles_roles
+ADD CONSTRAINT pk_cor_cycles_roles PRIMARY KEY (id_cycle, id_role);
 
 ALTER TABLE ONLY cor_dispositif_area
 ADD CONSTRAINT pk_cor_dispositifs_area PRIMARY KEY (id_dispositif, id_area);
 
-
-ALTER TABLE ONLY cor_placettes_roles
-ADD CONSTRAINT pk_cor_placettes_roles PRIMARY KEY (id_placette, id_role);
 
 ---------------
 --FOREIGN KEY--
@@ -264,12 +316,22 @@ ALTER TABLE ONLY t_reperes
 
 ALTER TABLE ONLY t_cycles
   ADD CONSTRAINT fk_t_cycles_t_placettes
-  FOREIGN KEY (id_placette) REFERENCES t_placettes (id_placette)
+  FOREIGN KEY (id_dispositif) REFERENCES t_dispositifs (id_dispositif)
   ON UPDATE CASCADE;
 
 ALTER TABLE ONLY t_categories
   ADD CONSTRAINT fk_t_categories_t_dispositifs
   FOREIGN KEY (id_dispositif) REFERENCES t_dispositifs (id_dispositif)
+  ON UPDATE CASCADE;
+
+ALTER TABLE ONLY cor_cycles_placettes
+  ADD CONSTRAINT fk_cor_cycles_placettes_t_cycles
+  FOREIGN KEY (id_cycle) REFERENCES t_cycles (id_cycle)
+  ON UPDATE CASCADE;
+
+ALTER TABLE ONLY cor_cycles_placettes
+  ADD CONSTRAINT fk_cor_cycles_placettes_t_placettes
+  FOREIGN KEY (id_placette) REFERENCES t_placettes (id_placette)
   ON UPDATE CASCADE;
 
 ALTER TABLE ONLY cor_dispositif_area
@@ -292,13 +354,23 @@ ALTER TABLE ONLY t_tarifs
   FOREIGN KEY (code_essence) REFERENCES bib_essences (code_essence)
   ON UPDATE CASCADE;
 
-ALTER TABLE ONLY cor_placettes_roles
-  ADD CONSTRAINT fk_cor_placettes_roles_t_placettes
-  FOREIGN KEY (id_placette) REFERENCES t_placettes (id_placette)
+ALTER TABLE ONLY t_regroupements_essences
+  ADD CONSTRAINT fk_t_reg_essences_bib_essences
+  FOREIGN KEY (code_essence) REFERENCES bib_essences (code_essence)
   ON UPDATE CASCADE;
 
-ALTER TABLE ONLY cor_placettes_roles
-  ADD CONSTRAINT fk_cor_placettes_roles_t_roles
+ALTER TABLE ONLY t_regroupements_essences
+  ADD CONSTRAINT fk_t_reg_essences_t_dispositifs
+  FOREIGN KEY (id_dispositif) REFERENCES t_dispositifs (id_dispositif)
+  ON UPDATE CASCADE;
+
+ALTER TABLE ONLY cor_cycles_roles
+  ADD CONSTRAINT fk_cor_cycles_roles_t_dispositifs
+  FOREIGN KEY (id_cycle) REFERENCES t_cycles (id_cycle)
+  ON UPDATE CASCADE;
+
+ALTER TABLE ONLY cor_cycles_roles
+  ADD CONSTRAINT fk_cor_cycles_roles_t_roles
   FOREIGN KEY (id_role) REFERENCES utilisateurs.t_roles (id_role)
   ON UPDATE CASCADE;
 
@@ -322,10 +394,10 @@ ALTER TABLE ONLY t_arbres_mesures
   FOREIGN KEY (id_cycle) REFERENCES t_cycles (id_cycle)
   ON UPDATE CASCADE;
 
-ALTER TABLE ONLY t_arbres_mesures
-  ADD CONSTRAINT fk_t_arbres_mesures_type
-  FOREIGN KEY ("type") REFERENCES ref_nomenclatures.t_nomenclatures (id_nomenclature)
-  ON UPDATE CASCADE;
+--ALTER TABLE ONLY t_arbres_mesures
+--  ADD CONSTRAINT fk_t_arbres_mesures_type
+--  FOREIGN KEY ("type") REFERENCES ref_nomenclatures.t_nomenclatures (id_nomenclature)
+--  ON UPDATE CASCADE;
 
 ALTER TABLE ONLY t_arbres_mesures
   ADD CONSTRAINT fk_t_arbres_mesures_stade_durete
@@ -373,18 +445,23 @@ ALTER TABLE ONLY t_bm_sup_30_mesures
   ON UPDATE CASCADE;
 
 ALTER TABLE ONLY t_regenerations
-  ADD CONSTRAINT fk_t_regenerations_t_cycles
-  FOREIGN KEY (id_cycle) REFERENCES t_cycles (id_cycle)
+  ADD CONSTRAINT fk_t_regenerations_cor_cycles_placettes
+  FOREIGN KEY (id_cycle_placette) REFERENCES cor_cycles_placettes (id_cycle_placette)
   ON UPDATE CASCADE;
 
 ALTER TABLE ONLY t_regenerations
-  ADD CONSTRAINT fk_t_regenerations_bib_essences
-  FOREIGN KEY (code_essence) REFERENCES bib_essences (code_essence)
+  ADD CONSTRAINT fk_t_regenerations_abroutissement
+  FOREIGN KEY ("id_nomenclature_abroutissement") REFERENCES ref_nomenclatures.t_nomenclatures (id_nomenclature)
   ON UPDATE CASCADE;
 
+-- ALTER TABLE ONLY t_regenerations
+--  ADD CONSTRAINT fk_t_regenerations_bib_essences
+--  FOREIGN KEY (code_essence) REFERENCES bib_essences (code_essence)
+--  ON UPDATE CASCADE;
+
 ALTER TABLE ONLY t_transects
-  ADD CONSTRAINT fk_t_transects_t_cycles
-  FOREIGN KEY (id_cycle) REFERENCES t_cycles (id_cycle)
+  ADD CONSTRAINT fk_t_transects_cor_cycles_placettes
+  FOREIGN KEY (id_cycle_placette) REFERENCES cor_cycles_placettes (id_cycle_placette)
   ON UPDATE CASCADE;
 
 ALTER TABLE ONLY t_transects
@@ -392,19 +469,82 @@ ALTER TABLE ONLY t_transects
   FOREIGN KEY ("stade_durete") REFERENCES ref_nomenclatures.t_nomenclatures (id_nomenclature)
   ON UPDATE CASCADE;
 
-ALTER TABLE ONLY t_bm_sup_30_mesures
-  ADD CONSTRAINT fk_t_transects_stade_ecorce
-  FOREIGN KEY ("stade_ecorce") REFERENCES ref_nomenclatures.t_nomenclatures (id_nomenclature)
-  ON UPDATE CASCADE;
-
 --------------
 --CONSTRAINTS--
 --------------
 
--- TODO : contraintes de check_nomenclatures_by_mnemonique
+ALTER TABLE t_arbres_mesures
+  ADD CONSTRAINT chk_t_arbres_nom_stade_durete
+  CHECK (ref_nomenclatures.check_nomenclature_type_by_mnemonique(stade_durete, 'PSDRF_DURETE'));
+
+ALTER TABLE t_arbres_mesures
+  ADD CONSTRAINT chk_t_arbres_nom_stade_ecorce
+  CHECK (ref_nomenclatures.check_nomenclature_type_by_mnemonique(stade_ecorce, 'PSDRF_ECORCE'));
+
+ALTER TABLE t_arbres_mesures
+  ADD CONSTRAINT chk_t_arbres_nom_sanitaire
+  CHECK (ref_nomenclatures.check_nomenclature_type_by_mnemonique(id_nomenclature_code_sanitaire, 'PSDRF_SANITAIRE'));
+
+ALTER TABLE t_regenerations
+  ADD CONSTRAINT chk_t_regenerations_abroutis
+  CHECK (ref_nomenclatures.check_nomenclature_type_by_mnemonique(id_nomenclature_abroutissement, 'PSDRF_ABROUTIS'));
+
+ALTER TABLE cor_cycles_placettes
+  ADD CONSTRAINT chk_cor_cycles_placettes_castor
+  CHECK (ref_nomenclatures.check_nomenclature_type_by_mnemonique(id_nomenclature_castor, 'PSDRF_CASTOR'));
+
+ALTER TABLE cor_cycles_placettes
+  ADD CONSTRAINT chk_cor_cycles_placettes_frottis
+  CHECK (ref_nomenclatures.check_nomenclature_type_by_mnemonique(id_nomenclature_frottis, 'PSDRF_FROTTIS'));
+
+ALTER TABLE cor_cycles_placettes
+  ADD CONSTRAINT chk_cor_cycles_placettes_boutis
+  CHECK (ref_nomenclatures.check_nomenclature_type_by_mnemonique(id_nomenclature_boutis, 'PSDRF_BOUTIS'));
+
+ALTER TABLE t_transects
+  ADD CONSTRAINT chk_t_transects_durete
+  CHECK (ref_nomenclatures.check_nomenclature_type_by_mnemonique(stade_durete, 'PSDRF_DURETE'));
+
+ALTER TABLE t_transects
+  ADD CONSTRAINT chk_t_transects_ecorce
+  CHECK (ref_nomenclatures.check_nomenclature_type_by_mnemonique(stade_ecorce, 'PSDRF_ECORCE'));
+
+ALTER TABLE t_bm_sup_30_mesures
+  ADD CONSTRAINT check_t_bm_sup_30_durete
+  CHECK (ref_nomenclatures.check_nomenclature_type_by_mnemonique(stade_durete, 'PSDRF_DURETE'));
+
+ALTER TABLE t_bm_sup_30_mesures
+  ADD CONSTRAINT check_t_bm_sup_30_ecorce
+  CHECK (ref_nomenclatures.check_nomenclature_type_by_mnemonique(stade_ecorce, 'PSDRF_ECORCE'));
 
 ALTER TABLE t_arbres ADD CONSTRAINT check_t_arbres_azimut
-  CHECK (azimut BETWEEN 0 AND 360);
+  CHECK (azimut BETWEEN 0 AND 400);
 
 ALTER TABLE t_bm_sup_30 ADD CONSTRAINT check_t_bm_sup_30_azimut
-  CHECK (azimut BETWEEN 0 AND 360);
+  CHECK (azimut BETWEEN 0 AND 400);
+
+ALTER TABLE t_regenerations ADD CONSTRAINT check_t_regenerations_ssplac
+  CHECK (sous_placette in (1,2,3));
+
+ALTER TABLE t_cycles
+  ADD CONSTRAINT unique_t_cycles_id_disp_num_cycle
+  UNIQUE (id_dispositif, num_cycle);
+
+
+--------
+-- VUES
+-------
+
+CREATE VIEW v_arbres_geom AS
+ SELECT a.id_arbre,
+    a.id_placette,
+    a.code_essence,
+    a.azimut,
+    a.distance,
+    a.taillis,
+    a.observation,
+    a.id_arbre_orig,
+    st_setsrid(st_point(st_x(p.geom) + a.distance * sin(a.azimut * pi() / 200), st_y(p.geom) + a.distance * cos(a.azimut * pi() / 200)), 2154)::geometry(Point,2154) AS g
+   FROM pr_psdrf.t_arbres a
+     JOIN pr_psdrf.t_placettes p ON a.id_placette = p.id_placette
+  WHERE p.geom IS NOT NULL;
