@@ -54,6 +54,10 @@ CREATE TABLE t_placettes (
   geom geometry(POINT, 2154)
 );
 
+CREATE INDEX idx_t_placettes_geom
+    ON t_placettes USING gist
+    (geom);
+
 CREATE TABLE t_reperes (
   id_repere serial NOT NULL,
   id_placette integer NOT NULL,
@@ -298,6 +302,10 @@ ADD CONSTRAINT pk_cor_dispositifs_area PRIMARY KEY (id_dispositif, id_area);
 ---------------
 --FOREIGN KEY--
 ---------------
+ALTER TABLE ONLY bib_essences
+  ADD CONSTRAINT fk_bib_essences_taxref_cd_nom FOREIGN KEY (cd_nom)
+    REFERENCES taxonomie.taxref (cd_nom)
+    ON UPDATE CASCADE;
 
 ALTER TABLE ONLY t_dispositifs
   ADD CONSTRAINT fk_t_dispositifs_bib_organismes

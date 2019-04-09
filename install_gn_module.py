@@ -14,8 +14,8 @@ def gnmodule_install_app(gn_db, gn_app):
             - Module (pour le moment rien)
     '''
     with gn_app.app_context() :
-        table_sql = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data/cmr.sql')
-        data_sql = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data/cmr_data.sql')
+        table_sql = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data/psdrf.sql')
+        data_sql = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data/psdrf_data.sql')
         
         try: 
             gn_db.session.execute(open(table_sql, 'r').read())
