@@ -8,15 +8,15 @@ from geoalchemy2 import Geometry
 SCHEMA = 'pr_psdrf'
 
 
-@serializable
+# @serializable
 class TDispositifs (DB.Model):
     __tablename__ = "t_dispositifs"
     __table_args__ = {'schema': SCHEMA}
     id_dispositif = DB.Column('id_dispositif', DB.Integer, primary_key = True)
     name = DB.Column('name', DB.String)
-    id_organisme = DB.Column('id_organisme', DB.Integer, DB.ForeignKey(''))
+    id_organisme = DB.Column('id_organisme', DB.Integer) # , DB.ForeignKey('')
 
-    # placettes = DB.relationship('TPlacettes', backref='id_dispositif')
+    placettes = DB.relationship('TPlacettes', back_populates='dispositif')
 
 
 @serializable
@@ -33,11 +33,11 @@ class TPlacettes (DB.Model):
     correction_pente = DB.Column('correction_pente', DB.Boolean)
     exposition = DB.Column('exposition', DB.Integer)
     profondeur_app = DB.Column('profondeur_app', DB.String)
-    profondeur_hydr = DB.Column('profondeur_hydr', DB.Float) 
+    profondeur_hydr = DB.Column('profondeur_hydr', DB.Float)
     texture = DB.Column('texture', DB.String)
     habitat = DB.Column('habitat', DB.String)
     station = DB.Column('station', DB.String)
-    typologie = DB.Column('typologie', DB.String) 
+    typologie = DB.Column('typologie', DB.String)
     groupe = DB.Column('groupe', DB.String)
     groupe1 = DB.Column('groupe1', DB.String)
     groupe2 = DB.Column('groupe2', DB.String)
@@ -51,8 +51,9 @@ class TPlacettes (DB.Model):
     precision_gps = DB.Column('precision_gps', DB.String)
     cheminement = DB.deferred(DB.Column('cheminement', DB.Text))
     geom = DB.Column('geom', Geometry('POINT', 2154))
+    geom_wgs84 = DB.Column('geom_wgs84', Geometry('POINT', 4326))
 
-    dispositif = DB.relationship('TDispositifs', foreign_keys=id_dispositif, backref='placettes')
+    dispositif = DB.relationship('TDispositifs', foreign_keys=id_dispositif, back_populates='placettes')
 
 
 @serializable
@@ -88,7 +89,7 @@ class TCycles (DB.Model):
 @serializable
 class BibEssences (DB.Model):
     __tablename__ = "bib_essences"
-    __table_args__ = {'schema': SCHEMA} 
+    __table_args__ = {'schema': SCHEMA}
     code_essence = DB.Column('code_essence', DB.String, primary_key = True)
     cd_nom = DB.Column('cd_nom', DB.Integer)
     nom = DB.Column('nom', DB.String)
@@ -145,7 +146,7 @@ class TArbres (DB.Model):
     __table_args__ = {'schema': SCHEMA}
     id_arbre = DB.Column('id_arbre', DB.Integer, primary_key = True)
     id_arbre_orig = DB.Column('id_arbre_orig', DB.Integer)
-    id_placette = DB.Column('id_placette', DB.Integer, DB.ForeignKey('pr_psdrf.t_placettes.id_placette')) 
+    id_placette = DB.Column('id_placette', DB.Integer, DB.ForeignKey('pr_psdrf.t_placettes.id_placette'))
     code_essence = DB.Column('code_essence', DB.String, DB.ForeignKey('pr_psdrf.bib_essences.code_essence'))
     azimut = DB.Column('azimut', DB.Float)
     distance = DB.Column('distance', DB.Float)
@@ -312,5 +313,3 @@ class TRegroupementsEssences (DB.Model):
 
     essence = DB.relationship('BibEssences', foreign_keys=code_essence)
     dispositif = DB.relationship('TDispositifs', foreign_keys=id_dispositif)
-
-

@@ -1,7 +1,10 @@
-from flask import Blueprint
+from flask import Blueprint, request
+from sqlalchemy.orm import subqueryload
+from geoalchemy2.shape import to_shape, from_shape
+from shapely.geometry import MultiPoint
 
 from geonature.utils.env import DB
-from geonature.utils.utilssqlalchemy import json_resp
+from geonature.utils.utilssqlalchemy import json_resp, get_geojson_feature
 from .models import TDispositifs, TPlacettes, TArbres
 
 blueprint = Blueprint('psdrf', __name__)
@@ -13,8 +16,38 @@ def test():
 @blueprint.route('/dispositifs', methods=['GET'])
 @json_resp
 def get_disps():
-    pgs = DB.session.query(TDispositifs).all()
-    return [pg.as_dict() for pg in pgs]
+    limit = int(request.args.get("limit", 100))
+    page = int(request.args.get("offset", 0))
+
+    query = DB.session.query(TDispositifs).options(subqueryload(TDispositifs.placettes)) \
+        .order_by(TDispositifs.name)
+    total = query.count()
+    pgs = query.offset(page * limit).limit(limit).all()
+    items = []
+
+    # rassemble les geom des placettes pour en former l'enveloppe
+    for pg in pgs:
+        pts = MultiPoint([to_shape(pl.geom_wgs84) for pl in pg.placettes if pl.geom_wgs84 is not None])
+        ft = get_geojson_feature(from_shape(pts.convex_hull))
+        ft['properties'] = {
+            'name': pg.name,
+            'id_dispositif': pg.id_dispositif,
+            'rights': {},
+            'leaflet_popup': pg.name
+        }
+        ft['id'] = pg.id_dispositif
+        items.append(ft)
+
+    # TODO: check les droits
+
+    data = {
+        "total": total,
+        "page": page,
+        "total_filtered": total,
+        "limit": limit,
+        "items": {"type": "FeatureCollection", "features": items}
+    }
+    return data
 
 
 @blueprint.route('/placettes/<int:id_dispositif>', methods=['GET'])
