@@ -51,7 +51,8 @@ CREATE TABLE t_placettes (
   descriptif_groupe2 text,
   precision_gps character varying,
   cheminement text,
-  geom geometry(POINT, 2154)
+  geom geometry(POINT, 2154),
+  geom_wgs84 geometry(POINT, 4326)
 );
 
 CREATE INDEX idx_t_placettes_geom

@@ -1,0 +1,60 @@
+
+<div class="container">
+    <h2>Liste des dispositifs</h2>
+    <div class="row">
+        <div class="col-sm-9">
+            <pnx-map-list idName="id_dispositif" id="dispositifs-map-list" height="80vh">
+                </pnx-map-list>
+            </div>
+
+        <div class="col-sm-3">
+            <ngx-datatable #table class="material striped margin-top-xs table-size expandable" [rows]="mapListService.tableData"
+                [columns]="mapListService.displayColumns" [loadingIndicator]="mapListService.isLoading" [columnMode]="'force'"
+                [headerHeight]="35" [footerHeight]="40" [rowHeight]="40" [draggable]="false" [selected]="mapListService.selectedRow"
+                [externalPaging]="true" [scrollbarH]="false" [selectionType]="'single'" [count]="mapListService.page.totalElements"
+                [offset]="mapListService.page.pageNumber" [limit]="mapListService.page.size" [rowClass]="mapListService.getRowClass"
+                [messages]="" (page)="mapListService.setTablePage($event, apiEndPoint)" (select)="onRowSelect($event)">
+
+                <!-- ACTION COLUMNS -->
+      <ngx-datatable-column maxWidth="10">
+            <ng-template ngx-datatable-header-template>
+              <i (click)="openModalCol($event, modalCol)" class="fa fa-cog clickable" aria-hidden="true" matTooltip="{{'List.Columns' | translate}}"
+                id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></i>
+            </ng-template>
+            <ng-template let-row="row" ngx-datatable-cell-template>
+              <button class="btn btn-outline-shadow btn-no-padding btn-ghost" [disabled]="!row.rights.U" (click)="onEditDispositif(row[mapListService.id_dispositif])">
+                <i [ngClass]="{'disabled' : !row.rights.U}" matTooltip="{{'Dispositif.Edit' | translate}} {{row[mapListService.idName]}}"
+                  class="fa fa-pencil-square-o" aria-hidden="true"></i>
+              </button>
+            </ng-template>
+          </ngx-datatable-column>
+
+          <ngx-datatable-column maxWidth="10">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+              <button class="btn btn-outline-shadow btn-no-padding btn-ghost" [disabled]="!row.rights.R" (click)="onDetailDispositif(row[mapListService.idName])">
+                <i [ngClass]="{'disabled' : !row.rights.R}" matTooltip="{{ 'Dispositif.Info' | translate }} {{row[mapListService.idName]}}"
+                  class="fa fa-info-circle" aria-hidden="true"></i>
+              </button>
+            </ng-template>
+          </ngx-datatable-column>
+
+          <ngx-datatable-column maxWidth="10">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+              <button class="btn btn-outline-shadow btn-no-padding btn-ghost" [disabled]="!row.rights.D" (click)="openDeleteModal($event, modalConfirm, iElement, row)">
+                <i [ngClass]="{'disabled' : !row.rights.D}" #iElement matTooltip="{{ 'Dispositif.Delete' | translate }} {{row[mapListService.idName]}}"
+                  class="fa fa-trash-o" aria-hidden="true"></i>
+              </button>
+            </ng-template>
+          </ngx-datatable-column>
+
+
+          <!-- DATA COLUMNS -->
+          <span *ngFor="let col of mapListService.displayColumns" >
+                <ngx-datatable-column  [name]="col.name " [prop]="col.prop">
+                </ngx-datatable-column>
+          </span>
+        </ngx-datatable>
+
+        </div>
+    </div>
+</div>
