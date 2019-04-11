@@ -1,5 +1,6 @@
 import { Component, OnInit } from "@angular/core";
 import { HttpClient } from '@angular/common/http';
+import { Router } from "@angular/router";
 import { AppConfig } from '@geonature_config/app.config';
 import { MapListService } from '@geonature_common/map-list/map-list.service';
 
@@ -12,7 +13,7 @@ import { MapListService } from '@geonature_common/map-list/map-list.service';
     public dispositifs: Array<any>;
     public apiEndPoint: string;
 
-    constructor(private _api: HttpClient, public mapListService: MapListService) { }
+    constructor(private _api: HttpClient, private _router: Router, public mapListService: MapListService) { }
 
     ngOnInit() {
         this.mapListService.displayColumns = [{name: "Nom", prop: "name"}];
@@ -31,5 +32,9 @@ import { MapListService } from '@geonature_common/map-list/map-list.service';
       if (ft) {
         this.mapListService.onRowSelect(row)
       }
+    }
+
+    onDetailDispositif(row): void {
+      this._router.navigate(["psdrf/infodispositif", row])
     }
   }
