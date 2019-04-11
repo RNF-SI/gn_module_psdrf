@@ -32,7 +32,7 @@ def get_disps():
         ft['properties'] = {
             'name': pg.name,
             'id_dispositif': pg.id_dispositif,
-            'rights': {},
+            'rights': {'C': True, 'R': True, 'U': True, 'V': True, 'E': True, 'D': True},
             'leaflet_popup': pg.name
         }
         ft['id'] = pg.id_dispositif
@@ -50,11 +50,34 @@ def get_disps():
     return data
 
 
+@blueprint.route('/dispositif/<int:id_dispositif>', methods=['GET'])
+@json_resp
+def get_dispositif(id_dispositif):
+    disp = DB.session.query(TDispositifs).filter(TDispositifs.id_dispositif == id_dispositif).one()
+    return {"name": disp.name, "id": disp.id_dispositif}
+
+
 @blueprint.route('/placettes/<int:id_dispositif>', methods=['GET'])
 @json_resp
 def get_placettes(id_dispositif):
-    pgs = DB.session.query(TPlacettes).filter(TPlacettes.id_dispositif == id_dispositif).all()
-    return [pg.as_geofeature('geom', 'id_placette') for pg in pgs]
+    limit = int(request.args.get("limit", 100))
+    page = int(request.args.get("offset", 0))
+    query = DB.session.query(TPlacettes).filter(TPlacettes.id_dispositif == id_dispositif).order_by(TPlacettes.id_placette)
+    total = query.count()
+    pgs = query.offset(page * limit).limit(limit).all()
+
+    data = {
+        "total": total,
+        "total_filtered": total,
+        "page": page,
+        "limit": limit,
+        "items": {"type": "FeatureCollection", "features": [pg.as_geofeature('geom_wgs84', 'id_placette') for pg in pgs]}
+    }
+    for ft in data["items"]["features"]:
+        ft["properties"]["rights"] =  {'C': True, 'R': True, 'U': True, 'V': True, 'E': True, 'D': True}
+        ft["id"] = ft["properties"]["id_placette"]
+
+    return data
 
 
 @blueprint.route('/arbres/<int:id_dispositif>', methods=['GET'])
