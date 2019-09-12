@@ -1,8 +1,6 @@
 import { Component, OnInit } from "@angular/core";
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router, ParamMap } from "@angular/router";
-import 'rxjs/add/operator/filter';
-import { Observable } from 'rxjs';
 import { AppConfig } from '@geonature_config/app.config';
 import { MapListService } from '@geonature_common/map-list/map-list.service';
 
@@ -10,13 +8,15 @@ import { MapListService } from '@geonature_common/map-list/map-list.service';
 
 @Component({
     selector: "rnf-psdrf-info-dispositif",
-    templateUrl: "info.dispositif.component.html"
+    templateUrl: "info.dispositif.component.html",
+    styleUrls: ["info.dispositif.component.scss"]
 })
 export class InfoDispositifComponent implements OnInit {
   public dispositif: object;
   public id: number;
   public apiEndPoint: string;
   public placettesEndPoint: string;
+  public editing: boolean = false;
 
   constructor(
     private _api: HttpClient,
@@ -50,6 +50,21 @@ export class InfoDispositifComponent implements OnInit {
             ])
           });
     })
+  }
+
+  onEditDispositif(): void {
+    this.editing = ! this.editing;
+  }
+
+  onDispositifSaved(saved: boolean) {
+    // Masque le formulaire après enregistrement
+    this.editing = !saved;
+    // Rechargement des données
+    if (saved) this.ngOnInit();
+  }
+
+  onDispositifFormCanceled(canceled: boolean) {
+    if (canceled) this.editing = false;
   }
 
   onRowSelect(row): void {
