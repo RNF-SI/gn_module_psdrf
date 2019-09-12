@@ -1,5 +1,5 @@
-from flask import Blueprint, request
-from sqlalchemy.orm import subqueryload
+from flask import Blueprint, request, jsonify
+from sqlalchemy.orm import subqueryload, joinedload
 from geoalchemy2.shape import to_shape, from_shape
 from shapely.geometry import MultiPoint
 
@@ -53,8 +53,34 @@ def get_disps():
 @blueprint.route('/dispositif/<int:id_dispositif>', methods=['GET'])
 @json_resp
 def get_dispositif(id_dispositif):
-    disp = DB.session.query(TDispositifs).filter(TDispositifs.id_dispositif == id_dispositif).one()
-    return {"name": disp.name, "id": disp.id_dispositif}
+    disp = DB.session.query(TDispositifs) \
+        .options(joinedload(TDispositifs.organisme)) \
+        .filter(TDispositifs.id_dispositif == id_dispositif).one()
+    organisme = None
+    if disp.organisme:
+        organisme = {
+            "nom_organisme": disp.organisme.nom_organisme,
+            "id_organisme": disp.organisme.id_organisme
+        }
+    return {
+        "name": disp.name,
+        "id": disp.id_dispositif,
+        "organisme": organisme
+        }
+
+
+@blueprint.route('/saveDispositif', methods=['POST'])
+@json_resp
+def save_dispositif():
+    data = request.get_json()
+    id_dispositif = int(data.get("id"))
+    if id_dispositif:
+        disp = DB.session.query(TDispositifs).filter(TDispositifs.id_dispositif == id_dispositif).one()
+        disp.name = data.get("name")
+        disp.id_organisme = data.get("id_organisme")
+        DB.session.commit()
+        return {"success": True}
+    return {"success": False, "message": "Id was not provided in data."}
 
 
 @blueprint.route('/placettes/<int:id_dispositif>', methods=['GET'])

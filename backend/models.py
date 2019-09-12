@@ -1,8 +1,11 @@
 # -*- encoding: utf-8 -*-
 
+from geoalchemy2 import Geometry
+
+from geonature.core.users.models import BibOrganismes
 from geonature.utils.utilssqlalchemy import serializable, geoserializable
 from geonature.utils.env import DB
-from geoalchemy2 import Geometry
+
 
 
 SCHEMA = 'pr_psdrf'
@@ -14,8 +17,8 @@ class TDispositifs (DB.Model):
     __table_args__ = {'schema': SCHEMA}
     id_dispositif = DB.Column('id_dispositif', DB.Integer, primary_key = True)
     name = DB.Column('name', DB.String)
-    id_organisme = DB.Column('id_organisme', DB.Integer) # , DB.ForeignKey('')
-
+    id_organisme = DB.Column('id_organisme', DB.Integer, DB.ForeignKey('utilisateurs.bib_organismes.id_organisme'))
+    organisme = DB.relationship('BibOrganismes')
     placettes = DB.relationship('TPlacettes', back_populates='dispositif')
 
 

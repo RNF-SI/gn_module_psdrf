@@ -1,6 +1,15 @@
 <div class="container-fluid">
-        <h2>Dispositif: {{dispositif.name}}</h2>
-        <div class="row">
+  <div *ngIf="!editing" >
+    <h2>Dispositif : {{dispositif.name}} <a (click)="onEditDispositif()"><span class="fa fa-edit"> </span></a></h2>
+    <p>Organisme : {{ dispositif.organisme ? dispositif.organisme.nom_organisme : "&lt;inconnu&gt;"  }}</p>
+  </div>
+  <div class="row description" *ngIf="editing">
+    <rnf-psdrf-form-dispositif [dispositif]="dispositif"
+      (saved)="onDispositifSaved($event)"
+      (canceled)="onDispositifFormCanceled($event)">
+    </rnf-psdrf-form-dispositif>
+  </div>
+        <div class="row" id="map-list-placettes">
             <div class="col-sm-7">
                 <pnx-map-list idName="id_placette" id="placettes-map-list" height="85vh">
                     </pnx-map-list>
