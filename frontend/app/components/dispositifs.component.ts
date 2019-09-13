@@ -16,13 +16,19 @@ import { MapListService } from '@geonature_common/map-list/map-list.service';
     constructor(private _api: HttpClient, private _router: Router, public mapListService: MapListService) { }
 
     ngOnInit() {
+        this.mapListService.originStyle = {
+          color: 'green',
+          radius: 8
+        }
+
+
         this.mapListService.displayColumns = [{name: "Nom", prop: "name"}];
         this.mapListService.idName = "id_dispositif";
 
         this.apiEndPoint = "psdrf/dispositifs";
 
         this.mapListService.getData('psdrf/dispositifs', [
-            {param: "limit", value: 20}
+          //  {param: "limit", value: 200}
         ])
     }
 
@@ -32,6 +38,7 @@ import { MapListService } from '@geonature_common/map-list/map-list.service';
       if (ft) {
         this.mapListService.onRowSelect(row)
       }
+      console.log(this.mapListService)
     }
 
     onDetailDispositif(row): void {

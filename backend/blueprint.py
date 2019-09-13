@@ -1,7 +1,8 @@
 from flask import Blueprint, request, jsonify
 from sqlalchemy.orm import subqueryload, joinedload
+from sqlalchemy.sql import func
 from geoalchemy2.shape import to_shape, from_shape
-from shapely.geometry import MultiPoint
+from shapely.geometry import MultiPoint, Point
 
 from geonature.utils.env import DB
 from geonature.utils.utilssqlalchemy import json_resp, get_geojson_feature
@@ -16,10 +17,22 @@ def test():
 @blueprint.route('/dispositifs', methods=['GET'])
 @json_resp
 def get_disps():
-    limit = int(request.args.get("limit", 100))
-    page = int(request.args.get("offset", 0))
+    """
+        Retourne tous les dispositifs avec leur géométrie.
+        Ne renvoie que les dispositifs ayant des placettes enregistrées
+        Paramètres :
+            :limit: nombre de résultats
+            :offset: décalage
+            :shape: 'point' pour le centroïde des placettes, 'polygon' pour l'enveloppe des placettes
+    """
 
-    query = DB.session.query(TDispositifs).options(subqueryload(TDispositifs.placettes)) \
+    limit = int(request.args.get("limit", 500))
+    page = int(request.args.get("offset", 0))
+    shape = request.args.get("shape", "point")
+
+    query = DB.session.query(TDispositifs).outerjoin(TDispositifs.placettes) \
+        .group_by(TDispositifs) \
+        .having(func.count(TDispositifs.placettes) > 0) \
         .order_by(TDispositifs.name)
     total = query.count()
     pgs = query.offset(page * limit).limit(limit).all()
@@ -28,11 +41,18 @@ def get_disps():
     # rassemble les geom des placettes pour en former l'enveloppe
     for pg in pgs:
         pts = MultiPoint([to_shape(pl.geom_wgs84) for pl in pg.placettes if pl.geom_wgs84 is not None])
-        ft = get_geojson_feature(from_shape(pts.convex_hull))
+        if shape == "point":
+            geom = pts.centroid
+        else:
+            geom = pts.convex_hull
+        if len(pts) > 0:
+            ft = get_geojson_feature(from_shape(geom))
+        else:
+            ft = {'geometry': None}
         ft['properties'] = {
             'name': pg.name,
             'id_dispositif': pg.id_dispositif,
-            'rights': {'C': True, 'R': True, 'U': True, 'V': True, 'E': True, 'D': True},
+            'rights': {'C': False, 'R': True, 'U': False, 'V': True, 'E': False, 'D': False},
             'leaflet_popup': pg.name
         }
         ft['id'] = pg.id_dispositif
@@ -81,6 +101,13 @@ def save_dispositif():
         DB.session.commit()
         return {"success": True}
     return {"success": False, "message": "Id was not provided in data."}
+
+
+@blueprint.route('/global_stats', methods=['GET'])
+@json_resp
+def global_stats():
+    """ Renvoie des chiffres globaux séparés par cycle """
+    pass
 
 
 @blueprint.route('/placettes/<int:id_dispositif>', methods=['GET'])
