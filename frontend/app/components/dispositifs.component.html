@@ -1,33 +1,45 @@
 
 <div class="container-fluid">
-    <h2>Liste des dispositifs</h2>
-    <div class="row">
+    <div class="card">
+      <div class="card-body">
+        <h2 class="underlined">Protocole de Suivi Dendrométrique des Réserves Forestières</h2>
+        <div class="dispositifs-intro">
+          <p>Ceci est un texte d'introduction.</p>
+        </div>
+        <div class="dispositifs-nbre" *ngIf="stats">
+          <p><strong>{{stats.nb_dispositifs | formatnum}} dispositifs sur {{stats.nb_cycles}} cycles de mesures.</strong></p>
+        </div>
+        <div class="card-deck dispositifs-stats-cycles" *ngIf="stats">
+          <div class="card" *ngFor="let cycle of stats.cycles | keyvalue">
+              <div class="card-header">
+                <h3>Cycle {{cycle.key}}</h3>
+              </div>
+              <div class="card-body stats-content">
+                <p><span class="fa fa-square"></span> {{cycle.value.nb_placettes | formatnum}} placettes</p>
+                <p><span class="fa fa-tree"></span> {{cycle.value.nb_arbres | formatnum}} arbres mesurés</p>
+              </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <div class="row">
         <div class="col-sm-7">
             <pnx-map-list idName="id_dispositif" id="dispositifs-map-list" height="80vh">
-                </pnx-map-list>
+            </pnx-map-list>
         </div>
 
         <div class="col-sm-5">
-            <ngx-datatable #table class="material striped margin-top-xs table-size expandable" [rows]="mapListService.tableData"
-                [columns]="mapListService.displayColumns" [loadingIndicator]="mapListService.isLoading" [columnMode]="'force'"
-                [headerHeight]="35" [footerHeight]="40" [rowHeight]="40" [draggable]="false" [selected]="mapListService.selectedRow"
-                [externalPaging]="false" [scrollbarH]="false" [selectionType]="'single'" [count]="mapListService.page.totalElements"
-                [limit]="20" [rowClass]="mapListService.getRowClass"
-                [messages]="" (select)="onRowSelect($event)">
+          <ngx-datatable #table class="material striped margin-top-xs table-size expandable" [rows]="mapListService.tableData"
+              [columns]="mapListService.displayColumns" [loadingIndicator]="mapListService.isLoading" [columnMode]="'force'"
+              [headerHeight]="35" [footerHeight]="40" [rowHeight]="40" [draggable]="false" [selected]="mapListService.selectedRow"
+              [externalPaging]="false" [scrollbarH]="false" [selectionType]="'single'" [count]="mapListService.page.totalElements"
+              [limit]="20" [rowClass]="mapListService.getRowClass"
+              [messages]="" (select)="onRowSelect($event)">
 
                 <!-- ACTION COLUMNS -->
-      <ngx-datatable-column maxWidth="10">
-            <ng-template ngx-datatable-header-template>
-              <i (click)="openModalCol($event, modalCol)" class="fa fa-cog clickable" aria-hidden="true" matTooltip="{{'List.Columns' | translate}}"
-                id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></i>
-            </ng-template>
-            <ng-template let-row="row" ngx-datatable-cell-template>
-              <button class="btn btn-outline-shadow btn-no-padding btn-ghost" [disabled]="!row.rights.U" (click)="onEditDispositif(row[mapListService.id_dispositif])">
-                <i [ngClass]="{'disabled' : !row.rights.U}" matTooltip="{{'Dispositif.Edit' | translate}} {{row[mapListService.idName]}}"
-                  class="fa fa-pencil-square-o" aria-hidden="true"></i>
-              </button>
-            </ng-template>
-          </ngx-datatable-column>
 
           <ngx-datatable-column maxWidth="10">
             <ng-template let-row="row" ngx-datatable-cell-template>
@@ -55,6 +67,10 @@
           </span>
         </ngx-datatable>
 
-        </div>
+      </div>
+      </div>
+      </div>
+
+
     </div>
 </div>

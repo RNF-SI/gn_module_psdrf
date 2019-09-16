@@ -1,12 +1,13 @@
 from flask import Blueprint, request, jsonify
 from sqlalchemy.orm import subqueryload, joinedload
-from sqlalchemy.sql import func
+from sqlalchemy.sql import func, distinct
 from geoalchemy2.shape import to_shape, from_shape
 from shapely.geometry import MultiPoint, Point
 
 from geonature.utils.env import DB
 from geonature.utils.utilssqlalchemy import json_resp, get_geojson_feature
-from .models import TDispositifs, TPlacettes, TArbres
+from .models import TDispositifs, TPlacettes, TArbres, TCycles, \
+    CorCyclesPlacettes, TArbresMesures
 
 blueprint = Blueprint('psdrf', __name__)
 
@@ -107,7 +108,29 @@ def save_dispositif():
 @json_resp
 def global_stats():
     """ Renvoie des chiffres globaux séparés par cycle """
-    pass
+
+    data = { }
+    query = DB.session.query(func.count('*')).select_from(TDispositifs)
+    data['nb_dispositifs'] = query.scalar()
+
+    query = DB.session.query(
+        TCycles.num_cycle,
+        func.count(CorCyclesPlacettes.id_placette)) \
+        .join(CorCyclesPlacettes) \
+        .group_by(TCycles.num_cycle)
+    data['cycles'] = {pg[0]: {'nb_placettes': pg[1]} for pg in query.all()}
+
+    query = DB.session.query(
+        TCycles.num_cycle,
+        func.count(TArbresMesures.id_arbre_mesure)) \
+        .join(TArbresMesures) \
+        .group_by(TCycles.num_cycle)
+    for pg in query.all():
+        data['cycles'][pg[0]]['nb_arbres'] = pg[1]
+    data['nb_cycles'] = len(data['cycles'])
+
+    return data
+
 
 
 @blueprint.route('/placettes/<int:id_dispositif>', methods=['GET'])

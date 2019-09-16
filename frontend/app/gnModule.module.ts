@@ -6,6 +6,7 @@ import { Routes, RouterModule } from "@angular/router";
 import { DispositifsComponent } from "./components/dispositifs.component";
 import { InfoDispositifComponent } from "./components/info.dispositif.component";
 import { FormDispositifComponent } from "./components/form.dispositif.component";
+import { KeyValue, FormatNum } from "./utils";
 
 // my module routing
 const routes: Routes = [
@@ -18,6 +19,8 @@ const routes: Routes = [
     DispositifsComponent,
     InfoDispositifComponent,
     FormDispositifComponent,
+    KeyValue,
+    FormatNum,
   ],
   imports: [
     GN2CommonModule,
