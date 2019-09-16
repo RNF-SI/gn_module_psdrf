@@ -79,6 +79,8 @@ CREATE TABLE t_cycles (
   monitor character varying (50)
 );
 
+CREATE INDEX idx_t_cycles_num_cycle on pr_psdrf.t_cycles (num_cycle);
+
 CREATE TABLE t_arbres (
   id_arbre serial NOT NULL,
   id_arbre_orig integer,
@@ -111,6 +113,8 @@ CREATE TABLE t_arbres_mesures (
   ratio_hauteur boolean,
   observation text
 );
+
+CREATE INDEX idx_t_arbres_mesures_id_cycle on pr_psdrf.t_arbres_mesures (id_cycle);
 
 CREATE TABLE t_regenerations (
   id_regeneration serial NOT NULL,
@@ -230,6 +234,8 @@ CREATE TABLE cor_cycles_placettes (
     recouv_buissons real,
     recouv_arbres real
 );
+
+CREATE INDEX idx_cor_cycles_placettes_id_cycle on pr_psdrf.cor_cycles_placettes (id_cycle);
 
 CREATE TABLE cor_dispositif_area (
   id_dispositif integer NOT NULL,
