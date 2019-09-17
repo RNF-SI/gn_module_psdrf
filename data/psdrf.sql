@@ -21,7 +21,8 @@ SET default_with_oids = false;
 CREATE TABLE t_dispositifs (
   id_dispositif serial NOT NULL,
   name character varying NOT NULL,
-  id_organisme integer
+  id_organisme integer,
+  alluvial boolean NOT NULL DEFAULT false
 );
 
 CREATE TABLE t_placettes (
@@ -243,6 +244,11 @@ CREATE TABLE cor_dispositif_area (
   "order" integer
 );
 
+CREATE TABLE cor_dispositif_municipality (
+  id_dispositif integer NOT NULL,
+  id_municipality character varying(25) NOT NULL
+);
+
 -- Lien vers la table roles (utilisateurs)
 CREATE TABLE cor_cycles_roles (
   id_cycle integer NOT NULL,
@@ -305,6 +311,9 @@ ADD CONSTRAINT pk_cor_cycles_roles PRIMARY KEY (id_cycle, id_role);
 ALTER TABLE ONLY cor_dispositif_area
 ADD CONSTRAINT pk_cor_dispositifs_area PRIMARY KEY (id_dispositif, id_area);
 
+ALTER TABLE ONLY cor_dispositif_municipality
+ADD CONSTRAINT pk_cor_dispositifs_municipality PRIMARY KEY (id_dispositif, id_municipality);
+
 
 ---------------
 --FOREIGN KEY--
@@ -357,6 +366,16 @@ ALTER TABLE ONLY cor_dispositif_area
 ALTER TABLE ONLY cor_dispositif_area
   ADD CONSTRAINT fk_cor_dispositifs_area_t_dispositifs
   FOREIGN KEY (id_dispositif) REFERENCES t_dispositifs (id_dispositif)
+  ON UPDATE CASCADE;
+
+ALTER TABLE ONLY cor_dispositif_municipality
+  ADD CONSTRAINT fk_cor_dispositifs_municipality_t_dispositifs
+  FOREIGN KEY (id_dispositif) REFERENCES t_dispositifs (id_dispositif)
+  ON UPDATE CASCADE;
+
+ALTER TABLE ONLY cor_dispositif_municipality
+  ADD CONSTRAINT fk_cor_dispositifs_municipality_li_municipalities
+  FOREIGN KEY (id_municipality) REFERENCES ref_geo.li_municipalities (id_municipality)
   ON UPDATE CASCADE;
 
 ALTER TABLE ONLY t_tarifs

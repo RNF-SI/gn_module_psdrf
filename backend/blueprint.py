@@ -6,6 +6,7 @@ from shapely.geometry import MultiPoint, Point
 
 from geonature.utils.env import DB
 from geonature.utils.utilssqlalchemy import json_resp, get_geojson_feature
+from geonature.core.ref_geo.models import LiMunicipalities
 from .models import TDispositifs, TPlacettes, TArbres, TCycles, \
     CorCyclesPlacettes, TArbresMesures
 
@@ -31,10 +32,24 @@ def get_disps():
     page = int(request.args.get("offset", 0))
     shape = request.args.get("shape", "point")
 
+    region = request.args.get("region")
+    alluvial = request.args.get("alluvial")
+
     query = DB.session.query(TDispositifs).outerjoin(TDispositifs.placettes) \
         .group_by(TDispositifs) \
         .having(func.count(TDispositifs.placettes) > 0) \
         .order_by(TDispositifs.name)
+
+    if alluvial is not None:
+        if alluvial.lower() == 'true':
+            alluvial = True
+        elif alluvial.lower() == 'false':
+            alluvial = False
+        query = query.filter(TDispositifs.alluvial == alluvial)
+
+    if region:
+        query = query.filter(TDispositifs.municipalities.any(LiMunicipalities.insee_reg == region))
+
     total = query.count()
     pgs = query.offset(page * limit).limit(limit).all()
     items = []

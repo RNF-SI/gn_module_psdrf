@@ -26,51 +26,68 @@
     <div class="card">
       <div class="card-body">
         <div class="row">
-        <div class="col-sm-7">
-            <pnx-map-list idName="id_dispositif" id="dispositifs-map-list" height="80vh">
-            </pnx-map-list>
-        </div>
+          <div class="col-sm-2">
+            <!-- Recherche -->
+            <div class="card search-wrapper">
+              <form [formGroup]="searchForm" (ngSubmit)="onSearch()">
+                <div class="card-header">
+                  <h4>Filtrer les résultats</h4>
+                </div>
+                <div class="card-body">
+                  <div class="form-group">
+                    <label for="region">Région</label>
+                    <select id="region" class="form-control" formControlName="region">
+                      <option value=""></option>
+                      <option *ngFor="let reg of regions" [value]="reg.insee">{{reg.name}}</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="card-footer">
+                  <div class="search-btn">
+                    <button type="reset" class="btn btn-sm btn-danger box-shadow"><span class="fa fa-trash-o"> </span></button>
+                    <button type="submit" class="btn btn-sm btn-success box-shadow">Rechercher</button>
+                  </div>
+                </div>
+              </form>
+            </div>
 
-        <div class="col-sm-5">
-          <ngx-datatable #table class="material striped margin-top-xs table-size expandable" [rows]="mapListService.tableData"
-              [columns]="mapListService.displayColumns" [loadingIndicator]="mapListService.isLoading" [columnMode]="'force'"
-              [headerHeight]="35" [footerHeight]="40" [rowHeight]="40" [draggable]="false" [selected]="mapListService.selectedRow"
-              [externalPaging]="false" [scrollbarH]="false" [selectionType]="'single'" [count]="mapListService.page.totalElements"
-              [limit]="20" [rowClass]="mapListService.getRowClass"
-              [messages]="" (select)="onRowSelect($event)">
+
+          </div>
+
+          <div class="col-sm-6">
+              <pnx-map-list idName="id_dispositif" id="dispositifs-map-list" height="80vh">
+              </pnx-map-list>
+          </div>
+
+          <div class="col-sm-4">
+            <ngx-datatable #table class="material striped margin-top-xs table-size expandable" [rows]="mapListService.tableData"
+                [columns]="mapListService.displayColumns" [loadingIndicator]="mapListService.isLoading" [columnMode]="'force'"
+                [headerHeight]="35" [footerHeight]="40" [rowHeight]="40" [draggable]="false" [selected]="mapListService.selectedRow"
+                [externalPaging]="false" [scrollbarH]="false" [selectionType]="'single'" [count]="mapListService.page.totalElements"
+                [limit]="20" [rowClass]="mapListService.getRowClass"
+                [messages]="" (select)="onRowSelect($event)">
 
                 <!-- ACTION COLUMNS -->
 
-          <ngx-datatable-column maxWidth="10">
-            <ng-template let-row="row" ngx-datatable-cell-template>
-              <button class="btn btn-outline-shadow btn-no-padding btn-ghost" [disabled]="!row.rights.R" (click)="onDetailDispositif(row[mapListService.idName])">
-                <i [ngClass]="{'disabled' : !row.rights.R}" matTooltip="{{ 'Dispositif.Info' | translate }} {{row[mapListService.idName]}}"
-                  class="fa fa-info-circle" aria-hidden="true"></i>
-              </button>
-            </ng-template>
-          </ngx-datatable-column>
-
-          <ngx-datatable-column maxWidth="10">
-            <ng-template let-row="row" ngx-datatable-cell-template>
-              <button class="btn btn-outline-shadow btn-no-padding btn-ghost" [disabled]="!row.rights.D" (click)="openDeleteModal($event, modalConfirm, iElement, row)">
-                <i [ngClass]="{'disabled' : !row.rights.D}" #iElement matTooltip="{{ 'Dispositif.Delete' | translate }} {{row[mapListService.idName]}}"
-                  class="fa fa-trash-o" aria-hidden="true"></i>
-              </button>
-            </ng-template>
-          </ngx-datatable-column>
+              <ngx-datatable-column maxWidth="10">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  <button class="btn btn-outline-shadow btn-no-padding btn-ghost" [disabled]="!row.rights.R" (click)="onDetailDispositif(row[mapListService.idName])">
+                    <i [ngClass]="{'disabled' : !row.rights.R}" matTooltip="{{ 'Dispositif.Info' | translate }} {{row[mapListService.idName]}}"
+                      class="fa fa-info-circle" aria-hidden="true"></i>
+                  </button>
+                </ng-template>
+              </ngx-datatable-column>
 
 
-          <!-- DATA COLUMNS -->
-          <span *ngFor="let col of mapListService.displayColumns" >
-                <ngx-datatable-column  [name]="col.name " [prop]="col.prop">
-                </ngx-datatable-column>
-          </span>
-        </ngx-datatable>
+              <!-- DATA COLUMNS -->
+              <span *ngFor="let col of mapListService.displayColumns" >
+                    <ngx-datatable-column  [name]="col.name " [prop]="col.prop">
+                    </ngx-datatable-column>
+              </span>
+              </ngx-datatable>
 
+          </div>
+        </div>
       </div>
-      </div>
-      </div>
-
-
-    </div>
+  </div>
 </div>
