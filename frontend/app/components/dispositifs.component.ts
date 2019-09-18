@@ -17,7 +17,8 @@ import { MapListService } from '@geonature_common/map-list/map-list.service';
     public statEndPoint: string = 'psdrf/global_stats';
     public stats: object;
     public searchForm = new FormGroup({
-      region: new FormControl('')
+      region: new FormControl(''),
+      alluvial: new FormControl(''),
     });
     public regions = [ // NB : dans l'idéal, les récupérer depuis l'API
       {insee: '84', name: 'Auvergne-Rhône-Alpes'},
@@ -42,10 +43,10 @@ import { MapListService } from '@geonature_common/map-list/map-list.service';
         this._api.get<any>(`${AppConfig.API_ENDPOINT}/${this.statEndPoint}`)
           .subscribe(data => {this.stats = data});
 
-        this.mapListService.originStyle = {
+        this.mapListService.originStyle =  (feature) => {return {
           color: 'green',
           radius: 8
-        }
+        }}
 
         this.mapListService.displayColumns = [{name: "Nom du dispositif", prop: "name"}];
         this.mapListService.idName = "id_dispositif";
@@ -71,7 +72,8 @@ import { MapListService } from '@geonature_common/map-list/map-list.service';
 
     onSearch(): void {
       this.mapListService.refreshData(this.apiEndPoint, 'set', [
-        {param: 'region', value: this.searchForm.get('region').value || '' }
+        {param: 'region', value: this.searchForm.get('region').value || '' },
+        {param: 'alluvial', value: this.searchForm.get('alluvial').value },
       ]);
     }
   }

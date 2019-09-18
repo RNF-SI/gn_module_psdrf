@@ -41,6 +41,14 @@
                       <option *ngFor="let reg of regions" [value]="reg.insee">{{reg.name}}</option>
                     </select>
                   </div>
+                  <div class="form-group">
+                    <label for="alluvial">Module alluvial</label>
+                    <select id="alluvial" class="form-control" formControlName="alluvial">
+                      <option value="">non filtré</option>
+                      <option value="true">Oui</option>
+                      <option value="false">Non</option>
+                    </select>
+                  </div>
                 </div>
                 <div class="card-footer">
                   <div class="search-btn">
