@@ -35,12 +35,15 @@ def get_disps():
     region = request.args.get("region")
     alluvial = request.args.get("alluvial")
 
-    query = DB.session.query(TDispositifs).outerjoin(TDispositifs.placettes) \
+    query = DB.session.query(TDispositifs, func.max(TCycles.num_cycle).label("cycle")) \
+        .outerjoin(TDispositifs.placettes) \
+        .outerjoin(CorCyclesPlacettes) \
+        .outerjoin(TCycles) \
         .group_by(TDispositifs) \
         .having(func.count(TDispositifs.placettes) > 0) \
         .order_by(TDispositifs.name)
 
-    if alluvial is not None:
+    if alluvial is not None and alluvial != '':
         if alluvial.lower() == 'true':
             alluvial = True
         elif alluvial.lower() == 'false':
@@ -56,7 +59,7 @@ def get_disps():
 
     # rassemble les geom des placettes pour en former l'enveloppe
     for pg in pgs:
-        pts = MultiPoint([to_shape(pl.geom_wgs84) for pl in pg.placettes if pl.geom_wgs84 is not None])
+        pts = MultiPoint([to_shape(pl.geom_wgs84) for pl in pg.TDispositifs.placettes if pl.geom_wgs84 is not None])
         if shape == "point":
             geom = pts.centroid
         else:
@@ -66,12 +69,14 @@ def get_disps():
         else:
             ft = {'geometry': None}
         ft['properties'] = {
-            'name': pg.name,
-            'id_dispositif': pg.id_dispositif,
+            'name': pg.TDispositifs.name,
+            'id_dispositif': pg.TDispositifs.id_dispositif,
+            'nb_placettes': len(pg.TDispositifs.placettes),
+            'cycle': pg.cycle,
             'rights': {'C': False, 'R': True, 'U': False, 'V': True, 'E': False, 'D': False},
-            'leaflet_popup': pg.name
+            'leaflet_popup': pg.TDispositifs.name
         }
-        ft['id'] = pg.id_dispositif
+        ft['id'] = pg.TDispositifs.id_dispositif
         items.append(ft)
 
     # TODO: check les droits
