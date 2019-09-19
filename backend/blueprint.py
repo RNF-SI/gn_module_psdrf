@@ -130,15 +130,17 @@ def global_stats():
     """ Renvoie des chiffres globaux séparés par cycle """
 
     data = { }
-    query = DB.session.query(func.count('*')).select_from(TDispositifs)
+    query = DB.session.query(func.count('*')).select_from(TDispositifs) \
+        .filter(TDispositifs.placettes.any())
     data['nb_dispositifs'] = query.scalar()
 
     query = DB.session.query(
         TCycles.num_cycle,
-        func.count(CorCyclesPlacettes.id_placette)) \
+        func.count(CorCyclesPlacettes.id_placette),
+        func.count(distinct(TCycles.id_dispositif))) \
         .join(CorCyclesPlacettes) \
         .group_by(TCycles.num_cycle)
-    data['cycles'] = {pg[0]: {'nb_placettes': pg[1]} for pg in query.all()}
+    data['cycles'] = {pg[0]: {'nb_placettes': pg[1], 'nb_dispositifs': pg[2]} for pg in query.all()}
 
     query = DB.session.query(
         TCycles.num_cycle,

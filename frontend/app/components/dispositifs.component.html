@@ -15,6 +15,7 @@
                 <h3>Cycle {{cycle.key}}</h3>
               </div>
               <div class="card-body stats-content">
+                <p>{{ cycle.value.nb_dispositifs | formatnum }} dispositifs</p>
                 <p><span class="fa fa-square"></span> {{cycle.value.nb_placettes | formatnum}} placettes</p>
                 <p><span class="fa fa-tree"></span> {{cycle.value.nb_arbres | formatnum}} arbres mesurés</p>
               </div>
@@ -63,24 +64,25 @@
           </div>
 
           <div class="col-sm-6">
-              <pnx-map-list idName="id_dispositif" id="dispositifs-map-list" height="80vh">
-              </pnx-map-list>
+              <pnx-map id="dispositifs-map" [center]="mapCenter" [zoom]="mapZoom" height="80vh">
+                <pnx-geojson [geojson]="geojson" [onEachFeature]="onEachFeature.bind(this)"></pnx-geojson>
+              </pnx-map>
           </div>
 
           <div class="col-sm-4">
-            <ngx-datatable #table class="material striped margin-top-xs table-size expandable" [rows]="mapListService.tableData"
-                [columns]="mapListService.displayColumns" [loadingIndicator]="mapListService.isLoading" [columnMode]="'force'"
-                [headerHeight]="35" [footerHeight]="40" [rowHeight]="40" [draggable]="false" [selected]="mapListService.selectedRow"
-                [externalPaging]="false" [scrollbarH]="false" [selectionType]="'single'" [count]="mapListService.page.totalElements"
-                [limit]="20" [rowClass]="mapListService.getRowClass"
+            <ngx-datatable #table class="material striped margin-top-xs table-size expandable" [rows]="tableData"
+                [columns]="tableColumns" [loadingIndicator]="isLoading" [columnMode]="'force'"
+                [headerHeight]="35" [footerHeight]="40" [rowHeight]="40" [draggable]="false" [selected]="[]"
+                [externalPaging]="false" [scrollbarH]="false" [selectionType]="'single'"
+                [limit]="20" [rowClass]=""
                 [messages]="" (select)="onRowSelect($event)">
 
                 <!-- ACTION COLUMNS -->
 
               <ngx-datatable-column maxWidth="10">
                 <ng-template let-row="row" ngx-datatable-cell-template>
-                  <button class="btn btn-outline-shadow btn-no-padding btn-ghost" [disabled]="!row.rights.R" (click)="onDetailDispositif(row[mapListService.idName])">
-                    <i [ngClass]="{'disabled' : !row.rights.R}" matTooltip="{{ 'Dispositif.Info' | translate }} {{row[mapListService.idName]}}"
+                  <button class="btn btn-outline-shadow btn-no-padding btn-ghost" [disabled]="!row.rights.R" (click)="onDetailDispositif(row['id_dispositif'])">
+                    <i [ngClass]="{'disabled' : !row.rights.R}" matTooltip="{{ 'Dispositif.Info' | translate }} {{row['id_dispositif']}}"
                       class="fa fa-info-circle" aria-hidden="true"></i>
                   </button>
                 </ng-template>
@@ -88,7 +90,7 @@
 
 
               <!-- DATA COLUMNS -->
-              <span *ngFor="let col of mapListService.displayColumns" >
+              <span *ngFor="let col of tableColumns" >
                     <ngx-datatable-column  [name]="col.name " [prop]="col.prop">
                     </ngx-datatable-column>
               </span>

@@ -1,9 +1,9 @@
 import { Component, OnInit } from "@angular/core";
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Router } from "@angular/router";
 import { FormControl, FormGroup } from "@angular/forms";
+import { MapService } from "@geonature_common/map/map.service";
 import { AppConfig } from '@geonature_config/app.config';
-import { MapListService } from '@geonature_common/map-list/map-list.service';
 
 
 @Component({
@@ -13,9 +13,16 @@ import { MapListService } from '@geonature_common/map-list/map-list.service';
   })
   export class DispositifsComponent implements OnInit {
     public dispositifs: Array<any>;
-    public apiEndPoint: string = 'psdrf/global_stats';
+    public apiEndPoint: string = 'psdrf/dispositifs';
     public statEndPoint: string = 'psdrf/global_stats';
     public stats: object;
+    public geojson: object;
+    public mapCenter: Array<number> = [47, 2];
+    public mapZoom: number = 5;
+    public tableData: any;
+    public layerDict: object;
+    public tableColumns: Array<object>;
+    public isLoading: boolean = false;
     public searchForm = new FormGroup({
       region: new FormControl(''),
       alluvial: new FormControl(''),
@@ -36,33 +43,58 @@ import { MapListService } from '@geonature_common/map-list/map-list.service';
       {insee: '93', name: 'Provence-Alpes-Côte d\'Azur'},
     ];
 
-    constructor(private _api: HttpClient, private _router: Router, public mapListService: MapListService) { }
+    private _cycleColors: object = {
+      1: 'yellow',
+      2: 'orange',
+      3: 'red'
+    };
+
+    constructor(private _api: HttpClient, private _router: Router, private mapservice: MapService) { }
 
     ngOnInit() {
         // Chargement des statistiques
         this._api.get<any>(`${AppConfig.API_ENDPOINT}/${this.statEndPoint}`)
           .subscribe(data => {this.stats = data});
 
-        this.mapListService.originStyle =  (feature) => {return {
-          color: 'green',
-          radius: 8
-        }}
 
-        this.mapListService.displayColumns = [{name: "Nom du dispositif", prop: "name"}];
-        this.mapListService.idName = "id_dispositif";
+        this.tableColumns = [{name: "Nom du dispositif", prop: "name"}];
 
-        this.apiEndPoint = "psdrf/dispositifs";
+        this.loadData();
+    }
 
-        this.mapListService.getData(this.apiEndPoint, [
-          //  {param: "limit", value: 200}
-        ])
+    loadData(): void {
+      this.isLoading = true;
+      const params = new HttpParams().set('region', this.searchForm.get('region').value)
+      .set('alluvial', this.searchForm.get('alluvial').value);
+      this._api.get<any>(`${AppConfig.API_ENDPOINT}/${this.apiEndPoint}`, {params: params})
+          .subscribe(data => {
+            this.layerDict = {};
+            this.geojson = data.items;
+            let rows = [];
+            data.items.features.forEach(i => {
+              rows.push(i.properties)
+            });
+            this.tableData = rows;
+            this.isLoading = false;
+          });
+    }
+
+    onEachFeature(feature, layer) {
+      const cycle = feature.properties.cycle;
+      const color = this._cycleColors[cycle];
+      layer.setStyle({
+        color: color,
+        radius: 8
+      });
+      layer.bindPopup(feature.properties.leaflet_popup);
+      this.layerDict[feature.properties.id_dispositif] = layer;
     }
 
     onRowSelect(row): void {
-      // Vérifie si la géométrie existe bien avant de lancer l'évenement
-      const ft = this.mapListService.layerDict[row.selected[0][this.mapListService.idName]];
-      if (ft) {
-        this.mapListService.onRowSelect(row)
+      const lyr = this.layerDict[row.selected[0].id_dispositif];
+      if (lyr) {
+        const center = lyr.getLatLng();
+        this.mapservice.map.setView(center, 15);
       }
     }
 
@@ -71,9 +103,6 @@ import { MapListService } from '@geonature_common/map-list/map-list.service';
     }
 
     onSearch(): void {
-      this.mapListService.refreshData(this.apiEndPoint, 'set', [
-        {param: 'region', value: this.searchForm.get('region').value || '' },
-        {param: 'alluvial', value: this.searchForm.get('alluvial').value },
-      ]);
+      this.loadData()
     }
   }
