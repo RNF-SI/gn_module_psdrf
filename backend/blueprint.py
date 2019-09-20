@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from sqlalchemy.orm import subqueryload, joinedload
-from sqlalchemy.sql import func, distinct, exists
+from sqlalchemy.sql import func, distinct
 from geoalchemy2.shape import to_shape, from_shape
 from shapely.geometry import MultiPoint, Point
 
@@ -10,11 +10,14 @@ from geonature.core.ref_geo.models import LiMunicipalities, LAreas, BibAreasType
 from .models import TDispositifs, TPlacettes, TArbres, TCycles, \
     CorCyclesPlacettes, TArbresMesures
 
+
 blueprint = Blueprint('psdrf', __name__)
+
 
 @blueprint.route('/test', methods=['GET', 'POST'])
 def test():
     return 'It works (ça marche !)'
+
 
 @blueprint.route('/dispositifs', methods=['GET'])
 @json_resp
@@ -34,7 +37,10 @@ def get_disps():
 
     region = request.args.get("region")
     alluvial = request.args.get("alluvial")
-    status = request.args.get("status")
+    try:
+        status = int(request.args.get("status"))
+    except ValueError:
+        status = None
 
     query = DB.session.query(TDispositifs, func.max(TCycles.num_cycle).label("cycle")) \
         .outerjoin(TDispositifs.placettes) \
@@ -49,9 +55,12 @@ def get_disps():
             alluvial = True
         elif alluvial.lower() == 'false':
             alluvial = False
-        query = query.filter(TDispositifs.alluvial == alluvial)
+        else:
+            alluvial = None
+        if alluvial is not None:
+            query = query.filter(TDispositifs.alluvial == alluvial)
 
-    if region:
+    if region and region != 'null':
         query = query.filter(TDispositifs.municipalities.any(LiMunicipalities.insee_reg == region))
 
     if status:
