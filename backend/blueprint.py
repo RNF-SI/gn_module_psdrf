@@ -1,12 +1,12 @@
 from flask import Blueprint, request, jsonify
 from sqlalchemy.orm import subqueryload, joinedload
-from sqlalchemy.sql import func, distinct
+from sqlalchemy.sql import func, distinct, exists
 from geoalchemy2.shape import to_shape, from_shape
 from shapely.geometry import MultiPoint, Point
 
 from geonature.utils.env import DB
 from geonature.utils.utilssqlalchemy import json_resp, get_geojson_feature
-from geonature.core.ref_geo.models import LiMunicipalities
+from geonature.core.ref_geo.models import LiMunicipalities, LAreas, BibAreasTypes
 from .models import TDispositifs, TPlacettes, TArbres, TCycles, \
     CorCyclesPlacettes, TArbresMesures
 
@@ -34,6 +34,7 @@ def get_disps():
 
     region = request.args.get("region")
     alluvial = request.args.get("alluvial")
+    status = request.args.get("status")
 
     query = DB.session.query(TDispositifs, func.max(TCycles.num_cycle).label("cycle")) \
         .outerjoin(TDispositifs.placettes) \
@@ -52,6 +53,9 @@ def get_disps():
 
     if region:
         query = query.filter(TDispositifs.municipalities.any(LiMunicipalities.insee_reg == region))
+
+    if status:
+        query = query.filter(TDispositifs.areas.any(LAreas.id_type == status))
 
     total = query.count()
     pgs = query.offset(page * limit).limit(limit).all()
@@ -88,6 +92,17 @@ def get_disps():
         "limit": limit,
         "items": {"type": "FeatureCollection", "features": items}
     }
+    return data
+
+
+@blueprint.route('/status_types', methods=['GET'])
+@json_resp
+def get_status_types():
+    """ Renvoie les différents types d'organismes concernés """
+    query = DB.session.query(BibAreasTypes).filter(
+        TDispositifs.areas.any(LAreas.id_type == BibAreasTypes.id_type)
+    ).order_by(BibAreasTypes.type_name)
+    data = [{'id_type': pg.id_type, 'name': pg.type_name} for pg in query]
     return data
 
 
