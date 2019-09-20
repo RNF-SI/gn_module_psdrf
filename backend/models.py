@@ -191,7 +191,7 @@ class TArbresMesures (DB.Model):
     ratio_hauteur = DB.Column('ratio_hauteur', DB.Boolean)
     observation = DB.deferred(DB.Column('observation', DB.Text))
 
-    arbre = DB.relationship('TArbres', foreign_keys=id_arbre)
+    arbre = DB.relationship('TArbres', foreign_keys=id_arbre, backref='mesures')
     cycle = DB.relationship('TCycles', foreign_keys=id_cycle)
 
 

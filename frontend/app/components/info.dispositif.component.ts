@@ -31,8 +31,8 @@ export class InfoDispositifComponent implements OnInit {
     this.dispositif = {"name": '<>'};
 
     this.mapListService.displayColumns = [
-      {name: "id", prop: "id_placette"},
-      {name: "id original", prop: "id_placette_orig"}
+      {name: "N°", prop: "id_placette_orig"},
+      {name: "Nombre d'arbres", prop: "nb_arbres"}
     ];
     this.mapListService.idName = "id_placette";
     this.mapListService.page.size = 20;

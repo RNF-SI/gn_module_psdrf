@@ -133,10 +133,20 @@ def get_dispositif(id_dispositif):
             "nom_organisme": disp.organisme.nom_organisme,
             "id_organisme": disp.organisme.id_organisme
         }
+
+    query = DB.session.query(TPlacettes.strate, func.count("*").label("cnt")) \
+        .outerjoin(TArbres) \
+        .filter(TPlacettes.id_dispositif == id_dispositif) \
+        .group_by(TPlacettes.strate) \
+        .order_by(TPlacettes.strate)
+
+    strates = [{"strate": s.strate, "nb": s.cnt} for s in query.all()]
+
     return {
         "name": disp.name,
         "id": disp.id_dispositif,
-        "organisme": organisme
+        "organisme": organisme,
+        "strates": strates
         }
 
 
@@ -190,6 +200,7 @@ def global_stats():
 def get_placettes(id_dispositif):
     limit = int(request.args.get("limit", 1000))
     page = int(request.args.get("offset", 0))
+
     query = DB.session.query(TPlacettes) \
         .filter(TPlacettes.id_dispositif == id_dispositif) \
         .options(joinedload(TPlacettes.arbres)) \
