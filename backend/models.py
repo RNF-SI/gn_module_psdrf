@@ -3,7 +3,7 @@
 from geoalchemy2 import Geometry
 
 from geonature.core.users.models import BibOrganismes
-from geonature.core.ref_geo.models import LiMunicipalities
+from geonature.core.ref_geo.models import LiMunicipalities, LAreas
 from geonature.utils.utilssqlalchemy import serializable, geoserializable
 from geonature.utils.env import DB
 
@@ -14,6 +14,12 @@ SCHEMA = 'pr_psdrf'
 dispositifs_municipalities_assoc = DB.Table('cor_dispositif_municipality', DB.metadata,
     DB.Column('id_dispositif', DB.Integer, DB.ForeignKey(SCHEMA + '.t_dispositifs.id_dispositif')),
     DB.Column('id_municipality', DB.String, DB.ForeignKey('ref_geo.li_municipalities.id_municipality')),
+    schema=SCHEMA
+)
+
+dispositifs_area_assoc = DB.Table('cor_dispositif_area', DB.metadata,
+    DB.Column('id_dispositif', DB.Integer, DB.ForeignKey(SCHEMA + '.t_dispositifs.id_dispositif')),
+    DB.Column('id_area', DB.Integer, DB.ForeignKey('ref_geo.l_areas.id_area')),
     schema=SCHEMA
 )
 
@@ -29,6 +35,7 @@ class TDispositifs (DB.Model):
     organisme = DB.relationship('BibOrganismes')
     placettes = DB.relationship('TPlacettes', back_populates='dispositif')
     municipalities = DB.relationship('LiMunicipalities', secondary=dispositifs_municipalities_assoc)
+    areas = DB.relationship('LAreas', secondary=dispositifs_area_assoc)
 
 
 @serializable
@@ -132,15 +139,6 @@ class CorCyclesPlacettes (DB.Model):
     cycle = DB.relationship('TCycles', foreign_keys=id_cycle)
     placette = DB.relationship('TPlacettes', foreign_keys=id_placette)
 
-
-class CorDispositifArea (DB.Model):
-    __tablename__ = "cor_dispositif_area"
-    __table_args__ = {'schema': SCHEMA}
-    id_dispositif = DB.Column('id_dispositif', DB.Integer, DB.ForeignKey('pr_psdrf.t_dispositifs.id_dispositif'), primary_key = True)
-    id_area = DB.Column('id_area', DB.Integer, primary_key = True)
-    order = DB.Column('order', DB.Integer)
-
-    dispositif = DB.relationship('TDispositifs', foreign_keys=id_dispositif)
 
 
 class CorCyclesRoles (DB.Model):

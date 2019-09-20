@@ -50,6 +50,13 @@
                       <option value="false">Non</option>
                     </select>
                   </div>
+                  <div class="form-group">
+                    <label for="status">Statut du gestionnaire</label>
+                    <select id="status" class="form-control" formControlName="status">
+                      <option value=""></option>
+                      <option *ngFor="let status of statusList" [value]="status.id_type">{{status.name}}</option>
+                    </select>
+                  </div>
                 </div>
                 <div class="card-footer">
                   <div class="search-btn">
