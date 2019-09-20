@@ -26,7 +26,6 @@ import { AppConfig } from '@geonature_config/app.config';
     public searchForm = new FormGroup({
       region: new FormControl(''),
       alluvial: new FormControl(''),
-      status: new FormControl(''),
     });
     public statusList: Array<object>;
     public regions = [ // NB : dans l'idéal, les récupérer depuis l'API
@@ -61,17 +60,13 @@ import { AppConfig } from '@geonature_config/app.config';
 
         this.tableColumns = [{name: "Nom du dispositif", prop: "name"}];
 
-        this._api.get<any>(`${AppConfig.API_ENDPOINT}/psdrf/status_types`)
-          .subscribe(data => {this.statusList = data});
-
         this.loadData();
     }
 
     loadData(): void {
       this.isLoading = true;
       const params = new HttpParams().set('region', this.searchForm.get('region').value)
-        .set('alluvial', this.searchForm.get('alluvial').value)
-        .set('status', this.searchForm.get('status').value);
+        .set('alluvial', this.searchForm.get('alluvial').value);
       this._api.get<any>(`${AppConfig.API_ENDPOINT}/${this.apiEndPoint}`, {params: params})
           .subscribe(data => {
             this.layerDict = {};
