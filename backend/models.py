@@ -102,7 +102,7 @@ class TCycles (DB.Model):
     diam_lim = DB.Column('diam_lim', DB.Float)
     monitor = DB.Column('monitor', DB.String)
 
-    dispositif = DB.relationship('TDispositifs', foreign_keys=id_dispositif)
+    dispositif = DB.relationship('TDispositifs', foreign_keys=id_dispositif, backref='cycles')
 
 
 @serializable

@@ -57,8 +57,11 @@ import { AppConfig } from '@geonature_config/app.config';
         this._api.get<any>(`${AppConfig.API_ENDPOINT}/${this.statEndPoint}`)
           .subscribe(data => {this.stats = data});
 
-
-        this.tableColumns = [{name: "Nom du dispositif", prop: "name"}];
+        this.tableColumns = [
+          {name: "Nom du dispositif", prop: "name"},
+          {name: "Nombre de placettes", prop: "nb_placettes"},
+          {name: "Année de début", prop: "debut"}
+        ];
 
         this.loadData();
     }

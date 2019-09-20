@@ -1,3 +1,5 @@
+import datetime
+
 from flask import Blueprint, request, jsonify
 from sqlalchemy.orm import subqueryload, joinedload
 from sqlalchemy.sql import func, distinct
@@ -39,26 +41,23 @@ def get_disps():
     alluvial = request.args.get("alluvial")
     try:
         status = int(request.args.get("status"))
-    except ValueError:
+    except (ValueError, TypeError):
         status = None
 
-    query = DB.session.query(TDispositifs, func.max(TCycles.num_cycle).label("cycle")) \
-        .outerjoin(TDispositifs.placettes) \
-        .outerjoin(CorCyclesPlacettes) \
-        .outerjoin(TCycles) \
-        .group_by(TDispositifs) \
-        .having(func.count(TDispositifs.placettes) > 0) \
+    query = DB.session.query(TDispositifs) \
+        .options(joinedload(TDispositifs.placettes), joinedload(TDispositifs.cycles)) \
+        .filter(TDispositifs.cycles.any(TCycles.date_debut < datetime.datetime.today())) \
         .order_by(TDispositifs.name)
 
     if alluvial is not None and alluvial != '':
         if alluvial.lower() == 'true':
-            alluvial = True
+            where = TCycles.monitor != 'PSDRF'
         elif alluvial.lower() == 'false':
-            alluvial = False
+            where = TCycles.monitor == 'PSDRF'
         else:
             alluvial = None
         if alluvial is not None:
-            query = query.filter(TDispositifs.alluvial == alluvial)
+            query = query.filter(TDispositifs.cycles.any(where))
 
     if region and region != 'null':
         query = query.filter(TDispositifs.municipalities.any(LiMunicipalities.insee_reg == region))
@@ -72,7 +71,7 @@ def get_disps():
 
     # rassemble les geom des placettes pour en former l'enveloppe
     for pg in pgs:
-        pts = MultiPoint([to_shape(pl.geom_wgs84) for pl in pg.TDispositifs.placettes if pl.geom_wgs84 is not None])
+        pts = MultiPoint([to_shape(pl.geom_wgs84) for pl in pg.placettes if pl.geom_wgs84 is not None])
         if shape == "point":
             geom = pts.centroid
         else:
@@ -81,15 +80,22 @@ def get_disps():
             ft = get_geojson_feature(from_shape(geom))
         else:
             ft = {'geometry': None}
+
+        cycle_1 = None
+        if len(pg.cycles) > 0:
+            cycle_1 = [c for c in pg.cycles if c.num_cycle == 1][0]
+
         ft['properties'] = {
-            'name': pg.TDispositifs.name,
-            'id_dispositif': pg.TDispositifs.id_dispositif,
-            'nb_placettes': len(pg.TDispositifs.placettes),
-            'cycle': pg.cycle,
+            'name': pg.name,
+            'id_dispositif': pg.id_dispositif,
+            'nb_placettes': len(pg.placettes),
+            'cycle': max([c.num_cycle for c in pg.cycles]),
             'rights': {'C': False, 'R': True, 'U': False, 'V': True, 'E': False, 'D': False},
-            'leaflet_popup': pg.TDispositifs.name
+            'leaflet_popup': pg.name
         }
-        ft['id'] = pg.TDispositifs.id_dispositif
+        if cycle_1 and cycle_1.date_debut:
+            ft['properties']['debut'] = cycle_1.date_debut.year
+        ft['id'] = pg.id_dispositif
         items.append(ft)
 
     # TODO: check les droits
@@ -155,7 +161,7 @@ def global_stats():
 
     data = { }
     query = DB.session.query(func.count('*')).select_from(TDispositifs) \
-        .filter(TDispositifs.placettes.any())
+        .filter(TDispositifs.cycles.any(TCycles.date_debut < datetime.datetime.today()))
     data['nb_dispositifs'] = query.scalar()
 
     query = DB.session.query(
