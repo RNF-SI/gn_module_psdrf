@@ -44,11 +44,10 @@ export class InfoDispositifComponent implements OnInit {
       this._api.get<any>(`${AppConfig.API_ENDPOINT}/${this.apiEndPoint}/${this.id}`)
           .subscribe(data => {
             this.dispositif = data;
-
-            this.mapListService.getData('psdrf/placettes/' + this.id, [
-                {param: "limit", value: 20}
-            ])
           });
+
+      this.mapListService.getData('psdrf/placettes/' + this.id, []);
+
     })
   }
 

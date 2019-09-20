@@ -163,7 +163,7 @@ class TArbres (DB.Model):
     taillis = DB.Column('taillis', DB.Boolean)
     observation = DB.deferred(DB.Column('observation', DB.Text))
 
-    placette = DB.relationship('TPlacettes', foreign_keys=id_placette)
+    placette = DB.relationship('TPlacettes', foreign_keys=id_placette, backref='arbres')
     essence = DB.relationship('BibEssences', foreign_keys=code_essence)
 
 

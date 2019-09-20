@@ -60,6 +60,13 @@ CREATE INDEX idx_t_placettes_geom
     ON t_placettes USING gist
     (geom);
 
+CREATE INDEX idx_t_placettes_geom
+    ON t_placettes USING gist
+    (geom_wgs84);
+
+CREATE INDEX idx_t_placettes_id_dispositif
+    ON t_placettes  (id_dispositif);
+
 CREATE TABLE t_reperes (
   id_repere serial NOT NULL,
   id_placette integer NOT NULL,

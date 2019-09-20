@@ -182,22 +182,29 @@ def global_stats():
 @blueprint.route('/placettes/<int:id_dispositif>', methods=['GET'])
 @json_resp
 def get_placettes(id_dispositif):
-    limit = int(request.args.get("limit", 100))
+    limit = int(request.args.get("limit", 1000))
     page = int(request.args.get("offset", 0))
-    query = DB.session.query(TPlacettes).filter(TPlacettes.id_dispositif == id_dispositif).order_by(TPlacettes.id_placette)
+    query = DB.session.query(TPlacettes) \
+        .filter(TPlacettes.id_dispositif == id_dispositif) \
+        .options(joinedload(TPlacettes.arbres)) \
+        .order_by(TPlacettes.id_placette)
     total = query.count()
-    pgs = query.offset(page * limit).limit(limit).all()
+    query = query.offset(page * limit).limit(limit)
 
     data = {
         "total": total,
         "total_filtered": total,
         "page": page,
         "limit": limit,
-        "items": {"type": "FeatureCollection", "features": [pg.as_geofeature('geom_wgs84', 'id_placette') for pg in pgs]}
+        "items": {"type": "FeatureCollection", "features": []}
     }
-    for ft in data["items"]["features"]:
-        ft["properties"]["rights"] =  {'C': True, 'R': True, 'U': True, 'V': True, 'E': True, 'D': True}
+    for pg in query.all():
+        cnt = len(pg.arbres)
+        ft = pg.as_geofeature('geom_wgs84', 'id_placette')
+        ft["properties"]["nb_arbres"] = cnt
+        ft["properties"]["rights"] =  {'C': False, 'R': True, 'U': False, 'V': False, 'E': False, 'D': False}
         ft["id"] = ft["properties"]["id_placette"]
+        data["items"]["features"].append(ft)
 
     return data
 
