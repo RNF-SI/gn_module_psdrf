@@ -1,0 +1,1 @@
+rpy2==3.0.5 # version 3.1.0 a un bug qui la rend incompatible avec python 3.5
