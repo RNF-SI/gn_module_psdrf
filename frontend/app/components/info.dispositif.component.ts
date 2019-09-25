@@ -17,6 +17,7 @@ export class InfoDispositifComponent implements OnInit {
   public apiEndPoint: string;
   public placettesEndPoint: string;
   public editing: boolean = false;
+  public canEdit: boolean;
 
   constructor(
     private _api: HttpClient,
@@ -29,6 +30,7 @@ export class InfoDispositifComponent implements OnInit {
     this.apiEndPoint = "psdrf/dispositif";
     this.placettesEndPoint = "psdrf/placettes"
     this.dispositif = {"name": '<>'};
+    this.canEdit = true; // TODO: implement CRUVED
 
     this.mapListService.displayColumns = [
       {name: "N°", prop: "id_placette_orig"},

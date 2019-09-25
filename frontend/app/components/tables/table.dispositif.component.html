@@ -1,0 +1,31 @@
+<div class="container-fluid">
+    <div class="card">
+      <div class="card-body">
+        <div>
+          <h2>Dispositif : {{dispositif.name}}</h2>
+        </div>
+      </div>
+    </div>
+
+    <div id="disp-tabs">
+        <ul class="nav nav-tabs">
+            <li *ngFor="let tab of tabHeaders" class="nav-item">
+                <a [ngClass]="{'nav-link': true, 'active': activeTab == tab.name}" href="#" (click)="onTabClick(tab.name)">{{tab.label}}</a>
+            </li>
+        </ul>
+        <div class="tab-content">
+                <ngx-datatable #table class="material striped margin-top-xs table-size expandable" [rows]="tableRows"
+                [columns]="tableColumns" [loadingIndicator]="isLoading" columnMode="force"
+                [headerHeight]="35" [footerHeight]="40" [rowHeight]="40" draggable="false" [selected]="selectedRow"
+                [externalPaging]="false" [scrollbarH]="false" [selectionType]="'single'" [count]="totalElements"
+                [limit]="50"   [messages]="" (select)="onRowSelect($event)">
+
+              <!-- DATA COLUMNS -->
+              <span *ngFor="let col of tableColumns" >
+                <ngx-datatable-column  [name]="col.name" [prop]="col.prop">
+                </ngx-datatable-column>
+              </span>
+            </ngx-datatable>
+        </div>
+    </div>
+</div>

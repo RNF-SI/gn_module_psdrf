@@ -13,7 +13,7 @@ from geonature.core.gn_permissions.tools import get_or_fetch_user_cruved
 from geonature.core.gn_permissions import decorators as permissions
 from pypnusershub.routes import check_auth
 from .models import TDispositifs, TPlacettes, TArbres, TCycles, \
-    CorCyclesPlacettes, TArbresMesures
+    CorCyclesPlacettes, TArbresMesures, BibEssences
 
 
 blueprint = Blueprint('psdrf', __name__)
@@ -238,5 +238,14 @@ def get_placettes(id_dispositif):
 @json_resp
 def get_arbres(id_dispositif):
     """ Recherche tous les arbres d'un dispositif donné """
-    pgs = DB.session.query(TArbres).filter(TArbres.placette.id_dispositif == id_dispositif).all()
-    return [pg.as_dict() for pg in pgs]
+    pgs = DB.session.query(TArbres, TArbresMesures) \
+        .filter(TArbresMesures.id_arbre == TArbres.id_arbre) \
+        .filter(TArbres.placette.has(TPlacettes.id_dispositif == id_dispositif)) \
+        .limit(5000).all()
+    data = []
+    for arbre, mesure in pgs:
+        li = arbre.as_dict()
+        li.update(mesure.as_dict())
+        data.append(li)
+
+    return {"items": data, "total":len(data)}

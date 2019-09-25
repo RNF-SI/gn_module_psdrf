@@ -2,7 +2,10 @@
   <div class="card">
     <div class="card-body">
       <div *ngIf="!editing" >
-        <h2>Dispositif : {{dispositif.name}} <a (click)="onEditDispositif()"><span class="fa fa-edit"> </span></a></h2>
+        <h2>Dispositif : {{dispositif.name}} <a *ngIf="canEdit" (click)="onEditDispositif()"><span class="fa fa-edit"> </span></a></h2>
+        <div *ngIf="canEdit">
+            <button class="btn btn-primary" [routerLink]="['/psdrf/tabledispositif', id]">Vue détaillée</button>
+          </div>
         <p>Organisme : {{ dispositif.organisme ? dispositif.organisme.nom_organisme : "&lt;inconnu&gt;"  }}</p>
         <p>{{ mapListService.tableData?.length }} placettes</p>
         <div class="container">

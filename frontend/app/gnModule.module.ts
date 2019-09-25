@@ -7,11 +7,13 @@ import { DispositifsComponent } from "./components/dispositifs.component";
 import { InfoDispositifComponent } from "./components/info.dispositif.component";
 import { FormDispositifComponent } from "./components/form.dispositif.component";
 import { KeyValue, FormatNum } from "./utils";
+import { TableDispositifComponent } from "./components/tables/table.dispositif.component";
 
 // my module routing
 const routes: Routes = [
   { path: "", component: DispositifsComponent },
-  { path: "infodispositif/:id", component: InfoDispositifComponent }
+  { path: "infodispositif/:id", component: InfoDispositifComponent },
+  { path: "tabledispositif/:id", component: TableDispositifComponent }
 ];
 
 @NgModule({
@@ -19,6 +21,7 @@ const routes: Routes = [
     DispositifsComponent,
     InfoDispositifComponent,
     FormDispositifComponent,
+    TableDispositifComponent,
     KeyValue,
     FormatNum,
   ],
