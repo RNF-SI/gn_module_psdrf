@@ -31,7 +31,6 @@ class TDispositifs (DB.Model):
     id_dispositif = DB.Column('id_dispositif', DB.Integer, primary_key = True)
     name = DB.Column('name', DB.String)
     id_organisme = DB.Column('id_organisme', DB.Integer, DB.ForeignKey('utilisateurs.bib_organismes.id_organisme'))
-    alluvial = DB.Column('alluvial', DB.Boolean)
     organisme = DB.relationship('BibOrganismes')
     placettes = DB.relationship('TPlacettes', back_populates='dispositif')
     municipalities = DB.relationship('LiMunicipalities', secondary=dispositifs_municipalities_assoc)

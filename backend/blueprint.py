@@ -1,6 +1,6 @@
 import datetime
 
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, session
 from sqlalchemy.orm import subqueryload, joinedload
 from sqlalchemy.sql import func, distinct
 from geoalchemy2.shape import to_shape, from_shape
@@ -9,6 +9,9 @@ from shapely.geometry import MultiPoint, Point
 from geonature.utils.env import DB
 from geonature.utils.utilssqlalchemy import json_resp, get_geojson_feature
 from geonature.core.ref_geo.models import LiMunicipalities, LAreas, BibAreasTypes
+from geonature.core.gn_permissions.tools import get_or_fetch_user_cruved
+from geonature.core.gn_permissions import decorators as permissions
+from pypnusershub.routes import check_auth
 from .models import TDispositifs, TPlacettes, TArbres, TCycles, \
     CorCyclesPlacettes, TArbresMesures
 
@@ -122,8 +125,9 @@ def get_status_types():
 
 
 @blueprint.route('/dispositif/<int:id_dispositif>', methods=['GET'])
+@permissions.check_cruved_scope('R', True, module_code="PSDRF")
 @json_resp
-def get_dispositif(id_dispositif):
+def get_dispositif(id_dispositif, info_role):
     disp = DB.session.query(TDispositifs) \
         .options(joinedload(TDispositifs.organisme)) \
         .filter(TDispositifs.id_dispositif == id_dispositif).one()
@@ -142,17 +146,21 @@ def get_dispositif(id_dispositif):
 
     strates = [{"strate": s.strate, "nb": s.cnt} for s in query.all()]
 
+    user_cruved = get_or_fetch_user_cruved(session=session, id_role=info_role.id_role, module_code="PSDRF")
+
     return {
         "name": disp.name,
         "id": disp.id_dispositif,
         "organisme": organisme,
-        "strates": strates
+        "strates": strates,
+        "cruved": user_cruved
         }
 
 
 @blueprint.route('/saveDispositif', methods=['POST'])
+@permissions.check_cruved_scope('U', True, module_code="PSDRF")
 @json_resp
-def save_dispositif():
+def save_dispositif(info_role):
     data = request.get_json()
     id_dispositif = int(data.get("id"))
     if id_dispositif:
