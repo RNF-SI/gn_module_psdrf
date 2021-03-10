@@ -10,7 +10,7 @@ import { AppConfig } from '@geonature_config/app.config';
     templateUrl: 'form.dispositif.component.html'
 })
 export class FormDispositifComponent implements OnInit {
-    @Input() public dispositif: object;
+    @Input() public dispositif: any;
     @Output() public saved = new EventEmitter<boolean>();
     @Output() public canceled = new EventEmitter<boolean>();
 
@@ -34,8 +34,16 @@ export class FormDispositifComponent implements OnInit {
           .subscribe(data => {
               this.organismes = data;
             });
-      let formData = {name: this.dispositif.name};
-      if (this.dispositif.organisme) {
+
+      interface formInterface {
+        name?: any,
+        id_organisme?: any
+      }
+      let formData: formInterface;
+
+
+      formData = {name: this.dispositif.name};
+      if (this.dispositif.organisme !== undefined) {
         formData.id_organisme = this.dispositif.organisme.id_organisme;
       }
       this.dispositifForm.patchValue(formData);

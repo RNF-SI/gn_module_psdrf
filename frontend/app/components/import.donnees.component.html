@@ -1,0 +1,585 @@
+<div class="container " appDnd (fileDropped)="onFileDropped($event)" *ngIf="!isCurrentVerification">
+  <div class="importzone">
+      <input type="file" #fileDropRef id="fileDropRef" accept=".xlsx, .xls" >
+      <h3>Déposer </h3>
+      <h3>ou</h3>                      
+      <div class="custom-file">
+          <input type="file" class="custom-file-input" id="customFile" name="excelFile"
+              (change)="onFileSelect($event)" #UploadFileInput accept=".xlsx, .xls">
+              <label >Choisir un fichier</label>
+      </div>
+  </div>             
+</div>
+
+<div class="d-flex justify-content-center" *ngIf="isCurrentVerification">
+  <div class="single-file text-center" >
+      <img src="external_assets/psdrf/ms-excel.svg" width="45px" alt="file">
+      <div class="info">
+          <h4 class="name">
+              {{ excelFile?.name }}
+          </h4>
+          <p class="size">
+              {{ formatBytes(excelFile?.size) }}
+          </p>
+      </div>
+      <button
+      class="m-1 float-right"
+      mat-raised-button
+      matTooltip="Supprimer"     
+      (click)="deleteFile()"             
+      >
+      <mat-icon> delete </mat-icon>
+    </button>
+  </div>
+</div> 
+
+<mat-tab-group  *ngIf="isCurrentVerification">
+  <mat-tab label="Placettes"> 
+    <div class="mat-elevation-z8">
+    <div class="example-loading-shade"
+    *ngIf="isLoadingResults">
+      <mat-spinner ></mat-spinner>
+    </div>
+    <table mat-table [dataSource]="placetteDataSource">
+
+      <ng-container matColumnDef="NumDisp">
+        <th mat-header-cell *matHeaderCellDef> NumDisp </th>
+        <td mat-cell *matCellDef="let element"> {{element.NumDisp}} </td>
+      </ng-container>
+  
+      <ng-container matColumnDef="NumPlac">
+        <th mat-header-cell *matHeaderCellDef> NumPlac </th>
+        <td mat-cell *matCellDef="let element"> {{element.NumPlac}} </td>
+      </ng-container>
+  
+      <ng-container matColumnDef="Cycle">
+        <th mat-header-cell *matHeaderCellDef> Cycle </th>
+        <td mat-cell *matCellDef="let element"> {{element.Cycle}} </td>
+      </ng-container>
+  
+      <ng-container matColumnDef="Strate">
+        <th mat-header-cell *matHeaderCellDef> Strate </th>
+        <td mat-cell *matCellDef="let element"> {{element.Strate}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="PoidsPlacette">
+        <th mat-header-cell *matHeaderCellDef> PoidsPlacette </th>
+        <td mat-cell *matCellDef="let element"> {{element.PoidsPlacette}} </td>
+      </ng-container>
+  
+      <ng-container matColumnDef="Pente">
+        <th mat-header-cell *matHeaderCellDef> Pente </th>
+        <td mat-cell *matCellDef="let element"> {{element.Pente}} </td>
+      </ng-container>
+  
+      <ng-container matColumnDef="CorrectionPente">
+        <th mat-header-cell *matHeaderCellDef> CorrectionPente </th>
+        <td mat-cell *matCellDef="let element"> {{element.CorrectionPente}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="Exposition">
+        <th mat-header-cell *matHeaderCellDef> Exposition </th>
+        <td mat-cell *matCellDef="let element"> {{element.Exposition}} </td>
+      </ng-container>
+  
+      <ng-container matColumnDef="Habitat">
+        <th mat-header-cell *matHeaderCellDef> Habitat </th>
+        <td mat-cell *matCellDef="let element"> {{element.Habitat}} </td>
+      </ng-container>
+  
+      <ng-container matColumnDef="Station">
+        <th mat-header-cell *matHeaderCellDef> Station </th>
+        <td mat-cell *matCellDef="let element"> {{element.Station}} </td>
+      </ng-container>
+  
+      <ng-container matColumnDef="Typologie">
+        <th mat-header-cell *matHeaderCellDef> Typologie </th>
+        <td mat-cell *matCellDef="let element"> {{element.Typologie}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="Groupe">
+        <th mat-header-cell *matHeaderCellDef> Groupe </th>
+        <td mat-cell *matCellDef="let element"> {{element.Groupe}} </td>
+      </ng-container>
+  
+      <ng-container matColumnDef="Groupe1">
+        <th mat-header-cell *matHeaderCellDef> Groupe1 </th>
+        <td mat-cell *matCellDef="let element"> {{element.Groupe1}} </td>
+      </ng-container>
+  
+      <ng-container matColumnDef="Groupe2">
+        <th mat-header-cell *matHeaderCellDef> Groupe2 </th>
+        <td mat-cell *matCellDef="let element"> {{element.Groupe2}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="Ref_Habitat">
+        <th mat-header-cell *matHeaderCellDef> Ref_Habitat </th>
+        <td mat-cell *matCellDef="let element"> {{element.Ref_Habitat}} </td>
+      </ng-container>
+  
+      <ng-container matColumnDef="Precision_Habitat">
+        <th mat-header-cell *matHeaderCellDef> Precision_Habitat </th>
+        <td mat-cell *matCellDef="let element"> {{element.Precision_Habitat}} </td>
+      </ng-container>
+  
+      <ng-container matColumnDef="Ref_Station">
+        <th mat-header-cell *matHeaderCellDef> Ref_Station </th>
+        <td mat-cell *matCellDef="let element"> {{element.Ref_Station}} </td>
+      </ng-container>
+  
+      <ng-container matColumnDef="Ref_Typologie">
+        <th mat-header-cell *matHeaderCellDef> Ref_Typologie </th>
+        <td mat-cell *matCellDef="let element"> {{element.Ref_Typologie}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="Descriptif_Groupe">
+        <th mat-header-cell *matHeaderCellDef> Descriptif_Groupe </th>
+        <td mat-cell *matCellDef="let element"> {{element.Descriptif_Groupe}} </td>
+      </ng-container>
+  
+      <ng-container matColumnDef="Descriptif_Groupe1">
+        <th mat-header-cell *matHeaderCellDef> Descriptif_Groupe1 </th>
+        <td mat-cell *matCellDef="let element"> {{element.Descriptif_Groupe1}} </td>
+      </ng-container>
+  
+      <ng-container matColumnDef="Descriptif_Groupe2">
+        <th mat-header-cell *matHeaderCellDef> Descriptif_Groupe2 </th>
+        <td mat-cell *matCellDef="let element"> {{element.Descriptif_Groupe2}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="Date_Intervention">
+        <th mat-header-cell *matHeaderCellDef> Date_Intervention </th>
+        <td mat-cell *matCellDef="let element"> {{element.Date_Intervention}} </td>
+      </ng-container>
+  
+      <ng-container matColumnDef="Nature_Intervention">
+        <th mat-header-cell *matHeaderCellDef> Nature_Intervention </th>
+        <td mat-cell *matCellDef="let element"> {{element.Nature_Intervention}} </td>
+      </ng-container>
+  
+      <ng-container matColumnDef="Gestion">
+        <th mat-header-cell *matHeaderCellDef> Gestion </th>
+        <td mat-cell *matCellDef="let element"> {{element.Gestion}} </td>
+      </ng-container>
+  
+      <ng-container matColumnDef="PrecisionGPS">
+        <th mat-header-cell *matHeaderCellDef> PrecisionGPS </th>
+        <td mat-cell *matCellDef="let element"> {{element.PrecisionGPS}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="Cheminement">
+        <th mat-header-cell *matHeaderCellDef> Cheminement </th>
+        <td mat-cell *matCellDef="let element"> {{element.Cheminement}} </td>
+      </ng-container>
+  
+      <tr mat-header-row *matHeaderRowDef="placetteColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: placetteColumns;"></tr>
+    </table>
+    
+      <mat-paginator #scheduledOrdersPaginator [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons></mat-paginator>
+    </div>
+
+  </mat-tab>
+  <mat-tab label="Cycles">
+
+    <ng-container matColumnDef="NumDisp">
+      <th mat-header-cell *matHeaderCellDef> NumDisp </th>
+      <td mat-cell *matCellDef="let element"> {{element.NumDisp}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="NumPlac">
+      <th mat-header-cell *matHeaderCellDef> NumPlac </th>
+      <td mat-cell *matCellDef="let element"> {{element.NumPlac}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="Cycle">
+      <th mat-header-cell *matHeaderCellDef> Cycle </th>
+      <td mat-cell *matCellDef="let element"> {{element.Cycle}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="Coeff">
+      <th mat-header-cell *matHeaderCellDef> Coeff </th>
+      <td mat-cell *matCellDef="let element"> {{element.Coeff}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="Date">
+      <th mat-header-cell *matHeaderCellDef> Date </th>
+      <td mat-cell *matCellDef="let element"> {{element.Date}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="DiamLim">
+      <th mat-header-cell *matHeaderCellDef> DiamLim </th>
+      <td mat-cell *matCellDef="let element"> {{element.DiamLim}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="Année">
+      <th mat-header-cell *matHeaderCellDef> Année </th>
+      <td mat-cell *matCellDef="let element"> {{element.Annee}} </td>
+    </ng-container>
+
+  </mat-tab>
+
+  <mat-tab label="Arbres"> 
+    
+        <ng-container matColumnDef="NumDisp">
+        <th mat-header-cell *matHeaderCellDef> NumDisp </th>
+        <td mat-cell *matCellDef="let element"> {{element.NumDisp}} </td>
+      </ng-container>
+  
+      <ng-container matColumnDef="NumPlac">
+        <th mat-header-cell *matHeaderCellDef> NumPlac </th>
+        <td mat-cell *matCellDef="let element"> {{element.NumPlac}} </td>
+      </ng-container>
+  
+      <ng-container matColumnDef="Cycle">
+        <th mat-header-cell *matHeaderCellDef> Cycle </th>
+        <td mat-cell *matCellDef="let element"> {{element.Cycle}} </td>
+      </ng-container>
+  
+      <ng-container matColumnDef="NumArbre">
+        <th mat-header-cell *matHeaderCellDef> NumArbre </th>
+        <td mat-cell *matCellDef="let element"> {{element.NumArbre}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="Essence">
+        <th mat-header-cell *matHeaderCellDef> Essence </th>
+        <td mat-cell *matCellDef="let element"> {{element.Essence}} </td>
+      </ng-container>
+  
+      <ng-container matColumnDef="Azimut">
+        <th mat-header-cell *matHeaderCellDef> Azimut </th>
+        <td mat-cell *matCellDef="let element"> {{element.Azimut}} </td>
+      </ng-container>
+  
+      <ng-container matColumnDef="Dist">
+        <th mat-header-cell *matHeaderCellDef> Dist </th>
+        <td mat-cell *matCellDef="let element"> {{element.Dist}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="Diam1">
+        <th mat-header-cell *matHeaderCellDef> Diam1 </th>
+        <td mat-cell *matCellDef="let element"> {{element.Diam1}} </td>
+      </ng-container>
+  
+      <ng-container matColumnDef="Diam2">
+        <th mat-header-cell *matHeaderCellDef> Diam2 </th>
+        <td mat-cell *matCellDef="let element"> {{element.Diam2}} </td>
+      </ng-container>
+  
+      <ng-container matColumnDef="Type">
+        <th mat-header-cell *matHeaderCellDef> Type </th>
+        <td mat-cell *matCellDef="let element"> {{element.Type}} </td>
+      </ng-container>
+  
+      <ng-container matColumnDef="Haut">
+        <th mat-header-cell *matHeaderCellDef> Haut </th>
+        <td mat-cell *matCellDef="let element"> {{element.Haut}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="StadeD">
+        <th mat-header-cell *matHeaderCellDef> StadeD </th>
+        <td mat-cell *matCellDef="let element"> {{element.StadeD}} </td>
+      </ng-container>
+  
+      <ng-container matColumnDef="StadeE">
+        <th mat-header-cell *matHeaderCellDef> StadeE </th>
+        <td mat-cell *matCellDef="let element"> {{element.StadeE}} </td>
+      </ng-container>
+  
+      <ng-container matColumnDef="Taillis">
+        <th mat-header-cell *matHeaderCellDef> Taillis </th>
+        <td mat-cell *matCellDef="let element"> {{element.Taillis}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="Coupe">
+        <th mat-header-cell *matHeaderCellDef> Coupe </th>
+        <td mat-cell *matCellDef="let element"> {{element.Coupe}} </td>
+      </ng-container>
+  
+      <ng-container matColumnDef="Limite">
+        <th mat-header-cell *matHeaderCellDef> Limite </th>
+        <td mat-cell *matCellDef="let element"> {{element.Limite}} </td>
+      </ng-container>
+  
+      <ng-container matColumnDef="CodeEcolo">
+        <th mat-header-cell *matHeaderCellDef> CodeEcolo </th>
+        <td mat-cell *matCellDef="let element"> {{element.CodeEcolo}} </td>
+      </ng-container>
+  
+      <ng-container matColumnDef="Ref_CodeEcolo">
+        <th mat-header-cell *matHeaderCellDef> Ref_CodeEcolo </th>
+        <td mat-cell *matCellDef="let element"> {{element.Ref_CodeEcolo}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="Observation">
+        <th mat-header-cell *matHeaderCellDef> Observation </th>
+        <td mat-cell *matCellDef="let element"> {{element.Observation}} </td>
+      </ng-container>
+     
+  </mat-tab>
+  <mat-tab label="Régénération"> 
+  
+    <ng-container matColumnDef="NumDisp">
+      <th mat-header-cell *matHeaderCellDef> NumDisp </th>
+      <td mat-cell *matCellDef="let element"> {{element.NumDisp}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="NumPlac">
+      <th mat-header-cell *matHeaderCellDef> NumPlac </th>
+      <td mat-cell *matCellDef="let element"> {{element.NumPlac}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="SsPlac">
+      <th mat-header-cell *matHeaderCellDef> SsPlac </th>
+      <td mat-cell *matCellDef="let element"> {{element.SsPlac}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="Cycle">
+      <th mat-header-cell *matHeaderCellDef> Cycle </th>
+      <td mat-cell *matCellDef="let element"> {{element.Cycle}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="Essence">
+      <th mat-header-cell *matHeaderCellDef> Essence </th>
+      <td mat-cell *matCellDef="let element"> {{element.Essence}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="Recouv">
+      <th mat-header-cell *matHeaderCellDef> Recouv </th>
+      <td mat-cell *matCellDef="let element"> {{element.Recouv}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="Class1">
+      <th mat-header-cell *matHeaderCellDef> Class1 </th>
+      <td mat-cell *matCellDef="let element"> {{element.Class1}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="Class2">
+      <th mat-header-cell *matHeaderCellDef> Class2 </th>
+      <td mat-cell *matCellDef="let element"> {{element.Class2}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="Class3">
+      <th mat-header-cell *matHeaderCellDef> Class3 </th>
+      <td mat-cell *matCellDef="let element"> {{element.Class3}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="Taillis">
+      <th mat-header-cell *matHeaderCellDef> Taillis </th>
+      <td mat-cell *matCellDef="let element"> {{element.Taillis}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="Abroutis">
+      <th mat-header-cell *matHeaderCellDef> Abroutis </th>
+      <td mat-cell *matCellDef="let element"> {{element.Abroutis}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="Observation">
+      <th mat-header-cell *matHeaderCellDef> Observation </th>
+      <td mat-cell *matCellDef="let element"> {{element.Observation}} </td>
+    </ng-container>
+
+  </mat-tab>
+
+
+  <mat-tab label="Transect"> 
+
+
+    <ng-container matColumnDef="NumDisp">
+      <th mat-header-cell *matHeaderCellDef> NumDisp </th>
+      <td mat-cell *matCellDef="let element"> {{element.NumDisp}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="NumPlac">
+      <th mat-header-cell *matHeaderCellDef> NumPlac </th>
+      <td mat-cell *matCellDef="let element"> {{element.NumPlac}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="Id">
+      <th mat-header-cell *matHeaderCellDef> Id </th>
+      <td mat-cell *matCellDef="let element"> {{element.Id}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="Cycle">
+      <th mat-header-cell *matHeaderCellDef> Cycle </th>
+      <td mat-cell *matCellDef="let element"> {{element.Cycle}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="Transect">
+      <th mat-header-cell *matHeaderCellDef> Transect </th>
+      <td mat-cell *matCellDef="let element"> {{element.Transect}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="Essence">
+      <th mat-header-cell *matHeaderCellDef> Essence </th>
+      <td mat-cell *matCellDef="let element"> {{element.Essence}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="Dist">
+      <th mat-header-cell *matHeaderCellDef> Dist </th>
+      <td mat-cell *matCellDef="let element"> {{element.Dist}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="Diam">
+      <th mat-header-cell *matHeaderCellDef> Diam </th>
+      <td mat-cell *matCellDef="let element"> {{element.Diam}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="Angle">
+      <th mat-header-cell *matHeaderCellDef> Angle </th>
+      <td mat-cell *matCellDef="let element"> {{element.Angle}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="Contact">
+      <th mat-header-cell *matHeaderCellDef> Contact </th>
+      <td mat-cell *matCellDef="let element"> {{element.Contact}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="Chablis">
+      <th mat-header-cell *matHeaderCellDef> Chablis </th>
+      <td mat-cell *matCellDef="let element"> {{element.Chablis}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="StadeD">
+      <th mat-header-cell *matHeaderCellDef> StadeD </th>
+      <td mat-cell *matCellDef="let element"> {{element.StadeD}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="StadeE">
+      <th mat-header-cell *matHeaderCellDef> StadeE </th>
+      <td mat-cell *matCellDef="let element"> {{element.StadeE}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="Observation">
+      <th mat-header-cell *matHeaderCellDef> Observation </th>
+      <td mat-cell *matCellDef="let element"> {{element.Observation}} </td>
+    </ng-container>
+    
+  </mat-tab>
+  <mat-tab label="BMSsup30">
+    
+    <ng-container matColumnDef="NumDisp">
+      <th mat-header-cell *matHeaderCellDef> NumDisp </th>
+      <td mat-cell *matCellDef="let element"> {{element.NumDisp}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="NumPlac">
+      <th mat-header-cell *matHeaderCellDef> NumPlac </th>
+      <td mat-cell *matCellDef="let element"> {{element.NumPlac}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="Id">
+      <th mat-header-cell *matHeaderCellDef> Id </th>
+      <td mat-cell *matCellDef="let element"> {{element.Id}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="NumArbre">
+      <th mat-header-cell *matHeaderCellDef> NumArbre </th>
+      <td mat-cell *matCellDef="let element"> {{element.NumArbre}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="Cycle">
+      <th mat-header-cell *matHeaderCellDef> Cycle </th>
+      <td mat-cell *matCellDef="let element"> {{element.Cycle}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="Essence">
+      <th mat-header-cell *matHeaderCellDef> Essence </th>
+      <td mat-cell *matCellDef="let element"> {{element.Essence}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="Azimut">
+      <th mat-header-cell *matHeaderCellDef> Azimut </th>
+      <td mat-cell *matCellDef="let element"> {{element.Azimut}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="Dist">
+      <th mat-header-cell *matHeaderCellDef> Dist </th>
+      <td mat-cell *matCellDef="let element"> {{element.Dist}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="DiamIni">
+      <th mat-header-cell *matHeaderCellDef> DiamIni </th>
+      <td mat-cell *matCellDef="let element"> {{element.DiamIni}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="DiamMed">
+      <th mat-header-cell *matHeaderCellDef> DiamMed </th>
+      <td mat-cell *matCellDef="let element"> {{element.DiamMed}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="DiamFin">
+      <th mat-header-cell *matHeaderCellDef> DiamFin </th>
+      <td mat-cell *matCellDef="let element"> {{element.DiamFin}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="Longueur">
+      <th mat-header-cell *matHeaderCellDef> Longueur </th>
+      <td mat-cell *matCellDef="let element"> {{element.Longueur}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="Contact">
+      <th mat-header-cell *matHeaderCellDef> Contact </th>
+      <td mat-cell *matCellDef="let element"> {{element.Contact}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="Chablis">
+      <th mat-header-cell *matHeaderCellDef> Chablis </th>
+      <td mat-cell *matCellDef="let element"> {{element.Chablis}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="StadeD">
+      <th mat-header-cell *matHeaderCellDef> StadeD </th>
+      <td mat-cell *matCellDef="let element"> {{element.StadeD}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="StadeE">
+      <th mat-header-cell *matHeaderCellDef> StadeE </th>
+      <td mat-cell *matCellDef="let element"> {{element.StadeE}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="Observation">
+      <th mat-header-cell *matHeaderCellDef> Observation </th>
+      <td mat-cell *matCellDef="let element"> {{element.Observation}} </td>
+    </ng-container>
+  
+  </mat-tab>
+  <mat-tab label="Reperes"> 
+    
+    <ng-container matColumnDef="NumDisp">
+      <th mat-header-cell *matHeaderCellDef> NumDisp </th>
+      <td mat-cell *matCellDef="let element"> {{element.NumDisp}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="NumPlac">
+      <th mat-header-cell *matHeaderCellDef> NumPlac </th>
+      <td mat-cell *matCellDef="let element"> {{element.NumPlac}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="Azimut">
+      <th mat-header-cell *matHeaderCellDef> Azimut </th>
+      <td mat-cell *matCellDef="let element"> {{element.Azimut}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="Dist">
+      <th mat-header-cell *matHeaderCellDef> Dist </th>
+      <td mat-cell *matCellDef="let element"> {{element.Dist}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="Diam">
+      <th mat-header-cell *matHeaderCellDef> Diam </th>
+      <td mat-cell *matCellDef="let element"> {{element.Diam}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="Repere">
+      <th mat-header-cell *matHeaderCellDef> Repere </th>
+      <td mat-cell *matCellDef="let element"> {{element.Repere}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="Observation">
+      <th mat-header-cell *matHeaderCellDef> Observation </th>
+      <td mat-cell *matCellDef="let element"> {{element.Observation}} </td>
+    </ng-container>
+  
+  </mat-tab>
+</mat-tab-group>
