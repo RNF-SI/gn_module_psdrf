@@ -1,0 +1,84 @@
+.importzone {
+    width: 600px;
+    height: 600px;
+    padding: 2rem;
+    text-align: center;
+    position: relative; 
+    margin: 0 auto;
+
+    input {
+        opacity: 0;
+        position: absolute; 
+        z-index: 2;
+        top: 0;
+        left: 0;
+    }
+
+    label {
+        color: white;
+        width: 300px;
+        height: 44px;
+        border-radius: 21.5px;
+        background-color: #db202f;
+        padding: 8px 16px;
+    }
+
+    h3 {
+        font-size: 20px;
+        font-weight: 600; 
+        color: #38424c
+    }
+}
+
+
+.single-file {
+    display: flex;
+    padding: 0.5rem;
+    justify-content: space-between;
+    align-items: center;
+    border: dashed 1px #979797;
+    margin-top: 2rem;
+    width:500px;
+
+    img.delete {
+    margin-left: 0.5rem;
+    cursor: pointer;
+    align-self: flex-end;
+    }
+
+    .name {
+    font-size: 14px;
+    font-weight: 500;
+    color: #353f4a;
+    margin: 0;
+    }
+
+    .size {
+    font-size: 12px;
+    font-weight: 500;
+    color: #a4a4a4;
+    margin: 0;
+    margin-bottom: 0.25rem;
+    }
+
+    .info {
+    width: 100%
+    }
+}
+
+table {
+    width: 100%;
+}
+
+.example-loading-shade {
+    position: absolute;
+    top: 35px;
+    left: 0;
+    bottom: 56px;
+    right: 0;
+    background: rgba(0, 0, 0, 0.15);
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }

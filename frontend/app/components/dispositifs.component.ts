@@ -111,4 +111,8 @@ import { AppConfig } from '@geonature_config/app.config';
     onSearch(): void {
       this.loadData()
     }
+
+    openImportPage(): void {
+      this._router.navigate(["psdrf/importdonnees"])
+    }
   }

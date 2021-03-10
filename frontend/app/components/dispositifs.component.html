@@ -2,10 +2,25 @@
 <div class="container-fluid">
     <div class="card">
       <div class="card-body">
+    
         <h2 class="underlined">Protocole de Suivi Dendrométrique des Réserves Forestières</h2>
+        
         <div class="dispositifs-intro">
           <p>Ceci est un texte d'introduction.</p>
         </div>
+
+        <button
+          class="m-1"
+          mat-raised-button
+          matTooltip="Importer des données"
+          (click)="openImportPage()"
+          >
+            <mat-icon> upload </mat-icon>
+            <span class="user-name">
+              {{ currentUser?.user_login }}
+            </span>
+        </button>
+
         <div class="dispositifs-nbre" *ngIf="stats">
           <p><strong>{{stats.nb_dispositifs | formatnum}} dispositifs sur {{stats.nb_cycles}} cycles de mesures.</strong></p>
         </div>
