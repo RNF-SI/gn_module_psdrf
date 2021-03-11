@@ -116,3 +116,6 @@ frontend/tsconfig.json
 
 # Dependency directories
 frontend/node_modules/
+
+#settings
+config/settings.ini
