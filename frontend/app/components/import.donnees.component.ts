@@ -5,6 +5,12 @@ import { HttpClient } from '@angular/common/http';
 import {ImportDonneesService} from './import.donnees-service';
 import * as _ from 'lodash';
 import {Placette} from '../models/placette.model';
+import {Arbre} from '../models/arbre.model';
+import {Rege} from '../models/rege.model';
+import {Transect} from '../models/transect.model';
+import {BMSsup30} from '../models/bmssup30.model';
+import {Repere} from '../models/repere.model';
+import {Cycle} from '../models/cycle.model';
 
 @Component({
   selector: "rnf-psdrf-import-donnees",
@@ -12,16 +18,40 @@ import {Placette} from '../models/placette.model';
   styleUrls: ["import.donnees.component.scss"]
 })
 export class ImportDonneesComponent{
-  placetteColumns:string[] = Object.keys( new Placette() );
-  placetteDataSource: MatTableDataSource<any> = new MatTableDataSource();;
+  tableColumnsArray:string[][] = [Object.keys(new Placette()), Object.keys(new Cycle()), Object.keys(new Arbre()), Object.keys(new Rege()), Object.keys(new Transect()), Object.keys(new BMSsup30()), Object.keys(new Repere())];
+  tableDataSourceArray: MatTableDataSource<any> []=[new MatTableDataSource(), new MatTableDataSource(),new MatTableDataSource(),new MatTableDataSource(), new MatTableDataSource(), new MatTableDataSource(), new MatTableDataSource() ];
   excelFile: any = null;
   isLoadingResults: boolean = false;
   isCurrentVerification: boolean= false;
 
   @ViewChild('UploadFileInput') uploadFileInput: ElementRef;
 
-  @ViewChild('scheduledOrdersPaginator') set paginator(pager:MatPaginator) {
-    if (pager) this.placetteDataSource.paginator = pager;
+  @ViewChild('placettePaginator') set paginator1(pager:MatPaginator) {
+    if (pager) this.tableDataSourceArray[0].paginator = pager;
+  }
+
+  @ViewChild('cyclePaginator') set paginator2(pager:MatPaginator) {
+    if (pager) this.tableDataSourceArray[1].paginator = pager;
+  }
+
+  @ViewChild('arbrePaginator') set paginator3(pager:MatPaginator) {
+    if (pager) this.tableDataSourceArray[2].paginator = pager;
+  }
+
+  @ViewChild('regePaginator') set paginator4(pager:MatPaginator) {
+    if (pager) this.tableDataSourceArray[3].paginator = pager;
+  }
+
+  @ViewChild('transectPaginator') set paginator5(pager:MatPaginator) {
+    if (pager) this.tableDataSourceArray[4].paginator = pager;
+  }
+
+  @ViewChild('bmssup30Paginator') set paginator6(pager:MatPaginator) {
+    if (pager) this.tableDataSourceArray[5].paginator = pager;
+  }
+
+  @ViewChild('reperePaginator') set paginator7(pager:MatPaginator) {
+    if (pager) this.tableDataSourceArray[6].paginator = pager;
   }
 
   constructor(
@@ -55,29 +85,38 @@ export class ImportDonneesComponent{
     this.isCurrentVerification = true;
     this.isLoadingResults = true;
 
-    let importPlacettes: Placette[] = [];
+    let importPlacettes : any[][]= [];
     let data, header;
     const reader: FileReader = new FileReader();
 
     reader.onload = (e: any) => {
       const bstr: string = e.target.result;
       data = this.excelSrv.importFromFile(bstr);
-      const header: string[] = this.placetteColumns;
-      const importedData = data.slice(1, -1);
-      importPlacettes = importedData.map(arr => {
-        const obj = {};
-        for (let i = 0; i < header.length; i++) {
-          const k = header[i];
-          obj[k] = arr[i];
-        }
-        return <Placette>obj;
-      })
+
+      for(let i=0; i<data.length; i++){
+
+        const header: string[] = this.tableColumnsArray[i];
+        const importedData = data[i].slice(1, -1);
+        importPlacettes.push(importedData.map(arr => {
+          const obj = {};
+          for (let i = 0; i < header.length; i++) {
+            const k = header[i];
+            obj[k] = arr[i];
+          }
+          return obj;
+        }))
+
+      }
+
     };
 
     reader.readAsBinaryString(target.files[0]);
 
     reader.onloadend = (e) => {
-      this.placetteDataSource = new MatTableDataSource(importPlacettes);
+      console.log(importPlacettes);
+      for(let i =0; i<importPlacettes.length; i++){
+        this.tableDataSourceArray[i] = new MatTableDataSource(importPlacettes[i]);
+      }
       this.isLoadingResults = false;
     }
   }
