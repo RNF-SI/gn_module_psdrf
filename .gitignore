@@ -110,3 +110,12 @@ venv.bak/
 .dmypy.json
 dmypy.json
 data/purge.sql
+
+#vscode
+frontend/tsconfig.json
+
+# Dependency directories
+frontend/node_modules/ 
+
+#settings
+config/settings.ini
