@@ -5,11 +5,11 @@ import * as XLSX from 'xlsx';
 @Injectable({
     providedIn: 'root'
   })
-  export class ImportDonneesService {
+  export class ExcelImportService {
   
     constructor() { }
   
-    public importFromFile(bstr: string): XLSX.AOA2SheetOpts[] {
+    public importFromExcelFile(bstr: string): XLSX.AOA2SheetOpts[] {
       /* read workbook */
       const wb: XLSX.WorkBook = XLSX.read(bstr, { type: 'binary' });
   

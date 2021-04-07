@@ -119,3 +119,6 @@ frontend/node_modules/
 
 #settings
 config/settings.ini
+
+#data 
+data/CodeEssence

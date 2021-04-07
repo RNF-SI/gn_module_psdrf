@@ -1,0 +1,32 @@
+<div>{{psdrfError.message}}</div>
+<div class="btn-group" role="group" aria-label="Basic example" *ngFor="let row of psdrfError.row; let rowIndex = index" >
+  <button type="button" (click)="onIndexButtonClicked(rowIndex, row)" class="btn btn-secondary" [ngClass]="{'isError': !checkModified(rowIndex), 'wasModified':checkModified(rowIndex), 'isSelected': checkSelected(rowIndex)}">{{row}}</button>
+</div>
+<div class="row">
+  <form class="select-form">
+      <mat-form-field appearance="fill">
+        <mat-label>{{psdrfError.column}}</mat-label>
+        <mat-select [(ngModel)]="value" name="errorSelect">
+          <mat-option *ngFor="let correction of listCorrection" [value]="correction">
+            {{correction}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+  </form>
+  <button
+  class="m-1 h-75"
+  mat-raised-button
+  matTooltip="Modifier l'erreur sélectionnée"     
+  (click)="modifValidation()"             
+  >
+  <mat-icon> done </mat-icon>
+  </button>
+  <button
+  class="m-1 h-75"
+  mat-raised-button
+  matTooltip="Modifier toutes les erreurs"     
+  (click)="modifValidationAll()"             
+  >
+  <mat-icon> done_all </mat-icon>
+  </button>
+</div>

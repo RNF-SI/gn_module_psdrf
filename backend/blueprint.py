@@ -9,6 +9,7 @@ from geonature.utils.utilssqlalchemy import json_resp, get_geojson_feature
 from geonature.core.ref_geo.models import LiMunicipalities, LAreas, BibAreasTypes
 from .models import TDispositifs, TPlacettes, TArbres, TCycles, \
     CorCyclesPlacettes, TArbresMesures
+from .data_verification import data_verification
 
 
 blueprint = Blueprint('psdrf', __name__)
@@ -30,7 +31,6 @@ def get_disps():
             :offset: décalage
             :shape: 'point' pour le centroïde des placettes, 'polygon' pour l'enveloppe des placettes
     """
-
     limit = int(request.args.get("limit", 500))
     page = int(request.args.get("offset", 0))
     shape = request.args.get("shape", "point")
@@ -208,3 +208,9 @@ def get_arbres(id_dispositif):
     """ Recherche tous les arbres d'un dispositif donné """
     pgs = DB.session.query(TArbres).filter(TArbres.placette.id_dispositif == id_dispositif).all()
     return [pg.as_dict() for pg in pgs]
+
+@blueprint.route('/validation', methods=['POST'])
+@json_resp
+def psdrf_data_verification():
+    data = request.get_json()
+    return data_verification(data)

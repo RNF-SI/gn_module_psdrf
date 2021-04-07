@@ -1,0 +1,5 @@
+<error-stepper (selectionChange)="onSubStepClicked($event)">
+  <cdk-step *ngFor="let error of step.errorList; let stepIndex = index">
+    <error-step (indexButtonClicked)="onIndexButtonClicked($event)" (modificationValidated)="modifValidation($event)" [psdrfError]="error" [errorIndex]="stepIndex" [errorTypeIndex]="errorTypeIndex" [listCorrection]="step.correctionList"></error-step>
+  </cdk-step>
+</error-stepper>

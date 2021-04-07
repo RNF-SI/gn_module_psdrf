@@ -33,13 +33,13 @@
   </div>
 </div> 
 
-<mat-tab-group  *ngIf="isCurrentVerification">
+<div class="example-loading-shade" *ngIf="isLoadingResults">
+  <mat-spinner ></mat-spinner>
+</div>
+
+<mat-tab-group   *ngIf="isCurrentVerification" [(selectedIndex)]="indexMatTabGroup">
   <mat-tab label="Placettes"> 
     <div class="mat-elevation-z8">
-    <div class="example-loading-shade"
-    *ngIf="isLoadingResults">
-      <mat-spinner ></mat-spinner>
-    </div>
     <table mat-table [dataSource]="tableDataSourceArray[0]">
 
       <ng-container matColumnDef="NumDisp">
@@ -183,10 +183,6 @@
   <mat-tab label="Cycles">
 
     <div class="mat-elevation-z8">
-      <div class="example-loading-shade"
-      *ngIf="isLoadingResults">
-        <mat-spinner ></mat-spinner>
-      </div>
       <table mat-table [dataSource]="tableDataSourceArray[1]">
 
     <ng-container matColumnDef="NumDisp">
@@ -235,10 +231,6 @@
 
   <mat-tab label="Arbres"> 
     <div class="mat-elevation-z8">
-      <div class="example-loading-shade"
-      *ngIf="isLoadingResults">
-        <mat-spinner ></mat-spinner>
-      </div>
       <table mat-table [dataSource]="tableDataSourceArray[2]">
     
         <ng-container matColumnDef="NumDisp">
@@ -346,10 +338,6 @@
   </mat-tab>
   <mat-tab label="Régénération"> 
     <div class="mat-elevation-z8">
-      <div class="example-loading-shade"
-      *ngIf="isLoadingResults">
-        <mat-spinner ></mat-spinner>
-      </div>
       <table mat-table [dataSource]="tableDataSourceArray[3]">
   
     <ng-container matColumnDef="NumDisp">
@@ -425,10 +413,6 @@
   <mat-tab label="Transect"> 
 
     <div class="mat-elevation-z8">
-      <div class="example-loading-shade"
-      *ngIf="isLoadingResults">
-        <mat-spinner ></mat-spinner>
-      </div>
       <table mat-table [dataSource]="tableDataSourceArray[4]">
 
     <ng-container matColumnDef="NumDisp">
@@ -511,11 +495,7 @@
   </mat-tab>
   <mat-tab label="BMSsup30">
     <div class="mat-elevation-z8">
-      <div class="example-loading-shade"
-      *ngIf="isLoadingResults">
-        <mat-spinner ></mat-spinner>
-      </div>
-      <table mat-table [dataSource]="tableDataSourceArray[5]">
+    <table mat-table [dataSource]="tableDataSourceArray[5]">
     
     <ng-container matColumnDef="NumDisp">
       <th mat-header-cell *matHeaderCellDef> NumDisp </th>
@@ -544,7 +524,7 @@
 
     <ng-container matColumnDef="Essence">
       <th mat-header-cell *matHeaderCellDef> Essence </th>
-      <td mat-cell *matCellDef="let element"> {{element.Essence}} </td>
+      <td mat-cell *matCellDef="let element; let i = index" [ngClass]="{'isError': checkErrorCell('BMSsup30', 'Essence', i ), 'isModifiedError': checkModifiedErrorCell('BMSsup30', 'Essence', i ), 'isSelectedError': checkSelectedErrorCell('BMSsup30', 'Essence', i)}"> {{element.Essence}} </td>
     </ng-container>
 
     <ng-container matColumnDef="Azimut">
@@ -613,10 +593,6 @@
   <mat-tab label="Reperes"> 
 
     <div class="mat-elevation-z8">
-      <div class="example-loading-shade"
-      *ngIf="isLoadingResults">
-        <mat-spinner ></mat-spinner>
-      </div>
       <table mat-table [dataSource]="tableDataSourceArray[6]">
     
     <ng-container matColumnDef="NumDisp">
@@ -663,3 +639,13 @@
   
   </mat-tab>
 </mat-tab-group>
+
+<div *ngIf="isCurrentVerification">
+  <div *ngIf="!isLoadingResults">
+    <errortype-stepper (selectionChange)="displayOnMainStepClick($event)">
+      <cdk-step *ngFor="let error of errorsPsdrfList; let stepIndex = index">
+        <errortype-step (subStepSelectionChange)="displayOnSubStepClick($event)" (indexButtonClicked)="displayErrorOnMatTab($event)" (modificationValidated)="modifyErrorValue($event)" [step]="error" [errorTypeIndex]="stepIndex"></errortype-step>
+      </cdk-step>
+    </errortype-stepper>
+  </div>
+</div>
