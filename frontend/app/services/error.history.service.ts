@@ -52,8 +52,8 @@ export class ErrorHistoryService{
     /*
         Teste si il y a une valeur pour un mainStep donné dans historyList
     */
-    isMainStepHasAlreadyBeenClicked(errorTypeIndex: number): boolean{
-        if(this.historyList[errorTypeIndex]){
+    isMainStepHasAlreadyBeenClicked(mainStepIndex: number): boolean{
+        if(this.historyList[mainStepIndex]){
             return true; 
         } else {
             return false; 
@@ -63,8 +63,8 @@ export class ErrorHistoryService{
     /*
         Teste si il y a une valeur pour un subStep donné dans historyList
     */
-    isSubStepHasAlreadyBeenClicked(errorTypeIndex: number, errorIndex: number): boolean{
-        if(this.historyList[errorTypeIndex].subStepHistory[errorIndex]){
+    isSubStepHasAlreadyBeenClicked(mainStepIndex: number, subStepIndex: number): boolean{
+        if(this.historyList[mainStepIndex].subStepHistory[subStepIndex]){
             return true; 
         } else {
             return false; 

@@ -642,10 +642,10 @@
 
 <div *ngIf="isCurrentVerification">
   <div *ngIf="!isLoadingResults">
-    <errortype-stepper (selectionChange)="displayOnMainStepClick($event)">
-      <cdk-step *ngFor="let error of errorsPsdrfList; let stepIndex = index">
-        <errortype-step (subStepSelectionChange)="displayOnSubStepClick($event)" (indexButtonClicked)="displayErrorOnMatTab($event)" (modificationValidated)="modifyErrorValue($event)" [step]="error" [errorTypeIndex]="stepIndex"></errortype-step>
+    <error-main-stepper (selectionChange)="displayOnMainStepClick($event)">
+      <cdk-step *ngFor="let error of errorsPsdrfList; let mainStepIndex = index">
+        <error-main-step (subStepSelectionChange)="displayOnSubStepClick($event)" (indexButtonClicked)="displayErrorOnMatTab($event)" (modificationValidated)="modifyErrorValue($event)" [step]="error" [mainStepIndex]="mainStepIndex"></error-main-step>
       </cdk-step>
-    </errortype-stepper>
+    </error-main-stepper>
   </div>
 </div>

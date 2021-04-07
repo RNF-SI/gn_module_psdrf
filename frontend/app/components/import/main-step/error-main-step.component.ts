@@ -1,21 +1,21 @@
 import {Component, Input, Output, EventEmitter} from '@angular/core';
 import {StepperSelectionEvent} from '@angular/cdk/stepper';
-import {ErrorHistoryService} from '../../services/error.history.service';
-import {PsdrfError, PsdrfErrorCoordinates} from '../../models/psdrfObject.model';
+import {ErrorHistoryService} from '../../../services/error.history.service';
+import {PsdrfError, PsdrfErrorCoordinates} from '../../../models/psdrfObject.model';
 
 
 @Component({
-    selector: "errortype-step",
-    templateUrl: "./errortype-step.component.html",
-    styleUrls: ["./errortype-step.component.scss"],
+    selector: "error-main-step",
+    templateUrl: "./error-main-step.component.html",
+    styleUrls: ["./error-main-step.component.scss"],
   })
-  export class ErrorTypeStepComponent {
+  export class ErrorMainStepComponent {
     value: string; 
 
-    @Input() errorTypeIndex: number;
+    @Input() mainStepIndex: number;
     @Input() step: {'errorList': PsdrfError[], 'correctionList': any};
 
-    @Output() subStepSelectionChange= new EventEmitter<{errorTypeIndex: number, selectedIndex: number}>();
+    @Output() subStepSelectionChange= new EventEmitter<{mainStepIndex: number, subStepIndex: number}>();
     @Output() indexButtonClicked=new EventEmitter<PsdrfErrorCoordinates>();
     @Output() modificationValidated=new EventEmitter<{errorCoordinates: PsdrfErrorCoordinates[], newErrorValue: string}>();
 
@@ -26,8 +26,8 @@ import {PsdrfError, PsdrfErrorCoordinates} from '../../models/psdrfObject.model'
     */
     onSubStepClicked(stepChangeEvent: StepperSelectionEvent): void{
       //Enregistrer dans l'historique à quelle étape nous en étions sur le dernier step
-      this.historyService.rememberSubStep(stepChangeEvent.selectedIndex, this.step.errorList[stepChangeEvent.selectedIndex].toPsdrfErrorCoordinates(0), this.errorTypeIndex);
-      this.subStepSelectionChange.next({errorTypeIndex: this.errorTypeIndex, selectedIndex: stepChangeEvent.selectedIndex});
+      this.historyService.rememberSubStep(stepChangeEvent.selectedIndex, this.step.errorList[stepChangeEvent.selectedIndex].toPsdrfErrorCoordinates(0), this.mainStepIndex);
+      this.subStepSelectionChange.next({mainStepIndex: this.mainStepIndex, subStepIndex: stepChangeEvent.selectedIndex});
     }
 
     /*

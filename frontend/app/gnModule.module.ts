@@ -7,10 +7,10 @@ import { DispositifsComponent } from "./components/dispositifs.component";
 import { InfoDispositifComponent } from "./components/info.dispositif.component";
 import { FormDispositifComponent } from "./components/form.dispositif.component";
 import { ImportDonneesComponent } from "./components/import/import.donnees.component";
-import { ErrorTypeStepperComponent } from "./components/import/errortype-stepper.component";
-import { ErrorTypeStepComponent } from "./components/import/errortype-step.component";
-import { ErrorStepperComponent } from "./components/import/error-stepper.component";
-import { ErrorStepComponent } from "./components/import/error-step.component";
+import { ErrorMainStepperComponent } from "./components/import/main-step/error-main-stepper.component";
+import { ErrorMainStepComponent } from "./components/import/main-step/error-main-step.component";
+import { ErrorSubStepperComponent } from "./components/import/main-step/sub-step/error-sub-stepper.component";
+import { ErrorSubStepComponent } from "./components/import/main-step/sub-step/error-sub-step.component";
 import { ExcelImportService } from "./services/excel.import.service";
 import { PsdrfDataService } from "./services/route.service";
 import { ErrorHistoryService } from "./services/error.history.service";
@@ -35,10 +35,10 @@ const routes: Routes = [
     KeyValue,
     FormatNum,
     DndDirective,
-    ErrorTypeStepperComponent,
-    ErrorTypeStepComponent,
-    ErrorStepperComponent,
-    ErrorStepComponent
+    ErrorMainStepperComponent,
+    ErrorMainStepComponent,
+    ErrorSubStepperComponent,
+    ErrorSubStepComponent
   ],
   imports: [
     GN2CommonModule,

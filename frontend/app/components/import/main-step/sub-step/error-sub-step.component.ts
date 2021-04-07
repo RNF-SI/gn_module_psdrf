@@ -1,20 +1,20 @@
 import {Component, Input, Output, EventEmitter} from '@angular/core';
-import {ErrorHistoryService} from '../../services/error.history.service';
-import {PsdrfError, PsdrfErrorCoordinates} from '../../models/psdrfObject.model';
+import {ErrorHistoryService} from '../../../../services/error.history.service';
+import {PsdrfError, PsdrfErrorCoordinates} from '../../../../models/psdrfObject.model';
 
 
 @Component({
-    selector: "error-step",
-    templateUrl: "./error-step.component.html",
-    styleUrls: ["./error-step.component.scss"],
+    selector: "error-sub-step",
+    templateUrl: "./error-sub-step.component.html",
+    styleUrls: ["./error-sub-step.component.scss"],
   })
-  export class ErrorStepComponent {
+  export class ErrorSubStepComponent {
     value: string; 
     selectedButtonIndex: number=0;
     modifiedIndexes: number[] = [];
 
-    @Input() errorTypeIndex: number;
-    @Input() errorIndex: number;
+    @Input() mainStepIndex: number;
+    @Input() subStepIndex: number;
     @Input() psdrfError: PsdrfError;
     @Input() listCorrection: any;
     @Output() indexButtonClicked=new EventEmitter<PsdrfErrorCoordinates>();
@@ -26,7 +26,7 @@ import {PsdrfError, PsdrfErrorCoordinates} from '../../models/psdrfObject.model'
       Fonction appelée lorsqu'un index button est cliqué
     */
     onIndexButtonClicked(rowIndex: number, row: number): void{
-      this.historyService.rememberIndex(this.psdrfError.toPsdrfErrorCoordinates(rowIndex), rowIndex, this.errorTypeIndex, this.errorIndex);
+      this.historyService.rememberIndex(this.psdrfError.toPsdrfErrorCoordinates(rowIndex), rowIndex, this.mainStepIndex, this.subStepIndex);
       this.selectedButtonIndex = rowIndex; 
       this.indexButtonClicked.next(new PsdrfErrorCoordinates(this.psdrfError.table, this.psdrfError.column, row));
     }

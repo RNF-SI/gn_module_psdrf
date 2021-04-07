@@ -126,18 +126,18 @@ export class ImportDonneesComponent{
             let errorsPsdrfListTemp = JSON.parse(error);
             let errorListTemp;
             let correctionListTemp;
-            errorsPsdrfListTemp.forEach(errorType => {
-              correctionListTemp = errorType.correctionList;
+            errorsPsdrfListTemp.forEach(mainError => {
+              correctionListTemp = mainError.correctionList;
               errorListTemp = [];
-              errorType.errorList.forEach(error => {
+              mainError.errorList.forEach(error => {
                 errorListTemp.push(new PsdrfError(error.message, error.table, error.column, error.row, error.value))
               })
               this.errorsPsdrfList.push({'errorList': errorListTemp, 'correctionList': correctionListTemp});
             })
 
             //Remplissage de errorElementArr avec toutes les erreurs renvoyées
-            this.errorsPsdrfList.forEach(errorType => {
-              errorType.errorList.forEach(error => {
+            this.errorsPsdrfList.forEach(mainError => {
+              mainError.errorList.forEach(error => {
                 error.row.forEach( idx => {
                   this.errorElementArr.push(new PsdrfErrorCoordinates(error.table, error.column, idx));
                 })
@@ -193,11 +193,11 @@ export class ImportDonneesComponent{
   /*
     Fonction permettant d'afficher le bon endroit du tableau lorsque l'évènement reçu correspond à un substep qui a été cliqué
   */
-  displayOnSubStepClick(stepperSelectionObj: {errorTypeIndex: number, selectedIndex: number}): void{
-    if(this.historyService.isMainStepHasAlreadyBeenClicked(stepperSelectionObj.errorTypeIndex) && this.historyService.isSubStepHasAlreadyBeenClicked(stepperSelectionObj.errorTypeIndex, stepperSelectionObj.selectedIndex)){
-      this.displayErrorOnMatTab(this.historyService.getLastSelectedCoordinates(stepperSelectionObj.errorTypeIndex));
+  displayOnSubStepClick(stepperSelectionObj: {mainStepIndex: number, subStepIndex: number}): void{
+    if(this.historyService.isMainStepHasAlreadyBeenClicked(stepperSelectionObj.mainStepIndex) && this.historyService.isSubStepHasAlreadyBeenClicked(stepperSelectionObj.mainStepIndex, stepperSelectionObj.subStepIndex)){
+      this.displayErrorOnMatTab(this.historyService.getLastSelectedCoordinates(stepperSelectionObj.mainStepIndex));
     } else {
-      let error = this.errorsPsdrfList[stepperSelectionObj.errorTypeIndex].errorList[stepperSelectionObj.selectedIndex];
+      let error = this.errorsPsdrfList[stepperSelectionObj.mainStepIndex].errorList[stepperSelectionObj.subStepIndex];
       let rowObj = {table: error.table, column: error.column, row: error.row[0]}
       this.displayErrorOnMatTab(rowObj);
     }
