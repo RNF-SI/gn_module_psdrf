@@ -38,10 +38,10 @@ def data_verification(data):
   #Appel des fonctions de test
   check_species_Error_List = check_species(BMSsup30, CodeEssence, Test, "BMSsup30")
   if len(check_species_Error_List) >0:
-    verificationList.append({'errorName': 'Essence de BMSsup30', 'errorList': check_species_Error_List, 'correctionList': CodeEssence['Essence'].tolist()})
+    verificationList.append({'errorName': 'Essence dans BMSsup30', 'errorList': check_species_Error_List, 'correctionList': CodeEssence['Essence'].tolist()})
   check_species_Error_List = check_species(BMSsup30, CodeEssence, Test, "BMSsup30")
   if len(check_species_Error_List) >0:
-    verificationList.append({'errorName': 'Essence de BMSsup30', 'errorList': check_species_Error_List, 'correctionList': CodeEssence['Essence'].tolist()})
+    verificationList.append({'errorName': 'Essence dans BMSsup30', 'errorList': check_species_Error_List, 'correctionList': CodeEssence['Essence'].tolist()})
 
   verificationObj = json.dumps(verificationList, cls=NumpyEncoder)
   return verificationObj
