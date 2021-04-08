@@ -11,9 +11,11 @@ import {CdkStepper, StepperSelectionEvent} from '@angular/cdk/stepper';
   })
   export class ErrorMainStepperComponent extends CdkStepper {
     @Input() totallyModifiedMainStepperArr: number[]=[];
+    @Input() mainStepNameArr:string[]=[];
 
     @Output()
     selectionChange: EventEmitter<StepperSelectionEvent>
+
 
     onClick(index: number): void {
       this.selectedIndex = index;

@@ -37,6 +37,7 @@ export class ImportDonneesComponent{
   isCurrentVerification: boolean= false;
   indexMatTabGroup: number=0; //Index de l'onglet sélectionné 
   errorsPsdrfList: {'errorList': PsdrfError[], 'correctionList': any}[] = []; //Tableau des erreurs retournées par la requête psdrf_data_verification
+  mainStepNameArr: string[]= [];
   errorElementArr: PsdrfErrorCoordinates[] = []; //Tableau des erreurs
   modifiedElementArr:PsdrfErrorCoordinates[] = []; //Tableau des erreurs qui ont été modifiées
   selectedErrorElementArr:PsdrfErrorCoordinates; //Erreur qui est actuellement sélectionnée
@@ -125,10 +126,10 @@ export class ImportDonneesComponent{
             }
             
             let errorsPsdrfListTemp = JSON.parse(error);
-            let errorListTemp;
-            let correctionListTemp;
+            let correctionListTemp, errorListTemp, errorNameTemp;
             errorsPsdrfListTemp.forEach(mainError => {
               correctionListTemp = mainError.correctionList;
+              this.mainStepNameArr.push(mainError.errorName);
               errorListTemp = [];
               mainError.errorList.forEach(error => {
                 errorListTemp.push(new PsdrfError(error.message, error.table, error.column, error.row, error.value))

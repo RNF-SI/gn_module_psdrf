@@ -642,7 +642,7 @@
 
 <div *ngIf="isCurrentVerification">
   <div *ngIf="!isLoadingResults">
-    <error-main-stepper (selectionChange)="displayOnMainStepClick($event)" [totallyModifiedMainStepperArr]="totallyModifiedMainStepperArr">
+    <error-main-stepper (selectionChange)="displayOnMainStepClick($event)" [totallyModifiedMainStepperArr]="totallyModifiedMainStepperArr" [mainStepNameArr]="mainStepNameArr">
       <cdk-step *ngFor="let error of errorsPsdrfList; let mainStepIndex = index">
         <error-main-step (subStepSelectionChange)="displayOnSubStepClick($event)" (indexButtonClicked)="displayErrorOnMatTab($event)" (modificationValidated)="modifyErrorValue($event)" (allSubStepModified)="modifyMainStepperAppearance($event)" [step]="error" [mainStepIndex]="mainStepIndex"></error-main-step>
       </cdk-step>

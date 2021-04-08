@@ -1,5 +1,5 @@
 <section class="container">
-    <header><h2>Step {{selectedIndex + 1}}/{{steps.length}}</h2></header>
+    <header><h2>{{mainStepNameArr[selectedIndex]}}</h2></header>
   
     <div [style.display]="selected ? 'block' : 'none'">
       <!-- Content from the CdkStep is projected here -->
@@ -14,7 +14,7 @@
         [ngClass]="{'active': selectedIndex === i, 'corrified': checkCorrifiedSubStepper(i) }"
         (click)="onClick(i)"
       >
-        Step {{i + 1}}
+        {{mainStepNameArr[i]}}
       </button>
       <button class="nav-button" cdkStepperNext>&rarr;</button>
     </footer>
