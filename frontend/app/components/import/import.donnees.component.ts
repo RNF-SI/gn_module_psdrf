@@ -40,6 +40,7 @@ export class ImportDonneesComponent{
   errorElementArr: PsdrfErrorCoordinates[] = []; //Tableau des erreurs
   modifiedElementArr:PsdrfErrorCoordinates[] = []; //Tableau des erreurs qui ont été modifiées
   selectedErrorElementArr:PsdrfErrorCoordinates; //Erreur qui est actuellement sélectionnée
+  totallyModifiedMainStepperArr: number[]=[]; //Tableau des indexs des mainstep qui ont été complètement modifiés
 
   @ViewChildren(MatPaginator) paginator = new QueryList<MatPaginator>(); //liste des 8 paginators
 
@@ -243,6 +244,13 @@ export class ImportDonneesComponent{
       this.modifiedElementArr.push({table: errorCoor.table, column:errorCoor.column, row:errorCoor.row});
       this.psdrfArray[indexTable][errorCoor.row][errorCoor.column] = modificationErrorObj.newErrorValue;
     });
+  }
+
+  /*
+    Modifie la liste des main stepper qui ont été modifiés
+  */
+  modifyMainStepperAppearance(mainStepIndex: number){
+    this.totallyModifiedMainStepperArr.push(mainStepIndex);
   }
 
   /*

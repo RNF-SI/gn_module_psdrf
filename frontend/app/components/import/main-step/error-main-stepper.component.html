@@ -11,7 +11,7 @@
       <button
         class="step"
         *ngFor="let step of steps; let i = index;"
-        [ngClass]="{'active': selectedIndex === i}"
+        [ngClass]="{'active': selectedIndex === i, 'corrified': checkCorrifiedSubStepper(i) }"
         (click)="onClick(i)"
       >
         Step {{i + 1}}

@@ -11,6 +11,7 @@ import {PsdrfError, PsdrfErrorCoordinates} from '../../../models/psdrfObject.mod
   })
   export class ErrorMainStepComponent {
     value: string; 
+    totallyModifiedSubStepperArr: number[]=[];
 
     @Input() mainStepIndex: number;
     @Input() step: {'errorList': PsdrfError[], 'correctionList': any};
@@ -18,7 +19,8 @@ import {PsdrfError, PsdrfErrorCoordinates} from '../../../models/psdrfObject.mod
     @Output() subStepSelectionChange= new EventEmitter<{mainStepIndex: number, subStepIndex: number}>();
     @Output() indexButtonClicked=new EventEmitter<PsdrfErrorCoordinates>();
     @Output() modificationValidated=new EventEmitter<{errorCoordinates: PsdrfErrorCoordinates[], newErrorValue: string}>();
-
+    @Output() allSubStepModified=new EventEmitter<number>();
+    
     constructor(private historyService:ErrorHistoryService){}
 
     /*
@@ -42,6 +44,19 @@ import {PsdrfError, PsdrfErrorCoordinates} from '../../../models/psdrfObject.mod
     */
     modifValidation(modificationErrorObj: {errorCoordinates: PsdrfErrorCoordinates[], newErrorValue: string}): void{
       this.modificationValidated.next(modificationErrorObj);
+    }
+
+    /*
+      Fonction modifiant l'apparence des stepper lorsque ceux-ci ont été complètement modifiés
+    */
+    modifySteppersAppearance(stepperIndex: number){
+      //ajouter seulement si non présent
+      if(this.totallyModifiedSubStepperArr.indexOf(stepperIndex) === -1){
+        this.totallyModifiedSubStepperArr.push(stepperIndex);
+      }
+      if(this.totallyModifiedSubStepperArr.length == this.step.errorList.length){
+        this.allSubStepModified.next(this.mainStepIndex);
+      }
     }
 
   }

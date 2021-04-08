@@ -1,4 +1,4 @@
-import {Component, Output, EventEmitter } from '@angular/core';
+import {Component, Input, Output, EventEmitter } from '@angular/core';
 import {CdkStepper, StepperSelectionEvent} from '@angular/cdk/stepper';
 
 @Component({
@@ -10,10 +10,18 @@ import {CdkStepper, StepperSelectionEvent} from '@angular/cdk/stepper';
     providers: [{ provide: CdkStepper, useExisting: ErrorSubStepperComponent }]
   })
   export class ErrorSubStepperComponent extends CdkStepper {
-    @Output()
-    selectionChange: EventEmitter<StepperSelectionEvent>
+    @Input() totallyModifiedSubStepperArr: number[]=[];
+
+    @Output() selectionChange: EventEmitter<StepperSelectionEvent>
 
     onClick(index: number): void {
       this.selectedIndex = index;
+    }
+
+    /*
+    Retourne si un step a été corrigé entièrement ou non
+    */
+    checkCorrifiedSubStepper(subStepIndex: number): boolean{
+      return this.totallyModifiedSubStepperArr.includes(subStepIndex);
     }
   }

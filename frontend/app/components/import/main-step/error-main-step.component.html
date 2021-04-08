@@ -1,5 +1,5 @@
-<error-sub-stepper (selectionChange)="onSubStepClicked($event)">
+<error-sub-stepper (selectionChange)="onSubStepClicked($event)" [totallyModifiedSubStepperArr]="totallyModifiedSubStepperArr">
   <cdk-step *ngFor="let error of step.errorList; let subStepIndex = index">
-    <error-sub-step (indexButtonClicked)="onIndexButtonClicked($event)" (modificationValidated)="modifValidation($event)" [psdrfError]="error" [subStepIndex]="subStepIndex" [mainStepIndex]="mainStepIndex" [listCorrection]="step.correctionList"></error-sub-step>
+    <error-sub-step (indexButtonClicked)="onIndexButtonClicked($event)" (modificationValidated)="modifValidation($event)" (allRowsModified)="modifySteppersAppearance($event)" [psdrfError]="error" [subStepIndex]="subStepIndex" [mainStepIndex]="mainStepIndex" [listCorrection]="step.correctionList"></error-sub-step>
   </cdk-step>
 </error-sub-stepper>

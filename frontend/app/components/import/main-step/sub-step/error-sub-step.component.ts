@@ -9,9 +9,9 @@ import {PsdrfError, PsdrfErrorCoordinates} from '../../../../models/psdrfObject.
     styleUrls: ["./error-sub-step.component.scss"],
   })
   export class ErrorSubStepComponent {
-    value: string; 
-    selectedButtonIndex: number=0;
-    modifiedIndexes: number[] = [];
+    value: string; //Valeur Corrigée par l'utilisateur
+    selectedButtonIndex: number=0; //IndexButton Sélectionné
+    modifiedIndexes: number[] = []; //liste des indexs des boutons modifiés 
 
     @Input() mainStepIndex: number;
     @Input() subStepIndex: number;
@@ -19,6 +19,8 @@ import {PsdrfError, PsdrfErrorCoordinates} from '../../../../models/psdrfObject.
     @Input() listCorrection: any;
     @Output() indexButtonClicked=new EventEmitter<PsdrfErrorCoordinates>();
     @Output() modificationValidated=new EventEmitter<{errorCoordinates: PsdrfErrorCoordinates[], newErrorValue: string}>();
+    @Output() allRowsModified=new EventEmitter<number>();
+
 
     constructor(private historyService:ErrorHistoryService){}
 
@@ -35,8 +37,15 @@ import {PsdrfError, PsdrfErrorCoordinates} from '../../../../models/psdrfObject.
       Fonction qui modifie une seule valeur
     */
     modifValidation(): void{
-      this.modifiedIndexes.push(this.selectedButtonIndex);
+      // Ajouter l'index seulement si il n'est pas déjà présent
+      if(this.modifiedIndexes.indexOf(this.selectedButtonIndex) === -1){
+        this.modifiedIndexes.push(this.selectedButtonIndex);
+      }      
       this.modificationValidated.next({errorCoordinates: [new PsdrfErrorCoordinates(this.psdrfError.table, this.psdrfError.column, this.psdrfError.row[this.selectedButtonIndex])], newErrorValue: this.value});
+      //Si tous les index ont été modifiés, l'évènement allStepsModified est lancé
+      if(this.modifiedIndexes.length == this.psdrfError.row.length){
+        this.allRowsModified.next(this.subStepIndex);
+      }
     }
 
     /*
@@ -49,6 +58,7 @@ import {PsdrfError, PsdrfErrorCoordinates} from '../../../../models/psdrfObject.
         psdrfErrorCoorArray.push(new PsdrfErrorCoordinates(this.psdrfError.table, this.psdrfError.column, row));
       })
       this.modificationValidated.next({errorCoordinates: psdrfErrorCoorArray, newErrorValue: this.value});
+      this.allRowsModified.next(this.subStepIndex);
     }
   
     /*
