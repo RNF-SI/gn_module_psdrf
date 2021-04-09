@@ -1,3 +1,5 @@
+@import '../../../../../styles/styles.scss';
+
 .select-form {
     min-width: 50px;
     max-width: 500px;
@@ -5,7 +7,7 @@
   }
   
 .isError {
-  background-color: #fe1b00;
+  background-color: $error-color;
 }
 
 .isSelected {
@@ -15,5 +17,5 @@
 }
 
 .wasModified {
-  background-color: #32CD32;
+  background-color: $corrified-color;
 }

@@ -66,7 +66,7 @@ def check_species(table_to_test, species, status, tablename):
       status = np.where(status >= 2, status, 2)
       for i in species_list:
           err= {
-            "message": "l'essence"+ i + "figure dans la table "+ tablename +"mais ne figure pas dans la table 'CodeEssence' (fichier administrateur) ",
+            "message": "L'essence "+ i + " figure dans la table "+ tablename +"mais ne figure pas dans la table 'CodeEssence' (fichier administrateur) ",
             "table": tablename,
             "column": 'Essence',
             "row": species_list_temp.index[species_list_temp['Essence']==i].tolist(),

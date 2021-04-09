@@ -2,6 +2,7 @@ import {Component,ViewChildren, QueryList, ViewChild, ElementRef  } from '@angul
 import {MatPaginator} from '@angular/material/paginator';
 import {MatTableDataSource} from '@angular/material/table';
 import { HttpClient } from '@angular/common/http';
+import { Router } from "@angular/router";
 import * as _ from 'lodash';
 import {ExcelImportService} from '../../services/excel.import.service';
 import {PsdrfDataService} from '../../services/route.service';
@@ -49,7 +50,8 @@ export class ImportDonneesComponent{
     private http: HttpClient,
     private excelSrv: ExcelImportService,
     private dataSrv: PsdrfDataService,
-    private historyService:ErrorHistoryService
+    private historyService:ErrorHistoryService,
+    private _router: Router
   ) { 
   }
 
@@ -126,7 +128,8 @@ export class ImportDonneesComponent{
             }
             
             let errorsPsdrfListTemp = JSON.parse(error);
-            let correctionListTemp, errorListTemp, errorNameTemp;
+            let correctionListTemp, errorListTemp;
+            this.mainStepNameArr = [];
             errorsPsdrfListTemp.forEach(mainError => {
               correctionListTemp = mainError.correctionList;
               this.mainStepNameArr.push(mainError.errorName);
@@ -260,6 +263,10 @@ export class ImportDonneesComponent{
   deleteFile(): void{
     this.isCurrentVerification = false;
     this.excelFile = null;
+  }
+
+  returnToPreviousPage(): void{
+    this._router.navigate(["psdrf"]);
   }
 
   /**

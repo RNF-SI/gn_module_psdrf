@@ -1,4 +1,4 @@
-<div>{{psdrfError.message}}</div>
+<div class="h6">{{psdrfError.message}}</div>
 <div class="btn-group" role="group" aria-label="Basic example" *ngFor="let row of psdrfError.row; let rowIndex = index" >
   <button type="button" (click)="onIndexButtonClicked(rowIndex, row)" class="btn btn-secondary" [ngClass]="{'isError': !checkModified(rowIndex), 'wasModified':checkModified(rowIndex), 'isSelected': checkSelected(rowIndex)}">{{row}}</button>
 </div>

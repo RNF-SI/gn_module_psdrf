@@ -1,6 +1,8 @@
+@import '../../../styles/styles.scss';
+
 .importzone {
     width: 600px;
-    height: 600px;
+    height: 85vh;
     padding: 2rem;
     text-align: center;
     position: relative; 
@@ -19,7 +21,7 @@
         width: 300px;
         height: 44px;
         border-radius: 21.5px;
-        background-color: #db202f;
+        background-color: #598979;
         padding: 8px 16px;
     }
 
@@ -33,11 +35,10 @@
 
 .single-file {
     display: flex;
-    padding: 0.5rem;
+    padding: 2px;
     justify-content: space-between;
     align-items: center;
     border: dashed 1px #979797;
-    margin-top: 2rem;
     width:500px;
 
     img.delete {
@@ -70,13 +71,34 @@ table {
     width: 100%;
 }
 
+.mat-tab-group {
+    border: 2mm ridge rgba(89, 137, 121, .6);
+    background: #BAD2CA;
+}
+
+.mat-header-row{
+    background: #DCE8E4;
+}
+
+// .mat-primary {
+//     background-color: #598979;
+// }
+
+.mat-tab-group.mat-primary .mat-ink-bar, .mat-tab-nav-bar.mat-primary .mat-ink-bar{
+    background: rgba(149, 165, 166,0.3);
+     height: 35px;
+     border-radius: 100px;
+     margin-bottom: 5px;
+ } 
+
+
 .example-loading-shade {
     position: absolute;
-    top: 64px;
+    top: 0;
     left: 0;
     bottom: 0px;
     right: 0;
-    background: rgba(0, 0, 0, 0.15);
+    background: rgba(127, 127, 127, 0.15);
     z-index: 9;
     display: flex;
     align-items: center;
@@ -84,7 +106,7 @@ table {
   }
 
   .isError {
-    background-color: #fe1b00;
+    background-color: $error-color;
   }
 
   .isSelectedError {
@@ -94,5 +116,5 @@ table {
   }
 
   .isModifiedError {
-    background-color: #32CD32;
+    background-color: $corrified-color;
 }
