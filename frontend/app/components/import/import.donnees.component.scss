@@ -21,7 +21,7 @@
         width: 300px;
         height: 44px;
         border-radius: 21.5px;
-        background-color: #598979;
+        background-color: $dark-green;
         padding: 8px 16px;
     }
 
@@ -118,3 +118,21 @@ table {
   .isModifiedError {
     background-color: $corrified-color;
 }
+
+::ng-deep .mat-progress-bar-fill::after {
+    background-color: $corrified-color;
+}
+
+::ng-deep .mat-progress-bar-buffer {
+    background: $error-color;
+}
+
+::ng-deep .mat-progress-bar {
+    border-radius: 2px;
+    height: 15px !important;
+}
+
+::ng-deep .mat-ink-bar {
+    background-color: $dark-green !important;
+}
+

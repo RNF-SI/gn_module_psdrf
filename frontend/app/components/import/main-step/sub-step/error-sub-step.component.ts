@@ -13,7 +13,7 @@ import {PsdrfError, PsdrfErrorCoordinates} from '../../../../models/psdrfObject.
     selectedButtonIndex: number=0; //IndexButton Sélectionné
     modifiedIndexes: number[] = []; //liste des indexs des boutons modifiés 
 
-    @Input() mainStepIndex: number;
+    @Input() mainStepIndex: number; //Index du main step auquel le subStep appartient
     @Input() subStepIndex: number;
     @Input() psdrfError: PsdrfError;
     @Input() listCorrection: any;

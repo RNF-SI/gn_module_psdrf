@@ -1,6 +1,4 @@
-<section class="container">
-    <header><h3>Step {{selectedIndex + 1}}/{{steps.length}}</h3></header>
-  
+<section class="container">  
     <div [style.display]="selected ? 'block' : 'none'">
       <!-- Content from the CdkStep is projected here -->
       <ng-container [ngTemplateOutlet]="selected.content"></ng-container>

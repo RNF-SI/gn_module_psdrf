@@ -43,6 +43,8 @@ export class ImportDonneesComponent{
   modifiedElementArr:PsdrfErrorCoordinates[] = []; //Tableau des erreurs qui ont été modifiées
   selectedErrorElementArr:PsdrfErrorCoordinates; //Erreur qui est actuellement sélectionnée
   totallyModifiedMainStepperArr: number[]=[]; //Tableau des indexs des mainstep qui ont été complètement modifiés
+  totalErrorNumber: number =0; //Correspond au nombre de rowButton total
+  value: number = 0;
 
   @ViewChildren(MatPaginator) paginator = new QueryList<MatPaginator>(); //liste des 8 paginators
 
@@ -140,11 +142,13 @@ export class ImportDonneesComponent{
               this.errorsPsdrfList.push({'errorList': errorListTemp, 'correctionList': correctionListTemp});
             })
 
+            this.totalErrorNumber = 0;
             //Remplissage de errorElementArr avec toutes les erreurs renvoyées
             this.errorsPsdrfList.forEach(mainError => {
               mainError.errorList.forEach(error => {
                 error.row.forEach( idx => {
                   this.errorElementArr.push(new PsdrfErrorCoordinates(error.table, error.column, idx));
+                  this.totalErrorNumber ++;
                 })
               })
             });
@@ -239,15 +243,20 @@ export class ImportDonneesComponent{
   }
 
   /*
-    Fonction permettant de modifier une valeur dans le tableau. Met aussi à jour la liste des éléments modifiés
+    Fonction permettant de modifier une valeur dans le tableau. 
+    Met aussi à jour la liste des éléments modifiés
   */
   modifyErrorValue(modificationErrorObj: {errorCoordinates: PsdrfErrorCoordinates[], newErrorValue: string}): void{
     let indexTable;
     modificationErrorObj.errorCoordinates.forEach(errorCoor => {
       indexTable = this.indexLabelMatTabGroup.indexOf(errorCoor.table);
-      this.modifiedElementArr.push({table: errorCoor.table, column:errorCoor.column, row:errorCoor.row});
+      if(!this.modifiedElementArr.some((obj) => (obj.table== errorCoor.table && obj.column == errorCoor.column && obj.row == errorCoor.row))){
+        this.modifiedElementArr.push({table: errorCoor.table, column:errorCoor.column, row:errorCoor.row});
+      }
       this.psdrfArray[indexTable][errorCoor.row][errorCoor.column] = modificationErrorObj.newErrorValue;
     });
+
+    this.value = this.modifiedElementArr.length *100 / this.totalErrorNumber;
   }
 
   /*

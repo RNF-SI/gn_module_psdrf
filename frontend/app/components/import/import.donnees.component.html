@@ -662,9 +662,26 @@
         <div *ngIf="!isLoadingResults">
           <error-main-stepper (selectionChange)="displayOnMainStepClick($event)" [totallyModifiedMainStepperArr]="totallyModifiedMainStepperArr" [mainStepNameArr]="mainStepNameArr">
             <cdk-step *ngFor="let error of errorsPsdrfList; let mainStepIndex = index">
-              <error-main-step (subStepSelectionChange)="displayOnSubStepClick($event)" (indexButtonClicked)="displayErrorOnMatTab($event)" (modificationValidated)="modifyErrorValue($event)" (allSubStepModified)="modifyMainStepperAppearance($event)" [step]="error" [mainStepIndex]="mainStepIndex"></error-main-step>
+              <error-main-step 
+                (subStepSelectionChange)="displayOnSubStepClick($event)" 
+                (indexButtonClicked)="displayErrorOnMatTab($event)" 
+                (modificationValidated)="modifyErrorValue($event)" 
+                (allSubStepModified)="modifyMainStepperAppearance($event)" 
+                [step]="error" 
+                [mainStepIndex]="mainStepIndex"
+              >
+            </error-main-step>
             </cdk-step>
           </error-main-stepper>
+
+          <mat-progress-bar 
+            class="example-margin"
+            [color]="color"
+            mode="determinate" 
+            [value]="value"
+          >
+          </mat-progress-bar>
+
         </div>
       </div>
     </div>

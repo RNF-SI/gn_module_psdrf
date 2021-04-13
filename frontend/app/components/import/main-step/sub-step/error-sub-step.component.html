@@ -1,9 +1,12 @@
 <div class="h6">{{psdrfError.message}}</div>
-<div class="btn-group" role="group" aria-label="Basic example" *ngFor="let row of psdrfError.row; let rowIndex = index" >
-  <button type="button" (click)="onIndexButtonClicked(rowIndex, row)" class="btn btn-secondary" [ngClass]="{'isError': !checkModified(rowIndex), 'wasModified':checkModified(rowIndex), 'isSelected': checkSelected(rowIndex)}">{{row}}</button>
+<div  class="d-flex flex-row align-items-center mb-3">
+  <div class="mr-4">Index de l'erreur: </div>
+  <div class="btn-group" role="group" aria-label="Basic example" *ngFor="let row of psdrfError.row; let rowIndex = index" >
+    <button class="btn btn-secondary mr-3" type="button" (click)="onIndexButtonClicked(rowIndex, row)" [ngClass]="{'isError': !checkModified(rowIndex), 'wasModified':checkModified(rowIndex), 'isSelected': checkSelected(rowIndex)}">{{row}}</button>
+  </div>
 </div>
-<div class="row">
-  <form class="select-form">
+<div class="d-flex flex-row align-items-center">
+  <form class="select-form mx-4">
       <mat-form-field appearance="fill">
         <mat-label>{{psdrfError.column}}</mat-label>
         <mat-select [(ngModel)]="value" name="errorSelect">
@@ -14,7 +17,7 @@
       </mat-form-field>
   </form>
   <button
-  class="m-1 h-75"
+  class="mr-3 h-75"
   mat-raised-button
   matTooltip="Modifier l'erreur sélectionnée"     
   (click)="modifValidation()"             
@@ -22,7 +25,7 @@
   <mat-icon> done </mat-icon>
   </button>
   <button
-  class="m-1 h-75"
+  class="mr-3 h-75"
   mat-raised-button
   matTooltip="Modifier toutes les erreurs"     
   (click)="modifValidationAll()"             
