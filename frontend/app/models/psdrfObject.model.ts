@@ -8,16 +8,39 @@ export class PsdrfError {
     constructor(message: string, table: string, column: string, row: number[], value: string) {
         this.message = message;
         this.table = table;
-        this.column = column;
+        this.column = column; 
         this.row = row;
         this.value = value;
-      }
-    
+      } 
+
     toPsdrfErrorCoordinates(rowIndex: number): PsdrfErrorCoordinates{
         return new PsdrfErrorCoordinates(this.table, this.column, this.row[rowIndex]);
     }
 
   };
+
+// export class PsdrfError {
+//     message: string;
+//     table: string;
+//     column: string;
+//     isBlockingError: boolean;
+//     row: number[] | undefined;
+//     value: string | undefined;
+
+//     constructor(isBlockingError: boolean, message: string, table: string, column: string, row?: number[], value?: string) {
+//         this.isBlockingError = isBlockingError;
+//         this.message = message;
+//         this.table = table;
+//         this.column = column; 
+//         this.row = row;
+//         this.value = value;
+//       } 
+
+//     toPsdrfErrorCoordinates(rowIndex: number): PsdrfErrorCoordinates{
+//         return new PsdrfErrorCoordinates(this.table, this.column, this.row[rowIndex]);
+//     }
+
+//   };
 
 export class PsdrfErrorCoordinates {
     table: string;

@@ -31,7 +31,7 @@ export class ImportDonneesComponent{
   tableDataSourceArray: MatTableDataSource<any> []= [];//Tableau des Datasource de chaque onglet
   
   
-  indexLabelMatTabGroup: string[]= ["Placette", "Cycle", "Arbre", "Rege", "Transect", "BMSsup30", "Repere"];//Tableau des titres d'onglet
+  indexLabelMatTabGroup: string[]= ["Placette", "Cycle", "Arbres", "Rege", "Transect", "BMSsup30", "Repere"];//Tableau des titres d'onglet
   excelFile: any = null;
   isLoadingResults: boolean = false;
   isLoadingErrors: boolean = false;
@@ -75,7 +75,7 @@ export class ImportDonneesComponent{
   }
 
   /*
-    Fonction déclenchée lors de la sélection d'un fichier lorsq'uon appui sur le bouton "choisir un fichier"
+    Fonction déclenchée lors de la sélection d'un fichier lorsqu'on appui sur le bouton "choisir un fichier"
   */
   onFileSelect(event): void {
     const target: DataTransfer = <DataTransfer>(event.target);
@@ -132,26 +132,21 @@ export class ImportDonneesComponent{
             let errorsPsdrfListTemp = JSON.parse(error);
             let correctionListTemp, errorListTemp;
             this.mainStepNameArr = [];
+            this.totalErrorNumber = 0;
+            
             errorsPsdrfListTemp.forEach(mainError => {
               correctionListTemp = mainError.correctionList;
               this.mainStepNameArr.push(mainError.errorName);
               errorListTemp = [];
               mainError.errorList.forEach(error => {
                 errorListTemp.push(new PsdrfError(error.message, error.table, error.column, error.row, error.value))
-              })
-              this.errorsPsdrfList.push({'errorList': errorListTemp, 'correctionList': correctionListTemp});
-            })
-
-            this.totalErrorNumber = 0;
-            //Remplissage de errorElementArr avec toutes les erreurs renvoyées
-            this.errorsPsdrfList.forEach(mainError => {
-              mainError.errorList.forEach(error => {
                 error.row.forEach( idx => {
                   this.errorElementArr.push(new PsdrfErrorCoordinates(error.table, error.column, idx));
                   this.totalErrorNumber ++;
                 })
               })
-            });
+              this.errorsPsdrfList.push({'errorList': errorListTemp, 'correctionList': correctionListTemp});
+            })
             
             //Affichage de la toute première erreur de errorsPsdrfList dans le MatTab
             this.displayErrorOnMatTab({table: this.errorsPsdrfList[0].errorList[0].table, column: this.errorsPsdrfList[0].errorList[0].column, row: this.errorsPsdrfList[0].errorList[0].row[0]});
@@ -207,8 +202,7 @@ export class ImportDonneesComponent{
       this.displayErrorOnMatTab(this.historyService.getLastSelectedCoordinates(stepperSelectionObj.mainStepIndex));
     } else {
       let error = this.errorsPsdrfList[stepperSelectionObj.mainStepIndex].errorList[stepperSelectionObj.subStepIndex];
-      let rowObj = {table: error.table, column: error.column, row: error.row[0]}
-      this.displayErrorOnMatTab(rowObj);
+      this.displayErrorOnMatTab(error.toPsdrfErrorCoordinates(0));      
     }
   }
 
@@ -220,7 +214,7 @@ export class ImportDonneesComponent{
       this.displayErrorOnMatTab(this.historyService.getLastSelectedCoordinates(stepperSelectionObj.selectedIndex));
     } else {
       let error = this.errorsPsdrfList[stepperSelectionObj.selectedIndex].errorList[0];
-      this.displayErrorOnMatTab(new PsdrfErrorCoordinates(error.table, error.column, error.row[0]));
+      this.displayErrorOnMatTab(error.toPsdrfErrorCoordinates(0));
     }
   }
 
@@ -272,6 +266,23 @@ export class ImportDonneesComponent{
   deleteFile(): void{
     this.isCurrentVerification = false;
     this.excelFile = null;
+    this.reInitializeValues();
+    this.historyService.reInitialize();
+  }
+
+  reInitializeValues(): void{
+    this.indexMatTabGroup=0;
+    this.psdrfArray=[];
+    this.tableDataSourceArray=[];
+    this.errorsPsdrfList=[];
+    this.mainStepNameArr=[];
+    this.errorElementArr=[];
+    this.modifiedElementArr=[];
+    this.totallyModifiedMainStepperArr=[];
+    this.totalErrorNumber=0;
+    this.value = 0;
+    this.selectedErrorElementArr = null;
+
   }
 
   returnToPreviousPage(): void{

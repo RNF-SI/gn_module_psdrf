@@ -70,4 +70,8 @@ export class ErrorHistoryService{
             return false; 
         }
     }
+
+    reInitialize(): void{
+        this.historyList = {};
+    }
 }

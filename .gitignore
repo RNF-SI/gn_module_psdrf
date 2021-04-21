@@ -122,3 +122,10 @@ config/settings.ini
 
 #data 
 data/CodeEssence
+data/CodeDurete
+data/Communes
+data/CyclesCodes
+data/Dispositifs
+data/EssReg
+data/Referents
+data/Tarifs
