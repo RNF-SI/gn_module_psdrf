@@ -266,6 +266,7 @@ export class ImportDonneesComponent{
   deleteFile(): void{
     this.isCurrentVerification = false;
     this.excelFile = null;
+    this.isLoadingResults = false;
     this.reInitializeValues();
     this.historyService.reInitialize();
   }
