@@ -11,13 +11,33 @@ export class PsdrfError {
         this.column = column; 
         this.row = row;
         this.value = value;
-      } 
+      }
 
     toPsdrfErrorCoordinates(rowIndex: number): PsdrfErrorCoordinates{
         return new PsdrfErrorCoordinates(this.table, this.column, this.row[rowIndex]);
     }
 
-  };
+};
+
+export class DuplicatedError {
+    message: string;
+    table: string;
+    column: string[];
+    row: number[];
+    value: any;
+
+    constructor(message: string, table: string, column: string[], row: number[], value: any) {
+        this.message = message;
+        this.table = table;
+        this.column = column; 
+        this.row = row;
+        this.value = value;
+    } 
+
+    toPsdrfErrorCoordinates2(): PsdrfErrorCoordinates2{
+        return new PsdrfErrorCoordinates2(this.table, this.column, this.row);
+    }
+}
 
 // export class PsdrfError {
 //     message: string;
@@ -52,15 +72,27 @@ export class PsdrfErrorCoordinates {
         this.column = column;
         this.row = row;
       }
-  };
+};
+
+export class PsdrfErrorCoordinates2 {
+    table: string;
+    column: string[];
+    row: number[];
+
+    constructor(table: string, column: string[], row: number[]) {
+        this.table = table;
+        this.column = column;
+        this.row = row;
+      }
+};
 
 export class MainStepHistory{
     lastSelected: number;
     subStepHistory:{
-        [key: number]: PsdrfErrorCoordinates;
+        [key: number]: PsdrfErrorCoordinates2;
     }= {};
 
-    constructor(lastSelectedIndex: number, errorCoordinates: PsdrfErrorCoordinates){
+    constructor(lastSelectedIndex: number, errorCoordinates: PsdrfErrorCoordinates2){
         this.lastSelected = lastSelectedIndex;
         this.subStepHistory[lastSelectedIndex] = errorCoordinates;
     }
@@ -69,7 +101,7 @@ export class MainStepHistory{
         this.lastSelected = lastSelectedIndex;
     }
 
-    updateSubStepHistory(subStepIndex: number, errorCoordinates: PsdrfErrorCoordinates): void{
+    updateSubStepHistory(subStepIndex: number, errorCoordinates: PsdrfErrorCoordinates2): void{
         this.subStepHistory[subStepIndex] = errorCoordinates;
     }
 

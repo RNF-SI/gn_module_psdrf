@@ -1,7 +1,7 @@
 import {Component, Input, Output, EventEmitter} from '@angular/core';
 import {StepperSelectionEvent} from '@angular/cdk/stepper';
 import {ErrorHistoryService} from '../../../services/error.history.service';
-import {PsdrfError, PsdrfErrorCoordinates} from '../../../models/psdrfObject.model';
+import {PsdrfError, PsdrfErrorCoordinates, PsdrfErrorCoordinates2} from '../../../models/psdrfObject.model';
 
 
 @Component({
@@ -14,11 +14,15 @@ import {PsdrfError, PsdrfErrorCoordinates} from '../../../models/psdrfObject.mod
     totallyModifiedSubStepperArr: number[]=[];
 
     @Input() mainStepIndex: number;
-    @Input() step: {'errorList': PsdrfError[], 'correctionList': any};
+    // @Input() step: {'errorList': PsdrfError[], 'correctionList': any};
+    @Input() step: any;
+
 
     @Output() subStepSelectionChange= new EventEmitter<{mainStepIndex: number, subStepIndex: number}>();
     @Output() indexButtonClicked=new EventEmitter<PsdrfErrorCoordinates>();
+    @Output() indexButtonClicked2=new EventEmitter<any>();
     @Output() modificationValidated=new EventEmitter<{errorCoordinates: PsdrfErrorCoordinates[], newErrorValue: string}>();
+    @Output() modificationValidated2=new EventEmitter<{errorCoordinates: {table: string, column: string[], row: number[]}, newErrorValue: any}>();
     @Output() allSubStepModified=new EventEmitter<number>();
     
     constructor(private historyService:ErrorHistoryService){}
@@ -32,12 +36,22 @@ import {PsdrfError, PsdrfErrorCoordinates} from '../../../models/psdrfObject.mod
       this.subStepSelectionChange.next({mainStepIndex: this.mainStepIndex, subStepIndex: stepChangeEvent.selectedIndex});
     }
 
+    onSubStepClicked2(stepChangeEvent: StepperSelectionEvent): void{
+      //Enregistrer dans l'historique à quelle étape nous en étions sur le dernier step
+      this.historyService.rememberSubStep(stepChangeEvent.selectedIndex, this.step.errorList[stepChangeEvent.selectedIndex].toPsdrfErrorCoordinates2(), this.mainStepIndex);
+      this.subStepSelectionChange.next({mainStepIndex: this.mainStepIndex, subStepIndex: stepChangeEvent.selectedIndex});
+    }
+
     /*
       Fonction qui est appelée lorsqu'un bouton index de ligne est cliqué
     */
     onIndexButtonClicked(indexErrorCoordinates: PsdrfErrorCoordinates): void{
       this.indexButtonClicked.next(indexErrorCoordinates);
     }
+    onIndexButtonClicked2(indexErrorCoordinates: PsdrfErrorCoordinates2): void{
+      this.indexButtonClicked2.next(indexErrorCoordinates);
+    }
+
     
     /*
       Fonction qui est appelée lorsqu'on valide la modification d'une valeur
@@ -45,6 +59,11 @@ import {PsdrfError, PsdrfErrorCoordinates} from '../../../models/psdrfObject.mod
     modifValidation(modificationErrorObj: {errorCoordinates: PsdrfErrorCoordinates[], newErrorValue: string}): void{
       this.modificationValidated.next(modificationErrorObj);
     }
+
+    modifValidation2(modificationErrorObj: {errorCoordinates: PsdrfErrorCoordinates2, newErrorValue: any}): void{
+      this.modificationValidated2.next(modificationErrorObj);
+    }
+
 
     /*
       Fonction modifiant l'apparence des stepper lorsque ceux-ci ont été complètement modifiés

@@ -14,7 +14,7 @@ import {Transect} from '../../models/transect.model';
 import {BMSsup30} from '../../models/bmssup30.model';
 import {Repere} from '../../models/repere.model';
 import {Cycle} from '../../models/cycle.model';
-import {PsdrfError, PsdrfErrorCoordinates} from '../../models/psdrfObject.model';
+import {PsdrfError, DuplicatedError, PsdrfErrorCoordinates, PsdrfErrorCoordinates2} from '../../models/psdrfObject.model';
 import {StepperSelectionEvent} from '@angular/cdk/stepper';
 
 
@@ -37,11 +37,14 @@ export class ImportDonneesComponent{
   isLoadingErrors: boolean = false;
   isCurrentVerification: boolean= false;
   indexMatTabGroup: number=0; //Index de l'onglet sélectionné 
-  errorsPsdrfList: {'errorList': PsdrfError[], 'correctionList': any}[] = []; //Tableau des erreurs retournées par la requête psdrf_data_verification
+  errorsPsdrfList: any[] = []; //Tableau des erreurs retournées par la requête psdrf_data_verification
   mainStepNameArr: string[]= [];
   errorElementArr: PsdrfErrorCoordinates[] = []; //Tableau des erreurs
+  errorElementArr2: PsdrfErrorCoordinates2[]= []
   modifiedElementArr:PsdrfErrorCoordinates[] = []; //Tableau des erreurs qui ont été modifiées
+  modifiedElementArr2:PsdrfErrorCoordinates2[]= []; //Tableau des erreurs qui ont été modifiées
   selectedErrorElementArr:PsdrfErrorCoordinates; //Erreur qui est actuellement sélectionnée
+  selectedErrorElementArr2: PsdrfErrorCoordinates2; //Erreur qui est actuellement sélectionnée
   totallyModifiedMainStepperArr: number[]=[]; //Tableau des indexs des mainstep qui ont été complètement modifiés
   totalErrorNumber: number =0; //Correspond au nombre de rowButton total
   value: number = 0;
@@ -122,6 +125,8 @@ export class ImportDonneesComponent{
             this.isLoadingResults = false;
             this.isLoadingErrors = false;
             
+            console.log(this.psdrfArray)
+
             //Création du binding entre les MatTable datasources et les données affichée dans la tableau
             //Remarque: Tout changement dans psdrfArray s'applique automatiquement au tableau
             for(let i =0; i<this.psdrfArray.length; i++){
@@ -135,20 +140,37 @@ export class ImportDonneesComponent{
             this.totalErrorNumber = 0;
             
             errorsPsdrfListTemp.forEach(mainError => {
-              correctionListTemp = mainError.correctionList;
               this.mainStepNameArr.push(mainError.errorName);
-              errorListTemp = [];
-              mainError.errorList.forEach(error => {
-                errorListTemp.push(new PsdrfError(error.message, error.table, error.column, error.row, error.value))
-                error.row.forEach( idx => {
-                  this.errorElementArr.push(new PsdrfErrorCoordinates(error.table, error.column, idx));
-                  this.totalErrorNumber ++;
-                })
-              })
-              this.errorsPsdrfList.push({'errorList': errorListTemp, 'correctionList': correctionListTemp});
+              switch(mainError.errorType){
+                case "ReferenceError":
+                  errorListTemp = [];
+                  mainError.errorList.forEach(error => {
+                    errorListTemp.push(new PsdrfError(error.message, error.table, error.column, error.row, error.value))
+                    error.row.forEach( idx => {
+                      this.errorElementArr.push(new PsdrfErrorCoordinates(error.table, error.column, idx));
+                      this.totalErrorNumber ++;
+                    })
+                  })
+                  this.errorsPsdrfList.push({'errorList': errorListTemp, 'errorType': 'ReferenceError', 'correctionList': mainError.correctionList});
+                  break;
+
+                case "DuplicatedError":
+                  errorListTemp = [];
+                  mainError.errorList.forEach(error => {
+                    console.log(error.value);
+                    errorListTemp.push(new DuplicatedError(error.message, error.table, error.column, error.row, JSON.parse(error.value)));
+                    this.errorElementArr2.push(new PsdrfErrorCoordinates2(error.table, error.column, error.row));
+                    error.row.forEach( idx => {
+                      this.totalErrorNumber ++;
+                    })
+                  })
+                  this.errorsPsdrfList.push({'errorList': errorListTemp, 'errorType': 'DuplicatedError'});
+                  break;
+              }
             })
             
             //Affichage de la toute première erreur de errorsPsdrfList dans le MatTab
+            this.displayErrorOnMatTab2({table: this.errorsPsdrfList[0].errorList[0].table, column: [this.errorsPsdrfList[0].errorList[0].column], row: this.errorsPsdrfList[0].errorList[0].row[0]})
             this.displayErrorOnMatTab({table: this.errorsPsdrfList[0].errorList[0].table, column: this.errorsPsdrfList[0].errorList[0].column, row: this.errorsPsdrfList[0].errorList[0].row[0]});
             }
         );
@@ -165,7 +187,7 @@ export class ImportDonneesComponent{
   /*
     Fonction permettant de retrouver l'index d'un élément en fonction du paginateur de la table
   */
-  getRowIndexFromPaginatorProperties(table: string, column: string, i: number): number{
+  getRowIndexFromPaginatorProperties(table: string, i: number): number{
     let tablePaginator = this.getPaginatorFromTableName(table);
     return i + (tablePaginator.pageIndex * tablePaginator.pageSize);
   }
@@ -174,24 +196,38 @@ export class ImportDonneesComponent{
     Fonction permettant de tester si les coordonnées d'un élément correspondent à une erreur ou non 
   */
   checkErrorCell(table: string, column: string, i: number): boolean{
-    let row = this.getRowIndexFromPaginatorProperties(table, column, i);
+    let row = this.getRowIndexFromPaginatorProperties(table, i);
     return this.errorElementArr.some((obj) => (obj.table== table && obj.column == column && obj.row == row));
+  }
+  checkErrorCell2(table: string, column: string, i: number): boolean{
+    let row = this.getRowIndexFromPaginatorProperties(table, i);
+    return this.errorElementArr2.some((obj) => (obj.table== table && obj.column.includes(column) && obj.row.includes(row)));
   }
 
   /*
     Fonction permettant de tester si les coordonnées d'un élément correspondent à une erreur modifiée
   */
   checkModifiedErrorCell(table: string, column: string, i: number): boolean{
-    let row = this.getRowIndexFromPaginatorProperties(table, column, i);
+    let row = this.getRowIndexFromPaginatorProperties(table, i);
     return this.modifiedElementArr.some((obj) => (obj.table== table && obj.column == column && obj.row == row));
+  }
+
+  checkModifiedErrorCell2(table: string, column: string, i: number): boolean{
+    let row = this.getRowIndexFromPaginatorProperties(table, i);
+    return this.modifiedElementArr2.some((obj) => (obj.table== table && obj.column.includes(column) && obj.row.includes(row)));
   }
 
   /*
     Fonction permettant de voir si une case correspond à celle de l'erreur sélectionnée ou non 
   */
   checkSelectedErrorCell(table: string, column: string, i: number): boolean{
-    let row = this.getRowIndexFromPaginatorProperties(table, column, i);
+    let row = this.getRowIndexFromPaginatorProperties(table, i);
     return this.selectedErrorElementArr.table == table && this.selectedErrorElementArr.column == column && this.selectedErrorElementArr.row == row;
+  }
+
+  checkSelectedErrorCell2(table: string, column: string, i: number): boolean{
+    let row = this.getRowIndexFromPaginatorProperties(table, i);
+    return this.selectedErrorElementArr2.table == table && this.selectedErrorElementArr2.column.includes(column) && this.selectedErrorElementArr2.row.includes(row);
   }
 
   /*
@@ -199,10 +235,10 @@ export class ImportDonneesComponent{
   */
   displayOnSubStepClick(stepperSelectionObj: {mainStepIndex: number, subStepIndex: number}): void{
     if(this.historyService.isMainStepHasAlreadyBeenClicked(stepperSelectionObj.mainStepIndex) && this.historyService.isSubStepHasAlreadyBeenClicked(stepperSelectionObj.mainStepIndex, stepperSelectionObj.subStepIndex)){
-      this.displayErrorOnMatTab(this.historyService.getLastSelectedCoordinates(stepperSelectionObj.mainStepIndex));
+      this.displayErrorOnMatTab2(this.historyService.getLastSelectedCoordinates(stepperSelectionObj.mainStepIndex));
     } else {
       let error = this.errorsPsdrfList[stepperSelectionObj.mainStepIndex].errorList[stepperSelectionObj.subStepIndex];
-      this.displayErrorOnMatTab(error.toPsdrfErrorCoordinates(0));      
+      this.displayErrorOnMatTab2(error.toPsdrfErrorCoordinates2());      
     }
   }
 
@@ -211,10 +247,10 @@ export class ImportDonneesComponent{
   */
   displayOnMainStepClick(stepperSelectionObj: StepperSelectionEvent): void{
     if(this.historyService.isMainStepHasAlreadyBeenClicked(stepperSelectionObj.selectedIndex)){
-      this.displayErrorOnMatTab(this.historyService.getLastSelectedCoordinates(stepperSelectionObj.selectedIndex));
+      this.displayErrorOnMatTab2(this.historyService.getLastSelectedCoordinates(stepperSelectionObj.selectedIndex));
     } else {
       let error = this.errorsPsdrfList[stepperSelectionObj.selectedIndex].errorList[0];
-      this.displayErrorOnMatTab(error.toPsdrfErrorCoordinates(0));
+      this.displayErrorOnMatTab2(error.toPsdrfErrorCoordinates2());
     }
   }
 
@@ -227,6 +263,20 @@ export class ImportDonneesComponent{
     this.indexMatTabGroup=this.indexLabelMatTabGroup.indexOf(errorCoordinates.table);
     let tablePaginator = this.tableDataSourceArray[this.indexMatTabGroup].paginator;
     let pageNumber = Math.trunc(errorCoordinates.row/tablePaginator.pageSize);
+
+    tablePaginator.pageIndex = pageNumber, // number of the page you want to jump.
+    tablePaginator.page.next({      
+         pageIndex: pageNumber,
+         pageSize: tablePaginator.pageSize,
+         length: tablePaginator.length
+       });
+  }
+
+  displayErrorOnMatTab2(errorCoordinates: PsdrfErrorCoordinates2): void{
+    this.selectedErrorElementArr2 = errorCoordinates;
+    this.indexMatTabGroup=this.indexLabelMatTabGroup.indexOf(errorCoordinates.table);
+    let tablePaginator = this.tableDataSourceArray[this.indexMatTabGroup].paginator;
+    let pageNumber = Math.trunc(errorCoordinates.row[0]/tablePaginator.pageSize);
 
     tablePaginator.pageIndex = pageNumber, // number of the page you want to jump.
     tablePaginator.page.next({      
@@ -251,6 +301,35 @@ export class ImportDonneesComponent{
     });
 
     this.value = this.modifiedElementArr.length *100 / this.totalErrorNumber;
+  }
+
+  modifyErrorValue2(modificationErrorObj: {errorCoordinates: PsdrfErrorCoordinates2, newErrorValue: any}): void{
+    let indexTable = this.indexLabelMatTabGroup.indexOf(modificationErrorObj.errorCoordinates.table);
+
+    this.modifiedElementArr2.push(modificationErrorObj.errorCoordinates);
+
+    // if(!this.modifiedElementArr2.some((obj) => (obj.table== modificationErrorObj.errorCoordinates.table && obj.column.includes(colName) && obj.row.includes(idx)))){
+    //   this.modifiedElementArr2.push({table: modificationErrorObj.errorCoordinates.table, column:modificationErrorObj.errorCoordinates.column, row:idx});
+    // }
+
+    modificationErrorObj.errorCoordinates.row.forEach((idx, i) => {
+      // modificationErrorObj.newErrorValue.forEach(line => {
+      modificationErrorObj.errorCoordinates.column.forEach(colName => {
+
+        this.psdrfArray[indexTable][idx][colName] = modificationErrorObj.newErrorValue[i][colName]
+      })
+    });
+
+
+    // modificationErrorObj.errorCoordinates.forEach(errorCoor => {
+    //   indexTable = this.indexLabelMatTabGroup.indexOf(errorCoor.table);
+    //   if(!this.modifiedElementArr.some((obj) => (obj.table== errorCoor.table && obj.column == errorCoor.column && obj.row == errorCoor.row))){
+    //     this.modifiedElementArr.push({table: errorCoor.table, column:errorCoor.column, row:errorCoor.row});
+    //   }
+    //   this.psdrfArray[indexTable][errorCoor.row][errorCoor.column] = modificationErrorObj.newErrorValue;
+    // });
+
+    // this.value = this.modifiedElementArr.length *100 / this.totalErrorNumber;
   }
 
   /*

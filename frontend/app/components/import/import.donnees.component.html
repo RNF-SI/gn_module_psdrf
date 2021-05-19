@@ -253,22 +253,22 @@
           
               <ng-container matColumnDef="NumDisp">
               <th mat-header-cell *matHeaderCellDef> NumDisp </th>
-              <td mat-cell *matCellDef="let element"> {{element.NumDisp}} </td>
+              <td mat-cell *matCellDef="let element, let i = index" [ngClass]="{'isError': checkErrorCell2('Arbres', 'NumDisp', i ), 'isModifiedError': checkModifiedErrorCell2('Arbres', 'NumDisp', i ), 'isSelectedError': checkSelectedErrorCell2('Arbres', 'NumDisp', i)}"> {{element.NumDisp}} </td>
             </ng-container>
         
             <ng-container matColumnDef="NumPlac">
               <th mat-header-cell *matHeaderCellDef> NumPlac </th>
-              <td mat-cell *matCellDef="let element"> {{element.NumPlac}} </td>
+              <td mat-cell *matCellDef="let element, let i = index" [ngClass]="{'isError': checkErrorCell2('Arbres', 'NumPlac', i ), 'isModifiedError': checkModifiedErrorCell2('Arbres', 'NumPlac', i ), 'isSelectedError': checkSelectedErrorCell2('Arbres', 'NumPlac', i)}"> {{element.NumPlac}} </td>
             </ng-container>
         
             <ng-container matColumnDef="Cycle">
               <th mat-header-cell *matHeaderCellDef> Cycle </th>
-              <td mat-cell *matCellDef="let element"> {{element.Cycle}} </td>
+              <td mat-cell *matCellDef="let element, let i = index" [ngClass]="{'isError': checkErrorCell2('Arbres', 'Cycle', i ), 'isModifiedError': checkModifiedErrorCell2('Arbres', 'Cycle', i ), 'isSelectedError': checkSelectedErrorCell2('Arbres', 'Cycle', i)}"> {{element.Cycle}} </td>
             </ng-container>
         
             <ng-container matColumnDef="NumArbre">
               <th mat-header-cell *matHeaderCellDef> NumArbre </th>
-              <td mat-cell *matCellDef="let element"> {{element.NumArbre}} </td>
+              <td mat-cell *matCellDef="let element, let i = index" [ngClass]="{'isError': checkErrorCell2('Arbres', 'NumArbre', i ), 'isModifiedError': checkModifiedErrorCell2('Arbres', 'NumArbre', i ), 'isSelectedError': checkSelectedErrorCell2('Arbres', 'NumArbre', i)}"> {{element.NumArbre}} </td>
             </ng-container>
 
             <ng-container matColumnDef="Essence">
@@ -648,7 +648,7 @@
             <td mat-cell *matCellDef="let element"> {{element.Observation}} </td>
           </ng-container>
 
-          <tr mat-header-row *matHeaderRowDef="tableColumnsArray[6]"></tr>
+            <tr mat-header-row *matHeaderRowDef="tableColumnsArray[6]"></tr>
             <tr mat-row *matRowDef="let row; columns: tableColumnsArray[6];"></tr>
           </table>
           
@@ -665,7 +665,9 @@
               <error-main-step 
                 (subStepSelectionChange)="displayOnSubStepClick($event)" 
                 (indexButtonClicked)="displayErrorOnMatTab($event)" 
+                (indexButtonClicked2)="displayErrorOnMatTab2($event)" 
                 (modificationValidated)="modifyErrorValue($event)" 
+                (modificationValidated2)="modifyErrorValue2($event)" 
                 (allSubStepModified)="modifyMainStepperAppearance($event)" 
                 [step]="error" 
                 [mainStepIndex]="mainStepIndex"

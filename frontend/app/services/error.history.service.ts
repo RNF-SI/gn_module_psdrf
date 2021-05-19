@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import {PsdrfErrorCoordinates, MainStepHistory} from '../models/psdrfObject.model';
+import {PsdrfErrorCoordinates,PsdrfErrorCoordinates2, MainStepHistory} from '../models/psdrfObject.model';
 
 
 @Injectable()
@@ -9,7 +9,15 @@ export class ErrorHistoryService{
     /*
         Sauvegarde l'index d'une ligne du tableau dans l'historique
     */
-    rememberIndex(psdrfErrorCoor: PsdrfErrorCoordinates, rowIndex: number, mainStepIndex: number, subStepIndex: number): void{
+    // rememberIndex(psdrfErrorCoor: PsdrfErrorCoordinates, rowIndex: number, mainStepIndex: number, subStepIndex: number): void{
+    //     if(this.historyList[mainStepIndex]){
+    //         this.historyList[mainStepIndex].setLastSelected(subStepIndex);
+    //         this.historyList[mainStepIndex].updateSubStepHistory(subStepIndex, psdrfErrorCoor);
+    //     } else {
+    //         this.historyList[mainStepIndex] = new MainStepHistory(subStepIndex, psdrfErrorCoor);
+    //     }
+    // }
+    rememberIndex2(psdrfErrorCoor: PsdrfErrorCoordinates2, rowIndex: number, mainStepIndex: number, subStepIndex: number): void{
         if(this.historyList[mainStepIndex]){
             this.historyList[mainStepIndex].setLastSelected(subStepIndex);
             this.historyList[mainStepIndex].updateSubStepHistory(subStepIndex, psdrfErrorCoor);
@@ -21,7 +29,7 @@ export class ErrorHistoryService{
     /*
         Sauvegarde un SubStep dans l'historique
     */
-    rememberSubStep(subStepIndex: number, errorCoor: PsdrfErrorCoordinates, mainStepIndex: number): void{
+    rememberSubStep(subStepIndex: number, errorCoor: PsdrfErrorCoordinates2, mainStepIndex: number): void{
         if(this.historyList[mainStepIndex]){
             this.historyList[mainStepIndex].setLastSelected(subStepIndex);
             //On initialise le subStepHistory du subStep en question si nécessaire
@@ -44,7 +52,7 @@ export class ErrorHistoryService{
         juste avant. Dedans, on a changé le lastSelectedIndex pour l'index du step qu'on vient de cliquer. 
         Donc la property lastSelected contient la bonne valeur.
     */
-    getLastSelectedCoordinates(mainStepIndex: number): PsdrfErrorCoordinates{
+    getLastSelectedCoordinates(mainStepIndex: number): PsdrfErrorCoordinates2{
         let mainStepHistory = this.historyList[mainStepIndex];
         return mainStepHistory.subStepHistory[mainStepHistory.lastSelected];
     }

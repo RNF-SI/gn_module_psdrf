@@ -1,6 +1,8 @@
-import {Component, Input, Output, EventEmitter} from '@angular/core';
+import {Component, Input, Output, EventEmitter, OnInit} from '@angular/core';
 import {ErrorHistoryService} from '../../../../services/error.history.service';
-import {PsdrfError, PsdrfErrorCoordinates} from '../../../../models/psdrfObject.model';
+import {MatTableDataSource} from '@angular/material/table';
+import {PsdrfError, PsdrfErrorCoordinates, PsdrfErrorCoordinates2} from '../../../../models/psdrfObject.model';
+// import { FormArray, FormGroup, FormBuilder } from '@angular/forms';
 
 
 @Component({
@@ -8,29 +10,55 @@ import {PsdrfError, PsdrfErrorCoordinates} from '../../../../models/psdrfObject.
     templateUrl: "./error-sub-step.component.html",
     styleUrls: ["./error-sub-step.component.scss"],
   })
-  export class ErrorSubStepComponent {
+  export class ErrorSubStepComponent implements OnInit{
     value: string; //Valeur Corrigée par l'utilisateur
     selectedButtonIndex: number=0; //IndexButton Sélectionné
     modifiedIndexes: number[] = []; //liste des indexs des boutons modifiés 
 
     @Input() mainStepIndex: number; //Index du main step auquel le subStep appartient
     @Input() subStepIndex: number;
-    @Input() psdrfError: PsdrfError;
+    @Input() psdrfError: any;
     @Input() listCorrection: any;
+    @Input() errorType: any; 
     @Output() indexButtonClicked=new EventEmitter<PsdrfErrorCoordinates>();
+    @Output() indexButtonClicked2=new EventEmitter<PsdrfErrorCoordinates2>();
     @Output() modificationValidated=new EventEmitter<{errorCoordinates: PsdrfErrorCoordinates[], newErrorValue: string}>();
+    @Output() modificationValidated2=new EventEmitter<{errorCoordinates: PsdrfErrorCoordinates2, newErrorValue: any}>();
     @Output() allRowsModified=new EventEmitter<number>();
+    datasource: any;
+
+    // form: FormGroup;
 
 
-    constructor(private historyService:ErrorHistoryService){}
+    constructor(
+      private historyService:ErrorHistoryService,
+      ) {
+  
+    }
+
+    ngOnInit(){
+      console.log(this.psdrfError)
+      this.datasource = new MatTableDataSource(this.psdrfError.value);
+    }
+
 
     /*
       Fonction appelée lorsqu'un index button est cliqué
     */
     onIndexButtonClicked(rowIndex: number, row: number): void{
-      this.historyService.rememberIndex(this.psdrfError.toPsdrfErrorCoordinates(rowIndex), rowIndex, this.mainStepIndex, this.subStepIndex);
+      // console.log(this.psdrfError)
+      // this.historyService.rememberIndex(this.psdrfError.toPsdrfErrorCoordinates(rowIndex), rowIndex, this.mainStepIndex, this.subStepIndex);
+      // this.selectedButtonIndex = rowIndex; 
+      // this.indexButtonClicked.next(new PsdrfErrorCoordinates(this.psdrfError.table, this.psdrfError.column, row));
+    }
+
+    onIndexButtonClicked2(rowIndex: number, row: number): void{
+      // console.log(this.psdrfError)
+      // this.historyService.rememberIndex(this.psdrfError.toPsdrfErrorCoordinates(rowIndex), rowIndex, this.mainStepIndex, this.subStepIndex);
+      // this.selectedButtonIndex = rowIndex; 
+      this.historyService.rememberIndex2(this.psdrfError.toPsdrfErrorCoordinates2(), rowIndex, this.mainStepIndex, this.subStepIndex);
       this.selectedButtonIndex = rowIndex; 
-      this.indexButtonClicked.next(new PsdrfErrorCoordinates(this.psdrfError.table, this.psdrfError.column, row));
+      this.indexButtonClicked2.next(new PsdrfErrorCoordinates2(this.psdrfError.table, this.psdrfError.column, [row]));
     }
     
     /*
@@ -46,6 +74,20 @@ import {PsdrfError, PsdrfErrorCoordinates} from '../../../../models/psdrfObject.
       if(this.modifiedIndexes.length == this.psdrfError.row.length){
         this.allRowsModified.next(this.subStepIndex);
       }
+    }
+
+    modifValidation2(): void{
+      console.log(this.datasource)
+      this.modificationValidated2.next({errorCoordinates: new PsdrfErrorCoordinates2(this.psdrfError.table, this.psdrfError.column, this.psdrfError.row), newErrorValue: this.datasource.data});
+    }
+
+    deleteRow(rowIndex): void{
+      console.log(rowIndex);
+      console.log(this.datasource);
+      this.psdrfError.row.splice(rowIndex, 1);
+
+      this.datasource.data.splice(rowIndex, 1);
+      this.datasource._updateChangeSubscription();
     }
 
     /*
