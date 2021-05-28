@@ -78,7 +78,13 @@ import {PsdrfError, PsdrfErrorCoordinates, PsdrfErrorCoordinates2} from '../../.
 
     modifValidation2(): void{
       console.log(this.datasource)
+      if(this.modifiedIndexes.indexOf(this.selectedButtonIndex) === -1){
+        this.modifiedIndexes.push(this.selectedButtonIndex);
+      }    
       this.modificationValidated2.next({errorCoordinates: new PsdrfErrorCoordinates2(this.psdrfError.table, this.psdrfError.column, this.psdrfError.row), newErrorValue: this.datasource.data});
+      if(this.modifiedIndexes.length == this.psdrfError.row.length){
+        this.allRowsModified.next(this.subStepIndex);
+      }
     }
 
     deleteRow(rowIndex): void{

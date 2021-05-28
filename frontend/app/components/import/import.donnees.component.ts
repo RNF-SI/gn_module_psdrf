@@ -1,4 +1,4 @@
-import {Component,ViewChildren, QueryList, ViewChild, ElementRef  } from '@angular/core';
+import {Component,ViewChildren, QueryList, ViewChild, ElementRef } from '@angular/core';
 import {MatPaginator} from '@angular/material/paginator';
 import {MatTableDataSource} from '@angular/material/table';
 import { HttpClient } from '@angular/common/http';
@@ -16,6 +16,7 @@ import {Repere} from '../../models/repere.model';
 import {Cycle} from '../../models/cycle.model';
 import {PsdrfError, DuplicatedError, PsdrfErrorCoordinates, PsdrfErrorCoordinates2} from '../../models/psdrfObject.model';
 import {StepperSelectionEvent} from '@angular/cdk/stepper';
+import { MatStepper } from "@angular/material/stepper";
 
 
 @Component({
@@ -23,7 +24,7 @@ import {StepperSelectionEvent} from '@angular/cdk/stepper';
   templateUrl: "import.donnees.component.html",
   styleUrls: ["import.donnees.component.scss"]
 })
-export class ImportDonneesComponent{
+export class ImportDonneesComponent {
 
   psdrfArray : any[][]= []; //Tableau qui contient au départ les données du fichier excel. Il est actualisé au fur et à mesure que les erreurs sont corrigées 
   tableColumnsArray:string[][] = [Object.keys(new Placette()), Object.keys(new Cycle()), Object.keys(new Arbre()), Object.keys(new Rege()), 
@@ -47,9 +48,16 @@ export class ImportDonneesComponent{
   selectedErrorElementArr2: PsdrfErrorCoordinates2; //Erreur qui est actuellement sélectionnée
   totallyModifiedMainStepperArr: number[]=[]; //Tableau des indexs des mainstep qui ont été complètement modifiés
   totalErrorNumber: number =0; //Correspond au nombre de rowButton total
+  totalMainStepNumber: number =0; 
   value: number = 0;
 
   @ViewChildren(MatPaginator) paginator = new QueryList<MatPaginator>(); //liste des 8 paginators
+
+  // MAX_PAGE ;
+
+  // @ViewChild('stepper') private myStepper: MatStepper;
+  // step: number = 0;
+  // page:number = 0;
 
   constructor(
     private http: HttpClient,
@@ -59,6 +67,10 @@ export class ImportDonneesComponent{
     private _router: Router
   ) { 
   }
+
+  // ngAfterViewInit() {
+  //   this.rerender();
+  // }
 
   /*
     Fonction déclenchée lors du drag&drop d'un fichier
@@ -138,9 +150,11 @@ export class ImportDonneesComponent{
             let correctionListTemp, errorListTemp;
             this.mainStepNameArr = [];
             this.totalErrorNumber = 0;
+            // this.totalMainStepNumber =0;
             
             errorsPsdrfListTemp.forEach(mainError => {
               this.mainStepNameArr.push(mainError.errorName);
+              // this.totalMainStepNumber++;
               switch(mainError.errorType){
                 case "ReferenceError":
                   errorListTemp = [];
@@ -168,7 +182,7 @@ export class ImportDonneesComponent{
                   break;
               }
             })
-            
+            console.log(this.errorsPsdrfList)
             //Affichage de la toute première erreur de errorsPsdrfList dans le MatTab
             this.displayErrorOnMatTab2({table: this.errorsPsdrfList[0].errorList[0].table, column: [this.errorsPsdrfList[0].errorList[0].column], row: this.errorsPsdrfList[0].errorList[0].row[0]})
             this.displayErrorOnMatTab({table: this.errorsPsdrfList[0].errorList[0].table, column: this.errorsPsdrfList[0].errorList[0].column, row: this.errorsPsdrfList[0].errorList[0].row[0]});
@@ -384,4 +398,77 @@ export class ImportDonneesComponent{
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
   }
+
+  // goBack() {
+  //   if((this.step) > 0){
+  //     this.step = this.step - 7;
+  //     this.myStepper.selectedIndex=this.step;
+  //     this.page = this.page--;
+  //     // this.rerender() 
+  //   }
+
+    // if (this.step > 0) {
+    //   this.step = this.step + 8;
+    //   this.myStepper.previous();
+    // }
+    // if(this.step/8 ){
+    //   this.page = this.step > 3 ? 1 : 0;
+    // }
+    // this.rerender();
+  // }
+
+  // goForward() {
+  //   if((this.step+7) < this.totalMainStepNumber){
+  //     this.step = this.step +7;
+  //     this.myStepper.selectedIndex=this.step;
+  //     this.page = this.page++;
+  //     this.rerender() 
+  //   }
+  // }
+
+  // private rerender() {
+
+  //   let headers = document.getElementsByTagName('mat-step-header');
+  //   let lines = document.getElementsByClassName('mat-stepper-horizontal-line');
+
+  //   console.log(headers);
+  //   for (let h of headers) {
+  //     if (this.page === 0) {
+  //       if (Number.parseInt(h.getAttribute('ng-reflect-index')) > 3) {
+  //         h.style.display = 'none';
+  //       }
+  //       else {
+  //         h.style.display = 'flex';
+  //       }
+  //     }
+  //     else if (this.page === 1) {
+  //       if (Number.parseInt(h.getAttribute('ng-reflect-index')) < 4) {
+  //         h.style.display = 'none';
+  //       }
+  //       else {
+  //         h.style.display = 'flex';
+  //       }
+  //     }
+  //   }
+
+  //   for (let i = 0; i < lines.length; i++) {
+  //     if (this.page === 0) {
+  //       if (i > 2) {
+  //         lines[i].style.display = 'none';
+  //       }
+  //       else {
+  //         lines[i].style.display = 'block';
+  //       }
+  //     }
+  //     else if (this.page === 1) {
+  //       if (i < 4) {
+  //         lines[i].style.display = 'none';
+  //       }
+  //       else {
+  //         lines[i].style.display = 'block';
+  //       }
+  //     }
+  //   }
+
+  // }
 }

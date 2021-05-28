@@ -108,6 +108,7 @@ def data_verification(data):
   #Appel des fonctions de test
   ###Table Arbres
   #Contrôle des essences rencontrées dans la table Arbres
+
   error_List_Temp = check_species(Arbres, CodeEssence, Test, "Arbres")
   if len(error_List_Temp) >0:
     verificationList.append({'errorName': 'Essence dans Arbres', 'errorList': error_List_Temp, 'correctionList': CodeEssence['Essence'].tolist(), 'errorType': 'ReferenceError'})
@@ -379,24 +380,25 @@ def data_verification(data):
       error_List_Temp.append(err)
     verificationList.append({'errorName': "Valeur(s) d'accroissement en diamètre trop importante(s) détectée(s) (seuil à 15 cm entre les 2 inventaires", 'errorList': error_List_Temp, 'errorType': 'DuplicatedError'})
 
+  # A remettre c'est important
 
-  ##### 6/ Incohérence type de Bois Mort sur Pied et de Taillis #####
-  # -- contrôle des types de bois mort sur pied :
-  type_list_temp = Arbres[(~Arbres["Type"].isna()) & (~Arbres.Type.isin(CodeTypoArbres.Id))]
-  type_list = type_list_temp.drop_duplicates()['Type'].tolist()
-  # temp = type_list[['NumPlac', "NumArbre", "Cycle", "Type"]]
-  if len(type_list) > 0:
-    error = []
-    for i in type_list:
-      err= {
-        "message": "Le type "+ str(i) + " figure dans la table Arbres mais ne figure pas dans la table CodeTypoArbres (fichier administrateur) ",
-        "table": "Arbres",
-        "column": 'Type',
-        "row": type_list_temp.index[type_list_temp['Type']==i].tolist(),
-        "value": i,
-      }
-      error.append(err)
-    verificationList.append({'errorName': 'Types dans Arbres', 'errorList': error, 'correctionList': CodeTypoArbres['Id'].tolist(), 'errorType': 'ReferenceError'})
+  # ##### 6/ Incohérence type de Bois Mort sur Pied et de Taillis #####
+  # # -- contrôle des types de bois mort sur pied :
+  # type_list_temp = Arbres[(~Arbres["Type"].isna()) & (~Arbres.Type.isin(CodeTypoArbres.Id))]
+  # type_list = type_list_temp.drop_duplicates()['Type'].tolist()
+  # # temp = type_list[['NumPlac', "NumArbre", "Cycle", "Type"]]
+  # if len(type_list) > 0:
+  #   error = []
+  #   for i in type_list:
+  #     err= {
+  #       "message": "Le type "+ str(i) + " figure dans la table Arbres mais ne figure pas dans la table CodeTypoArbres (fichier administrateur) ",
+  #       "table": "Arbres",
+  #       "column": 'Type',
+  #       "row": type_list_temp.index[type_list_temp['Type']==i].tolist(),
+  #       "value": i,
+  #     }
+  #     error.append(err)
+  #   verificationList.append({'errorName': 'Types dans Arbres', 'errorList': error, 'correctionList': CodeTypoArbres['Id'].tolist(), 'errorType': 'ReferenceError'})
 
   # Souches de plus de 1.30m
   temp = Arbres[(Arbres["Haut"] > 1.30) & (Arbres["Type"]==3)]
