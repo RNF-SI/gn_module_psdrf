@@ -56,7 +56,7 @@ export class ImportDonneesComponent {
 
   // Main Paginator
   // Max number of steps to show at a time in view, Change this to fit your need
-  MAX_STEP = 6;
+  MAX_STEP = 5;
   // Total steps included in mat-stepper in template, Change this to fit your need
   totalSteps =0;
   // Current page from paginator
@@ -371,7 +371,7 @@ export class ImportDonneesComponent {
     //   this.psdrfArray[indexTable][errorCoor.row][errorCoor.column] = modificationErrorObj.newErrorValue;
     // });
 
-    // this.value = this.modifiedElementArr.length *100 / this.totalErrorNumber;
+    this.value = this.modifiedElementArr2.length *100 / this.totalErrorNumber;
   }
 
   /*
@@ -476,6 +476,39 @@ export class ImportDonneesComponent {
         .minStepAllowed + 1}, maxStepAllowed: ${this.maxStepAllowed + 1}`
     );
     this.rerender();
+  }
+
+  /**
+   * This will change min max steps allowed at any time in view
+   */
+   changeMinMaxSteps2(isForward = true) {
+    const pageMultiple = this.page * this.MAX_STEP;
+
+    // maxStepAllowed will be the least value between minStep + MAX_STEP and total steps
+    // minStepAllowed will be the least value between pageMultiple and maxStep - MAX_STEP
+    if (pageMultiple + this.MAX_STEP - 1 <= this.totalSteps - 1) {
+      this.maxStepAllowed = pageMultiple + this.MAX_STEP - 1;
+      this.minStepAllowed = pageMultiple;
+    } else {
+      this.maxStepAllowed = this.totalSteps - 1;
+      this.minStepAllowed = this.maxStepAllowed - this.MAX_STEP + 1;
+    }
+
+    // This will set the next step into view after clicking on back / next paginator arrows
+    if (this.step < this.minStepAllowed || this.step > this.maxStepAllowed) {
+      if (isForward) {
+        this.step = this.minStepAllowed;
+      } else {
+        this.step = this.maxStepAllowed;
+      }
+      this.mainStepper.selectedIndex = this.step;
+    }
+
+    console.log(
+      `page: ${this.page + 1}, step: ${this.step + 1}, minStepAllowed: ${this
+        .minStepAllowed + 1}, maxStepAllowed: ${this.maxStepAllowed + 1}`
+    );
+    this.rerender2();
   }
 
   /**
@@ -605,19 +638,18 @@ export class ImportDonneesComponent {
     this.isLabelVisible = !this.isLabelVisible;
     if(this.isLabelVisible){
       // document.body.style.setProperty('--displayLabel', 'none')
-      this.MAX_STEP = 6;
+      this.MAX_STEP = 5;
     } else {
       // document.body.style.setProperty('--displayLabel', 'none')
-      this.MAX_STEP = 70; 
+      this.MAX_STEP = 60; 
     }
     this.totalPages = Math.ceil(this.totalSteps / this.MAX_STEP);
-    this.minStepAllowed = 0;
-    this.maxStepAllowed = this.MAX_STEP - 1;
-    this.page =0
+    // this.minStepAllowed = 0;
+    // this.maxStepAllowed = this.MAX_STEP - 1;
+    this.page =Math.trunc(this.step / this.MAX_STEP);
     
-    // this.rerender();
     if(this.isLabelVisible){
-      this.rerender();
+      this.changeMinMaxSteps(false);
       const labels = this.contentPlaceholder.nativeElement.querySelectorAll(
         ".mat-step-label"
       );
@@ -625,7 +657,7 @@ export class ImportDonneesComponent {
         l.style.display = "flex";
       });
     } else {
-      this.rerender2();
+      this.changeMinMaxSteps2(false);
       const labels = this.contentPlaceholder.nativeElement.querySelectorAll(
         ".mat-step-label"
       );
