@@ -1,4 +1,4 @@
-import {Component,ViewChildren, QueryList, ViewChild, ElementRef } from '@angular/core';
+import {Component,ViewChildren, QueryList, ViewChild, ElementRef, ChangeDetectorRef, OnInit } from '@angular/core';
 import {MatPaginator} from '@angular/material/paginator';
 import {MatTableDataSource} from '@angular/material/table';
 import { HttpClient } from '@angular/common/http';
@@ -40,6 +40,7 @@ export class ImportDonneesComponent {
   indexMatTabGroup: number=0; //Index de l'onglet sélectionné 
   errorsPsdrfList: any[] = []; //Tableau des erreurs retournées par la requête psdrf_data_verification
   mainStepNameArr: string[]= [];
+  mainStepTextArr:string[]= []
   errorElementArr: PsdrfErrorCoordinates[] = []; //Tableau des erreurs
   errorElementArr2: PsdrfErrorCoordinates2[]= []
   modifiedElementArr:PsdrfErrorCoordinates[] = []; //Tableau des erreurs qui ont été modifiées
@@ -53,24 +54,41 @@ export class ImportDonneesComponent {
 
   @ViewChildren(MatPaginator) paginator = new QueryList<MatPaginator>(); //liste des 8 paginators
 
-  // MAX_PAGE ;
+  // Main Paginator
+  // Max number of steps to show at a time in view, Change this to fit your need
+  MAX_STEP = 6;
+  // Total steps included in mat-stepper in template, Change this to fit your need
+  totalSteps =0;
+  // Current page from paginator
+  page = 0;
+  // Current active step in mat-stepper
+  step = 0;
+  // Min index of step to show in view
+  minStepAllowed = 0;
+  // Max index of step to show in view
+  maxStepAllowed = this.MAX_STEP - 1;
+  // Number of total possible pages
+  totalPages = 0;
+  isLabelVisible: boolean = true;
 
-  // @ViewChild('stepper') private myStepper: MatStepper;
-  // step: number = 0;
-  // page:number = 0;
+
+  @ViewChild('stepper') private mainStepper: MatStepper;
+
+  // private contentPlaceholder: ElementRef;
+
+  @ViewChild('contentPlaceholder') contentPlaceholder:
+   ElementRef;
 
   constructor(
     private http: HttpClient,
     private excelSrv: ExcelImportService,
     private dataSrv: PsdrfDataService,
     private historyService:ErrorHistoryService,
-    private _router: Router
+    private _router: Router,
+    private changeDetector : ChangeDetectorRef,
+    private elementRef: ElementRef
   ) { 
   }
-
-  // ngAfterViewInit() {
-  //   this.rerender();
-  // }
 
   /*
     Fonction déclenchée lors du drag&drop d'un fichier
@@ -134,27 +152,17 @@ export class ImportDonneesComponent {
       this.dataSrv.psdrf_data_verification(JSON.stringify(this.psdrfArray))
         .subscribe(
           error => {
-            this.isLoadingResults = false;
             this.isLoadingErrors = false;
-            
-            console.log(this.psdrfArray)
+            this.isLoadingResults = false;
 
-            //Création du binding entre les MatTable datasources et les données affichée dans la tableau
-            //Remarque: Tout changement dans psdrfArray s'applique automatiquement au tableau
-            for(let i =0; i<this.psdrfArray.length; i++){
-              this.tableDataSourceArray.push( new MatTableDataSource(this.psdrfArray[i]));
-              this.tableDataSourceArray[i].paginator = this.paginator.toArray()[i];
-            }
-            
             let errorsPsdrfListTemp = JSON.parse(error);
             let correctionListTemp, errorListTemp;
             this.mainStepNameArr = [];
             this.totalErrorNumber = 0;
-            // this.totalMainStepNumber =0;
             
             errorsPsdrfListTemp.forEach(mainError => {
               this.mainStepNameArr.push(mainError.errorName);
-              // this.totalMainStepNumber++;
+              this.mainStepTextArr.push(mainError.errorText);
               switch(mainError.errorType){
                 case "ReferenceError":
                   errorListTemp = [];
@@ -167,22 +175,41 @@ export class ImportDonneesComponent {
                   })
                   this.errorsPsdrfList.push({'errorList': errorListTemp, 'errorType': 'ReferenceError', 'correctionList': mainError.correctionList});
                   break;
-
-                case "DuplicatedError":
-                  errorListTemp = [];
-                  mainError.errorList.forEach(error => {
-                    console.log(error.value);
-                    errorListTemp.push(new DuplicatedError(error.message, error.table, error.column, error.row, JSON.parse(error.value)));
-                    this.errorElementArr2.push(new PsdrfErrorCoordinates2(error.table, error.column, error.row));
-                    error.row.forEach( idx => {
-                      this.totalErrorNumber ++;
+                  
+                  case "DuplicatedError":
+                    errorListTemp = [];
+                    mainError.errorList.forEach(error => {
+                      // console.log(error.value);
+                      errorListTemp.push(new DuplicatedError(error.message, error.table, error.column, error.row, JSON.parse(error.value)));
+                      this.errorElementArr2.push(new PsdrfErrorCoordinates2(error.table, error.column, error.row));
+                      error.row.forEach( idx => {
+                        this.totalErrorNumber ++;
+                      })
                     })
-                  })
-                  this.errorsPsdrfList.push({'errorList': errorListTemp, 'errorType': 'DuplicatedError'});
-                  break;
+                    this.errorsPsdrfList.push({'errorList': errorListTemp, 'errorType': 'DuplicatedError'});
+                    break;
               }
             })
-            console.log(this.errorsPsdrfList)
+
+            this.changeDetector.detectChanges();
+            
+            
+            // console.log(this.psdrfArray)
+            
+            //Création du binding entre les MatTable datasources et les données affichée dans la tableau
+            //Remarque: Tout changement dans psdrfArray s'applique automatiquement au tableau
+            for(let i =0; i<this.psdrfArray.length; i++){
+              this.tableDataSourceArray.push( new MatTableDataSource(this.psdrfArray[i]));
+              this.tableDataSourceArray[i].paginator = this.paginator.toArray()[i];
+            }
+
+            
+
+                
+            this.totalSteps = errorsPsdrfListTemp.length;
+            this.totalPages = Math.ceil(this.totalSteps / this.MAX_STEP);
+            this.changeMinMaxSteps();
+            // console.log(this.errorsPsdrfList)
             //Affichage de la toute première erreur de errorsPsdrfList dans le MatTab
             this.displayErrorOnMatTab2({table: this.errorsPsdrfList[0].errorList[0].table, column: [this.errorsPsdrfList[0].errorList[0].column], row: this.errorsPsdrfList[0].errorList[0].row[0]})
             this.displayErrorOnMatTab({table: this.errorsPsdrfList[0].errorList[0].table, column: this.errorsPsdrfList[0].errorList[0].column, row: this.errorsPsdrfList[0].errorList[0].row[0]});
@@ -260,6 +287,7 @@ export class ImportDonneesComponent {
     Fonction permettant d'afficher le bon endroit du tableau lorsque l'évènement reçu correspond à un mainstep qui a été cliqué
   */
   displayOnMainStepClick(stepperSelectionObj: StepperSelectionEvent): void{
+    this.step = stepperSelectionObj.selectedIndex;
     if(this.historyService.isMainStepHasAlreadyBeenClicked(stepperSelectionObj.selectedIndex)){
       this.displayErrorOnMatTab2(this.historyService.getLastSelectedCoordinates(stepperSelectionObj.selectedIndex));
     } else {
@@ -350,6 +378,8 @@ export class ImportDonneesComponent {
     Modifie la liste des main stepper qui ont été modifiés
   */
   modifyMainStepperAppearance(mainStepIndex: number){
+    this.mainStepper.selected.completed = true;
+    this.mainStepper.next();
     this.totallyModifiedMainStepperArr.push(mainStepIndex);
   }
 
@@ -376,6 +406,7 @@ export class ImportDonneesComponent {
     this.totalErrorNumber=0;
     this.value = 0;
     this.selectedErrorElementArr = null;
+    this.isLabelVisible = true;
 
   }
 
@@ -399,76 +430,218 @@ export class ImportDonneesComponent {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
   }
 
-  // goBack() {
-  //   if((this.step) > 0){
-  //     this.step = this.step - 7;
-  //     this.myStepper.selectedIndex=this.step;
-  //     this.page = this.page--;
-  //     // this.rerender() 
-  //   }
+  //Main Paginator Functions
+    /**
+   * Change the page in view
+   */
+  pageChangeLogic(isForward = true) {
+    if (this.step < this.minStepAllowed || this.step > this.maxStepAllowed) {
+      if (isForward) {
+        this.page++;
+      } else {
+        this.page--;
+      }
+      this.changeMinMaxSteps(isForward);
+    }
+  }
 
-    // if (this.step > 0) {
-    //   this.step = this.step + 8;
-    //   this.myStepper.previous();
-    // }
-    // if(this.step/8 ){
-    //   this.page = this.step > 3 ? 1 : 0;
-    // }
+  /**
+   * This will change min max steps allowed at any time in view
+   */
+  changeMinMaxSteps(isForward = true) {
+    const pageMultiple = this.page * this.MAX_STEP;
+
+    // maxStepAllowed will be the least value between minStep + MAX_STEP and total steps
+    // minStepAllowed will be the least value between pageMultiple and maxStep - MAX_STEP
+    if (pageMultiple + this.MAX_STEP - 1 <= this.totalSteps - 1) {
+      this.maxStepAllowed = pageMultiple + this.MAX_STEP - 1;
+      this.minStepAllowed = pageMultiple;
+    } else {
+      this.maxStepAllowed = this.totalSteps - 1;
+      this.minStepAllowed = this.maxStepAllowed - this.MAX_STEP + 1;
+    }
+
+    // This will set the next step into view after clicking on back / next paginator arrows
+    if (this.step < this.minStepAllowed || this.step > this.maxStepAllowed) {
+      if (isForward) {
+        this.step = this.minStepAllowed;
+      } else {
+        this.step = this.maxStepAllowed;
+      }
+      this.mainStepper.selectedIndex = this.step;
+    }
+
+    console.log(
+      `page: ${this.page + 1}, step: ${this.step + 1}, minStepAllowed: ${this
+        .minStepAllowed + 1}, maxStepAllowed: ${this.maxStepAllowed + 1}`
+    );
+    this.rerender();
+  }
+
+  /**
+   * Function to go back a page from the current step
+   */
+  paginatorBack() {
+    this.page--;
+    this.changeMinMaxSteps(false);
+  }
+
+  /**
+   * Function to go next a page from the current step
+   */
+  paginatorNext() {
+    this.page++;
+    this.changeMinMaxSteps(true);
+  }
+
+  /**
+   * Function to go back from the current step
+   */
+  goBack() {
+    if (this.step > 0) {
+      this.step--;
+      this.mainStepper.previous();
+      this.pageChangeLogic(false);
+    }
+  }
+
+  /**
+   * Function to go forward from the current step
+   */
+  goForward() {
+    if (this.step < this.totalSteps - 1) {
+      this.step++;
+      this.mainStepper.next();
+      this.pageChangeLogic(true);
+    }
+  }
+
+  /**
+   * This will display the steps in DOM based on the min max step indexes allowed in view
+   */
+  private rerender() {
+    // console.log(this.contentPlaceholder.nativeElement)
+    //setTimeout(() => {console.log(this.contentPlaceholder.nativeElement)})
+    const el: HTMLElement = this.contentPlaceholder.nativeElement;
+
+    const headers = this.contentPlaceholder.nativeElement.querySelectorAll(
+      "mat-step-header"
+    );
+    // console.log(headers)
+
+    const lines = this.contentPlaceholder.nativeElement.querySelectorAll(
+      ".mat-stepper-horizontal-line"
+    );
+    console.log(headers)
+    console.log(lines)
+
+
+    // If the step index is in between min and max allowed indexes, display it into view, otherwise set as none
+    headers.forEach((h, index) => {
+      console.log(index)
+      if (index >= this.minStepAllowed && 
+        index <= this.maxStepAllowed) {
+        h.style.display = "flex";
+        h.style.padding = "24px";
+      } else {
+        h.style.display = "none";
+      }
+    });
+
+    // If the line index is between min and max allowed indexes, display it in view, otherwise set as none
+    // One thing to note here: length of lines is 1 less than length of headers
+    // For eg, if there are 8 steps, there will be 7 lines joining those 8 steps
+    lines.forEach((l, index) => {
+      console.log(index)
+      if (index >= this.minStepAllowed && 
+        index <= this.maxStepAllowed) {
+        l.style.display = "block";
+      } else {
+        l.style.display = "none";
+      }
+    });
+  }
+
+  private rerender2() {
+    // console.log(this.contentPlaceholder.nativeElement)
+    //setTimeout(() => {console.log(this.contentPlaceholder.nativeElement)})
+    const el: HTMLElement = this.contentPlaceholder.nativeElement;
+
+    const headers = this.contentPlaceholder.nativeElement.querySelectorAll(
+      "mat-step-header"
+    );
+    // console.log(headers)
+
+    const lines = this.contentPlaceholder.nativeElement.querySelectorAll(
+      ".mat-stepper-horizontal-line"
+    );
+
+    console.log(headers)
+    console.log(lines)
+
+
+    // If the step index is in between min and max allowed indexes, display it into view, otherwise set as none
+    headers.forEach((h, index) => {
+      console.log(index)
+      if (index >= this.minStepAllowed && 
+        index <= this.maxStepAllowed) {
+        h.style.display = "flex";
+        h.style.padding = "24px 1px";
+      } else {
+        h.style.display = "none";
+      }
+    });
+
+    // If the line index is between min and max allowed indexes, display it in view, otherwise set as none
+    // One thing to note here: length of lines is 1 less than length of headers
+    // For eg, if there are 8 steps, there will be 7 lines joining those 8 steps
+    lines.forEach((l) => {
+      l.style.display = "none";
+    });
+
+  }
+
+  showStepLabels(){
+    this.isLabelVisible = !this.isLabelVisible;
+    if(this.isLabelVisible){
+      // document.body.style.setProperty('--displayLabel', 'none')
+      this.MAX_STEP = 6;
+    } else {
+      // document.body.style.setProperty('--displayLabel', 'none')
+      this.MAX_STEP = 70; 
+    }
+    this.totalPages = Math.ceil(this.totalSteps / this.MAX_STEP);
+    this.minStepAllowed = 0;
+    this.maxStepAllowed = this.MAX_STEP - 1;
+    this.page =0
+    
     // this.rerender();
-  // }
+    if(this.isLabelVisible){
+      this.rerender();
+      const labels = this.contentPlaceholder.nativeElement.querySelectorAll(
+        ".mat-step-label"
+      );
+      labels.forEach((l) => {
+        l.style.display = "flex";
+      });
+    } else {
+      this.rerender2();
+      const labels = this.contentPlaceholder.nativeElement.querySelectorAll(
+        ".mat-step-label"
+      );
+      labels.forEach((l) => {
+        l.style.display = "none";
+      });
+    }
+    // this.changeDetector.detectChanges();
+  }
+  
+  checkCorrifiedSubStepper(mainStepIndex: number): boolean{
+    return this.totallyModifiedMainStepperArr.includes(mainStepIndex);
+  }
+  
+  checkMainStepCompleted(mainStepIndex: number): boolean{
+    return this.totallyModifiedMainStepperArr.includes(mainStepIndex);
+  }
 
-  // goForward() {
-  //   if((this.step+7) < this.totalMainStepNumber){
-  //     this.step = this.step +7;
-  //     this.myStepper.selectedIndex=this.step;
-  //     this.page = this.page++;
-  //     this.rerender() 
-  //   }
-  // }
-
-  // private rerender() {
-
-  //   let headers = document.getElementsByTagName('mat-step-header');
-  //   let lines = document.getElementsByClassName('mat-stepper-horizontal-line');
-
-  //   console.log(headers);
-  //   for (let h of headers) {
-  //     if (this.page === 0) {
-  //       if (Number.parseInt(h.getAttribute('ng-reflect-index')) > 3) {
-  //         h.style.display = 'none';
-  //       }
-  //       else {
-  //         h.style.display = 'flex';
-  //       }
-  //     }
-  //     else if (this.page === 1) {
-  //       if (Number.parseInt(h.getAttribute('ng-reflect-index')) < 4) {
-  //         h.style.display = 'none';
-  //       }
-  //       else {
-  //         h.style.display = 'flex';
-  //       }
-  //     }
-  //   }
-
-  //   for (let i = 0; i < lines.length; i++) {
-  //     if (this.page === 0) {
-  //       if (i > 2) {
-  //         lines[i].style.display = 'none';
-  //       }
-  //       else {
-  //         lines[i].style.display = 'block';
-  //       }
-  //     }
-  //     else if (this.page === 1) {
-  //       if (i < 4) {
-  //         lines[i].style.display = 'none';
-  //       }
-  //       else {
-  //         lines[i].style.display = 'block';
-  //       }
-  //     }
-  //   }
-
-  // }
 }

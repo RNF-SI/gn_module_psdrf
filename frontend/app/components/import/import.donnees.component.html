@@ -658,35 +658,59 @@
         </mat-tab>
       </mat-tab-group>
 
-      <div *ngIf="isCurrentVerification">
-        <div *ngIf="!isLoadingResults">
-          <error-main-stepper (selectionChange)="displayOnMainStepClick($event)" [totallyModifiedMainStepperArr]="totallyModifiedMainStepperArr" [mainStepNameArr]="mainStepNameArr">
-            <cdk-step *ngFor="let error of errorsPsdrfList; let mainStepIndex = index">
-              <error-main-step 
-                (subStepSelectionChange)="displayOnSubStepClick($event)" 
-                (indexButtonClicked)="displayErrorOnMatTab($event)" 
-                (indexButtonClicked2)="displayErrorOnMatTab2($event)" 
-                (modificationValidated)="modifyErrorValue($event)" 
-                (modificationValidated2)="modifyErrorValue2($event)" 
-                (allSubStepModified)="modifyMainStepperAppearance($event)" 
-                [step]="error" 
-                [mainStepIndex]="mainStepIndex"
-              >
-            </error-main-step>
-            </cdk-step>
-          </error-main-stepper>
-          <!-- <button (click)="goBack()" type="button">Back</button>
-          <button (click)="goForward()" type="button">Next</button> -->
+      <div *ngIf="isCurrentVerification && !isLoadingResults">
+        <div class="solution" #contentPlaceholder>
+          <div class="arrow-icons">
+            <button mat-icon-button (click)="paginatorBack()" *ngIf="page > 0">
+              <mat-icon>keyboard_arrow_left</mat-icon>
+            </button>
+          </div>
+          <div class="stepper">
+            <mat-horizontal-stepper labelPosition="bottom" #stepper (selectionChange)="displayOnMainStepClick($event)" >
+              <ng-template matStepperIcon="edit">
+                <mat-icon>done</mat-icon>
+              </ng-template>
 
-          <mat-progress-bar 
-            class="example-margin"
-            [color]="color"
-            mode="determinate" 
-            [value]="value"
-          >
-          </mat-progress-bar>
-
+             
+              <mat-step *ngFor="let error of errorsPsdrfList; index as mainStepIndex" [completed]="checkMainStepCompleted(mainStepIndex)">
+                <ng-template matStepLabel>
+                  <div>{{mainStepNameArr[mainStepIndex]}}</div>
+                </ng-template>
+                <error-main-step 
+                  (subStepSelectionChange)="displayOnSubStepClick($event)" 
+                  (indexButtonClicked)="displayErrorOnMatTab($event)" 
+                  (indexButtonClicked2)="displayErrorOnMatTab2($event)" 
+                  (modificationValidated)="modifyErrorValue($event)" 
+                  (modificationValidated2)="modifyErrorValue2($event)" 
+                  (allSubStepModified)="modifyMainStepperAppearance($event)" 
+                  [step]="error" 
+                  [mainStepIndex]="mainStepIndex"
+                  [mainStepText]="mainStepTextArr[mainStepIndex]"
+                >
+                </error-main-step>
+              </mat-step>
+            </mat-horizontal-stepper>
+          </div>
+          <div class="arrow-icons">
+            <button mat-icon-button (click)="paginatorNext()" *ngIf="page < totalPages - 1">
+              <mat-icon>keyboard_arrow_right</mat-icon>
+            </button>
+          </div>
         </div>
+        <div class="action-buttons">
+          <button mat-button (click)="goBack()" *ngIf="step > 0">Précédent</button>
+          <button mat-button (click)="goForward()" *ngIf="step < totalSteps - 1">Suivant</button>
+          <button mat-button (click)="showStepLabels()">Change Display</button>
+        </div>
+
+        <mat-progress-bar 
+          class="example-margin"
+          [color]="color"
+          mode="determinate" 
+          [value]="value"
+        >
+        </mat-progress-bar>
+
       </div>
     </div>
   </div>

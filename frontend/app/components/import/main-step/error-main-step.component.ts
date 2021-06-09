@@ -14,6 +14,7 @@ import {PsdrfError, PsdrfErrorCoordinates, PsdrfErrorCoordinates2} from '../../.
     totallyModifiedSubStepperArr: number[]=[];
 
     @Input() mainStepIndex: number;
+    @Input() mainStepText: string;
     // @Input() step: {'errorList': PsdrfError[], 'correctionList': any};
     @Input() step: any;
 

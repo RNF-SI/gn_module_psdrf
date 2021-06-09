@@ -37,7 +37,6 @@ import {PsdrfError, PsdrfErrorCoordinates, PsdrfErrorCoordinates2} from '../../.
     }
 
     ngOnInit(){
-      console.log(this.psdrfError)
       this.datasource = new MatTableDataSource(this.psdrfError.value);
     }
 

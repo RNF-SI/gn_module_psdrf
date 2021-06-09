@@ -111,7 +111,7 @@ def data_verification(data):
 
   error_List_Temp = check_species(Arbres, CodeEssence, Test, "Arbres")
   if len(error_List_Temp) >0:
-    verificationList.append({'errorName': 'Essence dans Arbres', 'errorList': error_List_Temp, 'correctionList': CodeEssence['Essence'].tolist(), 'errorType': 'ReferenceError'})
+    verificationList.append({'errorName': 'Essence dans Arbres', 'errorText':"Essence dans Arbres", 'errorList': error_List_Temp, 'correctionList': CodeEssence['Essence'].tolist(), 'errorType': 'DuplicatedError'})
   
   #Contrôle des sauts de cycles: Contrôle qu'il n'y ait pas de cycles qui sautent
   error = []
@@ -124,13 +124,13 @@ def data_verification(data):
         if not i in listCycle:
           err = {
             "message": "Le cycle"+ str(i) +" est sauté dans la table Arbres",
-            "table": "Arbres",
+            "table": "Arbres", 
             "column": 'Cycle',
           }
           error.append(err)
 
   if len(error) >0:
-    verificationList.append({'errorName': 'Cycles dans Arbres', 'errorList': error})
+    verificationList.append({'errorName': 'Cycles dans Arbres', 'errorText': 'Cycles dans Arbres', 'errorList': error})
 
   #Contrôle des valeurs dupliquées
   error = []
@@ -156,8 +156,10 @@ def data_verification(data):
         }
       i = i + 1
       error_List_Temp.append(err)
-    verificationList.append({'errorName': 'Lignes dupliquées dans la table Arbres', 'errorList': error_List_Temp, 'errorType': 'DuplicatedError'})
-
+    verificationList.append({'errorName': 'Duplication dans Arbres', 'errorText':'Lignes dupliquées dans la table Arbres', 'errorList': error_List_Temp, 'errorType': 'DuplicatedError'})
+    print("Dupliqué")
+    print(listDupl)
+    print(valuesDupl)
 
 
   # 5/ Contrôle du suivi des arbres entre les différents inventaires
@@ -230,7 +232,7 @@ def data_verification(data):
             "value": tValues.to_json(orient='records'),
           }
         error_List_Temp.append(err)
-      verificationList.append({'errorName': "Incohérence(s) relevée(s) sur les valeurs d'Essence, Azimut et Dist entre les différents inventaires", 'errorList': error_List_Temp, 'errorType': 'DuplicatedError'})
+      verificationList.append({'errorName': "Incohérence dans Arbres", 'errorText': "Incohérence(s) relevée(s) sur les valeurs d'Essence, Azimut et Dist entre les différents inventaires", 'errorList': error_List_Temp, 'errorType': 'DuplicatedError'})
 
 
 
@@ -293,7 +295,7 @@ def data_verification(data):
           "value": tValues.to_json(orient='records'),
         }
       error_List_Temp.append(err)
-    verificationList.append({'errorName': "Acroissement(s) sur le diamètre négatif(s) constaté(s) sur la population d'arbres vivants entre les différents inventaires", 'errorList': error_List_Temp, 'errorType': 'DuplicatedError'})
+    verificationList.append({'errorName': "Accroissement négatif dans Arbres" , 'errorText': "Accroissement(s) sur le diamètre négatif(s) constaté(s) sur la population d'arbres vivants entre les différents inventaires", 'errorList': error_List_Temp, 'errorType': 'DuplicatedError'})
 
 
 
@@ -341,7 +343,7 @@ def data_verification(data):
           "value": tValues.to_json(orient='records'),
         }
       error_List_Temp.append(err)
-    verificationList.append({'errorName': "Accroissement(s) sur le diamètre positif(s) constaté(s) sur la population d'arbres morts sur pied entre les différents inventaires.", 'errorList': error_List_Temp, 'errorType': 'DuplicatedError'})
+    verificationList.append({'errorName': "Accroissement positif dans Arbres", 'errorText': "Accroissement(s) sur le diamètre positif(s) constaté(s) sur la population d'arbres morts sur pied entre les différents inventaires.", 'errorList': error_List_Temp, 'errorType': 'DuplicatedError'})
 
 
 
@@ -378,7 +380,7 @@ def data_verification(data):
           "value": tValues.to_json(orient='records'),
         }
       error_List_Temp.append(err)
-    verificationList.append({'errorName': "Valeur(s) d'accroissement en diamètre trop importante(s) détectée(s) (seuil à 15 cm entre les 2 inventaires", 'errorList': error_List_Temp, 'errorType': 'DuplicatedError'})
+    verificationList.append({'errorName': "Accroissement anormal dans Arbres", 'errorText': "Valeur(s) d'accroissement en diamètre trop importante(s) détectée(s) (seuil à 15 cm entre les 2 inventaires", 'errorList': error_List_Temp, 'errorType': 'DuplicatedError'})
 
   # A remettre c'est important
 
@@ -414,7 +416,7 @@ def data_verification(data):
           "value": temp.loc[[index],:].to_json(orient='records'),
         }
       error_List_Temp.append(err)
-    verificationList.append({'errorName': "BMP classé(s) en Type 3 (souche) et faisant strictement plus d'1,30m. Impossible dans le PSDRF.", 'errorList': error_List_Temp, 'errorType': 'DuplicatedError'})
+    verificationList.append({'errorName': "Souche(s) incohérente(s) dans Arbres", 'errorText': "BMP classé(s) en Type 3 (souche) et faisant strictement plus d'1,30m. Impossible dans le PSDRF.", 'errorList': error_List_Temp, 'errorType': 'DuplicatedError'})
 
 
   #Arbres ou chandelles < 1.30m
@@ -431,7 +433,7 @@ def data_verification(data):
           "value": temp.loc[[index],:].to_json(orient='records'),
         }
       error_List_Temp.append(err)
-    verificationList.append({'errorName': "Il y a des BMP classés en 'Arbre' ou en 'Chandelle' et faisant moins d'1,30m. Impossible dans le PSDRF", 'errorList': error_List_Temp, 'errorType': 'DuplicatedError'})
+    verificationList.append({'errorName': "Arbre(s) incohérent(s) dans Arbres", 'errorText': "Il y a des BMP classés en 'Arbre' ou en 'Chandelle' et faisant moins d'1,30m. Impossible dans le PSDRF", 'errorList': error_List_Temp, 'errorType': 'DuplicatedError'})
 
 
   # Incohérences sur les données Type - Haut - StadeD - StadeE des BMP 
@@ -450,7 +452,7 @@ def data_verification(data):
           "value": temp.loc[[index],:].to_json(orient='records'),
         }
       error_List_Temp.append(err)
-    verificationList.append({'errorName': "Information(s) manquante(s) pour les BMP", 'errorList': error_List_Temp, 'errorType': 'DuplicatedError'})
+    verificationList.append({'errorName': "Information(s) manquante(s) dans Arbres", 'errorText': "Information(s) manquante(s) pour les BMP", 'errorList': error_List_Temp, 'errorType': 'DuplicatedError'})
 
   # Incohérences sur les données de Taillis 
   Taillis_Temp = Arbres[~Arbres.Taillis.isin(["t", "f", pd.NA])]
@@ -466,7 +468,7 @@ def data_verification(data):
           "value": Taillis_Temp.loc[[index],:].to_json(orient='records'),
         }
       error_List_Temp.append(err)
-    verificationList.append({'errorName': "Il y a des informations incorrectes dans la colonne Taillis. Rappel : seules notations acceptées (hormis valeurs vides) = 't' ou 'f'", 'errorList': error_List_Temp, 'errorType': 'DuplicatedError'})
+    verificationList.append({'errorName': "Taillis incorrecte(s) dans Arbres", 'errorText': "Il y a des informations incorrectes dans la colonne Taillis. Rappel : seules notations acceptées (hormis valeurs vides) = 't' ou 'f'", 'errorList': error_List_Temp, 'errorType': 'DuplicatedError'})
 
 
   ##### 7/ Contrôle des valeurs absentes #####
@@ -484,7 +486,7 @@ def data_verification(data):
           "value": Empty_temp.loc[[index],:].to_json(orient='records'),
         }
       error_List_Temp.append(err)
-    verificationList.append({'errorName': "Diam2 vides pour des arbres vivants de Diam1 > 30 cm", 'errorList': error_List_Temp, 'errorType': 'DuplicatedError'})
+    verificationList.append({'errorName': "Diam2 non renseigné", "errorText": "Diam2 vides pour des arbres vivants de Diam1 > 30 cm", 'errorList': error_List_Temp, 'errorType': 'DuplicatedError'})
 
 
   # -- autres variables
@@ -502,7 +504,7 @@ def data_verification(data):
           "value": Vital.loc[[index],:].to_json(orient='records'),
         }
       error_List_Temp.append(err)
-    verificationList.append({'errorName': "Il manque des informations à des colonne(s) dans la table Arbre", 'errorList': error_List_Temp, 'errorType': 'DuplicatedError'})
+    verificationList.append({'errorName': "Informations manquantes dans Arbres", 'errorText': "Il manque des informations à des colonne(s) dans la table Arbre", 'errorList': error_List_Temp, 'errorType': 'DuplicatedError'})
 
   # ---------- Contrôle des codes écologiques : ---------- #
   Table_temp = Arbres[~Arbres["CodeEcolo"].isna() & Arbres["Ref_CodeEcolo"].isna()]
@@ -519,7 +521,7 @@ def data_verification(data):
           "value": Table_temp.loc[[index],:].to_json(orient='records'),
         }
       error_List_Temp.append(err)
-    verificationList.append({'errorName': "Il y a des arbres portant des DMH sans référence de codification renseignée (Ref_CodeEcolo vide pour CodeEcolo non vide)", 'errorList': error_List_Temp, 'errorType': 'DuplicatedError'})
+    verificationList.append({'errorName': "DMH sans référence de codification", 'errorText': "Il y a des arbres portant des DMH sans référence de codification renseignée (Ref_CodeEcolo vide pour CodeEcolo non vide)", 'errorList': error_List_Temp, 'errorType': 'DuplicatedError'})
 
 
   # # Référence utilisées
@@ -599,7 +601,7 @@ def data_verification(data):
             "value": posProSilva_temp.loc[[index],:].to_json(orient='records'),
           }
         error_List_Temp.append(err)
-      verificationList.append({'errorName': "Il y a des codes DMH référencés ProSilva qui ne sont pas reconnus", 'errorList': error_List_Temp, 'errorType': 'DuplicatedError'})
+      verificationList.append({'errorName': 'Code(s) DMH Prosilva non reconnu(s)', 'errorText': "Il y a des codes DMH référencés ProSilva qui ne sont pas reconnus", 'errorList': error_List_Temp, 'errorType': 'DuplicatedError'})
 
 
 
@@ -650,7 +652,7 @@ def data_verification(data):
             "value": posEFI_temp.loc[[index],:].to_json(orient='records'),
           }
         error_List_Temp.append(err)
-      verificationList.append({'errorName': "Il y a des codes DMH référencés EFI qui ne sont pas reconnus", 'errorList': error_List_Temp, 'errorType': 'DuplicatedError'})
+      verificationList.append({'errorName': 'Code(s) DMH EFI non reconnu(s)', 'errorText': "Il y a des codes DMH référencés EFI qui ne sont pas reconnus", 'errorList': error_List_Temp, 'errorType': 'DuplicatedError'})
 
 
   # --- Codification IRSTEA
@@ -684,7 +686,7 @@ def data_verification(data):
             "value": posIRSTEA_temp.loc[[index],:].to_json(orient='records'),
           }
         error_List_Temp.append(err)
-      verificationList.append({'errorName': "Il y a des codes DMH référencés IRSTEA qui ne sont pas reconnus", 'errorList': error_List_Temp, 'errorType': 'DuplicatedError'})
+      verificationList.append({'errorName': 'Code(s) DMH IRSTEA non reconnu(s)', 'errorText': "Il y a des codes DMH référencés IRSTEA qui ne sont pas reconnus", 'errorList': error_List_Temp, 'errorType': 'DuplicatedError'})
 
 
 
@@ -703,7 +705,7 @@ def data_verification(data):
           "value": posUnknown.loc[[index],:].to_json(orient='records'),
         }
       error_List_Temp.append(err)
-    verificationList.append({'errorName': "Il y a des références à des codifications de codes écologiques non reconnues. Rappel : les seules codifications reconnues sont celles de ProSilva, de l'IRSTEA et de l'EFI.", 'errorList': error_List_Temp, 'errorType': 'DuplicatedError'})
+    verificationList.append({'errorName': 'Code(s) écologiques non reconnu(s)', 'errorText': "Il y a des références à des codifications de codes écologiques non reconnues. Rappel : les seules codifications reconnues sont celles de ProSilva, de l'IRSTEA et de l'EFI.", 'errorList': error_List_Temp, 'errorType': 'DuplicatedError'})
 
     # temp["CodeEcolo"] = 
 
@@ -766,18 +768,18 @@ def data_verification(data):
   error_List_Temp = check_code(CodeDurete, BMSsup30, soundness_code, "BMSsup30")
   print(error_List_Temp)
   if len(error_List_Temp) >0:
-    verificationList.append({'errorName': 'Contrôle Stade de décomposition dans BMSsup30', 'errorList': error_List_Temp, 'correctionList': CodeDurete['Code'].tolist(), 'errorType': 'ReferenceError'})
+    verificationList.append({'errorName': 'Contrôle Stade de décomposition non reconnu(s)', 'errorText': 'Contrôle Stade de décomposition dans BMSsup30', 'errorList': error_List_Temp, 'correctionList': CodeDurete['Code'].tolist(), 'errorType': 'DuplicatedError'})
 
   # Contrôle des stades de d'écorce'
   bark_code = "écorce"
   error_List_Temp = check_code(CodeEcorce, BMSsup30, bark_code, "BMSsup30")
   if len(error_List_Temp) >0:
-    verificationList.append({'errorName': "Contrôle Stade d'écorce dans BMSsup30", 'errorList': error_List_Temp, 'correctionList': CodeEcorce['Code'].tolist(), 'errorType': 'ReferenceError'})
+    verificationList.append({'errorName': "Contrôle Stade d'écorce non reconnu", 'errorText':  "Contrôle Stade d'écorce dans BMSsup30", 'errorList': error_List_Temp, 'correctionList': CodeEcorce['Code'].tolist(), 'errorType': 'DuplicatedError'})
 
   # Contrôle des numéros d'inventaire
   check_cycle_Error_List = check_cycle(BMSsup30, Test, CyclesCodes, "BMSsup30", An, Dispositifs)
   if len(check_cycle_Error_List) >0:
-    verificationList.append({'errorName': 'Contrôle des cycles dans BMSsup30', 'errorList' : check_cycle_Error_List, 'errorType': 'ReferenceError'})
+    verificationList.append({'errorName': "Contrôle des cycles dans BMSsup30", 'errorText': 'Contrôle des cycles dans BMSsup30', 'errorList' : check_cycle_Error_List, 'errorType': 'ReferenceError'})
 
   print("\n \n \n")
 
@@ -818,7 +820,7 @@ def data_verification(data):
           "value": Vital.loc[[index],:].to_json(orient='records'),
         }
       error_List_Temp.append(err)
-    verificationList.append({'errorName': "Il manque des informations à des colonne(s) dans la table BMSsup30", 'errorList': error_List_Temp, 'errorType': 'DuplicatedError'})
+    verificationList.append({'errorName': "Informations manquantes dans BMSsup30", 'errorText': "Il manque des informations à des colonne(s) dans la table BMSsup30", 'errorList': error_List_Temp, 'errorType': 'DuplicatedError'})
 
   # Contrôle des valeurs dupliquées
   error = []
@@ -847,7 +849,7 @@ def data_verification(data):
         #possibilité de supression d'un des 2 ou de modification
       i = i + 1
       error_List_Temp.append(err)
-    verificationList.append({'errorName': 'Lignes dupliquées dans la table BMSsup30', 'errorList': error_List_Temp, 'errorType': 'DuplicatedError'})
+    verificationList.append({'errorName': "Duplication dans BMSsup30", 'errorText': 'Lignes dupliquées dans la table BMSsup30', 'errorList': error_List_Temp, 'errorType': 'DuplicatedError'})
 
 
 
@@ -870,7 +872,7 @@ def data_verification(data):
           "value": temp.loc[[index],:].to_json(orient='records'),
         }
       error_List_Temp.append(err)
-    verificationList.append({'errorName': "Certains billons ont des valeurs de diamètre inférieures à 30 cm. Impossible dans le PSDRF", 'errorList': error_List_Temp, 'errorType': 'DuplicatedError'})
+    verificationList.append({'errorName': "Diamètre trop petit dans BMSsup30", 'errorText': "Certains billons ont des valeurs de diamètre inférieures à 30 cm. Impossible dans le PSDRF", 'errorList': error_List_Temp, 'errorType': 'DuplicatedError'})
 
   # ----- Contrôle DiamIni et DiamFin non vides pour les billons > 5m :
   temp = BMSsup30[(BMSsup30["DiamFin"].isna() | BMSsup30["DiamMed"].isna() | BMSsup30["DiamIni"].isna()) & (BMSsup30["Longueur"] >= 5)]
@@ -886,7 +888,7 @@ def data_verification(data):
           "value": temp.loc[[index],:].to_json(orient='records'),
         }
       error_List_Temp.append(err)
-    verificationList.append({'errorName': "Valeurs manquantes dans 'DiamIni', 'DiamMed' ou 'DiamFin' pour des billons d'au moins 5 m de longueur. Impossible dans le PSDRF", 'errorList': error_List_Temp, 'errorType': 'DuplicatedError'})
+    verificationList.append({'errorName': "Diamètre(s) manquant(s) dans BMSsup30", 'errorText': "Valeurs manquantes dans 'DiamIni', 'DiamMed' ou 'DiamFin' pour des billons d'au moins 5 m de longueur. Impossible dans le PSDRF", 'errorList': error_List_Temp, 'errorType': 'DuplicatedError'})
 
   # ----- Contrôle DiamIni vide ou DiamFin vides pour les billons < 5m :
   temp = BMSsup30[((~BMSsup30["DiamFin"].isna()) | (~BMSsup30["DiamIni"].isna())) & (BMSsup30["Longueur"] < 5)]
@@ -902,7 +904,7 @@ def data_verification(data):
           "value": temp.loc[[index],:].to_json(orient='records'),
         }
       error_List_Temp.append(err)
-    verificationList.append({'errorName': "Billons de moins 5m de longueur pour lesquels des valeurs de 'DiamIni' et/ou de 'DiamFin' sont renseignées (impossible dans le PSDRF)", 'errorList': error_List_Temp, 'errorType': 'DuplicatedError'})
+    verificationList.append({'errorName': "Diamètre(s) non necessaire(s) dans BMSsup30", 'errorText': "Billons de moins 5m de longueur pour lesquels des valeurs de 'DiamIni' et/ou de 'DiamFin' sont renseignées (impossible dans le PSDRF)", 'errorList': error_List_Temp, 'errorType': 'DuplicatedError'})
 
 
 
@@ -920,7 +922,7 @@ def data_verification(data):
           "value": temp.loc[[index],:].to_json(orient='records'),
         }
       error_List_Temp.append(err)
-    verificationList.append({'errorName': "Incohérence possible dans les diamètres des billons : certains ne respectent pas la logique 'DiamIni' > 'DiamMed' > 'DiamFin'", 'errorList': error_List_Temp, 'errorType': 'DuplicatedError'})
+    verificationList.append({'errorName': "Grandeurs des Diamètre(s) incohérents dans BMSsup30", 'errorText': "Incohérence possible dans les diamètres des billons : certains ne respectent pas la logique 'DiamIni' > 'DiamMed' > 'DiamFin'", 'errorList': error_List_Temp, 'errorType': 'DuplicatedError'})
 
   
 
@@ -986,7 +988,7 @@ def data_verification(data):
                 "value": tValues.to_json(orient='records'),
               }
             error_List_Temp.append(err)
-          verificationList.append({'errorName': "Incohérence(s) relevée(s) sur les valeurs d'Essence, Azimut et Dist entre les différents inventaires", 'errorList': error_List_Temp, 'errorType': 'DuplicatedError'})
+          verificationList.append({'errorName': "Incohérence(s) dans BMSsup30", 'errorText':  "Incohérence(s) relevée(s) sur les valeurs d'Essence, Azimut et Dist entre les différents inventaires", 'errorList': error_List_Temp, 'errorType': 'DuplicatedError'})
 
           print("Incohérence(s) relevée(s) sur les valeurs d'Essence, Azimut et Dist entre les différents inventaires")
         
@@ -1355,19 +1357,25 @@ def check_species(table_to_test, species, status, tablename):
   species_list_temp = table_to_test[(~table_to_test['Essence'].isin(species['Essence'])) & (~table_to_test['Essence'].isna())]\
   [['Essence']]
   species_list = species_list_temp.drop_duplicates()['Essence'].tolist()
+  print("Check")
+  print(species_list_temp)
+  print(species_list)
+
 
   if len(species_list) > 0:
       status = np.where(status >= 2, status, 2)
-      for i in species_list:
+      for index, row in species_list_temp.iterrows():
           err= {
-            "message": "L'essence "+ i + " figure dans la table "+ tablename +"mais ne figure pas dans la table 'CodeEssence' (fichier administrateur) ",
+            "message": "L'essence "+ str(row["Essence"]) + " figure dans la table "+ tablename +"mais ne figure pas dans la table 'CodeEssence' (fichier administrateur) ",
             "table": tablename,
-            "column": 'Essence',
-            "row": species_list_temp.index[species_list_temp['Essence']==i].tolist(),
-            "value": i,
+            "column": ['Essence'],
+            "row": [index],
+            "value": species_list_temp.loc[[index],:].to_json(orient='records'),
           }
           error.append(err)
   return error
+
+
 
 ##### fonction contrôle des Cycles ####
 def check_cycle(table_to_test, status, cycle_admin, tablename, An, Dispositifs): 
@@ -1417,21 +1425,21 @@ def check_code(code_admin, table_to_test, code_to_check, tableName):
   column =["NumDisp", "NumPlac", "NumArbre", "Id", "Cycle", stade]
 
   # détection des codes non conformes
-  df1 = table_to_test[~table_to_test['StadeD'].isin(np.append(np.nan, code_admin['Code'].values)) ]
+  table_to_test=table_to_test[table_to_test[stade].notna()]
+  df1 = table_to_test[~table_to_test[stade].isin( code_admin['Code'].values)]
 
-  df = df1.loc[:,df1.columns.isin(["NumDisp", "NumPlac", "NumArbre", "Id", "Cycle", stade])]
-
+  df = df1.loc[:,df1.columns.isin([stade])].drop_duplicates()
 
   if df.shape[0]>0:
-      for i in df[stade].drop_duplicates():
-          err= {
-            "message": "Stade(s) "+code_to_check+" "+ str(int(i)) +" non conforme(s) dans la table" +tableName,
-            "table": tableName,
-            "column": stade,
-            "row": df.index[df[stade]==i].tolist(),
-            "value": i,
-          }
-          error.append(err)
+    for index, row in df.iterrows():
+      err= {
+        "message": "Stade(s) "+code_to_check+" "+ str(int(row[stade]))  +" non conforme(s) dans la table" +tableName,
+        "table": tableName,
+        "column": [stade],
+        "row": [index],
+        "value": df.loc[[index],:].to_json(orient='records'),
+      }
+      error.append(err)
 
 
   return(error)

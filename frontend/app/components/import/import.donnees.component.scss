@@ -80,6 +80,10 @@ table {
     background: #DCE8E4;
 }
 
+.mat-header-cell, .mat-cell {
+    text-align: center;
+}
+
 // .mat-primary {
 //     background-color: #598979;
 // }
@@ -105,17 +109,17 @@ table {
     justify-content: center;
   }
 
-  .isError {
+.isError {
     background-color: $error-color;
-  }
+}
 
-  .isSelectedError {
-    //background-color: #ffa600;
+.isSelectedError {
+//background-color: #ffa600;
     border: 2px dashed #000000;
     font-weight: bold;
-  }
+}
 
-  .isModifiedError {
+.isModifiedError {
     background-color: $corrified-color;
 }
 
@@ -136,3 +140,49 @@ table {
     background-color: $dark-green !important;
 }
 
+::ng-deep .mat-step-header[aria-selected="true"] {
+    border: solid 1px black;
+  }
+
+.solution {
+    display: flex;
+    margin-left: 2rem;
+    margin-right: 2rem;
+  }
+
+.stepper {
+    flex-grow: 2;
+  }
+  
+.arrow-icons {
+    display: flex;
+    height: 72px;
+    align-items: center;
+}
+
+.action-buttons {
+    margin-left: 2.5rem;
+}
+
+.bigStep{
+    padding: 20px;
+}
+
+.littleStep{
+    padding: 0px;
+}
+.corrified {
+    color: $corrified-color;
+}
+
+::ng-deep.mat-step-icon {
+    background-color: $error-color!important
+}
+
+::ng-deep.mat-step-icon-state-edit{
+    background-color: $corrified-color!important
+}
+
+// ::ng-deep.mat-step-label  {
+//     display: var(--displayLabel)!important
+// }
