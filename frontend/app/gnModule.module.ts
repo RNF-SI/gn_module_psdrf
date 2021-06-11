@@ -7,9 +7,7 @@ import { DispositifsComponent } from "./components/dispositifs.component";
 import { InfoDispositifComponent } from "./components/info.dispositif.component";
 import { FormDispositifComponent } from "./components/form.dispositif.component";
 import { ImportDonneesComponent } from "./components/import/import.donnees.component";
-import { ErrorMainStepperComponent } from "./components/import/main-step/error-main-stepper.component";
 import { ErrorMainStepComponent } from "./components/import/main-step/error-main-step.component";
-import { ErrorSubStepperComponent } from "./components/import/main-step/sub-step/error-sub-stepper.component";
 import { ErrorSubStepComponent } from "./components/import/main-step/sub-step/error-sub-step.component";
 import { ExcelImportService } from "./services/excel.import.service";
 import { PsdrfDataService } from "./services/route.service";
@@ -35,9 +33,7 @@ const routes: Routes = [
     KeyValue,
     FormatNum,
     DndDirective,
-    ErrorMainStepperComponent,
     ErrorMainStepComponent,
-    ErrorSubStepperComponent,
     ErrorSubStepComponent
   ],
   imports: [
