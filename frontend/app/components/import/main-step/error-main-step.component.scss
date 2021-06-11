@@ -23,3 +23,35 @@
 .wasModified {
   background-color: $corrified-color;
 }
+
+.solution {
+  display: flex;
+  margin-left: 2rem;
+  margin-right: 2rem;
+}
+
+.stepper {
+  flex-grow: 2;
+}
+
+.arrow-icons {
+  display: flex;
+  height: 72px;
+  align-items: center;
+}
+
+.action-buttons {
+  margin-left: 2.5rem;
+}
+
+.corrified {
+  color: $corrified-color;
+}
+
+// ::ng-deep.mat-step-icon {
+//   background-color: $error-color!important
+// }
+
+// ::ng-deep.mat-step-icon-state-edit{
+//   background-color: $corrified-color!important
+// }

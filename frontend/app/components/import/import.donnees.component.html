@@ -273,7 +273,7 @@
 
             <ng-container matColumnDef="Essence">
               <th mat-header-cell *matHeaderCellDef> Essence </th>
-              <td mat-cell *matCellDef="let element"> {{element.Essence}} </td>
+              <td mat-cell *matCellDef="let element, let i = index" [ngClass]="{'isError': checkErrorCell2('Arbres', 'Essence', i ), 'isModifiedError': checkModifiedErrorCell2('Arbres', 'Essence', i ), 'isSelectedError': checkSelectedErrorCell2('Arbres', 'Essence', i)}"> {{element.Essence}} </td>
             </ng-container>
         
             <ng-container matColumnDef="Azimut">
@@ -333,12 +333,12 @@
         
             <ng-container matColumnDef="CodeEcolo">
               <th mat-header-cell *matHeaderCellDef> CodeEcolo </th>
-              <td mat-cell *matCellDef="let element"> {{element.CodeEcolo}} </td>
+              <td mat-cell *matCellDef="let element; let i = index" [ngClass]="{'isError': checkErrorCell2('Arbres', 'CodeEcolo', i ), 'isModifiedError': checkModifiedErrorCell2('Arbres', 'CodeEcolo', i ), 'isSelectedError': checkSelectedErrorCell2('Arbres', 'CodeEcolo', i)}"> {{element.CodeEcolo}} </td>
             </ng-container>
         
             <ng-container matColumnDef="Ref_CodeEcolo">
               <th mat-header-cell *matHeaderCellDef> Ref_CodeEcolo </th>
-              <td mat-cell *matCellDef="let element"> {{element.Ref_CodeEcolo}} </td>
+              <td mat-cell *matCellDef="let element; let i = index" [ngClass]="{'isError': checkErrorCell2('Arbres', 'Ref_CodeEcolo', i ), 'isModifiedError': checkModifiedErrorCell2('Arbres', 'Ref_CodeEcolo', i ), 'isSelectedError': checkSelectedErrorCell2('Arbres', 'Ref_CodeEcolo', i)}"> {{element.Ref_CodeEcolo}} </td>
             </ng-container>
 
             <ng-container matColumnDef="Observation">
@@ -587,12 +587,12 @@
 
           <ng-container matColumnDef="StadeD">
             <th mat-header-cell *matHeaderCellDef> StadeD </th>
-            <td mat-cell *matCellDef="let element"> {{element.StadeD}} </td>
+            <td mat-cell *matCellDef="let element; let i = index" [ngClass]="{'isError': checkErrorCell2('BMSsup30', 'StadeD', i ), 'isModifiedError': checkModifiedErrorCell2('BMSsup30', 'StadeD', i ), 'isSelectedError': checkSelectedErrorCell2('BMSsup30', 'StadeD', i)}"> {{element.StadeD}} </td>
           </ng-container>
 
           <ng-container matColumnDef="StadeE">
             <th mat-header-cell *matHeaderCellDef> StadeE </th>
-            <td mat-cell *matCellDef="let element"> {{element.StadeE}} </td>
+            <td mat-cell *matCellDef="let element; let i = index" [ngClass]="{'isError': checkErrorCell2('BMSsup30', 'StadeE', i ), 'isModifiedError': checkModifiedErrorCell2('BMSsup30', 'StadeE', i ), 'isSelectedError': checkSelectedErrorCell2('BMSsup30', 'StadeE', i)}"> {{element.StadeE}} </td>
           </ng-container>
 
           <ng-container matColumnDef="Observation">
@@ -666,7 +666,7 @@
             </button>
           </div>
           <div class="stepper">
-            <mat-horizontal-stepper labelPosition="bottom" #stepper (selectionChange)="displayOnMainStepClick($event)" >
+            <mat-horizontal-stepper class="mainStepper" labelPosition="bottom" #mainStepper (selectionChange)="displayOnMainStepClick($event)" >
               <ng-template matStepperIcon="edit">
                 <mat-icon>done</mat-icon>
               </ng-template>
@@ -698,9 +698,33 @@
           </div>
         </div>
         <div class="action-buttons">
-          <button mat-button (click)="goBack()" *ngIf="step > 0">Précédent</button>
-          <button mat-button (click)="goForward()" *ngIf="step < totalSteps - 1">Suivant</button>
-          <button mat-button (click)="showStepLabels()">Change Display</button>
+          <button
+          *ngIf="step > 0"
+          class="m-1 float-left"
+          mat-raised-button
+          matTooltip="Erreur Précédente"
+          (click)="goBack()"
+          >
+            <mat-icon> arrow_back </mat-icon>
+          </button>
+          <button
+            *ngIf="step < totalSteps - 1"
+            class="m-1 float-left"
+            mat-raised-button
+            matTooltip="Erreur Suivante"
+            (click)="goForward()"
+            >
+              <mat-icon> arrow_forward </mat-icon>
+          </button>
+
+          <button
+          class="m-1 float-left"
+          mat-raised-button
+          matTooltip="Afficher les labels"
+          (click)="showStepLabels()"
+          >
+            <mat-icon class="extensionIcon-rotation"> {{extensionIcon}} </mat-icon>
+          </button>
         </div>
 
         <mat-progress-bar 

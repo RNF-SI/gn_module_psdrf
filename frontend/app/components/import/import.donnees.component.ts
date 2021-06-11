@@ -51,12 +51,14 @@ export class ImportDonneesComponent {
   totalErrorNumber: number =0; //Correspond au nombre de rowButton total
   totalMainStepNumber: number =0; 
   value: number = 0;
+  extensionIcon = 'unfold_more'; 
+
 
   @ViewChildren(MatPaginator) paginator = new QueryList<MatPaginator>(); //liste des 8 paginators
 
   // Main Paginator
   // Max number of steps to show at a time in view, Change this to fit your need
-  MAX_STEP = 5;
+  MAX_STEP = 6;
   // Total steps included in mat-stepper in template, Change this to fit your need
   totalSteps =0;
   // Current page from paginator
@@ -72,12 +74,9 @@ export class ImportDonneesComponent {
   isLabelVisible: boolean = true;
 
 
-  @ViewChild('stepper') private mainStepper: MatStepper;
+  @ViewChild('mainStepper') private mainStepper: MatStepper;
 
-  // private contentPlaceholder: ElementRef;
-
-  @ViewChild('contentPlaceholder') contentPlaceholder:
-   ElementRef;
+  @ViewChild('contentPlaceholder') contentPlaceholder: ElementRef;
 
   constructor(
     private http: HttpClient,
@@ -179,7 +178,6 @@ export class ImportDonneesComponent {
                   case "DuplicatedError":
                     errorListTemp = [];
                     mainError.errorList.forEach(error => {
-                      // console.log(error.value);
                       errorListTemp.push(new DuplicatedError(error.message, error.table, error.column, error.row, JSON.parse(error.value)));
                       this.errorElementArr2.push(new PsdrfErrorCoordinates2(error.table, error.column, error.row));
                       error.row.forEach( idx => {
@@ -193,9 +191,7 @@ export class ImportDonneesComponent {
 
             this.changeDetector.detectChanges();
             
-            
-            // console.log(this.psdrfArray)
-            
+                        
             //Création du binding entre les MatTable datasources et les données affichée dans la tableau
             //Remarque: Tout changement dans psdrfArray s'applique automatiquement au tableau
             for(let i =0; i<this.psdrfArray.length; i++){
@@ -209,10 +205,9 @@ export class ImportDonneesComponent {
             this.totalSteps = errorsPsdrfListTemp.length;
             this.totalPages = Math.ceil(this.totalSteps / this.MAX_STEP);
             this.changeMinMaxSteps();
-            // console.log(this.errorsPsdrfList)
             //Affichage de la toute première erreur de errorsPsdrfList dans le MatTab
-            this.displayErrorOnMatTab2({table: this.errorsPsdrfList[0].errorList[0].table, column: [this.errorsPsdrfList[0].errorList[0].column], row: this.errorsPsdrfList[0].errorList[0].row[0]})
             this.displayErrorOnMatTab({table: this.errorsPsdrfList[0].errorList[0].table, column: this.errorsPsdrfList[0].errorList[0].column, row: this.errorsPsdrfList[0].errorList[0].row[0]});
+            this.displayErrorOnMatTab2({table: this.errorsPsdrfList[0].errorList[0].table, column: [this.errorsPsdrfList[0].errorList[0].column], row: this.errorsPsdrfList[0].errorList[0].row[0]})
             }
         );
     }
@@ -346,23 +341,29 @@ export class ImportDonneesComponent {
   }
 
   modifyErrorValue2(modificationErrorObj: {errorCoordinates: PsdrfErrorCoordinates2, newErrorValue: any}): void{
+    
     let indexTable = this.indexLabelMatTabGroup.indexOf(modificationErrorObj.errorCoordinates.table);
-
-    this.modifiedElementArr2.push(modificationErrorObj.errorCoordinates);
-
+    
     // if(!this.modifiedElementArr2.some((obj) => (obj.table== modificationErrorObj.errorCoordinates.table && obj.column.includes(colName) && obj.row.includes(idx)))){
     //   this.modifiedElementArr2.push({table: modificationErrorObj.errorCoordinates.table, column:modificationErrorObj.errorCoordinates.column, row:idx});
     // }
+    console.log(modificationErrorObj.errorCoordinates)
+    console.log(this.modifiedElementArr2)
+    
 
     modificationErrorObj.errorCoordinates.row.forEach((idx, i) => {
       // modificationErrorObj.newErrorValue.forEach(line => {
       modificationErrorObj.errorCoordinates.column.forEach(colName => {
+        if(!this.modifiedElementArr2.some((obj) => (obj.table== modificationErrorObj.errorCoordinates.table && obj.column.includes(colName) && obj.row.includes(idx)))){
+          // if(!this.modifiedElementArr2.includes(modificationErrorObj.errorCoordinates)){
+            this.modifiedElementArr2.push(modificationErrorObj.errorCoordinates);
+          }
+        console.log(this.psdrfArray[indexTable][idx][colName])
+        
 
         this.psdrfArray[indexTable][idx][colName] = modificationErrorObj.newErrorValue[i][colName]
       })
     });
-
-
     // modificationErrorObj.errorCoordinates.forEach(errorCoor => {
     //   indexTable = this.indexLabelMatTabGroup.indexOf(errorCoor.table);
     //   if(!this.modifiedElementArr.some((obj) => (obj.table== errorCoor.table && obj.column == errorCoor.column && obj.row == errorCoor.row))){
@@ -379,7 +380,7 @@ export class ImportDonneesComponent {
   */
   modifyMainStepperAppearance(mainStepIndex: number){
     this.mainStepper.selected.completed = true;
-    this.mainStepper.next();
+    this.goForward();
     this.totallyModifiedMainStepperArr.push(mainStepIndex);
   }
 
@@ -400,12 +401,12 @@ export class ImportDonneesComponent {
     this.tableDataSourceArray=[];
     this.errorsPsdrfList=[];
     this.mainStepNameArr=[];
-    this.errorElementArr=[];
-    this.modifiedElementArr=[];
+    this.errorElementArr2=[];
+    this.modifiedElementArr2=[];
     this.totallyModifiedMainStepperArr=[];
     this.totalErrorNumber=0;
     this.value = 0;
-    this.selectedErrorElementArr = null;
+    this.selectedErrorElementArr2 = null;
     this.isLabelVisible = true;
 
   }
@@ -558,12 +559,12 @@ export class ImportDonneesComponent {
     const el: HTMLElement = this.contentPlaceholder.nativeElement;
 
     const headers = this.contentPlaceholder.nativeElement.querySelectorAll(
-      "mat-step-header"
+      ".mainStepper > div > mat-step-header"
     );
     // console.log(headers)
 
     const lines = this.contentPlaceholder.nativeElement.querySelectorAll(
-      ".mat-stepper-horizontal-line"
+      ".mainStepper > div > mat-step-header > .mat-stepper-horizontal-line"
     );
     console.log(headers)
     console.log(lines)
@@ -601,16 +602,16 @@ export class ImportDonneesComponent {
     const el: HTMLElement = this.contentPlaceholder.nativeElement;
 
     const headers = this.contentPlaceholder.nativeElement.querySelectorAll(
-      "mat-step-header"
+      ".mainStepper > div > mat-step-header"
     );
     // console.log(headers)
 
-    const lines = this.contentPlaceholder.nativeElement.querySelectorAll(
-      ".mat-stepper-horizontal-line"
-    );
+    // const lines = this.contentPlaceholder.nativeElement.querySelectorAll(
+    //   ".mainStepper > div > mat-step-header > .mat-stepper-horizontal-line"
+    // );
 
     console.log(headers)
-    console.log(lines)
+    // console.log(lines)
 
 
     // If the step index is in between min and max allowed indexes, display it into view, otherwise set as none
@@ -628,19 +629,21 @@ export class ImportDonneesComponent {
     // If the line index is between min and max allowed indexes, display it in view, otherwise set as none
     // One thing to note here: length of lines is 1 less than length of headers
     // For eg, if there are 8 steps, there will be 7 lines joining those 8 steps
-    lines.forEach((l) => {
-      l.style.display = "none";
-    });
+    // lines.forEach((l) => {
+    //   l.style.display = "none";
+    // });
 
   }
 
   showStepLabels(){
     this.isLabelVisible = !this.isLabelVisible;
     if(this.isLabelVisible){
+      this.extensionIcon = "unfold_more";
       // document.body.style.setProperty('--displayLabel', 'none')
-      this.MAX_STEP = 5;
+      this.MAX_STEP = 6;
     } else {
       // document.body.style.setProperty('--displayLabel', 'none')
+      this.extensionIcon = "unfold_less";
       this.MAX_STEP = 60; 
     }
     this.totalPages = Math.ceil(this.totalSteps / this.MAX_STEP);
@@ -651,7 +654,7 @@ export class ImportDonneesComponent {
     if(this.isLabelVisible){
       this.changeMinMaxSteps(false);
       const labels = this.contentPlaceholder.nativeElement.querySelectorAll(
-        ".mat-step-label"
+        ".mainStepper > div > mat-step-header > .mat-step-label"
       );
       labels.forEach((l) => {
         l.style.display = "flex";
@@ -659,7 +662,7 @@ export class ImportDonneesComponent {
     } else {
       this.changeMinMaxSteps2(false);
       const labels = this.contentPlaceholder.nativeElement.querySelectorAll(
-        ".mat-step-label"
+        ".mainStepper > div > mat-step-header > .mat-step-label"
       );
       labels.forEach((l) => {
         l.style.display = "none";

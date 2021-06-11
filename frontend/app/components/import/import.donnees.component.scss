@@ -164,13 +164,6 @@ table {
     margin-left: 2.5rem;
 }
 
-.bigStep{
-    padding: 20px;
-}
-
-.littleStep{
-    padding: 0px;
-}
 .corrified {
     color: $corrified-color;
 }
@@ -181,6 +174,14 @@ table {
 
 ::ng-deep.mat-step-icon-state-edit{
     background-color: $corrified-color!important
+}
+
+::ng-deep.mat-step-icon-selected{
+    background-color: $dark-green!important
+}
+
+.extensionIcon-rotation{
+    transform: rotate(90deg);
 }
 
 // ::ng-deep.mat-step-label  {

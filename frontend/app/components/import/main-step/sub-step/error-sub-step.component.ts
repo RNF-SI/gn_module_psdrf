@@ -72,7 +72,7 @@ import {PsdrfError, PsdrfErrorCoordinates, PsdrfErrorCoordinates2} from '../../.
       //Si tous les index ont été modifiés, l'évènement allStepsModified est lancé
       if(this.modifiedIndexes.length == this.psdrfError.row.length){
         this.allRowsModified.next(this.subStepIndex);
-      }
+      } 
     }
 
     modifValidation2(): void{
@@ -83,6 +83,20 @@ import {PsdrfError, PsdrfErrorCoordinates, PsdrfErrorCoordinates2} from '../../.
       this.modificationValidated2.next({errorCoordinates: new PsdrfErrorCoordinates2(this.psdrfError.table, this.psdrfError.column, this.psdrfError.row), newErrorValue: this.datasource.data});
       if(this.modifiedIndexes.length == this.psdrfError.row.length){
         this.allRowsModified.next(this.subStepIndex);
+      }
+    }
+
+    modifLineValidation2(buttonIndex: number): void{
+      console.log(this.datasource)
+      console.log(this.psdrfError.row)
+      if(this.modifiedIndexes.indexOf(buttonIndex) === -1){
+        this.modifiedIndexes.push(buttonIndex);
+      }    
+      this.modificationValidated2.next({errorCoordinates: new PsdrfErrorCoordinates2(this.psdrfError.table, this.psdrfError.column, [this.psdrfError.row[buttonIndex]]), newErrorValue: [this.datasource.data[buttonIndex]]});
+      if(this.modifiedIndexes.length == this.psdrfError.row.length){
+        this.allRowsModified.next(this.subStepIndex);
+      } else {
+        this.selectedButtonIndex = this.selectedButtonIndex + 1; 
       }
     }
 
