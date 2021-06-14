@@ -347,8 +347,6 @@ export class ImportDonneesComponent {
     // if(!this.modifiedElementArr2.some((obj) => (obj.table== modificationErrorObj.errorCoordinates.table && obj.column.includes(colName) && obj.row.includes(idx)))){
     //   this.modifiedElementArr2.push({table: modificationErrorObj.errorCoordinates.table, column:modificationErrorObj.errorCoordinates.column, row:idx});
     // }
-    console.log(modificationErrorObj.errorCoordinates)
-    console.log(this.modifiedElementArr2)
     
 
     modificationErrorObj.errorCoordinates.row.forEach((idx, i) => {
@@ -357,9 +355,7 @@ export class ImportDonneesComponent {
         if(!this.modifiedElementArr2.some((obj) => (obj.table== modificationErrorObj.errorCoordinates.table && obj.column.includes(colName) && obj.row.includes(idx)))){
           // if(!this.modifiedElementArr2.includes(modificationErrorObj.errorCoordinates)){
             this.modifiedElementArr2.push(modificationErrorObj.errorCoordinates);
-          }
-        console.log(this.psdrfArray[indexTable][idx][colName])
-        
+          }        
 
         this.psdrfArray[indexTable][idx][colName] = modificationErrorObj.newErrorValue[i][colName]
       })
@@ -432,9 +428,11 @@ export class ImportDonneesComponent {
   }
 
   //Main Paginator Functions
-    /**
-   * Change the page in view
-   */
+  /**
+  * Change the page in view
+  * @param bytes (File size in bytes)
+  * @param decimals (Decimals point)
+  */
   pageChangeLogic(isForward = true) {
     if (this.step < this.minStepAllowed || this.step > this.maxStepAllowed) {
       if (isForward) {
@@ -472,10 +470,6 @@ export class ImportDonneesComponent {
       this.mainStepper.selectedIndex = this.step;
     }
 
-    console.log(
-      `page: ${this.page + 1}, step: ${this.step + 1}, minStepAllowed: ${this
-        .minStepAllowed + 1}, maxStepAllowed: ${this.maxStepAllowed + 1}`
-    );
     this.rerender();
   }
 
@@ -505,10 +499,6 @@ export class ImportDonneesComponent {
       this.mainStepper.selectedIndex = this.step;
     }
 
-    console.log(
-      `page: ${this.page + 1}, step: ${this.step + 1}, minStepAllowed: ${this
-        .minStepAllowed + 1}, maxStepAllowed: ${this.maxStepAllowed + 1}`
-    );
     this.rerender2();
   }
 
@@ -554,25 +544,19 @@ export class ImportDonneesComponent {
    * This will display the steps in DOM based on the min max step indexes allowed in view
    */
   private rerender() {
-    // console.log(this.contentPlaceholder.nativeElement)
-    //setTimeout(() => {console.log(this.contentPlaceholder.nativeElement)})
     const el: HTMLElement = this.contentPlaceholder.nativeElement;
 
     const headers = this.contentPlaceholder.nativeElement.querySelectorAll(
       ".mainStepper > div > mat-step-header"
     );
-    // console.log(headers)
 
     const lines = this.contentPlaceholder.nativeElement.querySelectorAll(
       ".mainStepper > div > mat-step-header > .mat-stepper-horizontal-line"
     );
-    console.log(headers)
-    console.log(lines)
 
 
     // If the step index is in between min and max allowed indexes, display it into view, otherwise set as none
     headers.forEach((h, index) => {
-      console.log(index)
       if (index >= this.minStepAllowed && 
         index <= this.maxStepAllowed) {
         h.style.display = "flex";
@@ -586,7 +570,6 @@ export class ImportDonneesComponent {
     // One thing to note here: length of lines is 1 less than length of headers
     // For eg, if there are 8 steps, there will be 7 lines joining those 8 steps
     lines.forEach((l, index) => {
-      console.log(index)
       if (index >= this.minStepAllowed && 
         index <= this.maxStepAllowed) {
         l.style.display = "block";
@@ -597,26 +580,20 @@ export class ImportDonneesComponent {
   }
 
   private rerender2() {
-    // console.log(this.contentPlaceholder.nativeElement)
-    //setTimeout(() => {console.log(this.contentPlaceholder.nativeElement)})
     const el: HTMLElement = this.contentPlaceholder.nativeElement;
 
     const headers = this.contentPlaceholder.nativeElement.querySelectorAll(
       ".mainStepper > div > mat-step-header"
     );
-    // console.log(headers)
 
     // const lines = this.contentPlaceholder.nativeElement.querySelectorAll(
     //   ".mainStepper > div > mat-step-header > .mat-stepper-horizontal-line"
     // );
 
-    console.log(headers)
-    // console.log(lines)
 
 
     // If the step index is in between min and max allowed indexes, display it into view, otherwise set as none
     headers.forEach((h, index) => {
-      console.log(index)
       if (index >= this.minStepAllowed && 
         index <= this.maxStepAllowed) {
         h.style.display = "flex";
@@ -625,13 +602,6 @@ export class ImportDonneesComponent {
         h.style.display = "none";
       }
     });
-
-    // If the line index is between min and max allowed indexes, display it in view, otherwise set as none
-    // One thing to note here: length of lines is 1 less than length of headers
-    // For eg, if there are 8 steps, there will be 7 lines joining those 8 steps
-    // lines.forEach((l) => {
-    //   l.style.display = "none";
-    // });
 
   }
 
@@ -668,7 +638,6 @@ export class ImportDonneesComponent {
         l.style.display = "none";
       });
     }
-    // this.changeDetector.detectChanges();
   }
   
   checkCorrifiedSubStepper(mainStepIndex: number): boolean{

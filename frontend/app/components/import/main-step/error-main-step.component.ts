@@ -62,8 +62,6 @@ export class ErrorMainStepComponent implements OnInit, AfterViewInit {
   ngAfterViewInit() {
     this.totalSteps = this.step.errorList.length;
     this.totalPages = Math.ceil(this.totalSteps / this.MAX_STEP);
-    console.log(this.totalSteps)
-    console.log(this.totalPages)
     this.changeMinMaxSteps(false);
   }
   
@@ -164,10 +162,6 @@ export class ErrorMainStepComponent implements OnInit, AfterViewInit {
       this.subStepper.selectedIndex = this.stepIndex;
     }
 
-    console.log(
-      `page: ${this.page + 1}, step: ${this.stepIndex + 1}, minStepAllowed: ${this
-        .minStepAllowed + 1}, maxStepAllowed: ${this.maxStepAllowed + 1}`
-    );
     this.rerender();
   }
 
@@ -197,10 +191,7 @@ export class ErrorMainStepComponent implements OnInit, AfterViewInit {
   //     this.subStepper.selectedIndex = this.stepIndex;
   //   }
 
-  //   console.log(
-  //     `page: ${this.page + 1}, step: ${this.stepIndex + 1}, minStepAllowed: ${this
-  //       .minStepAllowed + 1}, maxStepAllowed: ${this.maxStepAllowed + 1}`
-  //   );
+
   //   this.rerender2();
   // }
 
@@ -246,24 +237,19 @@ export class ErrorMainStepComponent implements OnInit, AfterViewInit {
    * This will display the steps in DOM based on the min max step indexes allowed in view
    */
   private rerender() {
-    // console.log(this.contentPlaceholder.nativeElement)
-    //setTimeout(() => {console.log(this.contentPlaceholder.nativeElement)})
 
     const headers = this.subStepperContainer.nativeElement.querySelectorAll(
       "mat-step-header"
     );
-    // console.log(headers)
 
     const lines = this.subStepperContainer.nativeElement.querySelectorAll(
       ".mat-stepper-horizontal-line"
     );
-    console.log(headers)
-    console.log(lines)
+
 
 
     // If the step index is in between min and max allowed indexes, display it into view, otherwise set as none
     headers.forEach((h, index) => {
-      console.log(index)
       if (index >= this.minStepAllowed && 
         index <= this.maxStepAllowed) {
         h.style.display = "flex";
@@ -278,7 +264,6 @@ export class ErrorMainStepComponent implements OnInit, AfterViewInit {
     // For eg, if there are 8 steps, there will be 7 lines joining those 8 steps
     lines.forEach((l, index) => {
       l.style.display = "none";
-      // console.log(index)
       // if (index >= this.minStepAllowed && 
       //   index <= this.maxStepAllowed) {
       //   l.style.display = "block";
@@ -289,25 +274,20 @@ export class ErrorMainStepComponent implements OnInit, AfterViewInit {
   }
 
   // private rerender2() {
-  //   // console.log(this.contentPlaceholder.nativeElement)
-  //   //setTimeout(() => {console.log(this.contentPlaceholder.nativeElement)})
 
   //   const headers = this.subStepperContainer.nativeElement.querySelectorAll(
   //     "mat-step-header"
   //   );
-  //   // console.log(headers)
 
   //   const lines = this.subStepperContainer.nativeElement.querySelectorAll(
   //     ".mat-stepper-horizontal-line"
   //   );
 
-  //   console.log(headers)
-  //   console.log(lines)
+
 
 
   //   // If the step index is in between min and max allowed indexes, display it into view, otherwise set as none
   //   headers.forEach((h, index) => {
-  //     console.log(index)
   //     if (index >= this.minStepAllowed && 
   //       index <= this.maxStepAllowed) {
   //       h.style.display = "flex";

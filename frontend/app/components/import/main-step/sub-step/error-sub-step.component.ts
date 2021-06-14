@@ -45,14 +45,12 @@ import {PsdrfError, PsdrfErrorCoordinates, PsdrfErrorCoordinates2} from '../../.
       Fonction appelée lorsqu'un index button est cliqué
     */
     onIndexButtonClicked(rowIndex: number, row: number): void{
-      // console.log(this.psdrfError)
       // this.historyService.rememberIndex(this.psdrfError.toPsdrfErrorCoordinates(rowIndex), rowIndex, this.mainStepIndex, this.subStepIndex);
       // this.selectedButtonIndex = rowIndex; 
       // this.indexButtonClicked.next(new PsdrfErrorCoordinates(this.psdrfError.table, this.psdrfError.column, row));
     }
 
     onIndexButtonClicked2(rowIndex: number, row: number): void{
-      // console.log(this.psdrfError)
       // this.historyService.rememberIndex(this.psdrfError.toPsdrfErrorCoordinates(rowIndex), rowIndex, this.mainStepIndex, this.subStepIndex);
       // this.selectedButtonIndex = rowIndex; 
       this.historyService.rememberIndex2(this.psdrfError.toPsdrfErrorCoordinates2(), rowIndex, this.mainStepIndex, this.subStepIndex);
@@ -76,7 +74,6 @@ import {PsdrfError, PsdrfErrorCoordinates, PsdrfErrorCoordinates2} from '../../.
     }
 
     modifValidation2(): void{
-      console.log(this.datasource)
       if(this.modifiedIndexes.indexOf(this.selectedButtonIndex) === -1){
         this.modifiedIndexes.push(this.selectedButtonIndex);
       }    
@@ -87,8 +84,6 @@ import {PsdrfError, PsdrfErrorCoordinates, PsdrfErrorCoordinates2} from '../../.
     }
 
     modifLineValidation2(buttonIndex: number): void{
-      console.log(this.datasource)
-      console.log(this.psdrfError.row)
       if(this.modifiedIndexes.indexOf(buttonIndex) === -1){
         this.modifiedIndexes.push(buttonIndex);
       }    
@@ -101,8 +96,6 @@ import {PsdrfError, PsdrfErrorCoordinates, PsdrfErrorCoordinates2} from '../../.
     }
 
     deleteRow(rowIndex): void{
-      console.log(rowIndex);
-      console.log(this.datasource);
       this.psdrfError.row.splice(rowIndex, 1);
 
       this.datasource.data.splice(rowIndex, 1);
