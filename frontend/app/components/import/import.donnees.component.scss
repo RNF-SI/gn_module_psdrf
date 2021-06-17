@@ -84,10 +84,6 @@ table {
     text-align: center;
 }
 
-// .mat-primary {
-//     background-color: #598979;
-// }
-
 .mat-tab-group.mat-primary .mat-ink-bar, .mat-tab-nav-bar.mat-primary .mat-ink-bar{
     background: rgba(149, 165, 166,0.3);
      height: 35px;
@@ -114,7 +110,6 @@ table {
 }
 
 .isSelectedError {
-//background-color: #ffa600;
     border: 2px dashed #000000;
     font-weight: bold;
 }
@@ -144,7 +139,7 @@ table {
     border: solid 1px black;
   }
 
-.solution {
+.stepperPart {
     display: flex;
     margin-left: 2rem;
     margin-right: 2rem;
@@ -154,7 +149,7 @@ table {
     flex-grow: 2;
   }
   
-.arrow-icons {
+.stepper-arrow-icons {
     display: flex;
     height: 72px;
     align-items: center;
@@ -162,10 +157,6 @@ table {
 
 .action-buttons {
     margin-left: 2.5rem;
-}
-
-.corrified {
-    color: $corrified-color;
 }
 
 ::ng-deep.mat-step-icon {
@@ -183,7 +174,3 @@ table {
 .extensionIcon-rotation{
     transform: rotate(90deg);
 }
-
-// ::ng-deep.mat-step-label  {
-//     display: var(--displayLabel)!important
-// }

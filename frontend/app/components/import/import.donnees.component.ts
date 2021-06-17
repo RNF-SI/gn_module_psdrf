@@ -14,7 +14,7 @@ import {Transect} from '../../models/transect.model';
 import {BMSsup30} from '../../models/bmssup30.model';
 import {Repere} from '../../models/repere.model';
 import {Cycle} from '../../models/cycle.model';
-import {PsdrfError, DuplicatedError, PsdrfErrorCoordinates, PsdrfErrorCoordinates2} from '../../models/psdrfObject.model';
+import {PsdrfError, PsdrfErrorCoordinates} from '../../models/psdrfObject.model';
 import {StepperSelectionEvent} from '@angular/cdk/stepper';
 import { MatStepper } from "@angular/material/stepper";
 
@@ -26,7 +26,9 @@ import { MatStepper } from "@angular/material/stepper";
 })
 export class ImportDonneesComponent {
 
-  psdrfArray : any[][]= []; //Tableau qui contient au départ les données du fichier excel. Il est actualisé au fur et à mesure que les erreurs sont corrigées 
+  //Tableau qui contient au départ les données du fichier excel. Il est actualisé au fur et à mesure que les erreurs sont corrigées 
+  psdrfArray : any[][]= [];
+
   tableColumnsArray:string[][] = [Object.keys(new Placette()), Object.keys(new Cycle()), Object.keys(new Arbre()), Object.keys(new Rege()), 
     Object.keys(new Transect()), Object.keys(new BMSsup30()), Object.keys(new Repere())];//Tableau contenant les titres des colonnes pour chaque table
   tableDataSourceArray: MatTableDataSource<any> []= [];//Tableau des Datasource de chaque onglet
@@ -34,24 +36,19 @@ export class ImportDonneesComponent {
   
   indexLabelMatTabGroup: string[]= ["Placette", "Cycle", "Arbres", "Rege", "Transect", "BMSsup30", "Repere"];//Tableau des titres d'onglet
   excelFile: any = null;
-  isLoadingResults: boolean = false;
-  isLoadingErrors: boolean = false;
-  isCurrentVerification: boolean= false;
+  isLoadingResults: boolean = false; // Vrai lorsque les données sont entrain de charger
+  isCurrentVerification: boolean= false; // Faux lorsqu'on n'a pas encore choisi de fichier
   indexMatTabGroup: number=0; //Index de l'onglet sélectionné 
-  errorsPsdrfList: any[] = []; //Tableau des erreurs retournées par la requête psdrf_data_verification
-  mainStepNameArr: string[]= [];
-  mainStepTextArr:string[]= []
-  errorElementArr: PsdrfErrorCoordinates[] = []; //Tableau des erreurs
-  errorElementArr2: PsdrfErrorCoordinates2[]= []
+  errorsPsdrfList: {errorList: PsdrfError[], 'errorType': string}[] = []; //Tableau des erreurs retournées par la requête psdrf_data_verification
+  mainStepNameArr: string[]= []; // Tableau des titres des main step(affichés dans les main steps)
+  mainStepTextArr:string[]= [] //Tableau des textes d'erreurs pour chaque mainstep
+  errorElementArr: PsdrfErrorCoordinates[] = []; //Tableau de toutes les erreurs
   modifiedElementArr:PsdrfErrorCoordinates[] = []; //Tableau des erreurs qui ont été modifiées
-  modifiedElementArr2:PsdrfErrorCoordinates2[]= []; //Tableau des erreurs qui ont été modifiées
   selectedErrorElementArr:PsdrfErrorCoordinates; //Erreur qui est actuellement sélectionnée
-  selectedErrorElementArr2: PsdrfErrorCoordinates2; //Erreur qui est actuellement sélectionnée
   totallyModifiedMainStepperArr: number[]=[]; //Tableau des indexs des mainstep qui ont été complètement modifiés
-  totalErrorNumber: number =0; //Correspond au nombre de rowButton total
-  totalMainStepNumber: number =0; 
-  value: number = 0;
-  extensionIcon = 'unfold_more'; 
+  totalErrorNumber: number =0; //Correspond au nombre de rowButton total. Sert à la barre de progression
+  progressBarValue: number = 0;
+  extensionIcon: string = 'unfold_more'; 
 
 
   @ViewChildren(MatPaginator) paginator = new QueryList<MatPaginator>(); //liste des 8 paginators
@@ -71,12 +68,13 @@ export class ImportDonneesComponent {
   maxStepAllowed = this.MAX_STEP - 1;
   // Number of total possible pages
   totalPages = 0;
-  isLabelVisible: boolean = true;
+  //Visibilité des labels du mainStep
+  isLabelVisible: boolean = true; 
 
 
   @ViewChild('mainStepper') private mainStepper: MatStepper;
 
-  @ViewChild('contentPlaceholder') contentPlaceholder: ElementRef;
+  @ViewChild('stepperPart') stepperPart: ElementRef;
 
   constructor(
     private http: HttpClient,
@@ -89,8 +87,9 @@ export class ImportDonneesComponent {
   ) { 
   }
 
-  /*
-    Fonction déclenchée lors du drag&drop d'un fichier
+  /** 
+  * Triggered function on D&D event
+  * @param event Drag and Drop event
   */
   onFileDropped(event: DragEvent): void {
     let af = ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel']
@@ -106,8 +105,9 @@ export class ImportDonneesComponent {
     }
   }
 
-  /*
-    Fonction déclenchée lors de la sélection d'un fichier lorsqu'on appui sur le bouton "choisir un fichier"
+  /**
+  *  Triggered function on file selection (a file is chosen)
+  * @param event Selection File Event 
   */
   onFileSelect(event): void {
     const target: DataTransfer = <DataTransfer>(event.target);
@@ -116,13 +116,15 @@ export class ImportDonneesComponent {
     this.onFileLoad(target);
   }
 
-  /*
-    Fonction de chargement du fichier PSDRF excel 
+  /**
+  *  Loading function of the PSDRF excel file: 
+  * - Excel file data loaded in psrfArray
+  * - psdrf_data_verification is lauched to analyse the excel data
+  * @param target DataTransfertObject
   */
   onFileLoad (target: DataTransfer): void{
     this.isCurrentVerification = true;
     this.isLoadingResults = true;
-    this.isLoadingErrors = true;
     let excelData;
     const reader: FileReader = new FileReader();
 
@@ -143,19 +145,15 @@ export class ImportDonneesComponent {
         }))
       }
     };
-
     reader.readAsBinaryString(target.files[0]);
-
     //Lancement de la requête psdrf_data_verification avec les données Excel chargée
     reader.onloadend = (e) => {
       this.dataSrv.psdrf_data_verification(JSON.stringify(this.psdrfArray))
         .subscribe(
           error => {
-            this.isLoadingErrors = false;
             this.isLoadingResults = false;
-
             let errorsPsdrfListTemp = JSON.parse(error);
-            let correctionListTemp, errorListTemp;
+            let errorListTemp;
             this.mainStepNameArr = [];
             this.totalErrorNumber = 0;
             
@@ -163,34 +161,21 @@ export class ImportDonneesComponent {
               this.mainStepNameArr.push(mainError.errorName);
               this.mainStepTextArr.push(mainError.errorText);
               switch(mainError.errorType){
-                case "ReferenceError":
+                case "PsdrfError":
                   errorListTemp = [];
                   mainError.errorList.forEach(error => {
-                    errorListTemp.push(new PsdrfError(error.message, error.table, error.column, error.row, error.value))
+                    errorListTemp.push(new PsdrfError(error.message, error.table, error.column, error.row, JSON.parse(error.value)));
+                    this.errorElementArr.push(new PsdrfErrorCoordinates(error.table, error.column, error.row));
                     error.row.forEach( idx => {
-                      this.errorElementArr.push(new PsdrfErrorCoordinates(error.table, error.column, idx));
                       this.totalErrorNumber ++;
                     })
                   })
-                  this.errorsPsdrfList.push({'errorList': errorListTemp, 'errorType': 'ReferenceError', 'correctionList': mainError.correctionList});
+                  this.errorsPsdrfList.push({'errorList': errorListTemp, 'errorType': 'PsdrfError'});
                   break;
-                  
-                  case "DuplicatedError":
-                    errorListTemp = [];
-                    mainError.errorList.forEach(error => {
-                      errorListTemp.push(new DuplicatedError(error.message, error.table, error.column, error.row, JSON.parse(error.value)));
-                      this.errorElementArr2.push(new PsdrfErrorCoordinates2(error.table, error.column, error.row));
-                      error.row.forEach( idx => {
-                        this.totalErrorNumber ++;
-                      })
-                    })
-                    this.errorsPsdrfList.push({'errorList': errorListTemp, 'errorType': 'DuplicatedError'});
-                    break;
               }
             })
 
-            this.changeDetector.detectChanges();
-            
+            this.changeDetector.detectChanges();    
                         
             //Création du binding entre les MatTable datasources et les données affichée dans la tableau
             //Remarque: Tout changement dans psdrfArray s'applique automatiquement au tableau
@@ -198,119 +183,109 @@ export class ImportDonneesComponent {
               this.tableDataSourceArray.push( new MatTableDataSource(this.psdrfArray[i]));
               this.tableDataSourceArray[i].paginator = this.paginator.toArray()[i];
             }
-
-            
-
                 
             this.totalSteps = errorsPsdrfListTemp.length;
             this.totalPages = Math.ceil(this.totalSteps / this.MAX_STEP);
-            this.changeMinMaxSteps();
+            this.rerender();
             //Affichage de la toute première erreur de errorsPsdrfList dans le MatTab
-            this.displayErrorOnMatTab({table: this.errorsPsdrfList[0].errorList[0].table, column: this.errorsPsdrfList[0].errorList[0].column, row: this.errorsPsdrfList[0].errorList[0].row[0]});
-            this.displayErrorOnMatTab2({table: this.errorsPsdrfList[0].errorList[0].table, column: [this.errorsPsdrfList[0].errorList[0].column], row: this.errorsPsdrfList[0].errorList[0].row[0]})
+            this.displayErrorOnMatTab(new PsdrfErrorCoordinates(this.errorsPsdrfList[0].errorList[0].table, this.errorsPsdrfList[0].errorList[0].column, this.errorsPsdrfList[0].errorList[0].row))
             }
         );
     }
   }
 
-  /*
-    Fonction retournant le paginateur d'une table en fonction du nom de la table
+  /**
+  *  Return the paginator associated to one of the name table 
+  * @param tableName Table Name
   */
   getPaginatorFromTableName(tableName: string): MatPaginator{
     return this.tableDataSourceArray[this.indexLabelMatTabGroup.indexOf(tableName)].paginator;
   }
 
-  /*
-    Fonction permettant de retrouver l'index d'un élément en fonction du paginateur de la table
+   /**
+  *  Return the global index of an element according to the table name and the index inside the page
+  * @param table Name of the current table
+  * @param i Index of the line inside the page
   */
   getRowIndexFromPaginatorProperties(table: string, i: number): number{
     let tablePaginator = this.getPaginatorFromTableName(table);
     return i + (tablePaginator.pageIndex * tablePaginator.pageSize);
   }
 
-  /*
-    Fonction permettant de tester si les coordonnées d'un élément correspondent à une erreur ou non 
+  /**
+  *  In parameter takes the coordinates of a case in the mat-table
+  *  Return true if this case is an error
+  * @param table Name of the current table
+  * @param column Name of the column
+  * @param i Index of the line inside the page
   */
   checkErrorCell(table: string, column: string, i: number): boolean{
     let row = this.getRowIndexFromPaginatorProperties(table, i);
-    return this.errorElementArr.some((obj) => (obj.table== table && obj.column == column && obj.row == row));
-  }
-  checkErrorCell2(table: string, column: string, i: number): boolean{
-    let row = this.getRowIndexFromPaginatorProperties(table, i);
-    return this.errorElementArr2.some((obj) => (obj.table== table && obj.column.includes(column) && obj.row.includes(row)));
+    return this.errorElementArr.some((obj) => (obj.table== table && obj.column.includes(column) && obj.row.includes(row)));
   }
 
-  /*
-    Fonction permettant de tester si les coordonnées d'un élément correspondent à une erreur modifiée
+
+   /**
+  *  In parameter takes the coordinates of a case in the mat-table
+  *  Return true if this case was an error and has been modified
+  * @param table Name of the current table
+  * @param column Name of the column
+  * @param i Index of the line inside the page
   */
   checkModifiedErrorCell(table: string, column: string, i: number): boolean{
     let row = this.getRowIndexFromPaginatorProperties(table, i);
-    return this.modifiedElementArr.some((obj) => (obj.table== table && obj.column == column && obj.row == row));
+    return this.modifiedElementArr.some((obj) => (obj.table== table && obj.column.includes(column) && obj.row.includes(row)));
   }
 
-  checkModifiedErrorCell2(table: string, column: string, i: number): boolean{
-    let row = this.getRowIndexFromPaginatorProperties(table, i);
-    return this.modifiedElementArr2.some((obj) => (obj.table== table && obj.column.includes(column) && obj.row.includes(row)));
-  }
-
-  /*
-    Fonction permettant de voir si une case correspond à celle de l'erreur sélectionnée ou non 
+    /**
+  *  In parameter takes the coordinates of a case in the mat-table
+  *  Return true if this case was an error and has been modified
+  * @param table Name of the current table
+  * @param column Name of the column
+  * @param i Index of the line inside the page
   */
   checkSelectedErrorCell(table: string, column: string, i: number): boolean{
     let row = this.getRowIndexFromPaginatorProperties(table, i);
-    return this.selectedErrorElementArr.table == table && this.selectedErrorElementArr.column == column && this.selectedErrorElementArr.row == row;
+    return this.selectedErrorElementArr.table == table && this.selectedErrorElementArr.column.includes(column) && this.selectedErrorElementArr.row.includes(row);
   }
 
-  checkSelectedErrorCell2(table: string, column: string, i: number): boolean{
-    let row = this.getRowIndexFromPaginatorProperties(table, i);
-    return this.selectedErrorElementArr2.table == table && this.selectedErrorElementArr2.column.includes(column) && this.selectedErrorElementArr2.row.includes(row);
-  }
-
-  /*
-    Fonction permettant d'afficher le bon endroit du tableau lorsque l'évènement reçu correspond à un substep qui a été cliqué
+  /**
+  * Triggered when a substep is clicked. 
+  * Display the last error which was selected on this substep. If none, display the first one 
+  * @param stepperSelectionObj Object wityh 2 attributes: {mainStepIndex: number, subStepIndex: number}
   */
   displayOnSubStepClick(stepperSelectionObj: {mainStepIndex: number, subStepIndex: number}): void{
     if(this.historyService.isMainStepHasAlreadyBeenClicked(stepperSelectionObj.mainStepIndex) && this.historyService.isSubStepHasAlreadyBeenClicked(stepperSelectionObj.mainStepIndex, stepperSelectionObj.subStepIndex)){
-      this.displayErrorOnMatTab2(this.historyService.getLastSelectedCoordinates(stepperSelectionObj.mainStepIndex));
+      this.displayErrorOnMatTab(this.historyService.getLastSelectedCoordinates(stepperSelectionObj.mainStepIndex));
     } else {
       let error = this.errorsPsdrfList[stepperSelectionObj.mainStepIndex].errorList[stepperSelectionObj.subStepIndex];
-      this.displayErrorOnMatTab2(error.toPsdrfErrorCoordinates2());      
+      this.displayErrorOnMatTab(error.toPsdrfErrorCoordinates());      
     }
   }
 
-  /*
-    Fonction permettant d'afficher le bon endroit du tableau lorsque l'évènement reçu correspond à un mainstep qui a été cliqué
+
+   /**
+  * Triggered when a mainstep is clicked. 
+  * Display the last error which was selected on this substep. If none, display the first one 
+  * @param stepperSelectionObj StepperSelectionEvent
   */
-  displayOnMainStepClick(stepperSelectionObj: StepperSelectionEvent): void{
-    this.step = stepperSelectionObj.selectedIndex;
-    if(this.historyService.isMainStepHasAlreadyBeenClicked(stepperSelectionObj.selectedIndex)){
-      this.displayErrorOnMatTab2(this.historyService.getLastSelectedCoordinates(stepperSelectionObj.selectedIndex));
+  displayOnMainStepClick(stepperSelectionObjEvt: StepperSelectionEvent): void{
+    this.step = stepperSelectionObjEvt.selectedIndex;
+    if(this.historyService.isMainStepHasAlreadyBeenClicked(stepperSelectionObjEvt.selectedIndex)){
+      this.displayErrorOnMatTab(this.historyService.getLastSelectedCoordinates(stepperSelectionObjEvt.selectedIndex));
     } else {
-      let error = this.errorsPsdrfList[stepperSelectionObj.selectedIndex].errorList[0];
-      this.displayErrorOnMatTab2(error.toPsdrfErrorCoordinates2());
+      let error = this.errorsPsdrfList[stepperSelectionObjEvt.selectedIndex].errorList[0];
+      this.displayErrorOnMatTab(error.toPsdrfErrorCoordinates());
     }
   }
 
-  /*
-    Fonction permettant d'afficher sur le tableau une erreur à l'aide 
-    des ses coordonnées
+
+  /**
+  * Display the given Coordinates in the mat-tab
+  * @param errorCoordinates PsdrfErrorCoordinates of the error we want to display
   */
   displayErrorOnMatTab(errorCoordinates: PsdrfErrorCoordinates): void{
     this.selectedErrorElementArr = errorCoordinates;
-    this.indexMatTabGroup=this.indexLabelMatTabGroup.indexOf(errorCoordinates.table);
-    let tablePaginator = this.tableDataSourceArray[this.indexMatTabGroup].paginator;
-    let pageNumber = Math.trunc(errorCoordinates.row/tablePaginator.pageSize);
-
-    tablePaginator.pageIndex = pageNumber, // number of the page you want to jump.
-    tablePaginator.page.next({      
-         pageIndex: pageNumber,
-         pageSize: tablePaginator.pageSize,
-         length: tablePaginator.length
-       });
-  }
-
-  displayErrorOnMatTab2(errorCoordinates: PsdrfErrorCoordinates2): void{
-    this.selectedErrorElementArr2 = errorCoordinates;
     this.indexMatTabGroup=this.indexLabelMatTabGroup.indexOf(errorCoordinates.table);
     let tablePaginator = this.tableDataSourceArray[this.indexMatTabGroup].paginator;
     let pageNumber = Math.trunc(errorCoordinates.row[0]/tablePaginator.pageSize);
@@ -323,56 +298,33 @@ export class ImportDonneesComponent {
        });
   }
 
-  /*
-    Fonction permettant de modifier une valeur dans le tableau. 
-    Met aussi à jour la liste des éléments modifiés
+
+   /**
+  * Triggered when validation button has been clicked in a substep:
+  * - modify the values in the mat-table
+  * - update modifiedElementArr (list of the modified elements)
+  * @param modificationErrorObj contains 2 attributes:
+  * -errorCoordinates: 
+  * -newErrorValue: new set of
   */
-  modifyErrorValue(modificationErrorObj: {errorCoordinates: PsdrfErrorCoordinates[], newErrorValue: string}): void{
-    let indexTable;
-    modificationErrorObj.errorCoordinates.forEach(errorCoor => {
-      indexTable = this.indexLabelMatTabGroup.indexOf(errorCoor.table);
-      if(!this.modifiedElementArr.some((obj) => (obj.table== errorCoor.table && obj.column == errorCoor.column && obj.row == errorCoor.row))){
-        this.modifiedElementArr.push({table: errorCoor.table, column:errorCoor.column, row:errorCoor.row});
-      }
-      this.psdrfArray[indexTable][errorCoor.row][errorCoor.column] = modificationErrorObj.newErrorValue;
-    });
-
-    this.value = this.modifiedElementArr.length *100 / this.totalErrorNumber;
-  }
-
-  modifyErrorValue2(modificationErrorObj: {errorCoordinates: PsdrfErrorCoordinates2, newErrorValue: any}): void{
-    
+  modifyErrorValue(modificationErrorObj: {errorCoordinates: PsdrfErrorCoordinates, newErrorValue: any}): void{ 
     let indexTable = this.indexLabelMatTabGroup.indexOf(modificationErrorObj.errorCoordinates.table);
-    
-    // if(!this.modifiedElementArr2.some((obj) => (obj.table== modificationErrorObj.errorCoordinates.table && obj.column.includes(colName) && obj.row.includes(idx)))){
-    //   this.modifiedElementArr2.push({table: modificationErrorObj.errorCoordinates.table, column:modificationErrorObj.errorCoordinates.column, row:idx});
-    // }
-    
-
     modificationErrorObj.errorCoordinates.row.forEach((idx, i) => {
-      // modificationErrorObj.newErrorValue.forEach(line => {
       modificationErrorObj.errorCoordinates.column.forEach(colName => {
-        if(!this.modifiedElementArr2.some((obj) => (obj.table== modificationErrorObj.errorCoordinates.table && obj.column.includes(colName) && obj.row.includes(idx)))){
-          // if(!this.modifiedElementArr2.includes(modificationErrorObj.errorCoordinates)){
-            this.modifiedElementArr2.push(modificationErrorObj.errorCoordinates);
+        if(!this.modifiedElementArr.some((obj) => (obj.table== modificationErrorObj.errorCoordinates.table && obj.column.includes(colName) && obj.row.includes(idx)))){
+            this.modifiedElementArr.push(modificationErrorObj.errorCoordinates);
           }        
 
         this.psdrfArray[indexTable][idx][colName] = modificationErrorObj.newErrorValue[i][colName]
       })
     });
-    // modificationErrorObj.errorCoordinates.forEach(errorCoor => {
-    //   indexTable = this.indexLabelMatTabGroup.indexOf(errorCoor.table);
-    //   if(!this.modifiedElementArr.some((obj) => (obj.table== errorCoor.table && obj.column == errorCoor.column && obj.row == errorCoor.row))){
-    //     this.modifiedElementArr.push({table: errorCoor.table, column:errorCoor.column, row:errorCoor.row});
-    //   }
-    //   this.psdrfArray[indexTable][errorCoor.row][errorCoor.column] = modificationErrorObj.newErrorValue;
-    // });
-
-    this.value = this.modifiedElementArr2.length *100 / this.totalErrorNumber;
+    this.progressBarValue = this.modifiedElementArr.length *100 / this.totalErrorNumber;
   }
 
-  /*
-    Modifie la liste des main stepper qui ont été modifiés
+
+  /**
+  * Update list of modified Main step and go to the next main step 
+  * @param mainStepIndex index of the main step
   */
   modifyMainStepperAppearance(mainStepIndex: number){
     this.mainStepper.selected.completed = true;
@@ -380,8 +332,8 @@ export class ImportDonneesComponent {
     this.totallyModifiedMainStepperArr.push(mainStepIndex);
   }
 
-  /*
-    Fonction permettant de supprimer le fichier excel chargé
+   /**
+  * Delete the loaded Excel file
   */
   deleteFile(): void{
     this.isCurrentVerification = false;
@@ -391,22 +343,28 @@ export class ImportDonneesComponent {
     this.historyService.reInitialize();
   }
 
+  /**
+  * Reainitialize parameters
+  */
   reInitializeValues(): void{
     this.indexMatTabGroup=0;
     this.psdrfArray=[];
     this.tableDataSourceArray=[];
     this.errorsPsdrfList=[];
     this.mainStepNameArr=[];
-    this.errorElementArr2=[];
-    this.modifiedElementArr2=[];
+    this.errorElementArr=[];
+    this.modifiedElementArr=[];
     this.totallyModifiedMainStepperArr=[];
     this.totalErrorNumber=0;
-    this.value = 0;
-    this.selectedErrorElementArr2 = null;
+    this.progressBarValue = 0;
+    this.selectedErrorElementArr = null;
     this.isLabelVisible = true;
 
   }
 
+  /**
+  * Quit import page
+  */
   returnToPreviousPage(): void{
     this._router.navigate(["psdrf"]);
   }
@@ -427,11 +385,10 @@ export class ImportDonneesComponent {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
   }
 
-  //Main Paginator Functions
+  //* Main Paginator Functions
   /**
-  * Change the page in view
-  * @param bytes (File size in bytes)
-  * @param decimals (Decimals point)
+  * Change the page in view (next page exist)
+  * @param isForward boolean. True if we go to the next page, false if we come back to the previous
   */
   pageChangeLogic(isForward = true) {
     if (this.step < this.minStepAllowed || this.step > this.maxStepAllowed) {
@@ -444,9 +401,11 @@ export class ImportDonneesComponent {
     }
   }
 
+
   /**
-   * This will change min max steps allowed at any time in view
-   */
+  * Will change min max steps allowed at any time in view
+  * @param isForward boolean. True if we go to the next page, false if we come back to the previous
+  */
   changeMinMaxSteps(isForward = true) {
     const pageMultiple = this.page * this.MAX_STEP;
 
@@ -474,36 +433,7 @@ export class ImportDonneesComponent {
   }
 
   /**
-   * This will change min max steps allowed at any time in view
-   */
-   changeMinMaxSteps2(isForward = true) {
-    const pageMultiple = this.page * this.MAX_STEP;
-
-    // maxStepAllowed will be the least value between minStep + MAX_STEP and total steps
-    // minStepAllowed will be the least value between pageMultiple and maxStep - MAX_STEP
-    if (pageMultiple + this.MAX_STEP - 1 <= this.totalSteps - 1) {
-      this.maxStepAllowed = pageMultiple + this.MAX_STEP - 1;
-      this.minStepAllowed = pageMultiple;
-    } else {
-      this.maxStepAllowed = this.totalSteps - 1;
-      this.minStepAllowed = this.maxStepAllowed - this.MAX_STEP + 1;
-    }
-
-    // This will set the next step into view after clicking on back / next paginator arrows
-    if (this.step < this.minStepAllowed || this.step > this.maxStepAllowed) {
-      if (isForward) {
-        this.step = this.minStepAllowed;
-      } else {
-        this.step = this.maxStepAllowed;
-      }
-      this.mainStepper.selectedIndex = this.step;
-    }
-
-    this.rerender2();
-  }
-
-  /**
-   * Function to go back a page from the current step
+   * Function to go back page from the current step
    */
   paginatorBack() {
     this.page--;
@@ -511,7 +441,7 @@ export class ImportDonneesComponent {
   }
 
   /**
-   * Function to go next a page from the current step
+   * Function to go next page from the current step
    */
   paginatorNext() {
     this.page++;
@@ -519,7 +449,7 @@ export class ImportDonneesComponent {
   }
 
   /**
-   * Function to go back from the current step
+   * Function to go back from the current step (change page if necessary)
    */
   goBack() {
     if (this.step > 0) {
@@ -530,7 +460,7 @@ export class ImportDonneesComponent {
   }
 
   /**
-   * Function to go forward from the current step
+   * Function to go forward from the current step (change page if necessary)
    */
   goForward() {
     if (this.step < this.totalSteps - 1) {
@@ -544,106 +474,80 @@ export class ImportDonneesComponent {
    * This will display the steps in DOM based on the min max step indexes allowed in view
    */
   private rerender() {
-    const el: HTMLElement = this.contentPlaceholder.nativeElement;
-
-    const headers = this.contentPlaceholder.nativeElement.querySelectorAll(
-      ".mainStepper > div > mat-step-header"
-    );
-
-    const lines = this.contentPlaceholder.nativeElement.querySelectorAll(
-      ".mainStepper > div > mat-step-header > .mat-stepper-horizontal-line"
-    );
-
-
-    // If the step index is in between min and max allowed indexes, display it into view, otherwise set as none
-    headers.forEach((h, index) => {
-      if (index >= this.minStepAllowed && 
-        index <= this.maxStepAllowed) {
-        h.style.display = "flex";
-        h.style.padding = "24px";
-      } else {
-        h.style.display = "none";
-      }
-    });
-
-    // If the line index is between min and max allowed indexes, display it in view, otherwise set as none
-    // One thing to note here: length of lines is 1 less than length of headers
-    // For eg, if there are 8 steps, there will be 7 lines joining those 8 steps
-    lines.forEach((l, index) => {
-      if (index >= this.minStepAllowed && 
-        index <= this.maxStepAllowed) {
-        l.style.display = "block";
-      } else {
-        l.style.display = "none";
-      }
-    });
-  }
-
-  private rerender2() {
-    const el: HTMLElement = this.contentPlaceholder.nativeElement;
-
-    const headers = this.contentPlaceholder.nativeElement.querySelectorAll(
-      ".mainStepper > div > mat-step-header"
-    );
-
-    // const lines = this.contentPlaceholder.nativeElement.querySelectorAll(
-    //   ".mainStepper > div > mat-step-header > .mat-stepper-horizontal-line"
-    // );
-
-
-
-    // If the step index is in between min and max allowed indexes, display it into view, otherwise set as none
-    headers.forEach((h, index) => {
-      if (index >= this.minStepAllowed && 
-        index <= this.maxStepAllowed) {
-        h.style.display = "flex";
-        h.style.padding = "24px 1px";
-      } else {
-        h.style.display = "none";
-      }
-    });
-
-  }
-
-  showStepLabels(){
-    this.isLabelVisible = !this.isLabelVisible;
-    if(this.isLabelVisible){
-      this.extensionIcon = "unfold_more";
-      // document.body.style.setProperty('--displayLabel', 'none')
-      this.MAX_STEP = 6;
-    } else {
-      // document.body.style.setProperty('--displayLabel', 'none')
-      this.extensionIcon = "unfold_less";
-      this.MAX_STEP = 60; 
-    }
-    this.totalPages = Math.ceil(this.totalSteps / this.MAX_STEP);
-    // this.minStepAllowed = 0;
-    // this.maxStepAllowed = this.MAX_STEP - 1;
-    this.page =Math.trunc(this.step / this.MAX_STEP);
     
+    const headers = this.stepperPart.nativeElement.querySelectorAll(
+      ".mainStepper > div > mat-step-header"
+    );
+
+    // If the step index is in between min and max allowed indexes, display it into view, otherwise set as none
+    headers.forEach((h, index) => {
+      if (index >= this.minStepAllowed && 
+        index <= this.maxStepAllowed) {
+          h.style.display = "flex";
+          h.style.padding = "24px 1px";
+        } else {
+          h.style.display = "none";
+        }
+      });
+
     if(this.isLabelVisible){
-      this.changeMinMaxSteps(false);
-      const labels = this.contentPlaceholder.nativeElement.querySelectorAll(
+      const labels = this.stepperPart.nativeElement.querySelectorAll(
         ".mainStepper > div > mat-step-header > .mat-step-label"
       );
       labels.forEach((l) => {
         l.style.display = "flex";
       });
+        
     } else {
-      this.changeMinMaxSteps2(false);
-      const labels = this.contentPlaceholder.nativeElement.querySelectorAll(
+      // We precise ".mainStepper" to assure that we are not changing substep matstep
+      const lines = this.stepperPart.nativeElement.querySelectorAll(
+        ".mainStepper > div > mat-step-header > .mat-stepper-horizontal-line"
+      );
+  
+      // If the line index is between min and max allowed indexes, display it in view, otherwise set as none
+      // One thing to note here: length of lines is 1 less than length of headers
+      // For eg, if there are 8 steps, there will be 7 lines joining those 8 steps
+      lines.forEach((l, index) => {
+        if (index >= this.minStepAllowed && 
+          index <= this.maxStepAllowed) {
+          l.style.display = "block";
+        } else {
+          l.style.display = "none";
+        }
+      });      
+      
+      const labels = this.stepperPart.nativeElement.querySelectorAll(
         ".mainStepper > div > mat-step-header > .mat-step-label"
       );
       labels.forEach((l) => {
         l.style.display = "none";
       });
     }
+
+  }
+
+  /**
+   * This will display the steps in DOM based on the min max step indexes allowed in view
+   */
+  showStepLabels(){
+    this.isLabelVisible = !this.isLabelVisible;
+    if(this.isLabelVisible){
+      this.extensionIcon = "unfold_more";
+      this.MAX_STEP = 6;
+    } else {
+      this.extensionIcon = "unfold_less";
+      this.MAX_STEP = 60; 
+    }
+    this.totalPages = Math.ceil(this.totalSteps / this.MAX_STEP);
+    this.page =Math.trunc(this.step / this.MAX_STEP);
+    
+    this.changeMinMaxSteps(false);
   }
   
-  checkCorrifiedSubStepper(mainStepIndex: number): boolean{
-    return this.totallyModifiedMainStepperArr.includes(mainStepIndex);
-  }
-  
+  /**
+   * Check if a main step has been changed. Return a boolean.
+   * @param mainStepIndex index of the main step
+   */
   checkMainStepCompleted(mainStepIndex: number): boolean{
     return this.totallyModifiedMainStepperArr.includes(mainStepIndex);
   }

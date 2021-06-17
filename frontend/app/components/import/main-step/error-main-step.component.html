@@ -8,17 +8,16 @@
     </button>
   </div>
   <div class="stepper">
-    <mat-horizontal-stepper class="subStepper" labelPosition="bottom" #subStepper (selectionChange)="onSubStepClicked2($event)" >
+    <mat-horizontal-stepper class="subStepper" labelPosition="bottom" #subStepper (selectionChange)="onSubStepClicked($event)" >
       <ng-template matStepperIcon="edit">
         <mat-icon>done</mat-icon>
       </ng-template>
 
       <mat-step *ngFor="let error of step.errorList; index as subStepIndex" [completed]="checkSubStepCompleted(subStepIndex)">  
-        <error-sub-step (indexButtonClicked)="onIndexButtonClicked($event)" 
-          (indexButtonClicked2)="onIndexButtonClicked2($event)"
+        <error-sub-step 
+          (indexButtonClicked)="onIndexButtonClicked($event)"
           (modificationValidated)="modifValidation($event)" 
-          (modificationValidated2)="modifValidation2($event)" 
-          (allRowsModified)="modifySteppersAppearance($event)" 
+          (allRowsModified)="onAllRowsModified($event)" 
           [psdrfError]="error" 
           [subStepIndex]="subStepIndex" 
           [mainStepIndex]="mainStepIndex" 

@@ -1,7 +1,7 @@
 import {Component, Input, Output, EventEmitter, OnInit} from '@angular/core';
 import {ErrorHistoryService} from '../../../../services/error.history.service';
 import {MatTableDataSource} from '@angular/material/table';
-import {PsdrfError, PsdrfErrorCoordinates, PsdrfErrorCoordinates2} from '../../../../models/psdrfObject.model';
+import {PsdrfError, PsdrfErrorCoordinates} from '../../../../models/psdrfObject.model';
 // import { FormArray, FormGroup, FormBuilder } from '@angular/forms';
 
 
@@ -16,16 +16,17 @@ import {PsdrfError, PsdrfErrorCoordinates, PsdrfErrorCoordinates2} from '../../.
     modifiedIndexes: number[] = []; //liste des indexs des boutons modifiés 
 
     @Input() mainStepIndex: number; //Index du main step auquel le subStep appartient
-    @Input() subStepIndex: number;
-    @Input() psdrfError: any;
+    @Input() subStepIndex: number; //Index du subStep 
+    @Input() psdrfError: PsdrfError;
+
+    //TODO: Add list of correction
     @Input() listCorrection: any;
+    
     @Input() errorType: any; 
     @Output() indexButtonClicked=new EventEmitter<PsdrfErrorCoordinates>();
-    @Output() indexButtonClicked2=new EventEmitter<PsdrfErrorCoordinates2>();
-    @Output() modificationValidated=new EventEmitter<{errorCoordinates: PsdrfErrorCoordinates[], newErrorValue: string}>();
-    @Output() modificationValidated2=new EventEmitter<{errorCoordinates: PsdrfErrorCoordinates2, newErrorValue: any}>();
+    @Output() modificationValidated=new EventEmitter<{errorCoordinates: PsdrfErrorCoordinates, newErrorValue: any}>();
     @Output() allRowsModified=new EventEmitter<number>();
-    datasource: any;
+    datasource: MatTableDataSource<any>;
 
     // form: FormGroup;
 
@@ -41,53 +42,30 @@ import {PsdrfError, PsdrfErrorCoordinates, PsdrfErrorCoordinates2} from '../../.
     }
 
 
-    /*
-      Fonction appelée lorsqu'un index button est cliqué
+    /**
+    *  Triggered when an index button is clicked:
+    *  - Throw an event to inform main step
+    *  - change selected button
+    * @param rowIndex Index of the button (0 to nb of button -1)
+    * @param row Number of the row in question 
     */
     onIndexButtonClicked(rowIndex: number, row: number): void{
-      // this.historyService.rememberIndex(this.psdrfError.toPsdrfErrorCoordinates(rowIndex), rowIndex, this.mainStepIndex, this.subStepIndex);
-      // this.selectedButtonIndex = rowIndex; 
-      // this.indexButtonClicked.next(new PsdrfErrorCoordinates(this.psdrfError.table, this.psdrfError.column, row));
-    }
-
-    onIndexButtonClicked2(rowIndex: number, row: number): void{
-      // this.historyService.rememberIndex(this.psdrfError.toPsdrfErrorCoordinates(rowIndex), rowIndex, this.mainStepIndex, this.subStepIndex);
-      // this.selectedButtonIndex = rowIndex; 
-      this.historyService.rememberIndex2(this.psdrfError.toPsdrfErrorCoordinates2(), rowIndex, this.mainStepIndex, this.subStepIndex);
       this.selectedButtonIndex = rowIndex; 
-      this.indexButtonClicked2.next(new PsdrfErrorCoordinates2(this.psdrfError.table, this.psdrfError.column, [row]));
+      this.indexButtonClicked.next(new PsdrfErrorCoordinates(this.psdrfError.table, this.psdrfError.column, [row]));
     }
     
-    /*
-      Fonction qui modifie une seule valeur
+    /**
+    *  Triggered when a validation button is clicked:
+    *  - Change Color of the button
+    *  - Change selected button if necessary
+    *  - Throw event if all row modified
+    * @param buttonIndex Index of the validation button clicked
     */
-    modifValidation(): void{
-      // Ajouter l'index seulement si il n'est pas déjà présent
-      if(this.modifiedIndexes.indexOf(this.selectedButtonIndex) === -1){
-        this.modifiedIndexes.push(this.selectedButtonIndex);
-      }      
-      this.modificationValidated.next({errorCoordinates: [new PsdrfErrorCoordinates(this.psdrfError.table, this.psdrfError.column, this.psdrfError.row[this.selectedButtonIndex])], newErrorValue: this.value});
-      //Si tous les index ont été modifiés, l'évènement allStepsModified est lancé
-      if(this.modifiedIndexes.length == this.psdrfError.row.length){
-        this.allRowsModified.next(this.subStepIndex);
-      } 
-    }
-
-    modifValidation2(): void{
-      if(this.modifiedIndexes.indexOf(this.selectedButtonIndex) === -1){
-        this.modifiedIndexes.push(this.selectedButtonIndex);
-      }    
-      this.modificationValidated2.next({errorCoordinates: new PsdrfErrorCoordinates2(this.psdrfError.table, this.psdrfError.column, this.psdrfError.row), newErrorValue: this.datasource.data});
-      if(this.modifiedIndexes.length == this.psdrfError.row.length){
-        this.allRowsModified.next(this.subStepIndex);
-      }
-    }
-
-    modifLineValidation2(buttonIndex: number): void{
+    modifLineValidation(buttonIndex: number): void{
       if(this.modifiedIndexes.indexOf(buttonIndex) === -1){
         this.modifiedIndexes.push(buttonIndex);
       }    
-      this.modificationValidated2.next({errorCoordinates: new PsdrfErrorCoordinates2(this.psdrfError.table, this.psdrfError.column, [this.psdrfError.row[buttonIndex]]), newErrorValue: [this.datasource.data[buttonIndex]]});
+      this.modificationValidated.next({errorCoordinates: new PsdrfErrorCoordinates(this.psdrfError.table, this.psdrfError.column, [this.psdrfError.row[buttonIndex]]), newErrorValue: [this.datasource.data[buttonIndex]]});
       if(this.modifiedIndexes.length == this.psdrfError.row.length){
         this.allRowsModified.next(this.subStepIndex);
       } else {
@@ -95,35 +73,39 @@ import {PsdrfError, PsdrfErrorCoordinates, PsdrfErrorCoordinates2} from '../../.
       }
     }
 
-    deleteRow(rowIndex): void{
-      this.psdrfError.row.splice(rowIndex, 1);
+    // TODO: Deletion of a line
+    // deleteRow(rowIndex): void{
+    //   this.psdrfError.row.splice(rowIndex, 1);
+    //   this.datasource.data.splice(rowIndex, 1);
+    //   this.datasource._updateChangeSubscription();
+    // }
 
-      this.datasource.data.splice(rowIndex, 1);
-      this.datasource._updateChangeSubscription();
-    }
-
-    /*
-      Fonction appelé modifie toutes les valeurs dans le subStep sélectionné
+    /** 
+     * Fonction appelé modifie toutes les valeurs dans le subStep sélectionné
+     * TODO: add in the new version
     */
-    modifValidationAll(): void{
-      this.modifiedIndexes= Array.from(Array(this.psdrfError.row.length).keys());
-      let psdrfErrorCoorArray: PsdrfErrorCoordinates[]=[];
-      this.psdrfError.row.forEach(row => {
-        psdrfErrorCoorArray.push(new PsdrfErrorCoordinates(this.psdrfError.table, this.psdrfError.column, row));
-      })
-      this.modificationValidated.next({errorCoordinates: psdrfErrorCoorArray, newErrorValue: this.value});
-      this.allRowsModified.next(this.subStepIndex);
-    }
+    // modifValidationAll(): void{
+    //   this.modifiedIndexes= Array.from(Array(this.psdrfError.row.length).keys());
+    //   let psdrfErrorCoorArray: PsdrfErrorCoordinates[]=[];
+    //   this.psdrfError.row.forEach(row => {
+    //     psdrfErrorCoorArray.push(new PsdrfErrorCoordinates(this.psdrfError.table, this.psdrfError.column, row));
+    //   })
+    //   this.modificationValidated.next({errorCoordinates: psdrfErrorCoorArray, newErrorValue: this.value});
+    //   this.allRowsModified.next(this.subStepIndex);
+    // }
   
-    /*
-      Fonction qui retourne si un index correspond à celui de l'élement sélectionné ou non
+
+    /**
+    *  Return true if the index correspond to the selected element or not 
+    * @param rowIndex Index of a validation button 
     */
     checkSelected(rowIndex: number): boolean{
       return this.selectedButtonIndex == rowIndex;
      }
 
-    /*
-      Fonction qui retourne si un index correspond à celui d'un élément modifié ou non
+    /**
+    *  Return true if a line has been modified or no 
+    * @param rowIndex Index of a validation button
     */
     checkModified(rowIndex: number): boolean{
       return this.modifiedIndexes.includes(rowIndex);
