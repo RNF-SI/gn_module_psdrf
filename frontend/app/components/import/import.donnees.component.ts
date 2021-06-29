@@ -34,7 +34,7 @@ export class ImportDonneesComponent {
   tableDataSourceArray: MatTableDataSource<any> []= [];//Tableau des Datasource de chaque onglet
   
   
-  indexLabelMatTabGroup: string[]= ["Placette", "Cycle", "Arbres", "Rege", "Transect", "BMSsup30", "Repere"];//Tableau des titres d'onglet
+  indexLabelMatTabGroup: string[]= ["Placettes", "Cycle", "Arbres", "Regeneration", "Transect", "BMSsup30", "Reperes"];//Tableau des titres d'onglet
   excelFile: any = null;
   isLoadingResults: boolean = false; // Vrai lorsque les données sont entrain de charger
   isCurrentVerification: boolean= false; // Faux lorsqu'on n'a pas encore choisi de fichier

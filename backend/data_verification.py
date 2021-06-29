@@ -21,10 +21,11 @@ def data_verification(data):
   Placettes = pd.json_normalize(data[0]) 
   Cycles = pd.json_normalize(data[1])
   Arbres = pd.json_normalize(data[2])
-  Reges = pd.json_normalize(data[3])
+  Regeneration = pd.json_normalize(data[3])
   Transect = pd.json_normalize(data[4])
   BMSsup30 = pd.json_normalize(data[5])
   Reperes = pd.json_normalize(data[6])
+
 
   # Trouver le chemin d'accès au dossier data, qui contient les tables nécessaires aux tests
   ROOT_DIR_PSDRF = Path(__file__).absolute().parent.parent
@@ -53,18 +54,17 @@ def data_verification(data):
   disp_num = 1
   last_cycle = Cycles[Cycles["NumDisp"] == disp_num]["Cycle"].max()
 
-  tables =["Placettes", "Cycles", "Arbres", "Reges", 
+  tables =["Placettes", "Cycles", "Arbres", "Regeneration", 
          "Transect", "BMSsup30", "Reperes", 
          "CyclesCodes", "Dispositifs", 
          "EssReg", "Communes", "Referents", "Tarifs"] 
 
-  # print(BMSsup30)
 
   #Tester si il n'y a pas de valeurs vitales nulles (Disp, Placette, Cycle)
   check_null_DPC(Placettes, "Placettes")
   check_null_DPC(Cycles, "Cycles")
   check_null_DPC(Arbres, "Arbres")
-  check_null_DPC(Reges, "Reges")
+  check_null_DPC(Regeneration, "Regeneration")
   check_null_DPC(Transect, "Transect")
   check_null_DPC(BMSsup30, "BMSsup30")
   check_null_DPC(Reperes, "Reperes")
@@ -78,7 +78,7 @@ def data_verification(data):
   Placettes = filter_by_disp(disp_num, last_cycle, Placettes, disp_num)
   Cycles = filter_by_disp(disp_num, last_cycle, Cycles, disp_num)
   Arbres = filter_by_disp(disp_num, last_cycle, Arbres, disp_num)
-  Reges = filter_by_disp(disp_num, last_cycle, Reges, disp_num)
+  Regeneration = filter_by_disp(disp_num, last_cycle, Regeneration, disp_num)
   Transect = filter_by_disp(disp_num, last_cycle, Transect, disp_num)
   BMSsup30 = filter_by_disp(disp_num, last_cycle, BMSsup30, disp_num)
   Reperes = filter_by_disp(disp_num, last_cycle, Reperes, disp_num)
@@ -89,7 +89,9 @@ def data_verification(data):
   Referents = filter_by_disp(disp_num, last_cycle, Referents, disp_num)
   Tarifs = filter_by_disp(disp_num, last_cycle, Tarifs, disp_num)
 
-  print(BMSsup30)
+  # Convertion de types
+  Transect["StadeD"] = pd.to_numeric(Transect["StadeD"])
+  Transect["StadeE"] = pd.to_numeric(Transect["StadeE"])
 
   
   # soundness_code = "de décomposition"
@@ -139,14 +141,12 @@ def data_verification(data):
 
   df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated()]
   if not df_Dupl.empty:
-    print(df_Dupl_temp.duplicated(keep=False))
     entire_df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated(keep=False)]
     listDupl = entire_df_Dupl.groupby(list(df_Dupl_temp)).apply(lambda x: list(x.index)).tolist()
     i = 0
     error_List_Temp = []
     for index, row in df_Dupl.iterrows():
       valuesDupl = entire_df_Dupl.loc[listDupl[i]]
-      print(valuesDupl.to_json(orient='records'))
       err = {
           "message": "L'Arbre "+ str(row["NumArbre"]) +" au cycle "+ str(row["Cycle"]) +" apparaît plusieurs fois dans la table Arbres",
           "table": "Arbres",
@@ -157,19 +157,13 @@ def data_verification(data):
       i = i + 1
       error_List_Temp.append(err)
     verificationList.append({'errorName': 'Duplication dans Arbres', 'errorText':'Lignes dupliquées dans la table Arbres', 'errorList': error_List_Temp, 'errorType': 'PsdrfError'})
-    print("Dupliqué")
-    print(listDupl)
-    print(valuesDupl)
 
 
   # 5/ Contrôle du suivi des arbres entre les différents inventaires
   #le contrôle est impossible si il existe des doublons NumDisp + NumPlac + NumArbre
   elif last_cycle > 1:
     tArbres = Arbres[["NumDisp", "NumPlac", "NumArbre", "Cycle", "Essence", "Azimut", "Dist"]]
-    print("aaa")
     t = pd.melt(tArbres, id_vars=["NumDisp", "NumPlac", "NumArbre", "Cycle"], value_vars=["Essence", "Azimut", "Dist"], ignore_index=False)
-    print(tArbres)
-    print(t)
 
     #On utilise la fonction first car il n'y a pas de duplicate dans notre cas. 
     t = t.pivot_table(index=["NumDisp", "NumPlac", "NumArbre", "variable"], columns='Cycle', values='value', aggfunc=['first', lambda x: x.index[0]]).reset_index()
@@ -204,26 +198,17 @@ def data_verification(data):
       # pos_Error = np.where(~(pd.isnull(t.shape[1])) & ((t.iloc[:, 4]) != (t.iloc[:,5])))
       # pos_Error = np.unique(pos_Error)
       # df_Error = t.iloc[pos_Error, : ]
-      # print(df_Error)
 
       temp1 = t[(~t.iloc[:,4].isna()) & (~t.iloc[:,5].isna())]
       pos_Error = np.where(temp1.iloc[:,4] != temp1.iloc[:,5])
       pos_Error = np.unique(pos_Error)
       df_Error = temp1.iloc[pos_Error, : ]
-      print(df_Error)
         
     if df_Error.shape[0] > 0 :
       error_List_Temp = []
-      print(df_Error)
-      print("Incohérence(s) relevée(s) sur les valeurs d'Essence, Azimut et Dist entre les différents inventaires")
       for index, row in df_Error.iterrows():
         # valuesDupl = df_Error.loc[listDupl[i]]
-        # print(valuesDupl.to_json(orient='records'))
-        print(row)
-        print(row["variable"].item())
-        print([int(x) for x in row["<lambda>"].values])
         tValues = tArbres[["NumArbre", "Cycle", str(row["variable"].item())]].loc[[int(x) for x in row["<lambda>"].values]]
-        print(tValues)
         err = {
             "message": "Incohérence(s) relevée(s) sur les valeurs "+ str(row["variable"].item()) +" pour l'arbre numéro "+ str(row["NumArbre"].item()) + " de la placette numéro " + str(row["NumPlac"].item()),
             "table": "Arbres",
@@ -233,10 +218,6 @@ def data_verification(data):
           }
         error_List_Temp.append(err)
       verificationList.append({'errorName': "Incohérence dans Arbres", 'errorText': "Incohérence(s) relevée(s) sur les valeurs d'Essence, Azimut et Dist entre les différents inventaires", 'errorList': error_List_Temp, 'errorType': 'PsdrfError'})
-
-
-
-  print(verificationList)
 
 
 
@@ -276,17 +257,10 @@ def data_verification(data):
     df_Error = t.iloc[pos_Error, : ]
 
   if df_Error.shape[0] > 0 :
-    print("Acroissement(s) sur le diamètre négatif(s) constaté(s) sur la population d'arbres vivants entre les différents inventaires")
     error_List_Temp = []
-    print(df_Error)
     for index, row in df_Error.iterrows():
       # valuesDupl = df_Error.loc[listDupl[i]]
-      # print(valuesDupl.to_json(orient='records'))
-      print(row)
-      print(row["variable"].item())
-      print([int(x) for x in row["<lambda>"].values])
       tValues = tArbres[["NumArbre", "Cycle", str(row["variable"].item())]].loc[[int(x) for x in row["<lambda>"].values],:]
-      print(tValues)
       err = {
           "message": "Accroissement(s) sur le "+ str(row["variable"].item()) +" négatif(s)  pour l'arbre numéro "+ str(row["NumArbre"].item()) + " de la placette numéro " + str(row["NumPlac"].item()),
           "table": "Arbres",
@@ -324,17 +298,9 @@ def data_verification(data):
 
   if df_Error.shape[0] > 0 :
     error_List_Temp = []
-    print(df_Error)
-    print(tArbres)
-    print("Accroissement(s) sur le diamètre positif(s) constaté(s) sur la population d'arbres morts sur pied entre les différents inventaires. Exception si changement de type (ex : chandelle devient souche) ")
     for index, row in df_Error.iterrows():
       # valuesDupl = df_Error.loc[listDupl[i]]
-      # print(valuesDupl.to_json(orient='records'))
-      print(row)
-      print(row["variable"].item())
-      print([int(x) for x in row["<lambda>"].values])
       tValues = tArbres[["NumArbre", "Cycle", str(row["variable"].item())]].loc[[int(x) for x in row["<lambda>"].values],:]
-      print(tValues)
       err = {
           "message": "Accroissement(s) sur le "+ str(row["variable"].item()) +" positif(s)  pour l'arbre numéro "+ str(row["NumArbre"].item()) + " de la placette numéro " + str(row["NumPlac"].item()),
           "table": "Arbres",
@@ -366,12 +332,10 @@ def data_verification(data):
 
   if error_trees.shape[0] > 0 :
     error_List_Temp = []
-    print("Valeur(s) d'accroissement en diamètre trop importante(s) détectée(s) (seuil à 15 cm entre les 2 inventaires)")
     for index, row in error_trees.iterrows():
+      
       # valuesDupl = df_Error.loc[listDupl[i]]
-      # print(valuesDupl.to_json(orient='records'))
       tValues = tArbres[["NumArbre", "Cycle", str(row["variable"].item())]].loc[[int(x) for x in row["<lambda>"].values],:]
-      # print(tValues)
       err = {
           "message": "Valeur d'accroissement trop importante pour le "+ str(row["variable"].item()) +" de l'arbre numéro "+ str(row["NumArbre"].item()) + " de la placette numéro " + str(row["NumPlac"].item()),
           "table": "Arbres",
@@ -509,7 +473,6 @@ def data_verification(data):
   # ---------- Contrôle des codes écologiques : ---------- #
   Table_temp = Arbres[~Arbres["CodeEcolo"].isna() & Arbres["Ref_CodeEcolo"].isna()]
   Table_temp = Table_temp[[ "NumPlac", "NumArbre", "CodeEcolo", "Ref_CodeEcolo" ]]
-  print(Table_temp)
   if not Table_temp.empty:
     error_List_Temp=[]
     for index, row in Table_temp.iterrows():
@@ -575,14 +538,10 @@ def data_verification(data):
     posProSilva["CodeEcolo"]= posProSilva["CodeEcolo"].apply(set)
     
     # posProSilva.loc[:, "CodeEcolo"] = posProSilva["CodeEcolo"].str.split("-")
-    # print(posProSilva.CodeEcolo.isin(CodeEcologie["Code"]))
     # temp = posProSilva[~posProSilva["CodeEcolo"].isin(CodeEcologie["Code"])]
 
     Prosilva_codes = (set(CodeEcologie[CodeEcologie["Codification"]=="prosilva"]["Code"].apply(str)))
 
-    # print([ x <= Prosilvas_codes for x in posProSilva["CodeEcolo"]])
-
-    # print(~posProSilva["CodeEcolo"].astype(str).str.contains('|'.join( str(c) for c in CodeEcologie[CodeEcologie["Codification"]=="prosilva"]["Code"])))
     # temp = posProSilva[~(posProSilva["CodeEcolo"].astype(str).str.contains('|'.join( str(c) for c in CodeEcologie[CodeEcologie["Codification"]=="prosilva"]["Code"])))]
     # temp= posProSilva[~posProSilva["CodeEcolo"].isin(CodeEcologie[CodeEcologie["Codification"]=="prosilva"]["Code"]).all()]
     # temp= posProSilva[~posProSilva["CodeEcolo"].astype(str).str.contains('|'.join( str(c) for c in CodeEcologie[CodeEcologie["Codification"]=="prosilva"]["Code"]))]
@@ -618,7 +577,6 @@ def data_verification(data):
   #   List = []
   #   pos = []
   #   temp = posAFI
-  #   print(temp["CodeEcolo"])
 
   #   # for i in range(1, temp.shape[0]):
   #   List_temp = temp["CodeEcolo"].str.extract(pat = Niveaux)[~temp["CodeEcolo"].str.extract(pat = Niveaux).isna()]
@@ -640,7 +598,6 @@ def data_verification(data):
     EFI_codes = (set(CodeEcologie[CodeEcologie["Codification"]=="EFI"]["Code"].apply(str)))
     temp = posEFI[[(not (x <= EFI_codes)) for x in posEFI["CodeEcolo"]]]
 
-      # print(temp)
     if not temp.empty:
       error_List_Temp=[]
       for index, row in temp.iterrows():
@@ -665,10 +622,6 @@ def data_verification(data):
     # NbCodes = len(Niveaux)
     posIRSTEA = posIRSTEA.assign(CodeEcolo = posIRSTEA["CodeEcolo"].astype(str).str.lower().str.split("-"))
 
-    # print([x.str.contains(IRSTEA_codes) for x in posIRSTEA["CodeEcolo"]])
-    # print(IRSTEA_codes)
-    # print([a for a in IRSTEA_codes])
-    # print(posIRSTEA["CodeEcolo"])
     # aaa = [posIRSTEA["CodeEcolo"].str.contains(a) for a in IRSTEA_codes]
 
     # aaa = posIRSTEA[posIRSTEA["CodeEcolo"].str.contains('|'.join( str(c) for c in IRSTEA_codes)).all()]
@@ -690,7 +643,6 @@ def data_verification(data):
 
 
 
-    # print(posIRSTEA["CodeEcolo"].astype(str).str.extract(IRSTEA_codes))
     # List_temp = posIRSTEA["CodeEcolo"].str.extract(IRSTEA_codes)[~posIRSTEA["CodeEcolo"].astype(str).str.extract(IRSTEA_codes).isna()]
 
   # --- Codification non reconnue
@@ -707,57 +659,6 @@ def data_verification(data):
       error_List_Temp.append(err)
     verificationList.append({'errorName': 'Code(s) écologiques non reconnu(s)', 'errorText': "Il y a des références à des codifications de codes écologiques non reconnues. Rappel : les seules codifications reconnues sont celles de ProSilva, de l'IRSTEA et de l'EFI.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError'})
 
-    # temp["CodeEcolo"] = 
-
-  # temp = Arbres[~Arbres.Type.isin(tableDict["CodeEcologie")["Code"]]
-  # print("Il y a des codes DMH référencés ProSilva qui ne sont pas reconnus")
-
-
-
-  # pos1 = np.where(df_Dupl.duplicated())
-  # pos2 = np.where(df_Dupl.duplicated(keep='last'))
-  # Dupl = []
-  # if len(pos1) >0:
-  #   for i in range(len(pos1)):
-  #     print(pos2[i])
-  #     print(pos1[i])
-  #     print(range(pos2[i], pos1[i]))
-
-
-    # if i in tableDict["Arbres"][]
-
-    # pos1= np.array(np.where(~a['Cycle'].isin(b['Cycle']))).tolist()[0]
-    # pos2= np.array(np.where(a['Cycle'] != b['Cycle'])).tolist()[0]
-    # # print(a["Cycle"][~a['Cycle'].isin(b['Cycle']])
-    # print(pos1)
-    # print(pos2)
-    # for i in pos1:
-    #   print(a.iloc[i])
-    #   err = {
-    #         "message": "Le cycle"+ str(a.iloc[i]['Cycle']) +" est manquant dans la table Arbres",
-    #         "table": "Arbres",
-    #         "column": 'Cycle',
-    #       }
-
-    # for i in pos2:
-    # if len(pos1)>0 | len(pos2)>0:
-    #       err = {
-    #         "message": "Le cycle"+NbCycle+"est manquant dans la table Arbres",
-    #         "table": "Arbres",
-    #         "column": 'Cycle',
-    #       }
-
-
-    # print( a['Cycle'][~a['Cycle'].isin(b['Cycle']) | b['Cycle'] != a['Cycle']])
-    
-    # print(np.where(~a['Cycle'].isin(b['Cycle'])))
-    # print(np.array(np.where(b['Cycle'] != a['Cycle'])).tolist()[0])
-    # # diffCycle = pd.concat([np.array(np.where(~a['Cycle'].isin(b['Cycle']))).tolist()[0], np.array(np.where(b['Cycle'] != a['Cycle'])).tolist()[0]])
-    # diffCycle = pd.concat([np.where(~a['Cycle'].isin(b['Cycle'])), np.where(b['Cycle'] != a['Cycle']))
-    # print(diffCycle)
-    # if len(diffCycle):
-    #   print("cycle(s) manquant(s) (exemple : passage du cycle 1 au cycle 3) détecté dans la table")
-
 
 
   ###Table BMSsup30
@@ -766,7 +667,6 @@ def data_verification(data):
   # Contrôle des stades de décomposition
   soundness_code = "de décomposition"
   error_List_Temp = check_code(CodeDurete, BMSsup30, soundness_code, "BMSsup30")
-  print(error_List_Temp)
   if len(error_List_Temp) >0:
     verificationList.append({'errorName': 'Contrôle Stade de décomposition non reconnu(s)', 'errorText': 'Contrôle Stade de décomposition dans BMSsup30', 'errorList': error_List_Temp, 'correctionList': CodeDurete['Code'].tolist(), 'errorType': 'PsdrfError'})
 
@@ -779,9 +679,8 @@ def data_verification(data):
   # Contrôle des numéros d'inventaire
   check_cycle_Error_List = check_cycle(BMSsup30, Test, CyclesCodes, "BMSsup30", An, Dispositifs)
   if len(check_cycle_Error_List) >0:
-    verificationList.append({'errorName': "Contrôle des cycles dans BMSsup30", 'errorText': 'Contrôle des cycles dans BMSsup30', 'errorList' : check_cycle_Error_List, 'errorType': 'ReferenceError'})
+    verificationList.append({'errorName': "Contrôle des cycles dans BMSsup30", 'errorText': 'Contrôle des cycles dans BMSsup30', 'errorList' : check_cycle_Error_List, 'errorType': 'PsdrfError'})
 
-  print("\n \n \n")
 
   # Contrôle des valeurs vides des variables :
   # Liste de colonne où il manque des valeurs
@@ -791,7 +690,6 @@ def data_verification(data):
   
   # if ListName.size > 0:
   #   Vital = ListName[pd.Series(ListName).isin(["Id", "Essence", "DiamMed", "Longueur", "StadeD", "StadeE"])]
-  #   print(Vital)
   #   # Annexe = ListName[~ListName.isin(["NumDisp", "NumPlac", "Id", "Cycle", "Essence", "DiamMed", "Longueur", "StadeD", "StadeE", "Observation"])]
   #   if Vital.size > 0:
   #     error_List_Temp=[]
@@ -806,15 +704,15 @@ def data_verification(data):
   #     #   error_List_Temp.append(err)
   #     # verificationList.append({'errorName': "Il manque des informations (vides) au(x) colonne(s) BMSsup30", 'errorList': error_List_Temp, 'errorType': 'PsdrfError'})
 
+  tBMSsup30 = BMSsup30[["NumDisp", "NumPlac", "NumArbre", "Cycle", "Essence", "Azimut", "Dist"]]
   Vital = BMSsup30[ BMSsup30["Id"].isna() |  BMSsup30["Essence"].isna() | BMSsup30["DiamMed"].isna() | BMSsup30["Longueur"].isna() | BMSsup30["StadeD"].isna() | BMSsup30["StadeE"].isna()]
   Vital = Vital[["NumPlac", "NumArbre", "Id", "Essence", "DiamMed", "Longueur", "StadeD", "StadeE"]]
-  print(Vital)
   if not Vital.empty:
     error_List_Temp=[]
     for index, row in Vital.iterrows():
       err = {
           "message": "Une/des colonne(s) de l'arbre "+ str(int(row["NumArbre"])) +" de la placette "+ str(int(row["NumPlac"])) + " n'est/ne sont pas renseignées.",
-          "table": "Arbres",
+          "table": "BMSsup30",
           "column": ["NumArbre", "Id", "Essence", "DiamMed", "Longueur", "StadeD", "StadeE"],
           "row": [index], 
           "value": Vital.loc[[index],:].to_json(orient='records'),
@@ -830,14 +728,10 @@ def data_verification(data):
   df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated()]
   if not df_Dupl.empty:
     entire_df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated(keep=False)]
-    print("test ohlaal")
-    print(entire_df_Dupl)
     listDupl = entire_df_Dupl.groupby(list(df_Dupl_temp)).apply(lambda x: list(x.index)).tolist()
-    print(listDupl)
     i = 0
     error_List_Temp = []
     for index, row in df_Dupl.iterrows():
-      print("Information dupliquée dans la table BMSsup30")
       valuesDupl = entire_df_Dupl.loc[listDupl[i]]
       err = {
           "message": "L'Arbre "+ str(row["Id"])+" de la placette "+ str(int(row["NumPlac"])) +" au cycle "+ str(row["Cycle"]) +" apparaît plusieurs fois dans la table BMSsup30",
@@ -862,7 +756,6 @@ def data_verification(data):
   temp = temp[["NumPlac", "Id", "DiamFin", "DiamMed", "DiamIni"]]
   if not temp.empty:
     error_List_Temp=[]
-    print(temp)
     for index, row in temp.iterrows():
       err = {
           "message": "Le billon  "+ str(int(row["Id"])) +" de la placette "+ str(int(row["NumPlac"])) + " mesure moins de 30cm.",
@@ -937,13 +830,12 @@ def data_verification(data):
       #On utilise la fonction first car il n'y a pas de duplicate dans notre cas. 
       t = t.pivot_table(index=["NumDisp", "NumPlac", "Id", "variable"], columns='Cycle',values='value', aggfunc=['first', lambda x: x.index[0]]).reset_index()
       t = t.sort_values(by=["NumDisp", "NumPlac", "Id", "variable"])
-
       # Note : on distingue quand il y a 2 cycles et 1 seul
       #
       # Cas où un arbre présent au cycle 1, disparaît au cycle 2 et réapparaît au cycle3
       if last_cycle > 2:
         pos_Error = []
-        df_temp = t
+        df_temp = t[~t.iloc[:,t.shape[1]-1].isna()]
         # Si arbre non coupé au dernier cycle, toutes les valeurs doivent être identiques
         for i in range(5, t.shape[1]):
           pos_Error =  np.concatenate((pos_Error, np.array(np.where(df_temp.iloc[:, i] != df_temp.iloc[:, i-1])).tolist()[0]))
@@ -952,46 +844,42 @@ def data_verification(data):
 
       # Cas où on n'a que 2 cycles
       else:
+
+        temp1 = t[(~t.iloc[:,4].isna()) & (~t.iloc[:,5].isna())]
+        pos_Error = np.where(temp1.iloc[:,4] != temp1.iloc[:,5])
+        pos_Error = np.unique(pos_Error)
+        df_Error = temp1.iloc[pos_Error, : ]
         # pos_Error = np.where(~(pd.isnull(t.shape[1])) & ((t.iloc[:, 4]) != (t.iloc[:,5])))
         # pos_Error = np.unique(pos_Error)
         # df_Error = t.iloc[pos_Error, : ]
 
-        temp = t[(~t.iloc[:,4].isna()) | (~t.iloc[:,5].isna())].reset_index()
-        temp["testA"] = np.where(temp.iloc[:, 4].isna(), 0, 1)
-        temp["testB"] = np.where(temp.iloc[:, 5].isna(), 0, 1)
-        # print(temp)
-        temp["testA"] = temp.groupby(["NumDisp", "NumPlac", "Id"])["testA"].transform('sum')
-        temp["testB"] = temp.groupby(["NumDisp", "NumPlac", "Id"])["testB"].transform('sum')
+        # temp = t[(~t.iloc[:,4].isna()) | (~t.iloc[:,5].isna())].reset_index()
+        # temp["testA"] = np.where(temp.iloc[:, 4].isna(), 0, 1)
+        # temp["testB"] = np.where(temp.iloc[:, 5].isna(), 0, 1)
+        # temp["testA"] = temp.groupby(["NumDisp", "NumPlac", "Id"])["testA"].transform('sum')
+        # temp["testB"] = temp.groupby(["NumDisp", "NumPlac", "Id"])["testB"].transform('sum')
 
-        temp =temp[(temp["testA"] > 0) & (temp["testB"]>0)]
-        if not temp.empty:
-          temp = temp[t.iloc[:,4] != t.iloc[:,5]].drop_duplicates()
-        else:
-          temp =t.iloc[0,:]
-        if temp.shape[0] >0:
-          error_List_Temp = []
-          print(df_Error)
-          print("Incohérence(s) relevée(s) sur les valeurs d'Essence, Azimut et Dist entre les différents inventaires")
-          for index, row in df_Error.iterrows():
-            # valuesDupl = df_Error.loc[listDupl[i]]
-            # print(valuesDupl.to_json(orient='records'))
-            print(row)
-            print(row["variable"].item())
-            print([int(x) for x in row["<lambda>"].values])
-            tValues = tArbres[["NumArbre", "Cycle", str(row["variable"].item())]].loc[[int(x) for x in row["<lambda>"].values]]
-            print(tValues)
-            err = {
-                "message": "Incohérence(s) relevée(s) sur les valeurs "+ str(row["variable"].item()) +" pour l'arbre numéro "+ str(row["NumArbre"].item()) + " de la placette numéro " + str(row["NumPlac"].item()),
-                "table": "BMSsup30",
-                "column": [ "NumArbre", "Cycle", str(row["variable"].item())],
-                "row": [int(x) for x in row["<lambda>"].values], 
-                "value": tValues.to_json(orient='records'),
-              }
-            error_List_Temp.append(err)
-          verificationList.append({'errorName': "Incohérence(s) dans BMSsup30", 'errorText':  "Incohérence(s) relevée(s) sur les valeurs d'Essence, Azimut et Dist entre les différents inventaires", 'errorList': error_List_Temp, 'errorType': 'PsdrfError'})
+        # temp =temp[(temp["testA"] > 0) & (temp["testB"]>0)]
+        # if not temp.empty:
+        #   df_Error = temp[t.iloc[:,4] != t.iloc[:,5]].drop_duplicates()
+        # else:
+        #   df_Error =t.iloc[0,:]
+      if df_Error.shape[0] >0:
+        error_List_Temp = []
+        for index, row in df_Error.iterrows():
+          # valuesDupl = df_Error.loc[listDupl[i]]
 
-          print("Incohérence(s) relevée(s) sur les valeurs d'Essence, Azimut et Dist entre les différents inventaires")
-        
+          tValues = BMSsup30[["NumArbre", "Cycle", str(row["variable"].item())]].loc[[int(x) for x in row["<lambda>"].values]]
+          err = {
+              "message": "Incohérence(s) relevée(s) sur les valeurs "+ str(row["variable"].item()) +" pour l'id numéro "+ str(row["Id"].item()) + " de la placette numéro " + str(row["NumPlac"].item()),
+              "table": "BMSsup30",
+              "column": [ "Id", "Cycle", str(row["variable"].item())],
+              "row": [int(x) for x in row["<lambda>"].values], 
+              "value": tValues.to_json(orient='records'),
+            }
+          error_List_Temp.append(err)
+        verificationList.append({'errorName': "Incohérence(s) dans BMSsup30", 'errorText':  "Incohérence(s) relevée(s) sur les valeurs d'Essence, Azimut et Dist entre les différents inventaires", 'errorList': error_List_Temp, 'errorType': 'PsdrfError'})
+      
 
 
 
@@ -1004,33 +892,56 @@ def data_verification(data):
   # ----- Contrôle Accroissement en diamètre
   if df_Dupl.empty:
     t = BMSsup30[["NumDisp", "NumPlac", "Id", "Cycle", "DiamMed"]]
-    t = pd.melt(t, id_vars=["NumDisp", "NumPlac", "Id", "Cycle"], value_vars=["DiamMed"])
+    t = pd.melt(t, id_vars=["NumDisp", "NumPlac", "Id", "Cycle"], value_vars=["DiamMed"], ignore_index=False)
 
     #On utilise la fonction first car il n'y a pas de duplicate dans notre cas. 
-    t = t.pivot_table(index=["NumDisp", "NumPlac", "Id", "variable"], columns='Cycle',values='value', aggfunc='first').reset_index()
+    t = t.pivot_table(index=["NumDisp", "NumPlac", "Id", "variable"], columns='Cycle',values='value', aggfunc=['first', lambda x: x.index[0]]).reset_index()
     t = t.sort_values(by=["NumDisp", "NumPlac", "Id", "variable"])
+  
 
-  if last_cycle > 2:
-    #Sous ensemble des arbres non coupés au dernier cycle
-    pos_Error = []
-    for i in range(5, t.shape[1]):
-      pos_Error =  np.concatenate((pos_Error, np.array(np.where(df_temp1.iloc[:, i] > df_temp1.iloc[:, i-1])).tolist()[0]))
-    pos_Error = np.unique(pos_Error)
-    df_Error = df_temp.iloc[pos_Error, : ]
+    if last_cycle > 2:
+      #Sous ensemble des arbres non coupés au dernier cycle
+      pos_Error = []
+      for i in range(5, t.shape[1]):
+        pos_Error =  np.concatenate((pos_Error, np.array(np.where(t.iloc[:, i] > t.iloc[:, i-1])).tolist()[0]))
+      pos_Error = np.unique(pos_Error)
+      df_Error = df_temp.iloc[pos_Error, : ]
 
-  else :
-    pos_Error = np.where((~pd.isna(t.iloc[:,4])) & (~pd.isna(t.iloc[:,5])) & ((t.iloc[:, 4]) < (t.iloc[:,5])))
-    pos_Error = np.unique(pos_Error)
-    df_Error = t.iloc[pos_Error, : ]
+    else :
+      pos_Error = np.where(~(pd.isnull(t.shape[1])) & ((t.iloc[:, 4]) < (t.iloc[:,5])))
+      pos_Error = np.unique(pos_Error)
+      df_Error = t.iloc[pos_Error, : ]
 
-  if df_Error.shape[0] > 0 :
-    print("Acroissement(s) sur le diamètre positif(s) constaté(s) entre les différents inventaires")
+      # temp1 = t[(~t.iloc[:,4].isna()) & (~t.iloc[:,5].isna())]
+      # pos_Error = np.where((temp1.iloc[:, 4]) < (temp1.iloc[:,5]))
 
-  # ----- Contrôle sur les écarts de diamètre en les cycles trop importants
+      # pos_Error = np.unique(pos_Error)
+      # df_Error = t.iloc[pos_Error, : ]
+
+    if df_Error.shape[0] > 0 :
+      error_List_Temp = []
+      for index, row in df_Error.iterrows():
+        tValues = BMSsup30[["NumArbre", "Cycle", str(row["variable"].item())]].loc[[int(x) for x in row["<lambda>"].values]]
+
+        err = {
+          "message": "Accroissement(s) sur le "+ str(row["variable"].item()) +" positif(s)  pour l'id numéro "+ str(row["Id"].item()) + " de la placette numéro " + str(row["NumPlac"].item()),
+          "table": "BMSsup30",
+          "column": [ "Id", "Cycle", str(row["variable"].item())],
+          "row": [int(x) for x in row["<lambda>"].values], 
+          "value": tValues.to_json(orient='records'),
+              }
+        error_List_Temp.append(err)
+      verificationList.append({'errorName': "Accroissement positif dans BMSsup30", 'errorText': "Accroissement(s) sur le diamètre positif(s) constaté(s) entre les différents inventaires.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError'})
+
+
+
+
+
+  # ----- Contrôle sur les écarts de diamètre entre les cycles trop importants
   t = BMSsup30[["NumDisp", "NumPlac", "Id", "Cycle", "DiamMed"]]
-  t = pd.melt(t, id_vars=["NumDisp", "NumPlac", "Id", "Cycle"], value_vars=["DiamMed"])
+  t = pd.melt(t, id_vars=["NumDisp", "NumPlac", "Id", "Cycle"], value_vars=["DiamMed"], ignore_index=False)
   #On utilise la fonction first car il n'y a pas de duplicate dans notre cas. 
-  t = t.pivot_table(index=["NumDisp", "NumPlac", "Id", "variable"], columns='Cycle',values='value', aggfunc='first').reset_index()
+  t = t.pivot_table(index=["NumDisp", "NumPlac", "Id", "variable"], columns='Cycle',values='value', aggfunc=['first', lambda x: x.index[0]]).reset_index()
   t = t.sort_values(by=["NumDisp", "NumPlac", "Id", "variable"])
   pos = []
   for i in range(1, last_cycle) :
@@ -1044,33 +955,72 @@ def data_verification(data):
     # t_Ecart = t_Ecart[t_Ecart["Mark"] == 1]
 
   if error_trees.shape[0] > 0 :
-    print("Valeur(s) d'accroissement en diamètre trop importante(s) détectée(s) (seuil à 15 cm entre les 2 inventaires)")
+    error_List_Temp = []
+    for index, row in error_trees.iterrows():
+      tValues = BMSsup30[["Id", "Cycle", str(row["variable"].item())]].loc[[int(x) for x in row["<lambda>"].values],:]
+      err = {
+          "message": "Valeur d'accroissement trop importante pour le "+ str(row["variable"].item()) +" de l'arbre id "+ str(row["Id"].item()) + " de la placette numéro " + str(row["NumPlac"].item()),
+          "table": "BMSsup30",
+          "column": [ "Id", "Cycle", str(row["variable"].item())],
+          "row": [int(x) for x in row["<lambda>"].values], 
+          "value": tValues.to_json(orient='records'),
+        }
+    error_List_Temp.append(err)
+    verificationList.append({'errorName': "Accroissement anormal dans BMSsup30", 'errorText': "Valeur(s) d'accroissement en diamètre trop importante(s) détectée(s) (seuil à 15 cm entre les 2 inventaires", 'errorList': error_List_Temp, 'errorType': 'PsdrfError'})
 
 
 
 
-
-
-  ###Table Reges
-  error_List_Temp = check_species(Reges, CodeEssence, Test, "Reges")
-  # if len(error_List_Temp) >0:
-    # verificationList.append({'errorName': 'Essence dans Reges', 'errorList': error_List_Temp, 'correctionList': CodeEssence['Essence'].tolist()})
-
-  # --- Contrôle des Cycles de Reges :
+  ###Table Regeneration
+  error_List_Temp = check_species(Regeneration, CodeEssence, Test, "Regeneration")
+  if len(error_List_Temp) >0:
+    verificationList.append({'errorName': 'Essence dans Regeneration', 'errorText':"Essence dans Regeneration", 'errorList': error_List_Temp, 'correctionList': CodeEssence['Essence'].tolist(), 'errorType': 'PsdrfError'})
+  
+  
+  # --- Contrôle des Cycles de Regenerations :
   # ----- Contrôle des valeurs vides des variables :
-  Vital = Reges[ Reges["SsPlac"].isna() |  Reges["Essence"].isna()]
+  Vital = Regeneration[ Regeneration["NumPlac"].isna() | Regeneration["SsPlac"].isna() |  Regeneration["Essence"].isna() ]
+  Vital = Vital[["NumPlac", "SsPlac", "Essence"]]
   if not Vital.empty:
-    print("Il manque des informations (vides) au(x) colonne(s) dans la table Arbre")
+    error_List_Temp=[]
+    for index, row in Vital.iterrows():
+      err = {
+          "message": "Une/des colonne(s) de la sous placette "+ str(int(row["SsPlac"])) +" de la placette "+ str(int(row["NumPlac"])) + " n'est/ne sont pas renseignées.",
+          "table": "Regeneration",
+          "column": ["NumPlac", "SsPlac", "Essence"],
+          "row": [index], 
+          "value": Vital.loc[[index],:].to_json(orient='records'),
+        }
+      error_List_Temp.append(err)
+    verificationList.append({'errorName': "Informations manquantes dans Regeneration", 'errorText': "Il manque des informations à une/des colonne(s) dans la table Regeneration", 'errorList': error_List_Temp, 'errorType': 'PsdrfError'})
 
-  ##### Contrôle des valeurs dupliquées : #####
+
+
+
+  # Contrôle des valeurs dupliquées
   error = []
-  df_Dupl= Reges.sort_values(by=["NumDisp", "NumPlac", "Cycle", "SsPlac", "Essence"])
+  df_Dupl_temp= Regeneration[["NumDisp", "NumPlac", "Cycle", "SsPlac", "Essence"]].sort_values(by=["NumDisp", "NumPlac", "Cycle", "SsPlac", "Essence"])
+  Regeneration= Regeneration.sort_values(by=["NumDisp", "NumPlac", "Cycle", "SsPlac", "Essence"])
 
-  df_Dupl = df_Dupl[df_Dupl.duplicated()]
+  df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated()]
   if not df_Dupl.empty:
-    print("Information dupliquée dans la table")
-
-
+    entire_df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated(keep=False)]
+    listDupl = entire_df_Dupl.groupby(list(df_Dupl_temp)).apply(lambda x: list(x.index)).tolist()
+    i = 0
+    error_List_Temp = []
+    for index, row in df_Dupl.iterrows():
+      valuesDupl = entire_df_Dupl.loc[listDupl[i]]
+      err = {
+          "message": "L'essence" + str(row["Essence"])+ "de la sous placette "+ str(row["SsPlac"])+" de la placette "+ str(int(row["NumPlac"])) +" au cycle "+ str(row["Cycle"]) +" apparaît plusieurs fois dans la table Regeneration",
+          "table": "Regeneration",
+          "column": ["NumDisp", "NumPlac", "SsPlac", "Cycle", "Essence"],
+          "row": listDupl[i], 
+          "value": valuesDupl.to_json(orient='records'),
+        }
+        #possibilité de supression d'un des 2 ou de modification
+      i = i + 1
+      error_List_Temp.append(err)
+    verificationList.append({'errorName': "Duplication dans Regeneration", 'errorText': 'Lignes dupliquées dans la table Regeneration', 'errorList': error_List_Temp, 'errorType': 'PsdrfError'})
 
 
 
@@ -1081,59 +1031,119 @@ def data_verification(data):
   
   ##### Contrôle des essences inventoriées dans la table #####
   error_List_Temp = check_species(Transect, CodeEssence, Test, "Transect")
-  # if len(error_List_Temp) >0:
-    # verificationList.append({'errorName': 'Essence dans Transect', 'errorList': error_List_Temp, 'correctionList': CodeEssence['Essence'].tolist()})
+  if len(error_List_Temp) >0:
+    verificationList.append({'errorName': 'Essence dans Transect','errorText': 'Essence dans Transect', 'errorList': error_List_Temp, 'correctionList': CodeEssence['Essence'].tolist(),'errorType': 'PsdrfError'})
 
   ##### Contrôle des stades de décomposition #####
   error_List_Temp = check_code(CodeDurete, Transect, soundness_code, "Transect")
-  # if len(error_List_Temp) >0:
-    # verificationList.append({'errorName': 'Contrôle Stade de décomposition dans Transect', 'errorList': error_List_Temp, 'correctionList': CodeDurete['Code'].tolist()})
+  if len(error_List_Temp) >0:
+    verificationList.append({'errorName': 'Contrôle Stade de décomposition dans Transect','errorText': 'Contrôle Stade de décomposition dans Transect', 'errorList': error_List_Temp, 'correctionList': CodeDurete['Code'].tolist(),'errorType': 'PsdrfError'})
 
   ##### Contrôle des stades de d'écorce #####  
   error_List_Temp = check_code(CodeEcorce, Transect, bark_code, "Transect")
-  # if len(error_List_Temp) >0:
-    # verificationList.append({'errorName': 'Contrôle Stade de décomposition dans Transect', 'errorList': error_List_Temp, 'correctionList': CodeEcorce['Code'].tolist()})
+  if len(error_List_Temp) >0:
+    verificationList.append({'errorName': 'Contrôle Stade de décomposition dans Transect','errorText': 'Contrôle Stade de décomposition dans Transect', 'errorList': error_List_Temp, 'correctionList': CodeEcorce['Code'].tolist(),'errorType': 'PsdrfError'})
 
   ##### Contrôle des Cycles de Transect #####  
   check_cycle_Error_List = check_cycle(Transect, Test, CyclesCodes, "Transect", An, Dispositifs)
-  # if len(check_cycle_Error_List) >0:
-    # verificationList.append({'errorName': 'Contrôle cycles dans Transect', 'errorType': 'nonBlockingError', 'errorList' : check_cycle_Error_List})
+  if len(check_cycle_Error_List) >0:
+    verificationList.append({'errorName': 'Contrôle cycles dans Transect','errorText': 'Contrôle des cycles dans Transect', 'errorList' : check_cycle_Error_List, 'errorType': 'PsdrfError'})
+
 
   # ----- Contrôle des valeurs vides des variables :
   Vital = Transect[ Transect["Id"].isna() |  Transect["Essence"].isna() | Transect["Transect"].isna() |  Transect["Diam"].isna() | Transect["Contact"].isna() |  Transect["Angle"].isna() | Transect["Chablis"].isna() |  Transect["StadeD"].isna() |  Transect["StadeE"].isna() ]
+  Vital = Vital[["Id", "Essence", "Transect", "Diam", "Contact", "Angle", "Chablis", "StadeD", "StadeE"]]
   if not Vital.empty:
-    print("Il manque des informations (vides) au(x) colonne(s) dans la table Arbre")
+    error_List_Temp=[]
+    for index, row in Vital.iterrows():
+      err = {
+          "message": "Une/des colonne(s) de la table Transect n'est/ne sont pas renseigné(s)",
+          "table": "Transect",
+          "column": ["Id", "Essence", "Transect", "Diam", "Contact", "Angle", "Chablis", "StadeD", "StadeE"],
+          "row": [index], 
+          "value": Vital.loc[[index],:].to_json(orient='records'),
+        }
+      error_List_Temp.append(err)
+    verificationList.append({'errorName': "Informations manquantes dans Transect", 'errorText': "Il manque des informations à une/des colonne(s) dans la table Transect", 'errorList': error_List_Temp, 'errorType': 'PsdrfError'})
+
 
 # ---------- Contrôle des valeurs dupliquées : ---------- #
-  df_Dupl= Transect.sort_values(by=["NumDisp", "NumPlac", "Id", "Cycle"])
-  df_Dupl = df_Dupl[df_Dupl.duplicated()]
+  df_Dupl_temp= Transect[["NumDisp", "NumPlac", "Id", "Cycle"]].sort_values(by=["NumDisp", "NumPlac", "Id", "Cycle"])
+  df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated()]
   if not df_Dupl.empty:
-    print("Information dupliquée dans la table")
+    entire_df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated(keep=False)]
+    listDupl = entire_df_Dupl.groupby(list(df_Dupl_temp)).apply(lambda x: list(x.index)).tolist()
+    i = 0
+    error_List_Temp = []
+    for index, row in df_Dupl.iterrows():
+      valuesDupl = entire_df_Dupl.loc[listDupl[i]]
+      err = {
+          "message": "L'Id" + str(row["Id"])+ "de la placette "+ str(row["NumPlac"]) +" au cycle "+ str(row["Cycle"]) +" apparaît plusieurs fois dans la table Transect",
+          "table": "Transect",
+          "column": ["NumDisp", "NumPlac", "Id", "Cycle"],
+          "row": listDupl[i], 
+          "value": valuesDupl.to_json(orient='records'),
+        }
+        #possibilité de supression d'un des 2 ou de modification
+      i = i + 1
+      error_List_Temp.append(err)
+    verificationList.append({'errorName': "Duplication dans Transect", 'errorText': 'Lignes dupliquées dans la table Transect', 'errorList': error_List_Temp, 'errorType': 'PsdrfError'})
+
+
+
+
+
 
 # ---------- Contrôle des valeurs d'angle (≤ 50) : ---------- #
   Transect = Transect.sort_values(by=["NumDisp", "NumPlac", "Id", "Cycle", "Angle"])
   temp = Transect[Transect["Angle"] > 50]
+  temp = temp[["NumPlac", "Id", "Angle"]]
   if not temp.empty:
-    print("Angle(s) > 50°  dans la table")
-
-
-
-
+    error_List_Temp=[]
+    for index, row in temp.iterrows():
+      err = {
+          "message": "A l'Id  "+ str(int(row["Id"])) +" de la placette "+ str(int(row["NumPlac"])) + " l'angle mesure plus de 50°.",
+          "table": "Transect",
+          "column": [ "NumPlac", "Id", "Angle"],
+          "row": [index], 
+          "value": temp.loc[[index],:].to_json(orient='records'),
+        }
+      error_List_Temp.append(err)
+    verificationList.append({'errorName': "Angle(s) incohérent(s) dans Transect", 'errorText': "Angle faisant strictement plus de  50°. Impossible dans le PSDRF.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError'})
 
 
   ### Table Placettes
   # Contrôle des valeurs vides des variables 
   Vital = Placettes[ Placettes["Strate"].isna() |  Placettes["PoidsPlacette"].isna()]
+  Vital = Vital[["Strate", "PoidsPlacette"]]
   if not Vital.empty:
-    print("Il manque des informations (vides) au(x) colonne(s) dans la table Arbre")
+    error_List_Temp=[]
+    for index, row in Vital.iterrows():
+      err = {
+          "message": "Une/des colonne(s) de la table Placettes n'est/ne sont pas renseignée(s)",
+          "table": "Placettes",
+          "column": ["Strate", "PoidsPlacette"],
+          "row": [index], 
+          "value": Vital.loc[[index],:].to_json(orient='records'),
+        }
+      error_List_Temp.append(err)
+    verificationList.append({'errorName': "Informations manquantes dans Placettes", 'errorText': "Il manque des informations à une/des colonne(s) dans la table Placettes", 'errorList': error_List_Temp, 'errorType': 'PsdrfError'})
 
-  # --- Contrôler cohérence NumDisp avec les tables : Arbres, BMSsup30, Reges, Transect et Cycles
+
+
+  # --- Contrôler cohérence NumDisp avec les tables : Arbres, BMSsup30, Regeneration, Transect et Cycles
   def miss2 (table, Placettes, tablename):
     if table.shape[0] >0:
-      temp1 = table.drop_duplicates(subset=["NumDisp", "NumPlac"])
+      temp1 = table[["NumDisp", "NumPlac"]]
+      temp1 = temp1.drop_duplicates()
       temp1= temp1.assign(Corresp1 = 1)
+      temp1['index_col_temp1'] = temp1.index
+
+
       temp2 = Placettes[["NumDisp", "NumPlac"]]
       temp2= temp2.assign(Corresp2 = 2)
+      temp2['index_col_temp2'] = temp2.index
+
 
 
       temp1["NumDisp"]= temp1["NumDisp"].astype(int)
@@ -1141,34 +1151,68 @@ def data_verification(data):
       temp2["NumDisp"]= temp2["NumDisp"].astype(int)
       temp2["NumPlac"]= temp2["NumPlac"].astype(int)
 
-      # print(temp1)
-      # print(temp2)
       temp3 = pd.merge(temp1, temp2, how="outer", on=["NumDisp", "NumPlac"])
-      temp3 = temp3[temp3["Corresp1"].isna() | temp3["Corresp2"].isna() ]
+      temp3 = temp3[temp3["Corresp1"].isna() | temp3["Corresp2"].isna() ]      
 
       list1 = temp3[temp3["Corresp1"].isna()]
       list2 = temp3[temp3["Corresp2"].isna()]
 
       if len(list2) >0:
-        print("Un des numéros d'inventaires figure dans la table" + tablename+ "mais ne figure pas dans la table Placette")
-      
+        error_List_Temp=[]
+        for index, row in list2.iterrows():
+          err = {
+              "message": "La Ligne au numéro de dispositif"+ str(int(row["NumDisp"])) +" et au numéro de placette "+ str(int(row["NumPlac"])) + " figure dans la table " + tablename+" mais ne figure pas dans la table Placette",
+              "table": tablename,
+              "column": [ "NumDisp", "NumPlac"],
+              "row": [int(row["index_col_temp1"])], 
+              "value": list2.loc[[index],:].to_json(orient='records'),
+            }
+          error_List_Temp.append(err)
+        verificationList.append({'errorName': "Information incohérente entre la table Placette et la table" +tablename, 'errorText': "Information incohérente entre la table Placette et la table" +tablename, 'errorList': error_List_Temp, 'errorType': 'PsdrfError'})
+
       if len(list1) >0:
-        print("Un des numéros d'inventaires figure dans la table Placette mais ne figure pas dans la table Placette"+ tablename)
+        error_List_Temp=[]
+        for index, row in list1.iterrows():
+          err = {
+              "message": "La Ligne au numéro de dispositif "+ str(int(row["NumDisp"])) +" et au numéro de placette "+ str(int(row["NumPlac"])) + " figure dans la table Placette mais ne figure pas dans la table " + tablename,
+              "table": "Placettes",
+              "column": [ "NumDisp", "NumPlac"],
+              "row": [int(row["index_col_temp2"])],
+              "value": list1.loc[[index],:].to_json(orient='records'),
+            }
+          error_List_Temp.append(err)
+        verificationList.append({'errorName': "Information incohérente entre la table Placette et la table" +tablename, 'errorText': "Information incohérente entre la table Placette et la table" +tablename, 'errorList': error_List_Temp, 'errorType': 'PsdrfError'})
+
+
+
 
   miss2(Arbres, Placettes, "Arbres")
   miss2(BMSsup30, Placettes, "BMSsup30")
   miss2(Cycles, Placettes, "Cycles")
-  miss2(Reges, Placettes, "Reges")
+  miss2(Regeneration, Placettes, "Regeneration")
   miss2(Transect, Placettes, "Transect")
 
-
   # ---------- Contrôle des valeurs dupliquées : ---------- #
-  df_Dupl= Placettes.sort_values(by=["NumDisp", "NumPlac", "Cycle", "Strate"])
-  df_Dupl = df_Dupl[df_Dupl.duplicated()]
+  df_Dupl_temp= Placettes[["NumDisp", "NumPlac", "Cycle", "Strate"]].sort_values(by=["NumDisp", "NumPlac", "Cycle", "Strate"])
+  df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated()]
   if not df_Dupl.empty:
-    print("Information dupliquée dans la table")
-
-
+    entire_df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated(keep=False)]
+    listDupl = entire_df_Dupl.groupby(list(df_Dupl_temp)).apply(lambda x: list(x.index)).tolist()
+    i = 0
+    error_List_Temp = []
+    for index, row in df_Dupl.iterrows():
+      valuesDupl = entire_df_Dupl.loc[listDupl[i]]
+      err = {
+          "message": "La placette "+ str(row["NumPlac"]) +" au cycle "+ str(row["Cycle"]) +" à la strate" +  str(row["Strate"])+" apparaît plusieurs fois dans la table Placettes",
+          "table": "Placettes",
+          "column": ["NumDisp", "NumPlac", "Cycle", "Strate"],
+          "row": listDupl[i], 
+          "value": valuesDupl.to_json(orient='records'),
+        }
+        #possibilité de supression d'un des 2 ou de modification
+      i = i + 1
+      error_List_Temp.append(err)
+    verificationList.append({'errorName': "Duplication dans Placettes", 'errorText': 'Lignes dupliquées dans la table Placettes', 'errorList': error_List_Temp, 'errorType': 'PsdrfError'})
 
 
 
@@ -1264,9 +1308,9 @@ def data_verification(data):
   # if len(error_List_Temp) >0:
     # verificationList.append({'errorName': 'Essence Reg dans Arbres', 'errorList': error_List_Temp, 'correctionList': EssReg['Essence'].tolist()})
 
-  error_List_Temp = check_species(Reges, EssReg, Test, "Reges")
+  error_List_Temp = check_species(Regeneration, EssReg, Test, "Regeneration")
   # if len(error_List_Temp) >0:
-    # verificationList.append({'errorName': 'Essence Reg dans Reges', 'errorList': error_List_Temp, 'correctionList': EssReg['Essence'].tolist()})
+    # verificationList.append({'errorName': 'Essence Reg dans Regeneration', 'errorList': error_List_Temp, 'correctionList': EssReg['Essence'].tolist()})
 
   error_List_Temp = check_species(Transect, EssReg, Test, "Transect")
   # if len(error_List_Temp) >0:
@@ -1329,6 +1373,7 @@ def check_null_DPC (table, tablename):
   # if not Vital.empty:
   #   print("Il manque des informations (vides) au(x) colonne(s) dans la table" + tablename)
 
+
 ##### fonction pour filtrer les tables selon une liste de dispositifs #####
 def filter_by_disp(disp_list, cycle, table, disp_num) :
   num_list = disp_num
@@ -1357,10 +1402,6 @@ def check_species(table_to_test, species, status, tablename):
   species_list_temp = table_to_test[(~table_to_test['Essence'].isin(species['Essence'])) & (~table_to_test['Essence'].isna())]\
   [['Essence']]
   species_list = species_list_temp.drop_duplicates()['Essence'].tolist()
-  print("Check")
-  print(species_list_temp)
-  print(species_list)
-
 
   if len(species_list) > 0:
       status = np.where(status >= 2, status, 2)
@@ -1422,11 +1463,17 @@ def check_code(code_admin, table_to_test, code_to_check, tableName):
   else:
       stade= "StadeD"
 
-  column =["NumDisp", "NumPlac", "NumArbre", "Id", "Cycle", stade]
+  column =["NumDisp", "NumPlac", "Id", "Cycle", stade]
 
   # détection des codes non conformes
   table_to_test=table_to_test[table_to_test[stade].notna()]
+  print(table_to_test)
+  print(code_admin['Code'].values)
   df1 = table_to_test[~table_to_test[stade].isin( code_admin['Code'].values)]
+  print(table_to_test[stade].isin( code_admin['Code'].values))
+  print(code_admin['Code'].values.dtype)
+  print(table_to_test.dtypes)
+  print(df1)
 
   df = df1.loc[:,df1.columns.isin([stade])].drop_duplicates()
 
@@ -1443,6 +1490,16 @@ def check_code(code_admin, table_to_test, code_to_check, tableName):
 
 
   return(error)
+
+
+# table_to_test=Transect[Transect["StadeD"].notna()]
+# table_to_test
+# df1 = table_to_test[~table_to_test["StadeD"].isin( CodeDurete['Code'].values)]
+# df1
+# df = df1.loc[:,df1.columns.isin(["StadeD"])].drop_duplicates()
+# df
+
+
 
 
 ##### fonction contrôle des stades écorce et de décomposition #####
