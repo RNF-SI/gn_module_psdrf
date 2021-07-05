@@ -1,5 +1,5 @@
 import {Component, Input, Output, EventEmitter, OnInit} from '@angular/core';
-import {ErrorHistoryService} from '../../../../services/error.history.service';
+import {ErrorCorrectionService} from '../../../../services/error.correction.service';
 import {MatTableDataSource} from '@angular/material/table';
 import {PsdrfError, PsdrfErrorCoordinates} from '../../../../models/psdrfObject.model';
 // import { FormArray, FormGroup, FormBuilder } from '@angular/forms';
@@ -14,13 +14,11 @@ import {PsdrfError, PsdrfErrorCoordinates} from '../../../../models/psdrfObject.
     value: string; //Valeur Corrigée par l'utilisateur
     selectedButtonIndex: number=0; //IndexButton Sélectionné
     modifiedIndexes: number[] = []; //liste des indexs des boutons modifiés 
+    listCorrection: any={};
 
     @Input() mainStepIndex: number; //Index du main step auquel le subStep appartient
     @Input() subStepIndex: number; //Index du subStep 
     @Input() psdrfError: PsdrfError;
-
-    //TODO: Add list of correction
-    @Input() listCorrection: any;
     
     @Input() errorType: any; 
     @Output() indexButtonClicked=new EventEmitter<PsdrfErrorCoordinates>();
@@ -32,12 +30,17 @@ import {PsdrfError, PsdrfErrorCoordinates} from '../../../../models/psdrfObject.
 
 
     constructor(
-      private historyService:ErrorHistoryService,
-      ) {
-  
+      private correctionService: ErrorCorrectionService
+    ) {
     }
 
     ngOnInit(){
+      this.psdrfError.column.forEach(colName => {
+        if(this.checkErrorType(colName) =="selectionError" ){
+          console.log(this.listCorrection)
+          this.listCorrection[colName]=this.correctionService.getColListCorrection(colName)
+        }
+      })
       this.datasource = new MatTableDataSource(this.psdrfError.value);
     }
 
@@ -109,5 +112,13 @@ import {PsdrfError, PsdrfErrorCoordinates} from '../../../../models/psdrfObject.
     */
     checkModified(rowIndex: number): boolean{
       return this.modifiedIndexes.includes(rowIndex);
+    }
+
+    checkErrorType(psdrfCol: string): string{
+      return this.correctionService.getErrorType(psdrfCol); 
+    }
+
+    getColListCorrection(psdrfCol: string){
+      return this.correctionService.getColListCorrection(psdrfCol)
     }
   }

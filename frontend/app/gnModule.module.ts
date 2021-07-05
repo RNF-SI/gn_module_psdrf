@@ -12,6 +12,7 @@ import { ErrorSubStepComponent } from "./components/import/main-step/sub-step/er
 import { ExcelImportService } from "./services/excel.import.service";
 import { PsdrfDataService } from "./services/route.service";
 import { ErrorHistoryService } from "./services/error.history.service";
+import { ErrorCorrectionService } from "./services/error.correction.service";
 import { KeyValue, FormatNum } from "./utils";
 import { DndDirective } from './directives/dnd.directive';
 import { MatTableModule } from '@angular/material';
@@ -47,7 +48,8 @@ const routes: Routes = [
   providers: [
     ExcelImportService,
     PsdrfDataService,
-    ErrorHistoryService
+    ErrorHistoryService, 
+    ErrorCorrectionService
   ],
   bootstrap: []
 })

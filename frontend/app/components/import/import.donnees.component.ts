@@ -7,6 +7,7 @@ import * as _ from 'lodash';
 import {ExcelImportService} from '../../services/excel.import.service';
 import {PsdrfDataService} from '../../services/route.service';
 import {ErrorHistoryService } from '../../services/error.history.service';
+import {ErrorCorrectionService} from '../../services/error.correction.service';
 import {Placette} from '../../models/placette.model';
 import {Arbre} from '../../models/arbre.model';
 import {Rege} from '../../models/rege.model';
@@ -80,6 +81,7 @@ export class ImportDonneesComponent {
     private http: HttpClient,
     private excelSrv: ExcelImportService,
     private dataSrv: PsdrfDataService,
+    private correctionService: ErrorCorrectionService,
     private historyService:ErrorHistoryService,
     private _router: Router,
     private changeDetector : ChangeDetectorRef,
@@ -150,9 +152,12 @@ export class ImportDonneesComponent {
     reader.onloadend = (e) => {
       this.dataSrv.psdrf_data_verification(JSON.stringify(this.psdrfArray))
         .subscribe(
-          error => {
+          verificationJson => {
+            let verificationObj = JSON.parse(verificationJson)
+            this.correctionService.setSelectionErrorObj(verificationObj["correctionList"])
+            let errorsPsdrfListTemp = verificationObj["verificationObj"]
+
             this.isLoadingResults = false;
-            let errorsPsdrfListTemp = JSON.parse(error);
             let errorListTemp;
             this.mainStepNameArr = [];
             this.totalErrorNumber = 0;

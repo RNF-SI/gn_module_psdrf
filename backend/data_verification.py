@@ -50,6 +50,13 @@ def data_verification(data):
   # - errorList correspond à la liste des éléments qui ont cette erreur
   # - correctionList correspond aux solutions possible pour résoudre cette erreur
   verificationList = []
+  correctionList = {}
+
+  correctionList['StadeD'] = CodeDurete['Code'].tolist()
+  correctionList['Essence'] = CodeEssence['Essence'].tolist()
+  correctionList['Type'] = CodeTypoArbres['Id'].tolist()
+  correctionList['StadeE'] = CodeEcorce['Code'].tolist()
+  correctionList['Ref_CodeEcolo'] = ["prosilva", "efi", "irstea"]
 
   disp_num = 1
   last_cycle = Cycles[Cycles["NumDisp"] == disp_num]["Cycle"].max()
@@ -98,16 +105,16 @@ def data_verification(data):
   bark_code = "écorce"
   check_code_Error_List = check_code(CodeDurete, Arbres, soundness_code, "Arbres")
   if len(check_code_Error_List) >0:
-    verificationList.append({'errorName': 'Contrôle Stade dans Arbres', 'errorText': 'Contrôle Stade dans Arbres', 'errorList': check_code_Error_List, 'correctionList': CodeDurete['Code'].tolist(), 'errorType': 'PsdrfError'})
-
+    verificationList.append({'errorName': 'Contrôle Stade dans Arbres', 'errorText': 'Contrôle Stade dans Arbres', 'errorList': check_code_Error_List, 'errorType': 'PsdrfError'})
 
   #Appel des fonctions de test
   ###Table Arbres
   #Contrôle des essences rencontrées dans la table Arbres
   error_List_Temp = check_species(Arbres, CodeEssence, Test, "Arbres")
   if len(error_List_Temp) >0:
-    verificationList.append({'errorName': 'Essence dans Arbres', 'errorText':"Essence dans Arbres", 'errorList': error_List_Temp, 'correctionList': CodeEssence['Essence'].tolist(), 'errorType': 'PsdrfError'})
-  
+    verificationList.append({'errorName': 'Essence dans Arbres', 'errorText':"Essence dans Arbres", 'errorList': error_List_Temp, 'errorType': 'PsdrfError'})
+
+
   #Contrôle des sauts de cycles: Contrôle qu'il n'y ait pas de cycles qui sautent
   error = []
   a = Arbres.groupby("NumDisp").agg({'Cycle': lambda s: len(list(s.unique()))})
@@ -344,7 +351,7 @@ def data_verification(data):
         "value": temp.loc[[index],:].to_json(orient='records'),
       }
       error_List_Temp.append(err)
-    verificationList.append({'errorName': 'Types dans Arbres', 'errorText': 'Types dans Arbres','errorList': error_List_Temp, 'correctionList': CodeTypoArbres['Id'].tolist(), 'errorType': 'PsdrfError'})
+    verificationList.append({'errorName': 'Types dans Arbres', 'errorText': 'Types dans Arbres','errorList': error_List_Temp,  'errorType': 'PsdrfError'})
 
   # Souches de plus de 1.30m
   temp = Arbres[(Arbres["Haut"] > 1.30) & (Arbres["Type"]==3)]
@@ -466,6 +473,7 @@ def data_verification(data):
       error_List_Temp.append(err)
     verificationList.append({'errorName': "DMH sans référence de codification", 'errorText': "Il y a des arbres portant des DMH sans référence de codification renseignée (Ref_CodeEcolo vide pour CodeEcolo non vide)", 'errorList': error_List_Temp, 'errorType': 'PsdrfError'})
 
+
   # ----- CodeEcolo non reconnus
   df_Codes = Arbres[~Arbres["Ref_CodeEcolo"].isna()]
   posProSilva = df_Codes[(df_Codes["Ref_CodeEcolo"].str.lower()=="prosilva") & 
@@ -581,13 +589,15 @@ def data_verification(data):
   soundness_code = "de décomposition"
   error_List_Temp = check_code(CodeDurete, BMSsup30, soundness_code, "BMSsup30")
   if len(error_List_Temp) >0:
-    verificationList.append({'errorName': 'Contrôle Stade de décomposition non reconnu(s)', 'errorText': 'Contrôle Stade de décomposition dans BMSsup30', 'errorList': error_List_Temp, 'correctionList': CodeDurete['Code'].tolist(), 'errorType': 'PsdrfError'})
+    verificationList.append({'errorName': 'Contrôle Stade de décomposition non reconnu(s)', 'errorText': 'Contrôle Stade de décomposition dans BMSsup30', 'errorList': error_List_Temp, 'errorType': 'PsdrfError'})
+
 
   # Contrôle des stades de d'écorce'
   bark_code = "écorce"
   error_List_Temp = check_code(CodeEcorce, BMSsup30, bark_code, "BMSsup30")
   if len(error_List_Temp) >0:
-    verificationList.append({'errorName': "Contrôle Stade d'écorce non reconnu", 'errorText':  "Contrôle Stade d'écorce dans BMSsup30", 'errorList': error_List_Temp, 'correctionList': CodeEcorce['Code'].tolist(), 'errorType': 'PsdrfError'})
+    verificationList.append({'errorName': "Contrôle Stade d'écorce non reconnu", 'errorText':  "Contrôle Stade d'écorce dans BMSsup30", 'errorList': error_List_Temp, 'errorType': 'PsdrfError'})
+
 
   # Contrôle des numéros d'inventaire
   check_cycle_Error_List = check_cycle(BMSsup30, Test, CyclesCodes, "BMSsup30", An, Dispositifs)
@@ -816,8 +826,8 @@ def data_verification(data):
   ###Table Regeneration
   error_List_Temp = check_species(Regeneration, CodeEssence, Test, "Regeneration")
   if len(error_List_Temp) >0:
-    verificationList.append({'errorName': 'Essence dans Regeneration', 'errorText':"Essence dans Regeneration", 'errorList': error_List_Temp, 'correctionList': CodeEssence['Essence'].tolist(), 'errorType': 'PsdrfError'})
-  
+    verificationList.append({'errorName': 'Essence dans Regeneration', 'errorText':"Essence dans Regeneration", 'errorList': error_List_Temp, 'errorType': 'PsdrfError'})
+
   # --- Contrôle des Cycles de Regenerations :
   # ----- Contrôle des valeurs vides des variables :
   Vital = Regeneration[ Regeneration["NumPlac"].isna() | Regeneration["SsPlac"].isna() |  Regeneration["Essence"].isna() ]
@@ -868,17 +878,17 @@ def data_verification(data):
   ##### Contrôle des essences inventoriées dans la table #####
   error_List_Temp = check_species(Transect, CodeEssence, Test, "Transect")
   if len(error_List_Temp) >0:
-    verificationList.append({'errorName': 'Essence dans Transect','errorText': 'Essence dans Transect', 'errorList': error_List_Temp, 'correctionList': CodeEssence['Essence'].tolist(),'errorType': 'PsdrfError'})
+    verificationList.append({'errorName': 'Essence dans Transect','errorText': 'Essence dans Transect', 'errorList': error_List_Temp, 'errorType': 'PsdrfError'})
 
   ##### Contrôle des stades de décomposition #####
   error_List_Temp = check_code(CodeDurete, Transect, soundness_code, "Transect")
   if len(error_List_Temp) >0:
-    verificationList.append({'errorName': 'Contrôle Stade de décomposition dans Transect','errorText': 'Contrôle Stade de décomposition dans Transect', 'errorList': error_List_Temp, 'correctionList': CodeDurete['Code'].tolist(),'errorType': 'PsdrfError'})
+    verificationList.append({'errorName': 'Contrôle Stade de décomposition dans Transect','errorText': 'Contrôle Stade de décomposition dans Transect', 'errorList': error_List_Temp, 'errorType': 'PsdrfError'})
 
   ##### Contrôle des stades de d'écorce #####  
   error_List_Temp = check_code(CodeEcorce, Transect, bark_code, "Transect")
   if len(error_List_Temp) >0:
-    verificationList.append({'errorName': 'Contrôle Stade de décomposition dans Transect','errorText': 'Contrôle Stade de décomposition dans Transect', 'errorList': error_List_Temp, 'correctionList': CodeEcorce['Code'].tolist(),'errorType': 'PsdrfError'})
+    verificationList.append({'errorName': 'Contrôle Stade de décomposition dans Transect','errorText': 'Contrôle Stade de décomposition dans Transect', 'errorList': error_List_Temp, 'errorType': 'PsdrfError'})
 
   ##### Contrôle des Cycles de Transect #####  
   check_cycle_Error_List = check_cycle(Transect, Test, CyclesCodes, "Transect", An, Dispositifs)
@@ -1155,8 +1165,9 @@ def data_verification(data):
   # error_List_Temp = check_code(CodeDurete, Arbres, soundness_code, "Arbres")
   # if len(error_List_Temp) >0:
   #   verificationList.append({'errorName': 'Contrôle Stade dans Arbres', 'errorList': error_List_Temp, 'correctionList': CodeDurete['Code'].tolist()})
-  
-  verificationObj = json.dumps(verificationList, cls=NumpyEncoder)
+  verifiedObj = {"verificationObj": verificationList, "correctionList": correctionList}
+
+  verifiedJson = json.dumps(verifiedObj, cls=NumpyEncoder)
 
 
   #Contrôle des stades d'écorce
@@ -1173,7 +1184,7 @@ def data_verification(data):
 
 
 
-  return verificationObj
+  return verifiedJson
 
 # Fonction d'encodage en Json
 class NumpyEncoder(json.JSONEncoder):
@@ -1350,6 +1361,5 @@ def check_code(code_admin, table_to_test, code_to_check, tableName):
 
 
 # -- construction table Arbres
-
 
 

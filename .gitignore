@@ -120,6 +120,9 @@ frontend/node_modules/
 #settings
 config/settings.ini
 
+#backend
+backend/test.py
+
 #data 
 data/CodeEssence
 data/CodeDurete
@@ -133,3 +136,4 @@ data/CodeEcologie
 data/CodeEcorce
 data/CodeTypoArbres
 .vscode/launch.json
+
