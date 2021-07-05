@@ -4,6 +4,7 @@ import { Injectable } from "@angular/core";
 @Injectable()
 export class ErrorCorrectionService {
 
+  //Object containing all the correction for columns of selectionErrorList
   selectionErrorObject={};
 
   constructor(
@@ -20,6 +21,10 @@ export class ErrorCorrectionService {
 
   stringErrorList: string[] = ['Ref_Habitat', 'Nature_Intervention', 'Gestion', 'Date', 'CodeEcolo'];
 
+  /**
+  *  Return type  of an error when a column name is given 
+  * @param colName Column Name
+  */
   getErrorType(colName: string){
     let errorType: string;
     if (this.numberErrorList.includes(colName)){
@@ -30,13 +35,19 @@ export class ErrorCorrectionService {
     return errorType
   }
 
+  /**
+  *  Set the selectionErrorObject; Called when a new excel file is chosen
+  */
   setSelectionErrorObj(selectionErrorObject: any): void{
     this.selectionErrorObject= selectionErrorObject
   }
 
-  getColListCorrection(psdrfCol: string): any{
-    console.log(this.selectionErrorObject[psdrfCol])
-    return this.selectionErrorObject[psdrfCol]
+  /**
+  *  Return the possible corrections for a column name
+  * @param colName Column Name
+  */
+  getColListCorrection(colName: string): any{
+    return this.selectionErrorObject[colName]
   }
 
 }

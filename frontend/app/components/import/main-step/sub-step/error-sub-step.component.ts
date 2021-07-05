@@ -114,10 +114,18 @@ import {PsdrfError, PsdrfErrorCoordinates} from '../../../../models/psdrfObject.
       return this.modifiedIndexes.includes(rowIndex);
     }
 
+  /**
+  *  Return type of an error when a column name is given. Call the correctionService. 
+  * @param colName Column Name
+  */
     checkErrorType(psdrfCol: string): string{
       return this.correctionService.getErrorType(psdrfCol); 
     }
 
+  /**
+  *  Return the possible corrections for a column name. Call the correctionService.
+  * @param colName Column Name
+  */
     getColListCorrection(psdrfCol: string){
       return this.correctionService.getColListCorrection(psdrfCol)
     }
