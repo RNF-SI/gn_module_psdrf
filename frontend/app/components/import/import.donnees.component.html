@@ -523,12 +523,12 @@
 
           <ng-container matColumnDef="NumPlac">
             <th mat-header-cell *matHeaderCellDef> NumPlac </th>
-            <td mat-cell *matCellDef="let element"> {{element.NumPlac}} </td>
+            <td mat-cell *matCellDef="let element, let i = index" [ngClass]="{'isError': checkErrorCell('BMSsup30', 'NumPlac', i ), 'isModifiedError': checkModifiedErrorCell('BMSsup30', 'NumPlac', i ), 'isSelectedError': checkSelectedErrorCell('BMSsup30', 'NumPlac', i)}"> {{element.NumPlac}} </td>
           </ng-container>
 
           <ng-container matColumnDef="Id">
             <th mat-header-cell *matHeaderCellDef> Id </th>
-            <td mat-cell *matCellDef="let element"> {{element.Id}} </td>
+            <td mat-cell *matCellDef="let element, let i = index" [ngClass]="{'isError': checkErrorCell('BMSsup30', 'Id', i ), 'isModifiedError': checkModifiedErrorCell('BMSsup30', 'Id', i ), 'isSelectedError': checkSelectedErrorCell('BMSsup30', 'Id', i)}"> {{element.Id}} </td>
           </ng-container>
 
           <ng-container matColumnDef="NumArbre">
@@ -558,22 +558,22 @@
 
           <ng-container matColumnDef="DiamIni">
             <th mat-header-cell *matHeaderCellDef> DiamIni </th>
-            <td mat-cell *matCellDef="let element"> {{element.DiamIni}} </td>
+            <td mat-cell *matCellDef="let element, let i = index" [ngClass]="{'isError': checkErrorCell('BMSsup30', 'DiamIni', i ), 'isModifiedError': checkModifiedErrorCell('BMSsup30', 'DiamIni', i ), 'isSelectedError': checkSelectedErrorCell('BMSsup30', 'DiamIni', i)}"> {{element.Essence}} </td>
           </ng-container>
 
           <ng-container matColumnDef="DiamMed">
             <th mat-header-cell *matHeaderCellDef> DiamMed </th>
-            <td mat-cell *matCellDef="let element"> {{element.DiamMed}} </td>
+            <td mat-cell *matCellDef="let element, let i = index" [ngClass]="{'isError': checkErrorCell('BMSsup30', 'Essence', i ), 'isModifiedError': checkModifiedErrorCell('BMSsup30', 'Essence', i ), 'isSelectedError': checkSelectedErrorCell('BMSsup30', 'Essence', i)}"> {{element.DiamMed}} </td>
           </ng-container>
 
           <ng-container matColumnDef="DiamFin">
             <th mat-header-cell *matHeaderCellDef> DiamFin </th>
-            <td mat-cell *matCellDef="let element"> {{element.DiamFin}} </td>
+            <td mat-cell *matCellDef="let element, let i = index" [ngClass]="{'isError': checkErrorCell('BMSsup30', 'DiamFin', i ), 'isModifiedError': checkModifiedErrorCell('BMSsup30', 'DiamFin', i ), 'isSelectedError': checkSelectedErrorCell('BMSsup30', 'DiamFin', i)}"> {{element.DiamFin}} </td>
           </ng-container>
 
           <ng-container matColumnDef="Longueur">
             <th mat-header-cell *matHeaderCellDef> Longueur </th>
-            <td mat-cell *matCellDef="let element"> {{element.Longueur}} </td>
+            <td mat-cell *matCellDef="let element, let i = index" [ngClass]="{'isError': checkErrorCell('BMSsup30', 'Longueur', i ), 'isModifiedError': checkModifiedErrorCell('BMSsup30', 'Longueur', i ), 'isSelectedError': checkSelectedErrorCell('BMSsup30', 'Longueur', i)}"> {{element.Longueur}} </td>
           </ng-container>
 
           <ng-container matColumnDef="Contact">

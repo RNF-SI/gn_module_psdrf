@@ -37,7 +37,6 @@ import {PsdrfError, PsdrfErrorCoordinates} from '../../../../models/psdrfObject.
     ngOnInit(){
       this.psdrfError.column.forEach(colName => {
         if(this.checkErrorType(colName) =="selectionError" ){
-          console.log(this.listCorrection)
           this.listCorrection[colName]=this.correctionService.getColListCorrection(colName)
         }
       })

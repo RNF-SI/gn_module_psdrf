@@ -25,7 +25,9 @@ def data_verification(data):
   Transect = pd.json_normalize(data[4])
   BMSsup30 = pd.json_normalize(data[5])
   Reperes = pd.json_normalize(data[6])
+  print(data)
 
+  print(Transect)
 
   # Trouver le chemin d'accès au dossier data, qui contient les tables nécessaires aux tests
   ROOT_DIR_PSDRF = Path(__file__).absolute().parent.parent
@@ -58,7 +60,7 @@ def data_verification(data):
   correctionList['StadeE'] = CodeEcorce['Code'].tolist()
   correctionList['Ref_CodeEcolo'] = ["prosilva", "efi", "irstea"]
 
-  disp_num = 1
+  disp_num = Placettes["NumDisp"][0]
   last_cycle = Cycles[Cycles["NumDisp"] == disp_num]["Cycle"].max()
 
   tables =["Placettes", "Cycles", "Arbres", "Regeneration", 
@@ -81,7 +83,7 @@ def data_verification(data):
   check_null_DPC(Communes, "Communes")
   check_null_DPC(Referents, "Referents")  
   check_null_DPC(Tarifs, "Tarifs")  
-  
+
   Placettes = filter_by_disp(disp_num, last_cycle, Placettes, disp_num)
   Cycles = filter_by_disp(disp_num, last_cycle, Cycles, disp_num)
   Arbres = filter_by_disp(disp_num, last_cycle, Arbres, disp_num)
@@ -96,9 +98,15 @@ def data_verification(data):
   Referents = filter_by_disp(disp_num, last_cycle, Referents, disp_num)
   Tarifs = filter_by_disp(disp_num, last_cycle, Tarifs, disp_num)
 
+
   # Convertion de types
-  Transect["StadeD"] = pd.to_numeric(Transect["StadeD"])
-  Transect["StadeE"] = pd.to_numeric(Transect["StadeE"])
+  # errors='ignore' permet de ne pas convertir si le type n'est pas convertible en nombre
+  Arbres = Arbres.apply(pd.to_numeric, errors='ignore')
+  BMSsup30 = BMSsup30.apply(pd.to_numeric, errors='ignore')
+  Transect = Transect.apply(pd.to_numeric, errors='ignore')
+  print(Transect["Angle"])
+  Transect["Angle"]= Transect["Angle"].astype(int)
+
 
   
   soundness_code = "de décomposition"
@@ -220,120 +228,120 @@ def data_verification(data):
 
 
 
-  # -- Contrôle des valeurs d'accroissement en diamètre
-  # Pour les Arbres vivants
-  t = Arbres[["NumDisp", "NumPlac", "NumArbre", "Cycle", "Diam1", "Diam2", "Type"]]
-  tArbres = t[t["Type"].isna()]
-  t = pd.melt(tArbres, id_vars=["NumDisp", "NumPlac", "NumArbre", "Cycle", "Type"], value_vars=["Diam1", "Diam2"], ignore_index=False)
-  t = t.pivot_table(index=["NumDisp", "NumPlac", "NumArbre", "variable"], columns='Cycle',values='value', aggfunc=['first', lambda x: x.index[0]]).reset_index()
-  t = t.sort_values(by=["NumDisp", "NumPlac", "NumArbre", "variable"])
+    # -- Contrôle des valeurs d'accroissement en diamètre
+    # Pour les Arbres vivants
+    t = Arbres[["NumDisp", "NumPlac", "NumArbre", "Cycle", "Diam1", "Diam2", "Type"]]
+    tArbres = t[t["Type"].isna()]
+    t = pd.melt(tArbres, id_vars=["NumDisp", "NumPlac", "NumArbre", "Cycle", "Type"], value_vars=["Diam1", "Diam2"], ignore_index=False)
+    t = t.pivot_table(index=["NumDisp", "NumPlac", "NumArbre", "variable"], columns='Cycle',values='value', aggfunc=['first', lambda x: x.index[0]]).reset_index()
+    t = t.sort_values(by=["NumDisp", "NumPlac", "NumArbre", "variable"])
 
-  if last_cycle > 2:
-    #Sous ensemble des arbres non coupés au dernier cycle
-    pos_Error1 = []
-    df_temp1 = t[~t.iloc[:,t.shape[1]-1].isna()] # On supprime les arbres dont la dernière valeur est vide (arbre coupé)
-    for i in range(5, t.shape[1]):
-      pos_Error1 =  np.concatenate((pos_Error1, np.array(np.where(df_temp1.iloc[:, i] < df_temp1.iloc[:, i-1])).tolist()[0]))
-    pos_Error1 = np.unique(pos_Error1)
-    df_Error1 = df_temp1.iloc[pos_Error1, : ]
-
-
-    #Sous ensemble des arbres coupés au dernier cycle
-    pos_Error2 = []
-    df_temp2 = t[t.iloc[:,t.shape[1]-1].isna()]
-    for i in range(5, t.shape[1]-1):
-        # Si arbre coupé au dernier cycle, les autres valeurs doivent être croissantes au cours du temps
-        pos_Error2 =  np.concatenate((pos_Error2, np.array(np.where(df_temp2.iloc[:, i] < df_temp2.iloc[:, i-1])).tolist()[0]))
-    pos_Error2 = np.unique(pos_Error2)
-    df_Error2 = df_temp2.iloc[pos_Error2, : ]
-
-    df_Error = np.concatenate((df_Error1, df_Error2))
-
-  else:
-    pos_Error = np.where(~(pd.isnull(t.shape[1])) & ((t.iloc[:, 4]) > (t.iloc[:,5])))
-    pos_Error = np.unique(pos_Error)
-    df_Error = t.iloc[pos_Error, : ]
-
-  if df_Error.shape[0] > 0 :
-    error_List_Temp = []
-    for index, row in df_Error.iterrows():
-      # valuesDupl = df_Error.loc[listDupl[i]]
-      tValues = tArbres[["NumArbre", "Cycle", str(row["variable"].item())]].loc[[int(x) for x in row["<lambda>"].values],:]
-      err = {
-          "message": "Accroissement(s) sur le "+ str(row["variable"].item()) +" négatif(s)  pour l'arbre numéro "+ str(row["NumArbre"].item()) + " de la placette numéro " + str(row["NumPlac"].item()),
-          "table": "Arbres",
-          "column": [ "NumArbre", "Cycle", str(row["variable"].item())],
-          "row": [int(x) for x in row["<lambda>"].values], 
-          "value": tValues.to_json(orient='records'),
-        }
-      error_List_Temp.append(err)
-    verificationList.append({'errorName': "Accroissement négatif dans Arbres" , 'errorText': "Accroissement(s) sur le diamètre négatif(s) constaté(s) sur la population d'arbres vivants entre les différents inventaires", 'errorList': error_List_Temp, 'errorType': 'PsdrfError'})
+    if last_cycle > 2:
+      #Sous ensemble des arbres non coupés au dernier cycle
+      pos_Error1 = []
+      df_temp1 = t[~t.iloc[:,t.shape[1]-1].isna()] # On supprime les arbres dont la dernière valeur est vide (arbre coupé)
+      for i in range(5, t.shape[1]):
+        pos_Error1 =  np.concatenate((pos_Error1, np.array(np.where(df_temp1.iloc[:, i] < df_temp1.iloc[:, i-1])).tolist()[0]))
+      pos_Error1 = np.unique(pos_Error1)
+      df_Error1 = df_temp1.iloc[pos_Error1, : ]
 
 
+      #Sous ensemble des arbres coupés au dernier cycle
+      pos_Error2 = []
+      df_temp2 = t[t.iloc[:,t.shape[1]-1].isna()]
+      for i in range(5, t.shape[1]-1):
+          # Si arbre coupé au dernier cycle, les autres valeurs doivent être croissantes au cours du temps
+          pos_Error2 =  np.concatenate((pos_Error2, np.array(np.where(df_temp2.iloc[:, i] < df_temp2.iloc[:, i-1])).tolist()[0]))
+      pos_Error2 = np.unique(pos_Error2)
+      df_Error2 = df_temp2.iloc[pos_Error2, : ]
 
+      df_Error = np.concatenate((df_Error1, df_Error2))
 
-
-  # Pour les Arbres morts sur pied
-  tArbres = Arbres[["NumDisp", "NumPlac", "NumArbre", "Cycle", "Diam1", "Diam2", "Type"]]
-  t = tArbres[~tArbres["Type"].isna()]
-  t = pd.melt(t, id_vars=["NumDisp", "NumPlac", "NumArbre", "Cycle", "Type"], value_vars=["Diam1", "Diam2"], ignore_index=False)
-  t = t.pivot_table(index=["NumDisp", "NumPlac", "NumArbre", "variable"], columns='Cycle',values='value', aggfunc=['first', lambda x: x.index[0]]).reset_index()
-  t = t.sort_values(by=["NumDisp", "NumPlac", "NumArbre", "variable"])
-  df_temp = t
-  # Note : on distingue quand il y a 2 cycles et 1 seul
-  if last_cycle > 2 : # Cas où un arbre présent au cycle 1, disparaît au cycle 2 et réapparaît au cycle3
-    # BMP doivent avoir été présent au passage précédent :
-    pos_Error = []
-    for i in range(5, t.shape[1]-1):
-      # toutes les valeurs doivent être décroissantes au cours du temps
-      pos_Error = np.concatenate((pos_Error, np.array(np.where(df_temp.iloc[:, i] > df_temp.iloc[:, i-1])).tolist()[0]))
+    else:
+      pos_Error = np.where(~(pd.isnull(t.shape[1])) & ((t.iloc[:, 4]) > (t.iloc[:,5])))
       pos_Error = np.unique(pos_Error)
-      df_Error = df_temp.iloc[pos_Error, : ]
-  else:
-    pos_Error = np.where(~(pd.isnull(t.iloc[:, 4])) & ~(pd.isnull(t.iloc[:, 5])) & ((t.iloc[:, 4]) < (t.iloc[:,5])) )
-    pos_Error = np.unique(pos_Error)
-    df_Error = df_temp.iloc[pos_Error, : ]   
+      df_Error = t.iloc[pos_Error, : ]
 
-  if df_Error.shape[0] > 0 :
-    error_List_Temp = []
-    for index, row in df_Error.iterrows():
-      # valuesDupl = df_Error.loc[listDupl[i]]
-      tValues = tArbres[["NumArbre", "Cycle", str(row["variable"].item())]].loc[[int(x) for x in row["<lambda>"].values],:]
-      err = {
-          "message": "Accroissement(s) sur le "+ str(row["variable"].item()) +" positif(s)  pour l'arbre numéro "+ str(row["NumArbre"].item()) + " de la placette numéro " + str(row["NumPlac"].item()),
-          "table": "Arbres",
-          "column": [ "NumArbre", "Cycle", str(row["variable"].item())],
-          "row": [int(x) for x in row["<lambda>"].values], 
-          "value": tValues.to_json(orient='records'),
-        }
-      error_List_Temp.append(err)
-    verificationList.append({'errorName': "Accroissement positif dans Arbres", 'errorText': "Accroissement(s) sur le diamètre positif(s) constaté(s) sur la population d'arbres morts sur pied entre les différents inventaires.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError'})
+    if df_Error.shape[0] > 0 :
+      error_List_Temp = []
+      for index, row in df_Error.iterrows():
+        # valuesDupl = df_Error.loc[listDupl[i]]
+        tValues = tArbres[["NumArbre", "Cycle", str(row["variable"].item())]].loc[[int(x) for x in row["<lambda>"].values],:]
+        err = {
+            "message": "Accroissement(s) sur le "+ str(row["variable"].item()) +" négatif(s)  pour l'arbre numéro "+ str(row["NumArbre"].item()) + " de la placette numéro " + str(row["NumPlac"].item()),
+            "table": "Arbres",
+            "column": [ "NumArbre", "Cycle", str(row["variable"].item())],
+            "row": [int(x) for x in row["<lambda>"].values], 
+            "value": tValues.to_json(orient='records'),
+          }
+        error_List_Temp.append(err)
+      verificationList.append({'errorName': "Accroissement négatif dans Arbres" , 'errorText': "Accroissement(s) sur le diamètre négatif(s) constaté(s) sur la population d'arbres vivants entre les différents inventaires", 'errorList': error_List_Temp, 'errorType': 'PsdrfError'})
 
 
 
-  # ----- Contrôle sur les écarts de diamètre entre les cycles trop importants
-  t = Arbres[["NumDisp", "NumPlac", "NumArbre", "Cycle", "Diam1", "Diam2", "Type"]]
-  t = pd.melt(t, id_vars=["NumDisp", "NumPlac", "NumArbre", "Cycle", "Type"], value_vars=["Diam1", "Diam2"], ignore_index=False)
-  t = t.pivot_table(index=["NumDisp", "NumPlac", "NumArbre", "variable"], columns='Cycle',values='value', aggfunc=['first', lambda x: x.index[0]]).reset_index()
-  t = t.sort_values(by=["NumDisp", "NumPlac", "NumArbre", "variable"])
 
-  pos = []
-  for i in range(1, last_cycle) :
-    t["temp"] = abs(t.iloc[:, i + 4] - t.iloc[: , i +3])
-    error_trees = t[t["temp"] > 15]
-  if error_trees.shape[0] > 0 :
-    error_List_Temp = []
-    for index, row in error_trees.iterrows():
-      tValues = tArbres[["NumArbre", "Cycle", str(row["variable"].item())]].loc[[int(x) for x in row["<lambda>"].values],:]
-      err = {
-          "message": "Valeur d'accroissement trop importante pour le "+ str(row["variable"].item()) +" de l'arbre numéro "+ str(row["NumArbre"].item()) + " de la placette numéro " + str(row["NumPlac"].item()),
-          "table": "Arbres",
-          "column": [ "NumArbre", "Cycle", str(row["variable"].item())],
-          "row": [int(x) for x in row["<lambda>"].values], 
-          "value": tValues.to_json(orient='records'),
-        }
-      error_List_Temp.append(err)
-    verificationList.append({'errorName': "Accroissement anormal dans Arbres", 'errorText': "Valeur(s) d'accroissement en diamètre trop importante(s) détectée(s) (seuil à 15 cm entre les 2 inventaires", 'errorList': error_List_Temp, 'errorType': 'PsdrfError'})
+
+    # Pour les Arbres morts sur pied
+    tArbres = Arbres[["NumDisp", "NumPlac", "NumArbre", "Cycle", "Diam1", "Diam2", "Type"]]
+    t = tArbres[~tArbres["Type"].isna()]
+    t = pd.melt(t, id_vars=["NumDisp", "NumPlac", "NumArbre", "Cycle", "Type"], value_vars=["Diam1", "Diam2"], ignore_index=False)
+    t = t.pivot_table(index=["NumDisp", "NumPlac", "NumArbre", "variable"], columns='Cycle',values='value', aggfunc=['first', lambda x: x.index[0]]).reset_index()
+    t = t.sort_values(by=["NumDisp", "NumPlac", "NumArbre", "variable"])
+    df_temp = t
+    # Note : on distingue quand il y a 2 cycles et 1 seul
+    if last_cycle > 2 : # Cas où un arbre présent au cycle 1, disparaît au cycle 2 et réapparaît au cycle3
+      # BMP doivent avoir été présent au passage précédent :
+      pos_Error = []
+      for i in range(5, t.shape[1]-1):
+        # toutes les valeurs doivent être décroissantes au cours du temps
+        pos_Error = np.concatenate((pos_Error, np.array(np.where(df_temp.iloc[:, i] > df_temp.iloc[:, i-1])).tolist()[0]))
+        pos_Error = np.unique(pos_Error)
+        df_Error = df_temp.iloc[pos_Error, : ]
+    else:
+      pos_Error = np.where(~(pd.isnull(t.iloc[:, 4])) & ~(pd.isnull(t.iloc[:, 5])) & ((t.iloc[:, 4]) < (t.iloc[:,5])) )
+      pos_Error = np.unique(pos_Error)
+      df_Error = df_temp.iloc[pos_Error, : ]   
+
+    if df_Error.shape[0] > 0 :
+      error_List_Temp = []
+      for index, row in df_Error.iterrows():
+        # valuesDupl = df_Error.loc[listDupl[i]]
+        tValues = tArbres[["NumArbre", "Cycle", str(row["variable"].item())]].loc[[int(x) for x in row["<lambda>"].values],:]
+        err = {
+            "message": "Accroissement(s) sur le "+ str(row["variable"].item()) +" positif(s)  pour l'arbre numéro "+ str(row["NumArbre"].item()) + " de la placette numéro " + str(row["NumPlac"].item()),
+            "table": "Arbres",
+            "column": [ "NumArbre", "Cycle", str(row["variable"].item())],
+            "row": [int(x) for x in row["<lambda>"].values], 
+            "value": tValues.to_json(orient='records'),
+          }
+        error_List_Temp.append(err)
+      verificationList.append({'errorName': "Accroissement positif dans Arbres", 'errorText': "Accroissement(s) sur le diamètre positif(s) constaté(s) sur la population d'arbres morts sur pied entre les différents inventaires.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError'})
+
+
+
+    # ----- Contrôle sur les écarts de diamètre entre les cycles trop importants
+    t = Arbres[["NumDisp", "NumPlac", "NumArbre", "Cycle", "Diam1", "Diam2", "Type"]]
+    t = pd.melt(t, id_vars=["NumDisp", "NumPlac", "NumArbre", "Cycle", "Type"], value_vars=["Diam1", "Diam2"], ignore_index=False)
+    t = t.pivot_table(index=["NumDisp", "NumPlac", "NumArbre", "variable"], columns='Cycle',values='value', aggfunc=['first', lambda x: x.index[0]]).reset_index()
+    t = t.sort_values(by=["NumDisp", "NumPlac", "NumArbre", "variable"])
+
+    pos = []
+    for i in range(1, last_cycle) :
+      t["temp"] = abs(t.iloc[:, i + 4] - t.iloc[: , i +3])
+      error_trees = t[t["temp"] > 15]
+    if error_trees.shape[0] > 0 :
+      error_List_Temp = []
+      for index, row in error_trees.iterrows():
+        tValues = tArbres[["NumArbre", "Cycle", str(row["variable"].item())]].loc[[int(x) for x in row["<lambda>"].values],:]
+        err = {
+            "message": "Valeur d'accroissement trop importante pour le "+ str(row["variable"].item()) +" de l'arbre numéro "+ str(row["NumArbre"].item()) + " de la placette numéro " + str(row["NumPlac"].item()),
+            "table": "Arbres",
+            "column": [ "NumArbre", "Cycle", str(row["variable"].item())],
+            "row": [int(x) for x in row["<lambda>"].values], 
+            "value": tValues.to_json(orient='records'),
+          }
+        error_List_Temp.append(err)
+      verificationList.append({'errorName': "Accroissement anormal dans Arbres", 'errorText': "Valeur(s) d'accroissement en diamètre trop importante(s) détectée(s) (seuil à 15 cm entre les 2 inventaires", 'errorList': error_List_Temp, 'errorType': 'PsdrfError'})
 
   # ##### 6/ Incohérence type de Bois Mort sur Pied et de Taillis #####
   # -- contrôle des types de bois mort sur pied :
@@ -391,16 +399,16 @@ def data_verification(data):
   ListDisp_Verif = []
   BMP_Temp = Arbres[~Arbres["Type"].isna() | ~Arbres["Haut"].isna() | ~Arbres["StadeD"].isna() | ~Arbres["StadeE"].isna()]
   BMP_Temp = BMP_Temp[BMP_Temp["Type"].isna() | (BMP_Temp["Haut"].isna() & BMP_Temp["Type"] != 1) | BMP_Temp["StadeD"].isna() | BMP_Temp["StadeE"].isna()]
-  BMP_Temp = BMP_Temp[[ "NumArbre", "Type", "Haut", "StadeD", "StadeE"]]
+  BMP_Temp = BMP_Temp[[ "NumPlac", "NumArbre", "Type", "Haut", "StadeD", "StadeE"]]
   if not BMP_Temp.empty:
     error_List_Temp=[]
-    for index, row in temp.iterrows():
+    for index, row in BMP_Temp.iterrows():
       err = {
           "message": "Information manquante pour l'arbre "+ str(int(row["NumArbre"])) +" de la placette "+ str(int(row["NumPlac"])),
           "table": "Arbres",
           "column": [ "NumArbre", "Type", "Haut", "StadeD", "StadeE"],
           "row": [index], 
-          "value": temp.loc[[index],:].to_json(orient='records'),
+          "value": BMP_Temp.loc[[index],:].to_json(orient='records'),
         }
       error_List_Temp.append(err)
     verificationList.append({'errorName': "Information(s) manquante(s) dans Arbres", 'errorText': "Information(s) manquante(s) pour les BMP", 'errorList': error_List_Temp, 'errorType': 'PsdrfError'})
@@ -644,9 +652,6 @@ def data_verification(data):
       i = i + 1
       error_List_Temp.append(err)
     verificationList.append({'errorName': "Duplication dans BMSsup30", 'errorText': 'Lignes dupliquées dans la table BMSsup30', 'errorList': error_List_Temp, 'errorType': 'PsdrfError'})
-
-
-
   BMSsup30[["DiamFin", "DiamMed", "DiamIni"]] = BMSsup30[["DiamFin", "DiamMed", "DiamIni"]].apply(pd.to_numeric)
 
 
@@ -760,68 +765,67 @@ def data_verification(data):
           error_List_Temp.append(err)
         verificationList.append({'errorName': "Incohérence(s) dans BMSsup30", 'errorText':  "Incohérence(s) relevée(s) sur les valeurs d'Essence, Azimut et Dist entre les différents inventaires", 'errorList': error_List_Temp, 'errorType': 'PsdrfError'})
 
-  # ----- Contrôle Accroissement en diamètre
-  if df_Dupl.empty:
+    # ----- Contrôle Accroissement en diamètre
+    if df_Dupl.empty:
+      t = BMSsup30[["NumDisp", "NumPlac", "Id", "Cycle", "DiamMed"]]
+      t = pd.melt(t, id_vars=["NumDisp", "NumPlac", "Id", "Cycle"], value_vars=["DiamMed"], ignore_index=False)
+
+      #On utilise la fonction first car il n'y a pas de duplicate dans notre cas. 
+      t = t.pivot_table(index=["NumDisp", "NumPlac", "Id", "variable"], columns='Cycle',values='value', aggfunc=['first', lambda x: x.index[0]]).reset_index()
+      t = t.sort_values(by=["NumDisp", "NumPlac", "Id", "variable"])
+    
+      if last_cycle > 2:
+        #Sous ensemble des arbres non coupés au dernier cycle
+        pos_Error = []
+        for i in range(5, t.shape[1]):
+          pos_Error =  np.concatenate((pos_Error, np.array(np.where(t.iloc[:, i] > t.iloc[:, i-1])).tolist()[0]))
+        pos_Error = np.unique(pos_Error)
+        df_Error = df_temp.iloc[pos_Error, : ]
+      else :
+        pos_Error = np.where(~(pd.isnull(t.shape[1])) & ((t.iloc[:, 4]) < (t.iloc[:,5])))
+        pos_Error = np.unique(pos_Error)
+        df_Error = t.iloc[pos_Error, : ]
+
+      if df_Error.shape[0] > 0 :
+        error_List_Temp = []
+        for index, row in df_Error.iterrows():
+          tValues = BMSsup30[["NumArbre", "Cycle", str(row["variable"].item())]].loc[[int(x) for x in row["<lambda>"].values]]
+          err = {
+            "message": "Accroissement(s) sur le "+ str(row["variable"].item()) +" positif(s)  pour l'id numéro "+ str(row["Id"].item()) + " de la placette numéro " + str(row["NumPlac"].item()),
+            "table": "BMSsup30",
+            "column": [ "Id", "Cycle", str(row["variable"].item())],
+            "row": [int(x) for x in row["<lambda>"].values], 
+            "value": tValues.to_json(orient='records'),
+                }
+          error_List_Temp.append(err)
+        verificationList.append({'errorName': "Accroissement positif dans BMSsup30", 'errorText': "Accroissement(s) sur le diamètre positif(s) constaté(s) entre les différents inventaires.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError'})
+
+
+    # ----- Contrôle sur les écarts de diamètre entre les cycles trop importants
     t = BMSsup30[["NumDisp", "NumPlac", "Id", "Cycle", "DiamMed"]]
     t = pd.melt(t, id_vars=["NumDisp", "NumPlac", "Id", "Cycle"], value_vars=["DiamMed"], ignore_index=False)
-
     #On utilise la fonction first car il n'y a pas de duplicate dans notre cas. 
     t = t.pivot_table(index=["NumDisp", "NumPlac", "Id", "variable"], columns='Cycle',values='value', aggfunc=['first', lambda x: x.index[0]]).reset_index()
     t = t.sort_values(by=["NumDisp", "NumPlac", "Id", "variable"])
-  
-    if last_cycle > 2:
-      #Sous ensemble des arbres non coupés au dernier cycle
-      pos_Error = []
-      for i in range(5, t.shape[1]):
-        pos_Error =  np.concatenate((pos_Error, np.array(np.where(t.iloc[:, i] > t.iloc[:, i-1])).tolist()[0]))
-      pos_Error = np.unique(pos_Error)
-      df_Error = df_temp.iloc[pos_Error, : ]
-    else :
-      pos_Error = np.where(~(pd.isnull(t.shape[1])) & ((t.iloc[:, 4]) < (t.iloc[:,5])))
-      pos_Error = np.unique(pos_Error)
-      df_Error = t.iloc[pos_Error, : ]
+    pos = []
+    for i in range(1, last_cycle) :
 
-    if df_Error.shape[0] > 0 :
+      t["temp"] = abs(t.iloc[:, i + 4] - t.iloc[: , i +3])
+      error_trees = t[t["temp"] > 15]
+
+    if error_trees.shape[0] > 0 :
       error_List_Temp = []
-      for index, row in df_Error.iterrows():
-        tValues = BMSsup30[["NumArbre", "Cycle", str(row["variable"].item())]].loc[[int(x) for x in row["<lambda>"].values]]
+      for index, row in error_trees.iterrows():
+        tValues = BMSsup30[["Id", "Cycle", str(row["variable"].item())]].loc[[int(x) for x in row["<lambda>"].values],:]
         err = {
-          "message": "Accroissement(s) sur le "+ str(row["variable"].item()) +" positif(s)  pour l'id numéro "+ str(row["Id"].item()) + " de la placette numéro " + str(row["NumPlac"].item()),
-          "table": "BMSsup30",
-          "column": [ "Id", "Cycle", str(row["variable"].item())],
-          "row": [int(x) for x in row["<lambda>"].values], 
-          "value": tValues.to_json(orient='records'),
-              }
-        error_List_Temp.append(err)
-      verificationList.append({'errorName': "Accroissement positif dans BMSsup30", 'errorText': "Accroissement(s) sur le diamètre positif(s) constaté(s) entre les différents inventaires.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError'})
-
-
-
-  # ----- Contrôle sur les écarts de diamètre entre les cycles trop importants
-  t = BMSsup30[["NumDisp", "NumPlac", "Id", "Cycle", "DiamMed"]]
-  t = pd.melt(t, id_vars=["NumDisp", "NumPlac", "Id", "Cycle"], value_vars=["DiamMed"], ignore_index=False)
-  #On utilise la fonction first car il n'y a pas de duplicate dans notre cas. 
-  t = t.pivot_table(index=["NumDisp", "NumPlac", "Id", "variable"], columns='Cycle',values='value', aggfunc=['first', lambda x: x.index[0]]).reset_index()
-  t = t.sort_values(by=["NumDisp", "NumPlac", "Id", "variable"])
-  pos = []
-  for i in range(1, last_cycle) :
-
-    t["temp"] = abs(t.iloc[:, i + 4] - t.iloc[: , i +3])
-    error_trees = t[t["temp"] > 15]
-
-  if error_trees.shape[0] > 0 :
-    error_List_Temp = []
-    for index, row in error_trees.iterrows():
-      tValues = BMSsup30[["Id", "Cycle", str(row["variable"].item())]].loc[[int(x) for x in row["<lambda>"].values],:]
-      err = {
-          "message": "Valeur d'accroissement trop importante pour le "+ str(row["variable"].item()) +" de l'arbre id "+ str(row["Id"].item()) + " de la placette numéro " + str(row["NumPlac"].item()),
-          "table": "BMSsup30",
-          "column": [ "Id", "Cycle", str(row["variable"].item())],
-          "row": [int(x) for x in row["<lambda>"].values], 
-          "value": tValues.to_json(orient='records'),
-        }
-    error_List_Temp.append(err)
-    verificationList.append({'errorName': "Accroissement anormal dans BMSsup30", 'errorText': "Valeur(s) d'accroissement en diamètre trop importante(s) détectée(s) (seuil à 15 cm entre les 2 inventaires", 'errorList': error_List_Temp, 'errorType': 'PsdrfError'})
+            "message": "Valeur d'accroissement trop importante pour le "+ str(row["variable"].item()) +" de l'arbre id "+ str(row["Id"].item()) + " de la placette numéro " + str(row["NumPlac"].item()),
+            "table": "BMSsup30",
+            "column": [ "Id", "Cycle", str(row["variable"].item())],
+            "row": [int(x) for x in row["<lambda>"].values], 
+            "value": tValues.to_json(orient='records'),
+          }
+      error_List_Temp.append(err)
+      verificationList.append({'errorName': "Accroissement anormal dans BMSsup30", 'errorText': "Valeur(s) d'accroissement en diamètre trop importante(s) détectée(s) (seuil à 15 cm entre les 2 inventaires", 'errorList': error_List_Temp, 'errorType': 'PsdrfError'})
 
   ###Table Regeneration
   error_List_Temp = check_species(Regeneration, CodeEssence, Test, "Regeneration")
