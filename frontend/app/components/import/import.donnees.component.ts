@@ -33,12 +33,13 @@ export class ImportDonneesComponent {
   tableColumnsArray: string[][]= [];
   tableDataSourceArray: MatTableDataSource<any> []= [];//Tableau des Datasource de chaque onglet
   
-  
-  indexLabelMatTabGroup: string[]= ["Placettes", "Cycle", "Arbres", "Regeneration", "Transect", "BMSsup30", "Reperes"];//Tableau des titres d'onglet
+  indexLabelMatTabGroup: string[]= ["Placettes", "Cycles", "Arbres", "Regeneration", "Transect", "BMSsup30", "Reperes"];//Tableau des titres d'onglet
   excelFile: any = null;
-  isLoadingResults: boolean = false; // Vrai lorsque les données sont entrain de charger
-  isCurrentVerification: boolean= false; // Faux lorsqu'on n'a pas encore choisi de fichier
-  isVerificationDone: boolean= false; 
+
+  isDataCharging: boolean = false;// Vrai lorsque le fichier Excel est entrain de charger
+  isExcelLoaded: boolean= false; // Faux lorsqu'on n'a pas encore choisi de fichier
+  isVerificationObjLoaded: boolean= false; 
+
   indexMatTabGroup: number=0; //Index de l'onglet sélectionné 
   errorsPsdrfList: {errorList: PsdrfError[], 'errorType': string}[] = []; //Tableau des erreurs retournées par la requête psdrf_data_verification
   mainStepNameArr: string[]= []; // Tableau des titres des main step(affichés dans les main steps)
@@ -127,6 +128,7 @@ export class ImportDonneesComponent {
   onFileLoad (target: DataTransfer): void{
     let excelData;
     const reader: FileReader = new FileReader();
+    this.isDataCharging = true;
 
     //Chargement des données du fichier excel dans la variable psdrfArray
     reader.onload = (e: any) => {
@@ -147,8 +149,15 @@ export class ImportDonneesComponent {
           return obj;
         }))
       }
-      this.isCurrentVerification = true;
-      this.isLoadingResults = true;     
+      
+      //Création du binding entre les MatTable datasources et les données affichée dans la tableau
+      //Remarque: Tout changement dans psdrfArray s'applique automatiquement au tableau
+      for(let i =0; i<this.psdrfArray.length; i++){
+        this.tableDataSourceArray.push( new MatTableDataSource(this.psdrfArray[i]));
+        this.tableDataSourceArray[i].paginator = this.paginator.toArray()[i];
+      }                          
+      
+      this.isExcelLoaded = true;
     };
     reader.readAsBinaryString(target.files[0]);
     //Lancement de la requête psdrf_data_verification avec les données Excel chargée
@@ -159,47 +168,90 @@ export class ImportDonneesComponent {
           let verificationObj = JSON.parse(verificationJson)
           this.correctionService.setSelectionErrorObj(verificationObj["correctionList"])
           let errorsPsdrfListTemp = verificationObj["verificationObj"]
-
-          this.isLoadingResults = false;
+          
           let errorListTemp;
-            this.mainStepNameArr = [];
-            this.totalErrorNumber = 0;
-            
-            errorsPsdrfListTemp.forEach(mainError => {
-              this.mainStepNameArr.push(mainError.errorName);
-              this.mainStepTextArr.push(mainError.errorText);
-              switch(mainError.errorType){
-                case "PsdrfError":
-                  errorListTemp = [];
-                  mainError.errorList.forEach(error => {
-                    errorListTemp.push(new PsdrfError(error.message, error.table, error.column, error.row, JSON.parse(error.value)));
-                    this.errorElementArr.push(new PsdrfErrorCoordinates(error.table, error.column, error.row));
-                    error.row.forEach( idx => {
-                      this.totalErrorNumber ++;
-                    })
+          this.mainStepNameArr = [];
+          this.totalErrorNumber = 0;
+          
+          errorsPsdrfListTemp.forEach(mainError => {
+            this.mainStepNameArr.push(mainError.errorName);
+            this.mainStepTextArr.push(mainError.errorText);
+            switch(mainError.errorType){
+              case "PsdrfError":
+                errorListTemp = [];
+                mainError.errorList.forEach(error => {
+                  errorListTemp.push(new PsdrfError(error.message, error.table, error.column, error.row, JSON.parse(error.value)));
+                  this.errorElementArr.push(new PsdrfErrorCoordinates(error.table, error.column, error.row));
+                  error.row.forEach( idx => {
+                    this.totalErrorNumber ++;
                   })
-                  this.errorsPsdrfList.push({'errorList': errorListTemp, 'errorType': 'PsdrfError'});
-                  break;
-                }
-              })
-              
-              //Création du binding entre les MatTable datasources et les données affichée dans la tableau
-              //Remarque: Tout changement dans psdrfArray s'applique automatiquement au tableau
-              for(let i =0; i<this.psdrfArray.length; i++){
-                this.tableDataSourceArray.push( new MatTableDataSource(this.psdrfArray[i]));
-                this.tableDataSourceArray[i].paginator = this.paginator.toArray()[i];
+                })
+                this.errorsPsdrfList.push({'errorList': errorListTemp, 'errorType': 'PsdrfError'});
+                break;
               }
-              this.changeDetector.detectChanges();    
-                            
-              this.totalSteps = errorsPsdrfListTemp.length;
-              this.totalPages = Math.ceil(this.totalSteps / this.MAX_STEP);
+            })
+            this.isVerificationObjLoaded = true;
+            
+            this.totalSteps = errorsPsdrfListTemp.length;
+            this.totalPages = Math.ceil(this.totalSteps / this.MAX_STEP);
+            
+            let fistSelected = new PsdrfErrorCoordinates(this.errorsPsdrfList[0].errorList[0].table, this.errorsPsdrfList[0].errorList[0].column, this.errorsPsdrfList[0].errorList[0].row)
+            this.selectedErrorElementArr = fistSelected;
+            //Using setTimeout to be sure that the ngIf stepperPart has taken effect
+            setTimeout(() => {
               this.rerender();
               //Affichage de la toute première erreur de errorsPsdrfList dans le MatTab
-              this.displayErrorOnMatTab(new PsdrfErrorCoordinates(this.errorsPsdrfList[0].errorList[0].table, this.errorsPsdrfList[0].errorList[0].column, this.errorsPsdrfList[0].errorList[0].row))
-              this.isVerificationDone = true;
-            }
+              this.displayErrorOnMatTab(fistSelected) 
+            }, 0);
+          }
         );
     }
+  }
+
+  /**
+  *  Import all the modified data in a new PSDRF File
+  */
+  importTableToExcel(){
+    let excelData = [[]]
+    let tableDataTemp = []
+
+    console.log(this.psdrfArray)
+    this.psdrfArray.forEach((table, i) =>{
+      tableDataTemp = []
+      tableDataTemp.push(this.tableColumnsArray[i])
+      tableDataTemp.push(table.map(obj => {
+        let rowTemp = []
+        Object.keys(obj).forEach(key=> {
+          rowTemp.push(obj[key])
+        });
+        return rowTemp
+      }))
+      excelData.push(tableDataTemp)
+
+    })
+    console.log(excelData)
+
+
+
+    // const bstr: string = e.target.result;
+    // excelData = this.excelSrv.importFromExcelFile(bstr);
+    // for(let i=0; i<excelData.length; i++){
+    //   // const header: string[] = this.tableColumnsArray[i];
+    //   let columnNames = excelData[i].slice(0, 1)[0];
+    //   this.tableColumnsArray[i] = columnNames;
+    //   const header: string[] = columnNames;
+    //   const importedData = excelData[i].slice(1, -1);
+    //   this.psdrfArray.push(importedData.map(arr => {
+    //     const obj = {};
+    //     for (let j = 0; j < header.length; j++) {
+    //       const k = header[j];
+    //       obj[k] = arr[j];
+    //     }          
+    //     return obj;
+    //   }))
+    // }
+
+
   }
 
   /**
@@ -228,14 +280,13 @@ export class ImportDonneesComponent {
   * @param i Index of the line inside the page
   */
   checkErrorCell(table: string, column: string, i: number): boolean{
-    if(this.isVerificationDone){
+    if(this.isVerificationObjLoaded){
       let row = this.getRowIndexFromPaginatorProperties(table, i);
       return this.errorElementArr.some((obj) => (obj.table== table && obj.column.includes(column) && obj.row.includes(row)));
-    } else {
-      return false
+    }else {
+      return false;
     }
   }
-
 
    /**
   *  In parameter takes the coordinates of a case in the mat-table
@@ -245,11 +296,11 @@ export class ImportDonneesComponent {
   * @param i Index of the line inside the page
   */
   checkModifiedErrorCell(table: string, column: string, i: number): boolean{
-    if(this.isVerificationDone){
+    if(this.isVerificationObjLoaded){
       let row = this.getRowIndexFromPaginatorProperties(table, i);
       return this.modifiedElementArr.some((obj) => (obj.table== table && obj.column.includes(column) && obj.row.includes(row)));
     } else {
-      return false
+      return false 
     }
   }
 
@@ -261,11 +312,12 @@ export class ImportDonneesComponent {
   * @param i Index of the line inside the page
   */
   checkSelectedErrorCell(table: string, column: string, i: number): boolean{
-    if(this.isVerificationDone){
+    if(this.isVerificationObjLoaded){
       let row = this.getRowIndexFromPaginatorProperties(table, i);
       return this.selectedErrorElementArr.table == table && this.selectedErrorElementArr.column.includes(column) && this.selectedErrorElementArr.row.includes(row);
-    } else {
-      return false
+    }
+    else {
+      return false 
     }
   }
 
@@ -356,16 +408,16 @@ export class ImportDonneesComponent {
   * Delete the loaded Excel file
   */
   deleteFile(): void{
-    this.isCurrentVerification = false;
-    this.isVerificationDone = false;
+    this.isExcelLoaded = false;
+    this.isVerificationObjLoaded = false;
     this.excelFile = null;
-    this.isLoadingResults = false;
+    this.isDataCharging = false;
     this.reInitializeValues();
     this.historyService.reInitialize();
   }
 
   /**
-  * Reainitialize parameters
+  * Reinitialize parameters
   */
   reInitializeValues(): void{
     this.indexMatTabGroup=0;

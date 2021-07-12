@@ -1,54 +1,36 @@
 <div>
-  <h3>{{mainStepText}}</h3>
+    <h3>{{mainStepText}}</h3>
 </div>
 <div class="solution" #subStepperContainer>
-  <div class="arrow-icons">
-    <button mat-icon-button (click)="paginatorBack()" *ngIf="page > 0">
+    <div class="arrow-icons">
+        <button mat-icon-button (click)="paginatorBack()" *ngIf="page > 0">
       <mat-icon>keyboard_arrow_left</mat-icon>
     </button>
-  </div>
-  <div class="stepper">
-    <mat-horizontal-stepper class="subStepper" labelPosition="bottom" #subStepper (selectionChange)="onSubStepClicked($event)" >
-      <ng-template matStepperIcon="edit">
-        <mat-icon>done</mat-icon>
-      </ng-template>
+    </div>
+    <div class="stepper">
+        <mat-horizontal-stepper #subStepper class="subStepper" labelPosition="bottom" #subStepper (selectionChange)="onSubStepClicked($event)">
+            <ng-template matStepperIcon="edit">
+                <mat-icon>done</mat-icon>
+            </ng-template>
 
-      <mat-step *ngFor="let error of step.errorList; index as subStepIndex" [completed]="checkSubStepCompleted(subStepIndex)">  
-        <error-sub-step 
-          (indexButtonClicked)="onIndexButtonClicked($event)"
-          (modificationValidated)="modifValidation($event)" 
-          (allRowsModified)="onAllRowsModified($event)" 
-          [psdrfError]="error" 
-          [subStepIndex]="subStepIndex" 
-          [mainStepIndex]="mainStepIndex" 
-          [errorType]="step.errorType">
-        </error-sub-step>
-      </mat-step>
-    </mat-horizontal-stepper>
-  </div>
-  <div class="arrow-icons">
-    <button mat-icon-button (click)="paginatorNext()" *ngIf="page < totalPages - 1">
+            <mat-step *ngFor="let error of step.errorList; index as subStepIndex" [completed]="checkSubStepCompleted(subStepIndex)">
+                <error-sub-step *ngIf="subStepper.selectedIndex == subStepIndex" (indexButtonClicked)="onIndexButtonClicked($event)" (modificationValidated)="modifValidation($event)" (allRowsModified)="onAllRowsModified($event)" [psdrfError]="error" [subStepIndex]="subStepIndex"
+                    [mainStepIndex]="mainStepIndex" [errorType]="step.errorType">
+                </error-sub-step>
+            </mat-step>
+        </mat-horizontal-stepper>
+    </div>
+    <div class="arrow-icons">
+        <button mat-icon-button (click)="paginatorNext()" *ngIf="page < totalPages - 1">
       <mat-icon>keyboard_arrow_right</mat-icon>
     </button>
-  </div>
+    </div>
 </div>
 <div class="action-buttons">
-  <button
-  *ngIf="stepIndex > 0"
-  class="m-1 float-left"
-  mat-raised-button
-  matTooltip="Cas Précédent"
-  (click)="goBack()"
-  >
+    <button *ngIf="stepIndex > 0" class="m-1 float-left" mat-raised-button matTooltip="Cas Précédent" (click)="goBack()">
     <mat-icon> arrow_back </mat-icon>
   </button>
-  <button
-    *ngIf="stepIndex < totalSteps - 1"
-    class="m-1 float-left"
-    mat-raised-button
-    matTooltip="Cas Suivant"
-    (click)="goForward()"
-    >
+    <button *ngIf="stepIndex < totalSteps - 1" class="m-1 float-left" mat-raised-button matTooltip="Cas Suivant" (click)="goForward()">
       <mat-icon> arrow_forward </mat-icon>
   </button>
 </div>

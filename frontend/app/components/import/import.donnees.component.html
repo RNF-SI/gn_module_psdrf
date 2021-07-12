@@ -1,741 +1,205 @@
 <div class="container-fluid p-2">
-  <div class="card">
-    <div class="card-body p-2">
+    <div class="card">
+        <div class="card-body p-2">
 
-      <button
-        class="m-1 float-left"
-        mat-raised-button
-        matTooltip="Arrêter l'import de données"
-        (click)="returnToPreviousPage()"
-        >
+            <button class="m-1 float-left" mat-raised-button matTooltip="Arrêter l'import de données" (click)="returnToPreviousPage()">
           <mat-icon> arrow_back </mat-icon>
           <span class="user-name">
             {{ currentUser?.user_login }}
           </span>
       </button>
 
-      <div class="container " appDnd (fileDropped)="onFileDropped($event)" *ngIf="!isCurrentVerification">
-        <div class="importzone d-flex align-items-center justify-content-center">
-          <div class="h-25 text-center">
-              <input type="file" #fileDropRef id="fileDropRef" accept=".xlsx, .xls" >
-              <h3>Déposer </h3>
-              <h3>ou</h3>                      
-              <div class="custom-file">
-                  <input type="file" class="custom-file-input" id="customFile" name="excelFile"
-                      (change)="onFileSelect($event)" #UploadFileInput accept=".xlsx, .xls">
-                      <label >Choisir un fichier</label>
-              </div>
-          </div>
-        </div>             
-      </div>
-
-      <div class="d-flex justify-content-center" *ngIf="isCurrentVerification">
-        <div class="single-file text-center" >
-            <img src="external_assets/psdrf/ms-excel.svg" width="45px" alt="file">
-            <div class="info">
-                <h4 class="name">
-                    {{ excelFile?.name }}
-                </h4>
-                <p class="size">
-                    {{ formatBytes(excelFile?.size) }}
-                </p>
+            <div class="container " appDnd (fileDropped)="onFileDropped($event)" *ngIf="!isDataCharging">
+                <div class="importzone d-flex align-items-center justify-content-center">
+                    <div class="h-25 text-center">
+                        <input type="file" #fileDropRef id="fileDropRef" accept=".xlsx, .xls">
+                        <h3>Déposer </h3>
+                        <h3>ou</h3>
+                        <div class="custom-file">
+                            <input type="file" class="custom-file-input" id="customFile" name="excelFile" (change)="onFileSelect($event)" #UploadFileInput accept=".xlsx, .xls">
+                            <label>Choisir un fichier</label>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <button
-            class="m-1 float-right"
-            mat-raised-button
-            matTooltip="Supprimer"     
-            (click)="deleteFile()"             
-            >
-            <mat-icon> delete </mat-icon>
-          </button>
+
+            <div class="d-flex justify-content-center" *ngIf="isDataCharging">
+                <div class="single-file text-center">
+                    <img src="external_assets/psdrf/ms-excel.svg" width="45px" alt="file">
+                    <div class="info">
+                        <h4 class="name">
+                            {{ excelFile?.name }}
+                        </h4>
+                        <p class="size">
+                            {{ formatBytes(excelFile?.size) }}
+                        </p>
+                    </div>
+                    <button *ngIf="isExcelLoaded" class="m-1" mat-raised-button matTooltip="Sauvegarder la table modifiée dans un fichier Excel" (click)="importTableToExcel()">
+                        <mat-icon> file_download </mat-icon>
+                    </button>
+                    <button class="m-1 float-right" mat-raised-button matTooltip="Supprimer" (click)="deleteFile()">
+                        <mat-icon> delete </mat-icon>
+                    </button>
+                </div>
+            </div>
+
+            <div class="example-loading-shade" *ngIf="(isDataCharging && !isExcelLoaded) || (isExcelLoaded && !isVerificationObjLoaded)">
+                <mat-spinner></mat-spinner>
+            </div>
+
+
+            <mat-tab-group class="mat-tab-group my-2" [(selectedIndex)]="indexMatTabGroup" [hidden]="!isExcelLoaded">
+                <mat-tab label="Placettes">
+                    <div class="mat-elevation-z8">
+                        <table mat-table [dataSource]="tableDataSourceArray[0]">
+                            <ng-container *ngFor="let columnName of tableColumnsArray[0]" [matColumnDef]="columnName">
+                                <th mat-header-cell *matHeaderCellDef> {{columnName}} </th>
+                                <td mat-cell *matCellDef="let element, let i = index" [ngClass]="{'isError': checkErrorCell('Placettes', columnName, i ), 'isModifiedError': checkModifiedErrorCell('Placettes', columnName, i ), 'isSelectedError': checkSelectedErrorCell('Placettes', columnName, i)}">
+                                    {{element[columnName]}} </td>
+                            </ng-container>
+                            <tr mat-header-row *matHeaderRowDef="tableColumnsArray[0]"></tr>
+                            <tr mat-row *matRowDef="let row; columns: tableColumnsArray[0];"></tr>
+                        </table>
+                        <mat-paginator #placettePaginator [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons></mat-paginator>
+                    </div>
+                </mat-tab>
+
+                <mat-tab label="Cycles">
+                    <div class="mat-elevation-z8">
+                        <table mat-table [dataSource]="tableDataSourceArray[1]">
+                            <ng-container *ngFor="let columnName of tableColumnsArray[1]" [matColumnDef]="columnName">
+                                <th mat-header-cell *matHeaderCellDef> {{columnName}} </th>
+                                <td mat-cell *matCellDef="let element, let i = index" [ngClass]="{'isError': checkErrorCell('Cycles', columnName, i ), 'isModifiedError':  checkModifiedErrorCell('Cycles', columnName, i ), 'isSelectedError':  checkSelectedErrorCell('Cycles', columnName, i)}">
+                                    {{element[columnName]}} </td>
+                            </ng-container>
+                            <tr mat-header-row *matHeaderRowDef="tableColumnsArray[1]"></tr>
+                            <tr mat-row *matRowDef="let row; columns: tableColumnsArray[1];"></tr>
+                        </table>
+                        <mat-paginator #cyclePaginator [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons></mat-paginator>
+                    </div>
+                </mat-tab>
+
+                <mat-tab label="Arbres">
+                    <div class="mat-elevation-z8">
+                        <table mat-table [dataSource]="tableDataSourceArray[2]">
+                            <ng-container *ngFor="let columnName of tableColumnsArray[2]" [matColumnDef]="columnName">
+                                <th mat-header-cell *matHeaderCellDef> {{columnName}} </th>
+                                <td mat-cell *matCellDef="let element, let i = index" [ngClass]="{'isError': checkErrorCell('Arbres', columnName, i ), 'isModifiedError':  checkModifiedErrorCell('Arbres', columnName, i ), 'isSelectedError':  checkSelectedErrorCell('Arbres', columnName, i)}">
+                                    {{element[columnName]}} </td>
+                            </ng-container>
+                            <tr mat-header-row *matHeaderRowDef="tableColumnsArray[2]"></tr>
+                            <tr mat-row *matRowDef="let row; columns: tableColumnsArray[2];"></tr>
+                        </table>
+                        <mat-paginator #arbrePaginator [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons></mat-paginator>
+                    </div>
+                </mat-tab>
+
+                <mat-tab label="Regeneration">
+                    <div class="mat-elevation-z8">
+                        <table mat-table [dataSource]="tableDataSourceArray[3]">
+                            <ng-container *ngFor="let columnName of tableColumnsArray[3]" [matColumnDef]="columnName">
+                                <th mat-header-cell *matHeaderCellDef> {{columnName}} </th>
+                                <td mat-cell *matCellDef="let element, let i = index" [ngClass]="{'isError': checkErrorCell('Regeneration', columnName, i ), 'isModifiedError':  checkModifiedErrorCell('Regeneration', columnName, i ), 'isSelectedError':  checkSelectedErrorCell('Regeneration', columnName, i)}">
+                                    {{element[columnName]}} </td>
+                            </ng-container>
+                            <tr mat-header-row *matHeaderRowDef="tableColumnsArray[3]"></tr>
+                            <tr mat-row *matRowDef="let row; columns: tableColumnsArray[3];"></tr>
+                        </table>
+
+                        <mat-paginator #regePaginator [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons></mat-paginator>
+                    </div>
+                </mat-tab>
+
+                <mat-tab label="Transect">
+                    <div class="mat-elevation-z8">
+                        <table mat-table [dataSource]="tableDataSourceArray[4]">
+                            <ng-container *ngFor="let columnName of tableColumnsArray[4]" [matColumnDef]="columnName">
+                                <th mat-header-cell *matHeaderCellDef> {{columnName}} </th>
+                                <td mat-cell *matCellDef="let element, let i = index" [ngClass]="{'isError': checkErrorCell('Transect', columnName, i ), 'isModifiedError':  checkModifiedErrorCell('Transect', columnName, i ), 'isSelectedError':  checkSelectedErrorCell('Transect', columnName, i)}">
+                                    {{element[columnName]}} </td>
+                            </ng-container>
+                            <tr mat-header-row *matHeaderRowDef="tableColumnsArray[4]"></tr>
+                            <tr mat-row *matRowDef="let row; columns: tableColumnsArray[4];"></tr>
+                        </table>
+                        <mat-paginator #transectPaginator [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons></mat-paginator>
+                    </div>
+                </mat-tab>
+
+                <mat-tab label="BMSsup30">
+                    <div class="mat-elevation-z8">
+                        <table mat-table [dataSource]="tableDataSourceArray[5]">
+                            <ng-container *ngFor="let columnName of tableColumnsArray[5]" [matColumnDef]="columnName">
+                                <th mat-header-cell *matHeaderCellDef> {{columnName}} </th>
+                                <td mat-cell *matCellDef="let element, let i = index" [ngClass]="{'isError': checkErrorCell('BMSsup30', columnName, i ), 'isModifiedError':  checkModifiedErrorCell('BMSsup30', columnName, i ), 'isSelectedError':  checkSelectedErrorCell('BMSsup30', columnName, i)}">
+                                    {{element[columnName]}} </td>
+                            </ng-container>
+                            <tr mat-header-row *matHeaderRowDef="tableColumnsArray[5]"></tr>
+                            <tr mat-row *matRowDef="let row; columns: tableColumnsArray[5];"></tr>
+                        </table>
+                        <mat-paginator #bmssup30Paginator [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons></mat-paginator>
+                    </div>
+                </mat-tab>
+
+                <mat-tab label="Reperes">
+                    <div class="mat-elevation-z8">
+                        <table mat-table [dataSource]="tableDataSourceArray[6]">
+                            <ng-container *ngFor="let columnName of tableColumnsArray[6]" [matColumnDef]="columnName">
+                                <th mat-header-cell *matHeaderCellDef> {{columnName}} </th>
+                                <td mat-cell *matCellDef="let element, let i = index" [ngClass]="{'isError': checkErrorCell('Reperes', columnName, i ), 'isModifiedError':  checkModifiedErrorCell('Reperes', columnName, i ), 'isSelectedError':  checkSelectedErrorCell('Reperes', columnName, i)}">
+                                    {{element[columnName]}} </td>
+                            </ng-container>
+                            <tr mat-header-row *matHeaderRowDef="tableColumnsArray[6]"></tr>
+                            <tr mat-row *matRowDef="let row; columns: tableColumnsArray[6];"></tr>
+                        </table>
+                        <mat-paginator #reperePaginator [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons></mat-paginator>
+                    </div>
+                </mat-tab>
+            </mat-tab-group>
+
+            <div *ngIf="isVerificationObjLoaded">
+                <div class="stepperPart" #stepperPart>
+                    <div class="stepper-arrow-icons">
+                        <button mat-icon-button (click)="paginatorBack()" *ngIf="page > 0">
+                            <mat-icon>keyboard_arrow_left</mat-icon>
+                        </button>
+                    </div>
+                    <div class="stepper">
+                        <mat-horizontal-stepper #mainStepper class="mainStepper" labelPosition="bottom" #mainStepper (selectionChange)="displayOnMainStepClick($event)">
+                            <ng-template matStepperIcon="edit">
+                                <mat-icon>done</mat-icon>
+                            </ng-template>
+                            <mat-step *ngFor="let error of errorsPsdrfList; index as mainStepIndex" [completed]="checkMainStepCompleted(mainStepIndex)">
+                                <ng-template matStepLabel>
+                                    <div>{{mainStepNameArr[mainStepIndex]}}</div>
+                                </ng-template>
+                                <error-main-step *ngIf="mainStepper.selectedIndex == mainStepIndex" (subStepSelectionChange)="displayOnSubStepClick($event)" (indexButtonClicked)="displayErrorOnMatTab($event)" (modificationValidated)="modifyErrorValue($event)" (allSubStepModified)="modifyMainStepperAppearance($event)"
+                                    [step]="error" [mainStepIndex]="mainStepIndex" [mainStepText]="mainStepTextArr[mainStepIndex]">
+                                </error-main-step>
+                            </mat-step>
+                        </mat-horizontal-stepper>
+                    </div>
+                    <div class="stepper-arrow-icons">
+                        <button mat-icon-button (click)="paginatorNext()" *ngIf="page < totalPages - 1">
+                            <mat-icon>keyboard_arrow_right</mat-icon>
+                        </button>
+                    </div>
+                </div>
+                <div class="action-buttons">
+                    <button *ngIf="step > 0" class="m-1 float-left" mat-raised-button matTooltip="Erreur Précédente" (click)="goBack()">
+                         <mat-icon> arrow_back </mat-icon>
+                    </button>
+                    <button *ngIf="step < totalSteps - 1" class="m-1 float-left" mat-raised-button matTooltip="Erreur Suivante" (click)="goForward()">
+                        <mat-icon> arrow_forward </mat-icon>
+                    </button>
+                    <button class="m-1 float-left" mat-raised-button matTooltip="Afficher les labels" (click)="showStepLabels()">
+                        <mat-icon class="extensionIcon-rotation"> {{extensionIcon}} </mat-icon>
+                    </button>
+                </div>
+
+                <mat-progress-bar class="example-margin" [color]="color" mode="determinate" [value]="progressBarValue">
+                </mat-progress-bar>
+
+            </div>
         </div>
-      </div> 
-
-      <div class="example-loading-shade" *ngIf="isLoadingResults">
-        <mat-spinner ></mat-spinner>
-      </div>
-
-      <mat-tab-group class="mat-tab-group my-2" *ngIf="isCurrentVerification" [(selectedIndex)]="indexMatTabGroup">
-        <mat-tab label="Placettes"> 
-          <div class="mat-elevation-z8">
-          <table mat-table [dataSource]="tableDataSourceArray[0]">
-
-            <ng-container matColumnDef="NumDisp">
-              <th mat-header-cell *matHeaderCellDef> NumDisp </th>
-              <td mat-cell *matCellDef="let element"> {{element.NumDisp}} </td>
-            </ng-container>
-        
-            <ng-container matColumnDef="NumPlac">
-              <th mat-header-cell *matHeaderCellDef> NumPlac </th>
-              <td mat-cell *matCellDef="let element"> {{element.NumPlac}} </td>
-            </ng-container>
-        
-            <ng-container matColumnDef="Cycle">
-              <th mat-header-cell *matHeaderCellDef> Cycle </th>
-              <td mat-cell *matCellDef="let element"> {{element.Cycle}} </td>
-            </ng-container>
-        
-            <ng-container matColumnDef="Strate">
-              <th mat-header-cell *matHeaderCellDef> Strate </th>
-              <td mat-cell *matCellDef="let element"> {{element.Strate}} </td>
-            </ng-container>
-
-            <ng-container matColumnDef="PoidsPlacette">
-              <th mat-header-cell *matHeaderCellDef> PoidsPlacette </th>
-              <td mat-cell *matCellDef="let element"> {{element.PoidsPlacette}} </td>
-            </ng-container>
-        
-            <ng-container matColumnDef="Pente">
-              <th mat-header-cell *matHeaderCellDef> Pente </th>
-              <td mat-cell *matCellDef="let element"> {{element.Pente}} </td>
-            </ng-container>
-        
-            <ng-container matColumnDef="CorrectionPente">
-              <th mat-header-cell *matHeaderCellDef> CorrectionPente </th>
-              <td mat-cell *matCellDef="let element"> {{element.CorrectionPente}} </td>
-            </ng-container>
-
-            <ng-container matColumnDef="Exposition">
-              <th mat-header-cell *matHeaderCellDef> Exposition </th>
-              <td mat-cell *matCellDef="let element"> {{element.Exposition}} </td>
-            </ng-container>
-        
-            <ng-container matColumnDef="Habitat">
-              <th mat-header-cell *matHeaderCellDef> Habitat </th>
-              <td mat-cell *matCellDef="let element"> {{element.Habitat}} </td>
-            </ng-container>
-        
-            <ng-container matColumnDef="Station">
-              <th mat-header-cell *matHeaderCellDef> Station </th>
-              <td mat-cell *matCellDef="let element"> {{element.Station}} </td>
-            </ng-container>
-        
-            <ng-container matColumnDef="Typologie">
-              <th mat-header-cell *matHeaderCellDef> Typologie </th>
-              <td mat-cell *matCellDef="let element"> {{element.Typologie}} </td>
-            </ng-container>
-
-            <ng-container matColumnDef="Groupe">
-              <th mat-header-cell *matHeaderCellDef> Groupe </th>
-              <td mat-cell *matCellDef="let element"> {{element.Groupe}} </td>
-            </ng-container>
-        
-            <ng-container matColumnDef="Groupe1">
-              <th mat-header-cell *matHeaderCellDef> Groupe1 </th>
-              <td mat-cell *matCellDef="let element"> {{element.Groupe1}} </td>
-            </ng-container>
-        
-            <ng-container matColumnDef="Groupe2">
-              <th mat-header-cell *matHeaderCellDef> Groupe2 </th>
-              <td mat-cell *matCellDef="let element"> {{element.Groupe2}} </td>
-            </ng-container>
-
-            <ng-container matColumnDef="Ref_Habitat">
-              <th mat-header-cell *matHeaderCellDef> Ref_Habitat </th>
-              <td mat-cell *matCellDef="let element"> {{element.Ref_Habitat}} </td>
-            </ng-container>
-        
-            <ng-container matColumnDef="Precision_Habitat">
-              <th mat-header-cell *matHeaderCellDef> Precision_Habitat </th>
-              <td mat-cell *matCellDef="let element"> {{element.Precision_Habitat}} </td>
-            </ng-container>
-        
-            <ng-container matColumnDef="Ref_Station">
-              <th mat-header-cell *matHeaderCellDef> Ref_Station </th>
-              <td mat-cell *matCellDef="let element"> {{element.Ref_Station}} </td>
-            </ng-container>
-        
-            <ng-container matColumnDef="Ref_Typologie">
-              <th mat-header-cell *matHeaderCellDef> Ref_Typologie </th>
-              <td mat-cell *matCellDef="let element"> {{element.Ref_Typologie}} </td>
-            </ng-container>
-
-            <ng-container matColumnDef="Descriptif_Groupe">
-              <th mat-header-cell *matHeaderCellDef> Descriptif_Groupe </th>
-              <td mat-cell *matCellDef="let element"> {{element.Descriptif_Groupe}} </td>
-            </ng-container>
-        
-            <ng-container matColumnDef="Descriptif_Groupe1">
-              <th mat-header-cell *matHeaderCellDef> Descriptif_Groupe1 </th>
-              <td mat-cell *matCellDef="let element"> {{element.Descriptif_Groupe1}} </td>
-            </ng-container>
-        
-            <ng-container matColumnDef="Descriptif_Groupe2">
-              <th mat-header-cell *matHeaderCellDef> Descriptif_Groupe2 </th>
-              <td mat-cell *matCellDef="let element"> {{element.Descriptif_Groupe2}} </td>
-            </ng-container>
-
-            <ng-container matColumnDef="Date_Intervention">
-              <th mat-header-cell *matHeaderCellDef> Date_Intervention </th>
-              <td mat-cell *matCellDef="let element"> {{element.Date_Intervention}} </td>
-            </ng-container>
-        
-            <ng-container matColumnDef="Nature_Intervention">
-              <th mat-header-cell *matHeaderCellDef> Nature_Intervention </th>
-              <td mat-cell *matCellDef="let element"> {{element.Nature_Intervention}} </td>
-            </ng-container>
-        
-            <ng-container matColumnDef="Gestion">
-              <th mat-header-cell *matHeaderCellDef> Gestion </th>
-              <td mat-cell *matCellDef="let element"> {{element.Gestion}} </td>
-            </ng-container>
-        
-            <ng-container matColumnDef="PrecisionGPS">
-              <th mat-header-cell *matHeaderCellDef> PrecisionGPS </th>
-              <td mat-cell *matCellDef="let element"> {{element.PrecisionGPS}} </td>
-            </ng-container>
-
-            <ng-container matColumnDef="Cheminement">
-              <th mat-header-cell *matHeaderCellDef> Cheminement </th>
-              <td mat-cell *matCellDef="let element"> {{element.Cheminement}} </td>
-            </ng-container>
-        
-            <tr mat-header-row *matHeaderRowDef="tableColumnsArray[0]"></tr>
-            <tr mat-row *matRowDef="let row; columns: tableColumnsArray[0];"></tr>
-          </table>
-          
-            <mat-paginator #placettePaginator [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons></mat-paginator>
-          </div>
-
-        </mat-tab>
-        <mat-tab label="Cycles">
-
-          <div class="mat-elevation-z8">
-            <table mat-table [dataSource]="tableDataSourceArray[1]">
-
-          <ng-container matColumnDef="NumDisp">
-            <th mat-header-cell *matHeaderCellDef> NumDisp </th>
-            <td mat-cell *matCellDef="let element"> {{element.NumDisp}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="NumPlac">
-            <th mat-header-cell *matHeaderCellDef> NumPlac </th>
-            <td mat-cell *matCellDef="let element"> {{element.NumPlac}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="Cycle">
-            <th mat-header-cell *matHeaderCellDef> Cycle </th>
-            <td mat-cell *matCellDef="let element"> {{element.Cycle}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="Coeff">
-            <th mat-header-cell *matHeaderCellDef> Coeff </th>
-            <td mat-cell *matCellDef="let element"> {{element.Coeff}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="Date">
-            <th mat-header-cell *matHeaderCellDef> Date </th>
-            <td mat-cell *matCellDef="let element"> {{element.Date}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="DiamLim">
-            <th mat-header-cell *matHeaderCellDef> DiamLim </th>
-            <td mat-cell *matCellDef="let element"> {{element.DiamLim}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="Année">
-            <th mat-header-cell *matHeaderCellDef> Année </th>
-            <td mat-cell *matCellDef="let element"> {{element.Annee}} </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="tableColumnsArray[1]"></tr>
-            <tr mat-row *matRowDef="let row; columns: tableColumnsArray[1];"></tr>
-          </table>
-          
-            <mat-paginator #cyclePaginator [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons></mat-paginator>
-          </div>
-
-        </mat-tab>
-
-        <mat-tab label="Arbres"> 
-          <div class="mat-elevation-z8">
-            <table mat-table [dataSource]="tableDataSourceArray[2]">
-          
-              <ng-container matColumnDef="NumDisp">
-              <th mat-header-cell *matHeaderCellDef> NumDisp </th>
-              <td mat-cell *matCellDef="let element, let i = index" [ngClass]="{'isError': checkErrorCell('Arbres', 'NumDisp', i ), 'isModifiedError': checkModifiedErrorCell('Arbres', 'NumDisp', i ), 'isSelectedError': checkSelectedErrorCell('Arbres', 'NumDisp', i)}"> {{element.NumDisp}} </td>
-            </ng-container>
-        
-            <ng-container matColumnDef="NumPlac">
-              <th mat-header-cell *matHeaderCellDef> NumPlac </th>
-              <td mat-cell *matCellDef="let element, let i = index" [ngClass]="{'isError': checkErrorCell('Arbres', 'NumPlac', i ), 'isModifiedError': checkModifiedErrorCell('Arbres', 'NumPlac', i ), 'isSelectedError': checkSelectedErrorCell('Arbres', 'NumPlac', i)}"> {{element.NumPlac}} </td>
-            </ng-container>
-        
-            <ng-container matColumnDef="Cycle">
-              <th mat-header-cell *matHeaderCellDef> Cycle </th>
-              <td mat-cell *matCellDef="let element, let i = index" [ngClass]="{'isError': checkErrorCell('Arbres', 'Cycle', i ), 'isModifiedError': checkModifiedErrorCell('Arbres', 'Cycle', i ), 'isSelectedError': checkSelectedErrorCell('Arbres', 'Cycle', i)}"> {{element.Cycle}} </td>
-            </ng-container>
-        
-            <ng-container matColumnDef="NumArbre">
-              <th mat-header-cell *matHeaderCellDef> NumArbre </th>
-              <td mat-cell *matCellDef="let element, let i = index" [ngClass]="{'isError': checkErrorCell('Arbres', 'NumArbre', i ), 'isModifiedError': checkModifiedErrorCell('Arbres', 'NumArbre', i ), 'isSelectedError': checkSelectedErrorCell('Arbres', 'NumArbre', i)}"> {{element.NumArbre}} </td>
-            </ng-container>
-
-            <ng-container matColumnDef="Essence">
-              <th mat-header-cell *matHeaderCellDef> Essence </th>
-              <td mat-cell *matCellDef="let element, let i = index" [ngClass]="{'isError': checkErrorCell('Arbres', 'Essence', i ), 'isModifiedError': checkModifiedErrorCell('Arbres', 'Essence', i ), 'isSelectedError': checkSelectedErrorCell('Arbres', 'Essence', i)}"> {{element.Essence}} </td>
-            </ng-container>
-        
-            <ng-container matColumnDef="Azimut">
-              <th mat-header-cell *matHeaderCellDef> Azimut </th>
-              <td mat-cell *matCellDef="let element"> {{element.Azimut}} </td>
-            </ng-container>
-        
-            <ng-container matColumnDef="Dist">
-              <th mat-header-cell *matHeaderCellDef> Dist </th>
-              <td mat-cell *matCellDef="let element"> {{element.Dist}} </td>
-            </ng-container>
-
-            <ng-container matColumnDef="Diam1">
-              <th mat-header-cell *matHeaderCellDef> Diam1 </th>
-              <td mat-cell *matCellDef="let element, let i = index" [ngClass]="{'isError': checkErrorCell('Arbres', 'Diam1', i ), 'isModifiedError': checkModifiedErrorCell('Arbres', 'Diam1', i ), 'isSelectedError': checkSelectedErrorCell
-              ('Arbres', 'Diam1', i)}"> {{element.Diam1}} </td>
-            </ng-container>
-        
-            <ng-container matColumnDef="Diam2">
-              <th mat-header-cell *matHeaderCellDef> Diam2 </th>
-              <td mat-cell *matCellDef="let element"> {{element.Diam2}} </td>
-            </ng-container>
-        
-            <ng-container matColumnDef="Type">
-              <th mat-header-cell *matHeaderCellDef> Type </th>
-              <td mat-cell *matCellDef="let element, let i = index" [ngClass]="{'isError': checkErrorCell('Arbres', 'Type', i ), 'isModifiedError': checkModifiedErrorCell('Arbres', 'Type', i ), 'isSelectedError': checkSelectedErrorCell('Arbres', 'Type', i)}"> {{element.Type}} </td>
-            </ng-container>
-        
-            <ng-container matColumnDef="Haut">
-              <th mat-header-cell *matHeaderCellDef> Haut </th>
-              <td mat-cell *matCellDef="let element, let i = index" [ngClass]="{'isError': checkErrorCell('Arbres', 'Haut', i ), 'isModifiedError': checkModifiedErrorCell('Arbres', 'Haut', i ), 'isSelectedError': checkSelectedErrorCell('Arbres', 'Haut', i)}"> {{element.Haut}} </td>
-            </ng-container>
-
-            <ng-container matColumnDef="StadeD">
-              <th mat-header-cell *matHeaderCellDef> StadeD </th>
-              <td mat-cell *matCellDef="let element; let i = index" [ngClass]="{'isError': checkErrorCell('Arbres', 'StadeD', i ), 'isModifiedError': checkModifiedErrorCell('Arbres', 'StadeD', i ), 'isSelectedError': checkSelectedErrorCell('Arbres', 'StadeD', i)}"> {{element.StadeD}} </td>
-            </ng-container>
-        
-            <ng-container matColumnDef="StadeE">
-              <th mat-header-cell *matHeaderCellDef> StadeE </th>
-              <td mat-cell *matCellDef="let element; let i = index" [ngClass]="{'isError': checkErrorCell('Arbres', 'StadeE', i ), 'isModifiedError': checkModifiedErrorCell('Arbres', 'StadeE', i ), 'isSelectedError': checkSelectedErrorCell('Arbres', 'StadeE', i)}"> {{element.StadeE}} </td>
-            </ng-container>
-        
-            <ng-container matColumnDef="Taillis">
-              <th mat-header-cell *matHeaderCellDef> Taillis </th>
-              <td mat-cell *matCellDef="let element; let i = index" [ngClass]="{'isError': checkErrorCell('Arbres', 'Taillis', i ), 'isModifiedError': checkModifiedErrorCell('Arbres', 'Taillis', i ), 'isSelectedError': checkSelectedErrorCell('Arbres', 'Taillis', i)}"> {{element.Taillis}} </td>
-            </ng-container>
-
-            <ng-container matColumnDef="Coupe">
-              <th mat-header-cell *matHeaderCellDef> Coupe </th>
-              <td mat-cell *matCellDef="let element"> {{element.Coupe}} </td>
-            </ng-container>
-        
-            <ng-container matColumnDef="Limite">
-              <th mat-header-cell *matHeaderCellDef> Limite </th>
-              <td mat-cell *matCellDef="let element"> {{element.Limite}} </td>
-            </ng-container>
-        
-            <ng-container matColumnDef="CodeEcolo">
-              <th mat-header-cell *matHeaderCellDef> CodeEcolo </th>
-              <td mat-cell *matCellDef="let element; let i = index" [ngClass]="{'isError': checkErrorCell('Arbres', 'CodeEcolo', i ), 'isModifiedError': checkModifiedErrorCell('Arbres', 'CodeEcolo', i ), 'isSelectedError': checkSelectedErrorCell('Arbres', 'CodeEcolo', i)}"> {{element.CodeEcolo}} </td>
-            </ng-container>
-        
-            <ng-container matColumnDef="Ref_CodeEcolo">
-              <th mat-header-cell *matHeaderCellDef> Ref_CodeEcolo </th>
-              <td mat-cell *matCellDef="let element; let i = index" [ngClass]="{'isError': checkErrorCell('Arbres', 'Ref_CodeEcolo', i ), 'isModifiedError': checkModifiedErrorCell('Arbres', 'Ref_CodeEcolo', i ), 'isSelectedError': checkSelectedErrorCell('Arbres', 'Ref_CodeEcolo', i)}"> {{element.Ref_CodeEcolo}} </td>
-            </ng-container>
-
-            <ng-container matColumnDef="Observation">
-              <th mat-header-cell *matHeaderCellDef> Observation </th>
-              <td mat-cell *matCellDef="let element"> {{element.Observation}} </td>
-            </ng-container>
-
-            <tr mat-header-row *matHeaderRowDef="tableColumnsArray[2]"></tr>
-            <tr mat-row *matRowDef="let row; columns: tableColumnsArray[2];"></tr>
-          </table>
-          
-            <mat-paginator #arbrePaginator [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons></mat-paginator>
-          </div>
-          
-        </mat-tab>
-        <mat-tab label="Régénération"> 
-          <div class="mat-elevation-z8">
-            <table mat-table [dataSource]="tableDataSourceArray[3]">
-        
-          <ng-container matColumnDef="NumDisp">
-            <th mat-header-cell *matHeaderCellDef> NumDisp </th>
-            <td mat-cell *matCellDef="let element"> {{element.NumDisp}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="NumPlac">
-            <th mat-header-cell *matHeaderCellDef> NumPlac </th>
-            <td mat-cell *matCellDef="let element"> {{element.NumPlac}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="SsPlac">
-            <th mat-header-cell *matHeaderCellDef> SsPlac </th>
-            <td mat-cell *matCellDef="let element"> {{element.SsPlac}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="Cycle">
-            <th mat-header-cell *matHeaderCellDef> Cycle </th>
-            <td mat-cell *matCellDef="let element"> {{element.Cycle}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="Essence">
-            <th mat-header-cell *matHeaderCellDef> Essence </th>
-            <td mat-cell *matCellDef="let element"> {{element.Essence}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="Recouv">
-            <th mat-header-cell *matHeaderCellDef> Recouv </th>
-            <td mat-cell *matCellDef="let element"> {{element.Recouv}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="Class1">
-            <th mat-header-cell *matHeaderCellDef> Class1 </th>
-            <td mat-cell *matCellDef="let element"> {{element.Class1}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="Class2">
-            <th mat-header-cell *matHeaderCellDef> Class2 </th>
-            <td mat-cell *matCellDef="let element"> {{element.Class2}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="Class3">
-            <th mat-header-cell *matHeaderCellDef> Class3 </th>
-            <td mat-cell *matCellDef="let element"> {{element.Class3}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="Taillis">
-            <th mat-header-cell *matHeaderCellDef> Taillis </th>
-            <td mat-cell *matCellDef="let element"> {{element.Taillis}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="Abroutis">
-            <th mat-header-cell *matHeaderCellDef> Abroutis </th>
-            <td mat-cell *matCellDef="let element"> {{element.Abroutis}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="Observation">
-            <th mat-header-cell *matHeaderCellDef> Observation </th>
-            <td mat-cell *matCellDef="let element"> {{element.Observation}} </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="tableColumnsArray[3]"></tr>
-            <tr mat-row *matRowDef="let row; columns: tableColumnsArray[3];"></tr>
-          </table>
-          
-            <mat-paginator #regePaginator [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons></mat-paginator>
-          </div>
-
-        </mat-tab>
-
-
-        <mat-tab label="Transect"> 
-
-          <div class="mat-elevation-z8">
-            <table mat-table [dataSource]="tableDataSourceArray[4]">
-
-          <ng-container matColumnDef="NumDisp">
-            <th mat-header-cell *matHeaderCellDef> NumDisp </th>
-            <td mat-cell *matCellDef="let element"> {{element.NumDisp}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="NumPlac">
-            <th mat-header-cell *matHeaderCellDef> NumPlac </th>
-            <td mat-cell *matCellDef="let element"> {{element.NumPlac}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="Id">
-            <th mat-header-cell *matHeaderCellDef> Id </th>
-            <td mat-cell *matCellDef="let element"> {{element.Id}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="Cycle">
-            <th mat-header-cell *matHeaderCellDef> Cycle </th>
-            <td mat-cell *matCellDef="let element"> {{element.Cycle}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="Transect">
-            <th mat-header-cell *matHeaderCellDef> Transect </th>
-            <td mat-cell *matCellDef="let element"> {{element.Transect}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="Essence">
-            <th mat-header-cell *matHeaderCellDef> Essence </th>
-            <td mat-cell *matCellDef="let element"> {{element.Essence}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="Dist">
-            <th mat-header-cell *matHeaderCellDef> Dist </th>
-            <td mat-cell *matCellDef="let element"> {{element.Dist}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="Diam">
-            <th mat-header-cell *matHeaderCellDef> Diam </th>
-            <td mat-cell *matCellDef="let element"> {{element.Diam}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="Angle">
-            <th mat-header-cell *matHeaderCellDef> Angle </th>
-            <td mat-cell *matCellDef="let element"> {{element.Angle}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="Contact">
-            <th mat-header-cell *matHeaderCellDef> Contact </th>
-            <td mat-cell *matCellDef="let element"> {{element.Contact}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="Chablis">
-            <th mat-header-cell *matHeaderCellDef> Chablis </th>
-            <td mat-cell *matCellDef="let element"> {{element.Chablis}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="StadeD">
-            <th mat-header-cell *matHeaderCellDef> StadeD </th>
-            <td mat-cell *matCellDef="let element"> {{element.StadeD}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="StadeE">
-            <th mat-header-cell *matHeaderCellDef> StadeE </th>
-            <td mat-cell *matCellDef="let element"> {{element.StadeE}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="Observation">
-            <th mat-header-cell *matHeaderCellDef> Observation </th>
-            <td mat-cell *matCellDef="let element"> {{element.Observation}} </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="tableColumnsArray[4]"></tr>
-            <tr mat-row *matRowDef="let row; columns: tableColumnsArray[4];"></tr>
-          </table>
-          
-            <mat-paginator #transectPaginator [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons></mat-paginator>
-          </div>
-          
-        </mat-tab>
-        <mat-tab label="BMSsup30">
-          <div class="mat-elevation-z8">
-          <table mat-table [dataSource]="tableDataSourceArray[5]">
-          
-          <ng-container matColumnDef="NumDisp">
-            <th mat-header-cell *matHeaderCellDef> NumDisp </th>
-            <td mat-cell *matCellDef="let element"> {{element.NumDisp}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="NumPlac">
-            <th mat-header-cell *matHeaderCellDef> NumPlac </th>
-            <td mat-cell *matCellDef="let element, let i = index" [ngClass]="{'isError': checkErrorCell('BMSsup30', 'NumPlac', i ), 'isModifiedError': checkModifiedErrorCell('BMSsup30', 'NumPlac', i ), 'isSelectedError': checkSelectedErrorCell('BMSsup30', 'NumPlac', i)}"> {{element.NumPlac}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="Id">
-            <th mat-header-cell *matHeaderCellDef> Id </th>
-            <td mat-cell *matCellDef="let element, let i = index" [ngClass]="{'isError': checkErrorCell('BMSsup30', 'Id', i ), 'isModifiedError': checkModifiedErrorCell('BMSsup30', 'Id', i ), 'isSelectedError': checkSelectedErrorCell('BMSsup30', 'Id', i)}"> {{element.Id}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="NumArbre">
-            <th mat-header-cell *matHeaderCellDef> NumArbre </th>
-            <td mat-cell *matCellDef="let element"> {{element.NumArbre}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="Cycle">
-            <th mat-header-cell *matHeaderCellDef> Cycle </th>
-            <td mat-cell *matCellDef="let element"> {{element.Cycle}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="Essence">
-            <th mat-header-cell *matHeaderCellDef> Essence </th>
-            <td mat-cell *matCellDef="let element; let i = index" [ngClass]="{'isError': checkErrorCell('BMSsup30', 'Essence', i ), 'isModifiedError': checkModifiedErrorCell('BMSsup30', 'Essence', i ), 'isSelectedError': checkSelectedErrorCell('BMSsup30', 'Essence', i)}"> {{element.Essence}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="Azimut">
-            <th mat-header-cell *matHeaderCellDef> Azimut </th>
-            <td mat-cell *matCellDef="let element"> {{element.Azimut}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="Dist">
-            <th mat-header-cell *matHeaderCellDef> Dist </th>
-            <td mat-cell *matCellDef="let element"> {{element.Dist}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="DiamIni">
-            <th mat-header-cell *matHeaderCellDef> DiamIni </th>
-            <td mat-cell *matCellDef="let element, let i = index" [ngClass]="{'isError': checkErrorCell('BMSsup30', 'DiamIni', i ), 'isModifiedError': checkModifiedErrorCell('BMSsup30', 'DiamIni', i ), 'isSelectedError': checkSelectedErrorCell('BMSsup30', 'DiamIni', i)}"> {{element.Essence}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="DiamMed">
-            <th mat-header-cell *matHeaderCellDef> DiamMed </th>
-            <td mat-cell *matCellDef="let element, let i = index" [ngClass]="{'isError': checkErrorCell('BMSsup30', 'Essence', i ), 'isModifiedError': checkModifiedErrorCell('BMSsup30', 'Essence', i ), 'isSelectedError': checkSelectedErrorCell('BMSsup30', 'Essence', i)}"> {{element.DiamMed}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="DiamFin">
-            <th mat-header-cell *matHeaderCellDef> DiamFin </th>
-            <td mat-cell *matCellDef="let element, let i = index" [ngClass]="{'isError': checkErrorCell('BMSsup30', 'DiamFin', i ), 'isModifiedError': checkModifiedErrorCell('BMSsup30', 'DiamFin', i ), 'isSelectedError': checkSelectedErrorCell('BMSsup30', 'DiamFin', i)}"> {{element.DiamFin}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="Longueur">
-            <th mat-header-cell *matHeaderCellDef> Longueur </th>
-            <td mat-cell *matCellDef="let element, let i = index" [ngClass]="{'isError': checkErrorCell('BMSsup30', 'Longueur', i ), 'isModifiedError': checkModifiedErrorCell('BMSsup30', 'Longueur', i ), 'isSelectedError': checkSelectedErrorCell('BMSsup30', 'Longueur', i)}"> {{element.Longueur}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="Contact">
-            <th mat-header-cell *matHeaderCellDef> Contact </th>
-            <td mat-cell *matCellDef="let element"> {{element.Contact}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="Chablis">
-            <th mat-header-cell *matHeaderCellDef> Chablis </th>
-            <td mat-cell *matCellDef="let element"> {{element.Chablis}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="StadeD">
-            <th mat-header-cell *matHeaderCellDef> StadeD </th>
-            <td mat-cell *matCellDef="let element; let i = index" [ngClass]="{'isError': checkErrorCell('BMSsup30', 'StadeD', i ), 'isModifiedError': checkModifiedErrorCell('BMSsup30', 'StadeD', i ), 'isSelectedError': checkSelectedErrorCell('BMSsup30', 'StadeD', i)}"> {{element.StadeD}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="StadeE">
-            <th mat-header-cell *matHeaderCellDef> StadeE </th>
-            <td mat-cell *matCellDef="let element; let i = index" [ngClass]="{'isError': checkErrorCell('BMSsup30', 'StadeE', i ), 'isModifiedError': checkModifiedErrorCell('BMSsup30', 'StadeE', i ), 'isSelectedError': checkSelectedErrorCell('BMSsup30', 'StadeE', i)}"> {{element.StadeE}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="Observation">
-            <th mat-header-cell *matHeaderCellDef> Observation </th>
-            <td mat-cell *matCellDef="let element"> {{element.Observation}} </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="tableColumnsArray[5]"></tr>
-            <tr mat-row *matRowDef="let row; columns: tableColumnsArray[5];"></tr>
-          </table>
-          
-            <mat-paginator #bmssup30Paginator [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons></mat-paginator>
-          </div>
-        
-        </mat-tab>
-        <mat-tab label="Reperes"> 
-
-          <div class="mat-elevation-z8">
-            <table mat-table [dataSource]="tableDataSourceArray[6]">
-          
-          <ng-container matColumnDef="NumDisp">
-            <th mat-header-cell *matHeaderCellDef> NumDisp </th>
-            <td mat-cell *matCellDef="let element"> {{element.NumDisp}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="NumPlac">
-            <th mat-header-cell *matHeaderCellDef> NumPlac </th>
-            <td mat-cell *matCellDef="let element"> {{element.NumPlac}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="Azimut">
-            <th mat-header-cell *matHeaderCellDef> Azimut </th>
-            <td mat-cell *matCellDef="let element"> {{element.Azimut}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="Dist">
-            <th mat-header-cell *matHeaderCellDef> Dist </th>
-            <td mat-cell *matCellDef="let element"> {{element.Dist}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="Diam">
-            <th mat-header-cell *matHeaderCellDef> Diam </th>
-            <td mat-cell *matCellDef="let element"> {{element.Diam}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="Repere">
-            <th mat-header-cell *matHeaderCellDef> Repere </th>
-            <td mat-cell *matCellDef="let element"> {{element.Repere}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="Observation">
-            <th mat-header-cell *matHeaderCellDef> Observation </th>
-            <td mat-cell *matCellDef="let element"> {{element.Observation}} </td>
-          </ng-container>
-
-            <tr mat-header-row *matHeaderRowDef="tableColumnsArray[6]"></tr>
-            <tr mat-row *matRowDef="let row; columns: tableColumnsArray[6];"></tr>
-          </table>
-          
-            <mat-paginator #reperePaginator [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons></mat-paginator>
-          </div>
-        
-        </mat-tab>
-      </mat-tab-group>
-
-      <div *ngIf="isCurrentVerification && !isLoadingResults">
-        <div class="stepperPart" #stepperPart>
-          <div class="stepper-arrow-icons">
-            <button mat-icon-button (click)="paginatorBack()" *ngIf="page > 0">
-              <mat-icon>keyboard_arrow_left</mat-icon>
-            </button>
-          </div>
-          <div class="stepper">
-            <mat-horizontal-stepper class="mainStepper" labelPosition="bottom" #mainStepper (selectionChange)="displayOnMainStepClick($event)" >
-              <ng-template matStepperIcon="edit">
-                <mat-icon>done</mat-icon>
-              </ng-template>
-
-             
-              <mat-step *ngFor="let error of errorsPsdrfList; index as mainStepIndex" [completed]="checkMainStepCompleted(mainStepIndex)">
-                <ng-template matStepLabel>
-                  <div>{{mainStepNameArr[mainStepIndex]}}</div>
-                </ng-template>
-                <error-main-step 
-                  (subStepSelectionChange)="displayOnSubStepClick($event)" 
-                  (indexButtonClicked)="displayErrorOnMatTab($event)" 
-                  (modificationValidated)="modifyErrorValue($event)" 
-                  (allSubStepModified)="modifyMainStepperAppearance($event)" 
-                  [step]="error" 
-                  [mainStepIndex]="mainStepIndex"
-                  [mainStepText]="mainStepTextArr[mainStepIndex]"
-                >
-                </error-main-step>
-              </mat-step>
-            </mat-horizontal-stepper>
-          </div>
-          <div class="stepper-arrow-icons">
-            <button mat-icon-button (click)="paginatorNext()" *ngIf="page < totalPages - 1">
-              <mat-icon>keyboard_arrow_right</mat-icon>
-            </button>
-          </div>
-        </div>
-        <div class="action-buttons">
-          <button
-          *ngIf="step > 0"
-          class="m-1 float-left"
-          mat-raised-button
-          matTooltip="Erreur Précédente"
-          (click)="goBack()"
-          >
-            <mat-icon> arrow_back </mat-icon>
-          </button>
-          <button
-            *ngIf="step < totalSteps - 1"
-            class="m-1 float-left"
-            mat-raised-button
-            matTooltip="Erreur Suivante"
-            (click)="goForward()"
-            >
-              <mat-icon> arrow_forward </mat-icon>
-          </button>
-
-          <button
-          class="m-1 float-left"
-          mat-raised-button
-          matTooltip="Afficher les labels"
-          (click)="showStepLabels()"
-          >
-            <mat-icon class="extensionIcon-rotation"> {{extensionIcon}} </mat-icon>
-          </button>
-        </div>
-
-        <mat-progress-bar 
-          class="example-margin"
-          [color]="color"
-          mode="determinate" 
-          [value]="progressBarValue"
-        >
-        </mat-progress-bar>
-
-      </div>
     </div>
-  </div>
 </div>
-
