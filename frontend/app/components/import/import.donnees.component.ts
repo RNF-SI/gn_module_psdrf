@@ -35,6 +35,7 @@ export class ImportDonneesComponent {
   
   indexLabelMatTabGroup: string[]= ["Placettes", "Cycles", "Arbres", "Regeneration", "Transect", "BMSsup30", "Reperes"];//Tableau des titres d'onglet
   excelFile: any = null;
+  excelFileName : any; 
 
   isDataCharging: boolean = false;// Vrai lorsque le fichier Excel est entrain de charger
   isExcelLoaded: boolean= false; // Faux lorsqu'on n'a pas encore choisi de fichier
@@ -129,6 +130,7 @@ export class ImportDonneesComponent {
     let excelData;
     const reader: FileReader = new FileReader();
     this.isDataCharging = true;
+    this.excelFileName = target.files[0].name;
 
     //Chargement des données du fichier excel dans la variable psdrfArray
     reader.onload = (e: any) => {
@@ -212,45 +214,12 @@ export class ImportDonneesComponent {
   *  Import all the modified data in a new PSDRF File
   */
   importTableToExcel(){
-    let excelData = [[]]
+    let excelData = []
     let tableDataTemp = []
-
-    console.log(this.psdrfArray)
     this.psdrfArray.forEach((table, i) =>{
-      tableDataTemp = []
-      tableDataTemp.push(this.tableColumnsArray[i])
-      tableDataTemp.push(table.map(obj => {
-        let rowTemp = []
-        Object.keys(obj).forEach(key=> {
-          rowTemp.push(obj[key])
-        });
-        return rowTemp
-      }))
-      excelData.push(tableDataTemp)
-
+      excelData.push([table, {header: this.tableColumnsArray[i]}])
     })
-    console.log(excelData)
-
-
-
-    // const bstr: string = e.target.result;
-    // excelData = this.excelSrv.importFromExcelFile(bstr);
-    // for(let i=0; i<excelData.length; i++){
-    //   // const header: string[] = this.tableColumnsArray[i];
-    //   let columnNames = excelData[i].slice(0, 1)[0];
-    //   this.tableColumnsArray[i] = columnNames;
-    //   const header: string[] = columnNames;
-    //   const importedData = excelData[i].slice(1, -1);
-    //   this.psdrfArray.push(importedData.map(arr => {
-    //     const obj = {};
-    //     for (let j = 0; j < header.length; j++) {
-    //       const k = header[j];
-    //       obj[k] = arr[j];
-    //     }          
-    //     return obj;
-    //   }))
-    // }
-
+    this.excelSrv.exportToExcelFile(excelData, this.excelFileName);
 
   }
 
