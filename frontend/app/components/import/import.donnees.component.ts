@@ -400,8 +400,22 @@ export class ImportDonneesComponent {
     this.totalErrorNumber=0;
     this.progressBarValue = 0;
     this.selectedErrorElementArr = null;
+    this.mainStepTextArr=[];
+    this.tableColumnsArray = [];
+    this.excelFile = null;
+    this.excelFileName = '';
+    
     this.isLabelVisible = true;
-
+    this.isDataCharging = false;
+    this.isExcelLoaded = false;
+    this.isVerificationObjLoaded = false;
+    this.MAX_STEP = 6;
+    this.totalSteps =0;
+    this.page = 0;
+    this.step = 0;
+    this.minStepAllowed = 0;
+    this.maxStepAllowed = this.MAX_STEP - 1;
+    this.totalPages = 0;
   }
 
   /**

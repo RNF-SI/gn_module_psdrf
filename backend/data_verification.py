@@ -55,10 +55,15 @@ def data_verification(data):
   correctionList = {}
 
   correctionList['StadeD'] = CodeDurete['Code'].tolist()
+  correctionList['StadeD'].insert(0, None)
   correctionList['Essence'] = CodeEssence['Essence'].tolist()
+  correctionList['Essence'].insert(0, None)
   correctionList['Type'] = CodeTypoArbres['Id'].tolist()
+  correctionList['Type'].insert(0, None)
   correctionList['StadeE'] = CodeEcorce['Code'].tolist()
+  correctionList['StadeE'].insert(0, None)
   correctionList['Ref_CodeEcolo'] = ["prosilva", "efi", "irstea"]
+  correctionList['Ref_CodeEcolo'].insert(0, None)
 
   disp_num = Placettes["NumDisp"][0]
   last_cycle = Cycles[Cycles["NumDisp"] == disp_num]["Cycle"].max()
@@ -285,20 +290,20 @@ def data_verification(data):
     tArbres = Arbres[["NumDisp", "NumPlac", "NumArbre", "Cycle", "Diam1", "Diam2", "Type"]]
     t = tArbres[~tArbres["Type"].isna()]
     t = pd.melt(t, id_vars=["NumDisp", "NumPlac", "NumArbre", "Cycle", "Type"], value_vars=["Diam1", "Diam2"], ignore_index=False)
-    t = t.pivot_table(index=["NumDisp", "NumPlac", "NumArbre", "variable"], columns='Cycle',values='value', aggfunc=['first', lambda x: x.index[0]]).reset_index()
+    t = t.pivot_table(index=["NumDisp", "NumPlac", "NumArbre", "Type", "variable"], columns='Cycle',values='value', aggfunc=['first', lambda x: x.index[0]]).reset_index()
     t = t.sort_values(by=["NumDisp", "NumPlac", "NumArbre", "variable"])
     df_temp = t
     # Note : on distingue quand il y a 2 cycles et 1 seul
     if last_cycle > 2 : # Cas où un arbre présent au cycle 1, disparaît au cycle 2 et réapparaît au cycle3
       # BMP doivent avoir été présent au passage précédent :
       pos_Error = []
-      for i in range(5, t.shape[1]-1):
+      for i in range(6, t.shape[1]-1):
         # toutes les valeurs doivent être décroissantes au cours du temps
         pos_Error = np.concatenate((pos_Error, np.array(np.where(df_temp.iloc[:, i] > df_temp.iloc[:, i-1])).tolist()[0]))
         pos_Error = np.unique(pos_Error)
         df_Error = df_temp.iloc[pos_Error, : ]
     else:
-      pos_Error = np.where(~(pd.isnull(t.iloc[:, 4])) & ~(pd.isnull(t.iloc[:, 5])) & ((t.iloc[:, 4]) < (t.iloc[:,5])) )
+      pos_Error = np.where(~(pd.isnull(t.iloc[:, 5])) & ~(pd.isnull(t.iloc[:, 6])) & ((t.iloc[:, 5]) < (t.iloc[:,6])) )
       pos_Error = np.unique(pos_Error)
       df_Error = df_temp.iloc[pos_Error, : ]   
 
@@ -306,16 +311,16 @@ def data_verification(data):
       error_List_Temp = []
       for index, row in df_Error.iterrows():
         # valuesDupl = df_Error.loc[listDupl[i]]
-        tValues = tArbres[["NumArbre", "Cycle", str(row["variable"].item())]].loc[[int(x) for x in row["<lambda>"].values],:]
+        tValues = tArbres[["NumArbre", "Cycle", "Type", str(row["variable"].item())]].loc[[int(x) for x in row["<lambda>"].values],:]
         err = {
             "message": "Accroissement(s) sur le "+ str(row["variable"].item()) +" positif(s)  pour l'arbre numéro "+ str(row["NumArbre"].item()) + " de la placette numéro " + str(row["NumPlac"].item()),
             "table": "Arbres",
-            "column": [ "NumArbre", "Cycle", str(row["variable"].item())],
+            "column": [ "NumArbre", "Cycle","Type", str(row["variable"].item())],
             "row": [int(x) for x in row["<lambda>"].values], 
             "value": tValues.to_json(orient='records'),
           }
         error_List_Temp.append(err)
-      verificationList.append({'errorName': "Accroissement positif dans Arbres", 'errorText': "Accroissement(s) sur le diamètre positif(s) constaté(s) sur la population d'arbres morts sur pied entre les différents inventaires.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError'})
+      verificationList.append({'errorName': "Accroissement positif BMP dans Arbres", 'errorText': "Accroissement(s) sur le diamètre positif(s) constaté(s) sur la population d'arbres morts sur pied entre les différents inventaires.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError'})
 
 
 
@@ -398,7 +403,7 @@ def data_verification(data):
   # Incohérences sur les données Type - Haut - StadeD - StadeE des BMP 
   ListDisp_Verif = []
   BMP_Temp = Arbres[~Arbres["Type"].isna() | ~Arbres["Haut"].isna() | ~Arbres["StadeD"].isna() | ~Arbres["StadeE"].isna()]
-  BMP_Temp = BMP_Temp[BMP_Temp["Type"].isna() | (BMP_Temp["Haut"].isna() & BMP_Temp["Type"] != 1) | BMP_Temp["StadeD"].isna() | BMP_Temp["StadeE"].isna()]
+  BMP_Temp = BMP_Temp[BMP_Temp["Type"].isna() | ((BMP_Temp["Haut"].isna()) & (BMP_Temp["Type"] != 1)) | BMP_Temp["StadeD"].isna() | BMP_Temp["StadeE"].isna()]
   BMP_Temp = BMP_Temp[[ "NumPlac", "NumArbre", "Type", "Haut", "StadeD", "StadeE"]]
   if not BMP_Temp.empty:
     error_List_Temp=[]

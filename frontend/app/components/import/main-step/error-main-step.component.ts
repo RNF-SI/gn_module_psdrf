@@ -27,7 +27,7 @@ export class ErrorMainStepComponent implements OnInit, AfterViewInit {
 
   // SubStepper Paginator
   // Max number of steps to show at a time in view, Change this to fit your need
-  MAX_STEP: number = 5;
+  MAX_STEP: number = 30;
   // Total steps included in mat-stepper in template, Change this to fit your need
   totalSteps: number =0;
   // Current page from paginator
