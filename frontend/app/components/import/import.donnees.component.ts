@@ -37,9 +37,12 @@ export class ImportDonneesComponent {
   excelFile: any = null;
   excelFileName : any; 
 
+  shapeFile: any = null; 
+
   isDataCharging: boolean = false;// Vrai lorsque le fichier Excel est entrain de charger
   isExcelLoaded: boolean= false; // Faux lorsqu'on n'a pas encore choisi de fichier
   isVerificationObjLoaded: boolean= false; 
+  isShapeCharged: boolean= false; 
 
   indexMatTabGroup: number=0; //Index de l'onglet sélectionné 
   errorsPsdrfList: {errorList: PsdrfError[], 'errorType': string}[] = []; //Tableau des erreurs retournées par la requête psdrf_data_verification
@@ -606,6 +609,33 @@ export class ImportDonneesComponent {
    */
   checkMainStepCompleted(mainStepIndex: number): boolean{
     return this.totallyModifiedMainStepperArr.includes(mainStepIndex);
+  }
+
+  importShape($event):void{
+    const target: DataTransfer = <DataTransfer>($event.target);
+    if (target.files.length !== 1) throw new Error('Cannot use multiple files');
+    this.shapeFile = target.files[0];
+    this.isShapeCharged= true; 
+  }
+
+  dataVerifWithShape(): void{
+    let excelAndShapeData:FormData = new FormData();
+    excelAndShapeData.append('file', this.shapeFile)
+
+    let overrides = JSON.stringify(this.psdrfArray, (k, v) => v === undefined ? null : v)
+    const blobOverrides = new Blob([overrides], {
+      type: 'application/json',
+    });
+    excelAndShapeData.append('overrides', blobOverrides)
+
+    this.dataSrv.psdrf_data_verification_with_shape(excelAndShapeData).subscribe(
+      (res) => console.log(res)
+    );
+  }
+
+  deleteShapeFile(): void{
+    this.shapeFile = null;
+    this.isShapeCharged = false;
   }
 
 }

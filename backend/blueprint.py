@@ -3,6 +3,7 @@ from sqlalchemy.orm import subqueryload, joinedload
 from sqlalchemy.sql import func, distinct
 from geoalchemy2.shape import to_shape, from_shape
 from shapely.geometry import MultiPoint, Point
+import json
 
 from geonature.utils.env import DB
 from geonature.utils.utilssqlalchemy import json_resp, get_geojson_feature
@@ -214,3 +215,11 @@ def get_arbres(id_dispositif):
 def psdrf_data_verification():
     data = request.get_json()
     return data_verification(data)
+
+@blueprint.route('/shapeValidation', methods=['POST'])
+def psdrf_data_verification_with_shape():
+    default_name = "None"
+    shape_file = request.files.get('file', default_name)
+    data=json.loads(request.files.get('overrides', default_name).read())
+    data_verification(data)
+    return "good"

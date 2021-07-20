@@ -23,8 +23,8 @@
                 </div>
             </div>
 
-            <div class="d-flex justify-content-center" *ngIf="isDataCharging">
-                <div class="single-file text-center">
+            <div class="d-flex justify-content-center " *ngIf="isDataCharging">
+                <div class="single-file text-center ">
                     <img src="external_assets/psdrf/ms-excel.svg" width="45px" alt="file">
                     <div class="info">
                         <h4 class="name">
@@ -41,6 +41,31 @@
                         <mat-icon> delete </mat-icon>
                     </button>
                 </div>
+
+                <button type='file' class="ml-5 float-right" *ngIf="!isShapeCharged" mat-raised-button matTooltip="Importer un fichier shape" (click)="shapeUploader.click()">
+                    <mat-icon> map </mat-icon>
+                </button>
+                <input hidden type="file" #shapeUploader (change)="importShape($event)" accept=".shp" />
+
+                <div class="single-file text-center ml-5" *ngIf="isShapeCharged">
+
+                    <div class="info">
+                        <h4 class="name">
+                            {{ shapeFile?.name }}
+                        </h4>
+                        <p class="size">
+                            {{ formatBytes(shapeFile?.size) }}
+                        </p>
+                    </div>
+                    <button class="m-1 float-right" mat-raised-button matTooltip="Relancer la vérification avec le fichier shape" (click)="dataVerifWithShape()">
+                        <mat-icon> published_with_changes </mat-icon>
+                    </button>
+                    <button class="m-1 float-right" mat-raised-button matTooltip="Supprimer le fichier shape" (click)="deleteShapeFile()">
+                        <mat-icon> delete </mat-icon>
+                    </button>
+                </div>
+
+
             </div>
 
             <div class="example-loading-shade" *ngIf="(isDataCharging && !isExcelLoaded) || (isExcelLoaded && !isVerificationObjLoaded)">

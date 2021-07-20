@@ -21,4 +21,11 @@ export class PsdrfDataService {
     );
   }
 
+  psdrf_data_verification_with_shape(excelAndShapeData) {
+    return this._http.post<any>(
+      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/shapeValidation`,
+      excelAndShapeData
+    );
+  }
+
 }
