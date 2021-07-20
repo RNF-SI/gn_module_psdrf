@@ -34,6 +34,9 @@
                             {{ formatBytes(excelFile?.size) }}
                         </p>
                     </div>
+                    <button class="m-1 float-right" mat-raised-button matTooltip="Relancer la vérification du fichier excel non modifié" (click)="dataVerifOriginalFile()">
+                        <mat-icon> published_with_changes </mat-icon>
+                    </button>
                     <button *ngIf="isExcelLoaded" class="m-1" mat-raised-button matTooltip="Sauvegarder la table modifiée dans un fichier Excel" (click)="importTableToExcel()">
                         <mat-icon> file_download </mat-icon>
                     </button>
@@ -218,6 +221,9 @@
                     </button>
                     <button class="m-1 float-left" mat-raised-button matTooltip="Afficher les labels" (click)="showStepLabels()">
                         <mat-icon class="extensionIcon-rotation"> {{extensionIcon}} </mat-icon>
+                    </button>
+                    <button class="m-1 float-left" mat-raised-button matTooltip="Relancer la vérification avec les modifications" (click)="dataVerifModifiedFile()">
+                        <mat-icon> published_with_changes </mat-icon>
                     </button>
                 </div>
 

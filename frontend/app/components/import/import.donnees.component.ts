@@ -381,44 +381,47 @@ export class ImportDonneesComponent {
   */
   deleteFile(): void{
     this.isExcelLoaded = false;
-    this.isVerificationObjLoaded = false;
     this.excelFile = null;
     this.isDataCharging = false;
+    this.psdrfArray=[];
+    this.reInitializeCorrection();
     this.reInitializeValues();
-    this.historyService.reInitialize();
   }
 
   /**
   * Reinitialize parameters
   */
   reInitializeValues(): void{
-    this.indexMatTabGroup=0;
-    this.psdrfArray=[];
     this.tableDataSourceArray=[];
+    this.totallyModifiedMainStepperArr=[];
+    this.selectedErrorElementArr = null;
+    this.tableColumnsArray = [];
+    this.excelFile = null;
+    this.excelFileName = '';
+    this.isExcelLoaded = false;
+  }
+  
+  reInitializeCorrection(): void{
+    this.isVerificationObjLoaded = false;
+    this.indexMatTabGroup=0;
     this.errorsPsdrfList=[];
     this.mainStepNameArr=[];
     this.errorElementArr=[];
     this.modifiedElementArr=[];
-    this.totallyModifiedMainStepperArr=[];
     this.totalErrorNumber=0;
     this.progressBarValue = 0;
-    this.selectedErrorElementArr = null;
     this.mainStepTextArr=[];
-    this.tableColumnsArray = [];
-    this.excelFile = null;
-    this.excelFileName = '';
-    
-    this.isLabelVisible = true;
-    this.isDataCharging = false;
-    this.isExcelLoaded = false;
     this.isVerificationObjLoaded = false;
+    this.isLabelVisible = true;
     this.MAX_STEP = 6;
     this.totalSteps =0;
     this.page = 0;
     this.step = 0;
+    this.totalPages = 0;
     this.minStepAllowed = 0;
     this.maxStepAllowed = this.MAX_STEP - 1;
-    this.totalPages = 0;
+    this.historyService.reInitialize();
+
   }
 
   /**
@@ -609,6 +612,62 @@ export class ImportDonneesComponent {
    */
   checkMainStepCompleted(mainStepIndex: number): boolean{
     return this.totallyModifiedMainStepperArr.includes(mainStepIndex);
+  }
+
+  /**
+   * TODO: Implémenter la fonction de relance du fichier original
+   */
+  dataVerifOriginalFile(): void{
+  }
+
+  /**
+   * 
+   */
+  dataVerifModifiedFile(): void{
+    this.reInitializeCorrection();
+    this.dataSrv.psdrf_data_verification(JSON.stringify(this.psdrfArray, (k, v) => v === undefined ? null : v))
+    .subscribe(
+      verificationJson => {
+        let verificationObj = JSON.parse(verificationJson)
+        this.correctionService.setSelectionErrorObj(verificationObj["correctionList"])
+        let errorsPsdrfListTemp = verificationObj["verificationObj"]
+        
+        let errorListTemp;
+        this.mainStepNameArr = [];
+        this.totalErrorNumber = 0;
+        
+        errorsPsdrfListTemp.forEach(mainError => {
+          this.mainStepNameArr.push(mainError.errorName);
+          this.mainStepTextArr.push(mainError.errorText);
+          switch(mainError.errorType){
+            case "PsdrfError":
+              errorListTemp = [];
+              mainError.errorList.forEach(error => {
+                errorListTemp.push(new PsdrfError(error.message, error.table, error.column, error.row, JSON.parse(error.value)));
+                this.errorElementArr.push(new PsdrfErrorCoordinates(error.table, error.column, error.row));
+                error.row.forEach( idx => {
+                  this.totalErrorNumber ++;
+                })
+              })
+              this.errorsPsdrfList.push({'errorList': errorListTemp, 'errorType': 'PsdrfError'});
+              break;
+            }
+          })
+          this.isVerificationObjLoaded = true;
+          
+          this.totalSteps = errorsPsdrfListTemp.length;
+          this.totalPages = Math.ceil(this.totalSteps / this.MAX_STEP);
+          
+          let fistSelected = new PsdrfErrorCoordinates(this.errorsPsdrfList[0].errorList[0].table, this.errorsPsdrfList[0].errorList[0].column, this.errorsPsdrfList[0].errorList[0].row)
+          this.selectedErrorElementArr = fistSelected;
+          //Using setTimeout to be sure that the ngIf stepperPart has taken effect
+          setTimeout(() => {
+            this.rerender();
+            //Affichage de la toute première erreur de errorsPsdrfList dans le MatTab
+            this.displayErrorOnMatTab(fistSelected) 
+          }, 0);
+        }
+      );
   }
 
   importShape($event):void{
