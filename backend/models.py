@@ -2,7 +2,7 @@
 
 from geoalchemy2 import Geometry
 
-from geonature.core.users.models import BibOrganismes
+from pypnusershub.db.models import Organisme
 from geonature.core.ref_geo.models import LiMunicipalities, LAreas
 from geonature.utils.utilssqlalchemy import serializable, geoserializable
 from geonature.utils.env import DB
@@ -32,7 +32,7 @@ class TDispositifs (DB.Model):
     name = DB.Column('name', DB.String)
     id_organisme = DB.Column('id_organisme', DB.Integer, DB.ForeignKey('utilisateurs.bib_organismes.id_organisme'))
     alluvial = DB.Column('alluvial', DB.Boolean)
-    organisme = DB.relationship('BibOrganismes')
+    organisme = DB.relationship('Organisme')
     placettes = DB.relationship('TPlacettes', back_populates='dispositif')
     municipalities = DB.relationship('LiMunicipalities', secondary=dispositifs_municipalities_assoc)
     areas = DB.relationship('LAreas', secondary=dispositifs_area_assoc)
