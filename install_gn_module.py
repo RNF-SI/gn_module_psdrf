@@ -17,24 +17,8 @@ def gnmodule_install_app(gn_db, gn_app):
         table_sql = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data/psdrf.sql')
         data_sql = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data/psdrf_data.sql')
         
-        try: 
-            gn_db.session.execute(open(table_sql, 'r').read())
-            gn_db.session.commit()
-            gn_db.session.execute(open(data_sql, 'r').read())
-            gn_db.session.commit()
-        except Exception as e:
-            print(e)
+        gn_db.session.execute(open(table_sql, 'r').read())
+        gn_db.session.commit()
+        gn_db.session.execute(open(data_sql, 'r').read())
+        gn_db.session.commit()
 
-
-
-def execute_script(file_name):
-    """ 
-        Execute a script to set or delete sample data before test
-    """
-    conn = psycopg2.connect(config['SQLALCHEMY_DATABASE_URI'])
-    cur = conn.cursor()
-    sql_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), file_name)
-    cur.execute(open(sql_file, 'r').read())
-    conn.commit()
-    cur.close()
-    conn.close()
