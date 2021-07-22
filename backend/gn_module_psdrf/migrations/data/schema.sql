@@ -1,4 +1,3 @@
-﻿
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET client_encoding = 'UTF8';
@@ -8,7 +7,7 @@ SET client_min_messages = warning;
 
 CREATE SCHEMA pr_psdrf;
 
-SET search_path = pr_psdrf, public, pg_catalog;
+SET search_path = pr_psdrf, pg_catalog, public;
 
 SET default_with_oids = false;
 

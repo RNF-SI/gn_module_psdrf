@@ -1,36 +1,4 @@
-DO
-$$
-BEGIN
-
-PERFORM pg_catalog.setval('ref_nomenclatures.ref_nomenclatures.bib_nomenclatures_types_id_type_seq', (SELECT max(id_type)+1 FROM ref_nomenclatures.ref_nomenclatures.bib_nomenclatures_types), false);
-EXCEPTION WHEN unique_violation  THEN
-        RAISE NOTICE 'Tentative d''insertion de valeur existante';
-END
-$$;
-
-DO
-$$
-BEGIN
-
-PERFORM pg_catalog.setval('ref_nomenclatures.ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)_id_nomenclature_seq', (SELECT max(id_nomenclature)+1 FROM ref_nomenclatures.ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)), false);
-EXCEPTION WHEN unique_violation  THEN
-        RAISE NOTICE 'Tentative d''insertion de valeur existante';
-END
-$$;
-
-DO
-$$
-BEGIN
-
-PERFORM pg_catalog.setval('gn_monitoring.t_base_sites_id_base_site_seq', (SELECT max(id_base_site)+1 FROM gn_monitoring.t_base_sites), false);
-EXCEPTION WHEN unique_violation  THEN
-        RAISE NOTICE 'Tentative d''insertion de valeur existante';
-END
-$$;
-
--- Add inserts here
-
-SET search_path = ref_nomenclatures, pg_catalog;
+SET search_path = ref_nomenclatures, pg_catalog, public;
 
 
 -- Types d'espaces
@@ -45,673 +13,673 @@ VALUES ('Réserve biologique dirigée', 'RBIOLD');
 
 
 -- Types de nomenclatures
-INSERT INTO ref_nomenclatures.bib_nomenclatures_types (mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut)
+INSERT INTO bib_nomenclatures_types (mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut)
 VALUES ('PSDRF_DURETE', 'Code dureté', 'Niveau de pourriture d''un billon de bois mort', 'Code dureté', 'Niveau de pourriture d''un billon de bois mort',  'PSDRF', 'Validé');
-INSERT INTO ref_nomenclatures.bib_nomenclatures_types (mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut)
+INSERT INTO bib_nomenclatures_types (mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut)
 VALUES ('PSDRF_ECORCE', 'Code écorce', 'Aspect de l''écorce sur le billon', 'Code écorce', 'Aspect de l''écorce sur le billon',  'PSDRF', 'Validé');
-INSERT INTO ref_nomenclatures.bib_nomenclatures_types (mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut)
+INSERT INTO bib_nomenclatures_types (mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut)
 VALUES ('PSDRF_ECOLOGIE', 'Code écologie', 'Dendromicrohabitats PSDRF (plusieurs référentiels possibles)', 'Code écologie', 'Dendromicrohabitats PSDRF (plusieurs référentiels possibles)',  'PSDRF', 'Validé');
-INSERT INTO ref_nomenclatures.bib_nomenclatures_types (mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut)
+INSERT INTO bib_nomenclatures_types (mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut)
 VALUES ('PSDRF_CASTOR', 'Indice de présence de castors', '', 'Indice de présence de castors', '',  'PSDRF', 'Validé');
-INSERT INTO ref_nomenclatures.bib_nomenclatures_types (mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut)
+INSERT INTO bib_nomenclatures_types (mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut)
 VALUES ('PSDRF_FROTTIS', 'Indice de présence de frottis', 'Indice de présence de frottis par des hebivores sauvages', 'Indice de présence de frottis', 'Indice de présence de frottis par des hebivores sauvages',  'PSDRF', 'Validé');
-INSERT INTO ref_nomenclatures.bib_nomenclatures_types (mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut)
+INSERT INTO bib_nomenclatures_types (mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut)
 VALUES ('PSDRF_BOUTIS', 'Indice de présence de boutis de sanglier', '', 'Indice de présence de boutis de sanglier', '',  'PSDRF', 'Validé');
-INSERT INTO ref_nomenclatures.bib_nomenclatures_types (mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut)
+INSERT INTO bib_nomenclatures_types (mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut)
 VALUES ('PSDRF_SANITAIRE', 'Etat sanitaire', 'Etat sanitaire de l''arbre (module alluvial)', 'Etat sanitaire', 'Etat sanitaire de l''arbre (module alluvial)',  'PSDRF', 'Validé');
-INSERT INTO ref_nomenclatures.bib_nomenclatures_types (mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut)
+INSERT INTO bib_nomenclatures_types (mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut)
 VALUES ('PSDRF_TYPO_ARBRES', 'Type d''arbre', '', 'type d''arbre', '',  'PSDRF', 'Validé');
-INSERT INTO ref_nomenclatures.bib_nomenclatures_types (mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut)
+INSERT INTO bib_nomenclatures_types (mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut)
 VALUES ('PSDRF_ABROUTIS', 'Abroutissement', 'Abroutissement (module alluvial)', 'Abroutissement', 'Abroutissement (module alluvial)',  'PSDRF', 'Validé');
 
 -- Code écologie
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '100', 'prosilva_100', '100 - Arbre mort sur pied', NULL, '100 - Arbre mort sur pied',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '110', 'prosilva_110', '110 - Arbre mort sur pied', NULL, '110 - Arbre mort sur pied',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '111', 'prosilva_111', '111 - Arbre mort sur pied de Diam > 30cm', NULL, '111 - Arbre mort sur pied de Diam > 30cm',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '112', 'prosilva_112', '112 - Arbre mort sur pied de Diam < 30cm', NULL, '112 - Arbre mort sur pied de Diam < 30cm',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '120', 'prosilva_120', '120 - Arbre mort sur pied - squelette du houppier présent', NULL, '120 - Arbre mort sur pied - squelette du houppier présent',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '130', 'prosilva_130', '130 - Arbre mort sur pied - champignons lignicoles', NULL, '130 - Arbre mort sur pied - champignons lignicoles',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '131', 'prosilva_131', '131 - Arbre mort sur pied - champignons lignicoles (< 3 carpophores)', NULL, '131 - Arbre mort sur pied - champignons lignicoles (< 3 carpophores)',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '132', 'prosilva_132', '132 - Arbre mort sur pied - champignons lignicoles (> 3 carpophores)', NULL, '132 - Arbre mort sur pied - champignons lignicoles (> 3 carpophores)',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '140', 'prosilva_140', '140 - Arbre mort sur pied - écorce présente', NULL, '140 - Arbre mort sur pied - écorce présente',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '141', 'prosilva_141', '141 - Arbre mort sur pied - écorce présente sur plus de la moitié du tronc', NULL, '141 - Arbre mort sur pied - écorce présente sur plus de la moitié du tronc',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '142', 'prosilva_142', '142 - Arbre mort sur pied - écorce présente sur moins de la moitié du tronc', NULL, '142 - Arbre mort sur pied - écorce présente sur moins de la moitié du tronc',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '200', 'prosilva_200', '200 - Arbre dépérissant', NULL, '200 - Arbre dépérissant',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '210', 'prosilva_210', '210 - Arbre dépérissant - à maintenir', NULL, '210 - Arbre dépérissant - à maintenir',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '220', 'prosilva_220', '220 - Arbre dépérissant - présence de champignons', NULL, '220 - Arbre dépérissant - présence de champignons',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '230', 'prosilva_230', '230 - Arbre dépérissant - creux', NULL, '230 - Arbre dépérissant - creux',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '300', 'prosilva_300', '300 - Arbre vivant', NULL, '300 - Arbre vivant',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '310', 'prosilva_310', '310 - Arbre vivant - < 3 branches mortes de Diam > 10cm', NULL, '310 - Arbre vivant - < 3 branches mortes de Diam > 10cm',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '311', 'prosilva_311', '311 - Arbre vivant - > 3 branches mortes de Diam > 10cm', NULL, '311 - Arbre vivant - > 3 branches mortes de Diam > 10cm',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '312', 'prosilva_312', '312 - Arbre vivant - < 3 branches mortes de faible diamètre', NULL, '312 - Arbre vivant - < 3 branches mortes de faible diamètre',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '313', 'prosilva_313', '313 - Arbre vivant - > 3 branches mortes de faible diamètre', NULL, '313 - Arbre vivant - > 3 branches mortes de faible diamètre',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '314', 'prosilva_314', '314 - Arbre vivant - branches mortes', NULL, '314 - Arbre vivant - branches mortes',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '320', 'prosilva_320', '320 - Arbre vivant - mal conformé', NULL, '320 - Arbre vivant - mal conformé',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '321', 'prosilva_321', '321 - Arbre vivant - fourchu/jumelle avec pourriture', NULL, '321 - Arbre vivant - fourchu/jumelle avec pourriture',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '322', 'prosilva_322', '322 - Arbre vivant - massif, bas branchu, sinueux', NULL, '322 - Arbre vivant - massif, bas branchu, sinueux',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '323', 'prosilva_323', '323 - Arbre vivant - en cépée naturelle (AUG ou AUB)', NULL, '323 - Arbre vivant - en cépée naturelle (AUG ou AUB)',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '330', 'prosilva_330', '330 - Arbre vivant - cavités ou trous de pics', NULL, '330 - Arbre vivant - cavités ou trous de pics',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '331', 'prosilva_331', '331 - Arbre vivant - cavités ou trous de pics en hauteur', NULL, '331 - Arbre vivant - cavités ou trous de pics en hauteur',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '332', 'prosilva_332', '332 - Arbre vivant - cavités ou trous de pics au pied', NULL, '332 - Arbre vivant - cavités ou trous de pics au pied',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '333', 'prosilva_333', '333 - Arbre vivant - cavités ou trous de pics en-desssous d''une branche sèche', NULL, '333 - Arbre vivant - cavités ou trous de pics en-desssous d''une branche sèche',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '334', 'prosilva_334', '334 - Arbre vivant - série de trous de pics superposés', NULL, '334 - Arbre vivant - série de trous de pics superposés',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '335', 'prosilva_335', '335 - Arbre vivant - cavités ou trous de pics en formation', NULL, '335 - Arbre vivant - cavités ou trous de pics en formation',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '340', 'prosilva_340', '340 - Arbre vivant - fente(s)', NULL, '340 - Arbre vivant - fente(s)',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '341', 'prosilva_341', '341 - Arbre vivant - fente(s) en hauteur, longue', NULL, '341 - Arbre vivant - fente(s) en hauteur, longue',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '343', 'prosilva_343', '343 - Arbre vivant - fente(s) en hauteur, courte', NULL, '343 - Arbre vivant - fente(s) en hauteur, courte',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '345', 'prosilva_345', '345 - Arbre vivant - fente(s) près du sol, longue', NULL, '345 - Arbre vivant - fente(s) près du sol, longue',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '347', 'prosilva_347', '347 - Arbre vivant - fente(s) près du sol, courte', NULL, '347 - Arbre vivant - fente(s) près du sol, courte',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '349', 'prosilva_349', '349 - Arbre vivant - fente(s) en formation', NULL, '349 - Arbre vivant - fente(s) en formation',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '350', 'prosilva_350', '350 - Arbre vivant - blessure(s)', NULL, '350 - Arbre vivant - blessure(s)',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '351', 'prosilva_351', '351 - Arbre vivant - blessure(s) sur le tronc', NULL, '351 - Arbre vivant - blessure(s) sur le tronc',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '352', 'prosilva_352', '352 - Arbre vivant - blessure(s) au pied', NULL, '352 - Arbre vivant - blessure(s) au pied',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '360', 'prosilva_360', '360 - Arbre vivant - à maintenir (position)', NULL, '360 - Arbre vivant - à maintenir (position)',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '361', 'prosilva_361', '361 - Arbre vivant - en lisière/bordure de chemin/cloisonnement', NULL, '361 - Arbre vivant - en lisière/bordure de chemin/cloisonnement',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '362', 'prosilva_362', '362 - Arbre vivant - proche de bois mort au sol (rôle de couvert)', NULL, '362 - Arbre vivant - proche de bois mort au sol (rôle de couvert)',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '370', 'prosilva_370', '370 - Arbre vivant - à maintenir (essence)', NULL, '370 - Arbre vivant - à maintenir (essence)',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '371', 'prosilva_371', '371 - Arbre vivant - à maintenir pour diversifier espèce autochtone', NULL, '371 - Arbre vivant - à maintenir pour diversifier espèce autochtone',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '372', 'prosilva_372', '372 - Arbre vivant - à maintenir pour la part des feuillus', NULL, '372 - Arbre vivant - à maintenir pour la part des feuillus',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '380', 'prosilva_380', '380 - Arbre vivant - autres critères', NULL, '380 - Arbre vivant - autres critères',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '381', 'prosilva_381', '381 - Arbre vivant - gros bois', NULL, '381 - Arbre vivant - gros bois',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '382', 'prosilva_382', '382 - Arbre vivant - struturation du peuplement', NULL, '382 - Arbre vivant - struturation du peuplement',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '390', 'prosilva_390', '390 - Arbre vivant - autres critères', NULL, '390 - Arbre vivant - autres critères',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '391', 'prosilva_391', '391 - Arbre vivant - lierre sur le tronc', NULL, '391 - Arbre vivant - lierre sur le tronc',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '392', 'prosilva_392', '392 - Arbre vivant - lierre sur le tronc et dans le houppier', NULL, '392 - Arbre vivant - lierre sur le tronc et dans le houppier',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '393', 'prosilva_393', '393 - Arbre vivant - mousse(s) et/ou lichen(s) sur tout le tronc', NULL, '393 - Arbre vivant - mousse(s) et/ou lichen(s) sur tout le tronc',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'g1', 'engref_g1', 'g1 - Cavité sur le pied', NULL, 'g1 - Cavité sur le pied',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'g2', 'engref_g2', 'g2 - Cavité sur le fût', NULL, 'g2 - Cavité sur le fût',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'g3', 'engref_g3', 'g3 - Cavité dans le houppier', NULL, 'g3 - Cavité dans le houppier',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'h1', 'engref_h1', 'h1 - Loge au pied', NULL, 'h1 - Loge au pied',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'h2', 'engref_h2', 'h2 - Loge sur le fût', NULL, 'h2 - Loge sur le fût',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'h3', 'engref_h3', 'h3 - Loge dans le houppier', NULL, 'h3 - Loge dans le houppier',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'f1', 'engref_f1', 'f1 - Fente au pied', NULL, 'f1 - Fente au pied',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'f2', 'engref_f2', 'f2 - Fente sur le fût', NULL, 'f2 - Fente sur le fût',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'f3', 'engref_f3', 'f3 - Fente dans le houppier', NULL, 'f3 - Fente dans le houppier',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'a1', 'engref_a1', 'a1 - Attaques de pics au pied', NULL, 'a1 - Attaques de pics au pied',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'a2', 'engref_a2', 'a2 - Attaques de pics sur le fût', NULL, 'a2 - Attaques de pics sur le fût',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'a3', 'engref_a3', 'a3 - Attaques de pics dans le houppier', NULL, 'a3 - Attaques de pics dans le houppier',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'p1', 'engref_p1', 'p1 - Pourriture au pied', NULL, 'p1 - Pourriture au pied',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'p2', 'engref_p2', 'p2 - Pourriture sur le fût', NULL, 'p2 - Pourriture sur le fût',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'p3', 'engref_p3', 'p3 - Pourriture dans le houppier', NULL, 'p3 - Pourriture dans le houppier',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'i1', 'engref_i1', 'i1 - Blessure au pied', NULL, 'i1 - Blessure au pied',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'i2', 'engref_i2', 'i2 - Blessure sur le fût', NULL, 'i2 - Blessure sur le fût',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'i3', 'engref_i3', 'i3 - Blessure dans le houppier', NULL, 'i3 - Blessure dans le houppier',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'c1', 'engref_c1', 'c1 - Champignon au pied', NULL, 'c1 - Champignon au pied',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'c2', 'engref_c2', 'c2 - Champignon sur le fût', NULL, 'c2 - Champignon sur le fût',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'c3', 'engref_c3', 'c3 - Champignon dans le houppier', NULL, 'c3 - Champignon dans le houppier',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'e1', 'engref_e1', 'e1 - Écorce déhiscente au pied', NULL, 'e1 - Écorce déhiscente au pied',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'e2', 'engref_e2', 'e2 - Écorce déhiscente sur le fût', NULL, 'e2 - Écorce déhiscente sur le fût',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'e3', 'engref_e3', 'e3 - Écorce déhiscente dans le houppier', NULL, 'e3 - Écorce déhiscente dans le houppier',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'b1', 'engref_b1', 'b1 - Mousse au pied', NULL, 'b1 - Mousse au pied',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'b2', 'engref_b2', 'b2 - Mousse sur le fût', NULL, 'b2 - Mousse sur le fût',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'b3', 'engref_b3', 'b3 - Mousse dans le houppier', NULL, 'b3 - Mousse dans le houppier',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'l1', 'engref_l1', 'l1 - Lichen au pied', NULL, 'l1 - Lichen au pied',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'l2', 'engref_l2', 'l2 - Lichen sur le fût', NULL, 'l2 - Lichen sur le fût',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'l3', 'engref_l3', 'l3 - Lichen dans le houppier', NULL, 'l3 - Lichen dans le houppier',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'r1', 'engref_r1', 'r1 - Lierre au pied', NULL, 'r1 - Lierre au pied',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'r2', 'engref_r2', 'r2 - Lierre sur le fût', NULL, 'r2 - Lierre sur le fût',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'r3', 'engref_r3', 'r3 - Lierre dans le houppier', NULL, 'r3 - Lierre dans le houppier',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 't1', 'engref_t1', 't1 - pointe sèche', NULL, 't1 - pointe sèche',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 't2', 'engref_t2', 't2 - Tête cassée, sans nouvelle tête', NULL, 't2 - Tête cassée, sans nouvelle tête',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 't3', 'engref_t3', 't3 - Tête cassée, avec une nouvelle tête', NULL, 't3 - Tête cassée, avec une nouvelle tête',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 't4', 'engref_t4', 't4 - Têtes multiples', NULL, 't4 - Têtes multiples',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'ts', 'engref_ts', 'ts - Pointe sèche', NULL, 'ts - Pointe sèche',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'tc', 'engref_tc', 'tc - Tête cassée, sans nouvelle tête', NULL, 'tc - Tête cassée, sans nouvelle tête',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'tn', 'engref_tn', 'tn - Tête cassée, avec une nouvelle tête', NULL, 'tn - Tête cassée, avec une nouvelle tête',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'tx', 'engref_tx', 'tx - Têtes multiples', NULL, 'tx - Têtes multiples',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'k', 'engref_k', 'k - Fourche', NULL, 'k - Fourche',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 't', 'engref_t', 't - Tête cassée ou sèche', NULL, 't - Tête cassée ou sèche',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'd', 'engref_d', 'd - Individu dépérissant', NULL, 'd - Individu dépérissant',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'u', 'engref_u', 'u - Individu bas branchu, sinueux, tortueux', NULL, 'u - Individu bas branchu, sinueux, tortueux',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'n', 'engref_n', 'n - Lisière', NULL, 'n - Lisière',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'j', 'engref_j', 'j - Lisière', NULL, 'j - Lisière',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'm', 'engref_m', 'm - Individu mort', NULL, 'm - Individu mort',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'm1', 'engref_m1', 'm1 - Individu mort < 30 cm de diam', NULL, 'm1 - Individu mort < 30 cm de diam',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'm2', 'engref_m2', 'm2 - Individu mort > 30 cm de diam', NULL, 'm2 - Individu mort > 30 cm de diam',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'v', 'engref_v', 'v - Diversité en espèce autochtone', NULL, 'v - Diversité en espèce autochtone',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 's1', 'engref_s1', 's1 - Petites branches mortes', NULL, 's1 - Petites branches mortes',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 's2', 'engref_s2', 's2 - Petites branches mortes', NULL, 's2 - Petites branches mortes',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 's3', 'engref_s3', 's3 - Petites branches mortes', NULL, 's3 - Petites branches mortes',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 's4', 'engref_s4', 's4 - Petites branches mortes', NULL, 's4 - Petites branches mortes',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 's5', 'engref_s5', 's5 - Petites branches mortes', NULL, 's5 - Petites branches mortes',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 's6', 'engref_s6', 's6 - Petites branches mortes', NULL, 's6 - Petites branches mortes',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 's7', 'engref_s7', 's7 - Petites branches mortes', NULL, 's7 - Petites branches mortes',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 's8', 'engref_s8', 's8 - Petites branches mortes', NULL, 's8 - Petites branches mortes',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 's9', 'engref_s9', 's9 - Petites branches mortes', NULL, 's9 - Petites branches mortes',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 's10', 'engref_s10', 's10 - Petites branches mortes', NULL, 's10 - Petites branches mortes',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'x1', 'engref_x1', 'x1 - Moyennes branches mortes', NULL, 'x1 - Moyennes branches mortes',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'x2', 'engref_x2', 'x2 - Moyennes branches mortes', NULL, 'x2 - Moyennes branches mortes',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'x3', 'engref_x3', 'x3 - Moyennes branches mortes', NULL, 'x3 - Moyennes branches mortes',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'x4', 'engref_x4', 'x4 - Moyennes branches mortes', NULL, 'x4 - Moyennes branches mortes',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'x5', 'engref_x5', 'x5 - Moyennes branches mortes', NULL, 'x5 - Moyennes branches mortes',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'x6', 'engref_x6', 'x6 - Moyennes branches mortes', NULL, 'x6 - Moyennes branches mortes',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'x7', 'engref_x7', 'x7 - Moyennes branches mortes', NULL, 'x7 - Moyennes branches mortes',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'x8', 'engref_x8', 'x8 - Moyennes branches mortes', NULL, 'x8 - Moyennes branches mortes',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'x9', 'engref_x9', 'x9 - Moyennes branches mortes', NULL, 'x9 - Moyennes branches mortes',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'x10', 'engref_x10', 'x10 - Moyennes branches mortes', NULL, 'x10 - Moyennes branches mortes',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'y1', 'engref_y1', 'y1 - Grosses branches mortes', NULL, 'y1 - Grosses branches mortes',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'y2', 'engref_y2', 'y2 - Grosses branches mortes', NULL, 'y2 - Grosses branches mortes',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'y3', 'engref_y3', 'y3 - Grosses branches mortes', NULL, 'y3 - Grosses branches mortes',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'y4', 'engref_y4', 'y4 - Grosses branches mortes', NULL, 'y4 - Grosses branches mortes',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'y5', 'engref_y5', 'y5 - Grosses branches mortes', NULL, 'y5 - Grosses branches mortes',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'y6', 'engref_y6', 'y6 - Grosses branches mortes', NULL, 'y6 - Grosses branches mortes',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'y7', 'engref_y7', 'y7 - Grosses branches mortes', NULL, 'y7 - Grosses branches mortes',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'y8', 'engref_y8', 'y8 - Grosses branches mortes', NULL, 'y8 - Grosses branches mortes',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'y9', 'engref_y9', 'y9 - Grosses branches mortes', NULL, 'y9 - Grosses branches mortes',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'y10', 'engref_y10', 'y10 - Grosses branches mortes', NULL, 'y10 - Grosses branches mortes',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'z', 'engref_z', 'z - > 10 branches mortes', NULL, 'z - > 10 branches mortes',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'CV', 'EFI_CV', 'CV - Cavités', NULL, 'CV - Cavités',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'CV1', 'EFI_CV1', 'CV1 - Cavités de pics', NULL, 'CV1 - Cavités de pics',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'CV11', 'EFI_CV11', 'CV11 - Cavités de pics - Diam = 4 cm', NULL, 'CV11 - Cavités de pics - Diam = 4 cm',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'CV12', 'EFI_CV12', 'CV12 - Cavités de pics - Diam = 5 - 6 cm', NULL, 'CV12 - Cavités de pics - Diam = 5 - 6 cm',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'CV13', 'EFI_CV13', 'CV13 - Cavités de pics - Diam > 10 cm', NULL, 'CV13 - Cavités de pics - Diam > 10 cm',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'CV14', 'EFI_CV14', 'CV14 - Cavités de pics - Diam ≥ 10 cm feeding hole', NULL, 'CV14 - Cavités de pics - Diam ≥ 10 cm feeding hole',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'CV15', 'EFI_CV15', 'CV15 - Cavités de pics en "flûte"/chaine de cavités', NULL, 'CV15 - Cavités de pics en "flûte"/chaine de cavités',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'CV2', 'EFI_CV2', 'CV2 - Cavités de tronc/à terreau', NULL, 'CV2 - Cavités de tronc/à terreau',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'CV21', 'EFI_CV21', 'CV21 - Cavités de tronc/à terreau - Diam ≥ 10 cm (en contact avec le sol)', NULL, 'CV21 - Cavités de tronc/à terreau - Diam ≥ 10 cm (en contact avec le sol)',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'CV22', 'EFI_CV22', 'CV22 - Cavités de tronc/à terreau - Diam ≥ 30 cm (en contact avec le sol)', NULL, 'CV22 - Cavités de tronc/à terreau - Diam ≥ 30 cm (en contact avec le sol)',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'CV23', 'EFI_CV23', 'CV23 - Cavités de tronc/à terreau - Diam ≥ 10 cm', NULL, 'CV23 - Cavités de tronc/à terreau - Diam ≥ 10 cm',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'CV24', 'EFI_CV24', 'CV24 - Cavités de tronc/à terreau - Diam ≥ 30 cm', NULL, 'CV24 - Cavités de tronc/à terreau - Diam ≥ 30 cm',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'CV25', 'EFI_CV25', 'CV25 - Cavités de tronc/à terreau - Diam ≥ 30 cm/semi-ouverte', NULL, 'CV25 - Cavités de tronc/à terreau - Diam ≥ 30 cm/semi-ouverte',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'CV26', 'EFI_CV26', 'CV26 - Cavités de tronc/à terreau - Diam ≥ 30 cm /ouverte vers le haut', NULL, 'CV26 - Cavités de tronc/à terreau - Diam ≥ 30 cm /ouverte vers le haut',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'CV3', 'EFI_CV3', 'CV3 - Cavités de branches', NULL, 'CV3 - Cavités de branches',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'CV31', 'EFI_CV31', 'CV31 - Cavités de branches - Diam ≥ 5 cm', NULL, 'CV31 - Cavités de branches - Diam ≥ 5 cm',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'CV32', 'EFI_CV32', 'CV32 - Cavités de branches - Diam ≥ 10 cm', NULL, 'CV32 - Cavités de branches - Diam ≥ 10 cm',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'CV33', 'EFI_CV33', 'CV33 - Cavités de branches - Branche creuse,Diam ≥ 10 cm', NULL, 'CV33 - Cavités de branches - Branche creuse,Diam ≥ 10 cm',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'CV4', 'EFI_CV4', 'CV4 - Dendrotelmes', NULL, 'CV4 - Dendrotelmes',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'CV41', 'EFI_CV41', 'CV41 - Dendrotelmes - Diam ≥ 3 cm/à la base du tronc', NULL, 'CV41 - Dendrotelmes - Diam ≥ 3 cm/à la base du tronc',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'CV42', 'EFI_CV42', 'CV42 - Dendrotelmes - Diam ≥ 15 cm/à la base du tronc', NULL, 'CV42 - Dendrotelmes - Diam ≥ 15 cm/à la base du tronc',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'CV43', 'EFI_CV43', 'CV43 - Dendrotelmes - Diam ≥ 5cm/dans le houppier', NULL, 'CV43 - Dendrotelmes - Diam ≥ 5cm/dans le houppier',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'CV44', 'EFI_CV44', 'CV44 - Dendrotelmes - Diam ≥ 15 cm/dans le houppier', NULL, 'CV44 - Dendrotelmes - Diam ≥ 15 cm/dans le houppier',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'CV5', 'EFI_CV5', 'CV5 - Galeries et trous d''insecte', NULL, 'CV5 - Galeries et trous d''insecte',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'CV51', 'EFI_CV51', 'CV51 - Galerie avec d''uniques et petits trous', NULL, 'CV51 - Galerie avec d''uniques et petits trous',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'CV52', 'EFI_CV52', 'CV52 - Trous de gros insectes, Diam ≥ 2 cm', NULL, 'CV52 - Trous de gros insectes, Diam ≥ 2 cm',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'IN', 'EFI_IN', 'IN - Blessures et plaies', NULL, 'IN - Blessures et plaies',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'IN1', 'EFI_IN1', 'IN1 - Perte d''écorce/Aubier exposé', NULL, 'IN1 - Perte d''écorce/Aubier exposé',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'IN11', 'EFI_IN11', 'IN11 - Perte d’écorce sur 25- 600 cm2, Stade de décomposition < 3', NULL, 'IN11 - Perte d’écorce sur 25- 600 cm2, Stade de décomposition < 3',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'IN12', 'EFI_IN12', 'IN12 - Perte d’écorce > 600 cm2, Stade de décomposition < 3', NULL, 'IN12 - Perte d’écorce > 600 cm2, Stade de décomposition < 3',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'IN13', 'EFI_IN13', 'IN13 - Perte d’écorce 25- 600 cm2, Stade de décomposition = 3', NULL, 'IN13 - Perte d’écorce 25- 600 cm2, Stade de décomposition = 3',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'IN14', 'EFI_IN14', 'IN14 - Perte d’écorce > 600 cm2, Stade de décomposition = 3', NULL, 'IN14 - Perte d’écorce > 600 cm2, Stade de décomposition = 3',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'IN2', 'EFI_IN2', 'IN2 - Bois de cœur exposé/Bris de tronc et de houppier', NULL, 'IN2 - Bois de cœur exposé/Bris de tronc et de houppier',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'IN21', 'EFI_IN21', 'IN21 - Bris de tronc, Diam ≥ 20 cm à l’extrémité brisée', NULL, 'IN21 - Bris de tronc, Diam ≥ 20 cm à l’extrémité brisée',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'IN22', 'EFI_IN22', 'IN22 - Bris de houppier ou de fourche, bois exposé > 300 cm²', NULL, 'IN22 - Bris de houppier ou de fourche, bois exposé > 300 cm²',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'IN23', 'EFI_IN23', 'IN23 - Bris de charpentière Diam ≥ 20 cm à l’extrémité brisée', NULL, 'IN23 - Bris de charpentière Diam ≥ 20 cm à l’extrémité brisée',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'IN24', 'EFI_IN24', 'IN24 - Tige éclatée, Diam ≥ 20 cm à l’extrémité brisée', NULL, 'IN24 - Tige éclatée, Diam ≥ 20 cm à l’extrémité brisée',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'IN3', 'EFI_IN3', 'IN3 - Fentes et cicatrices', NULL, 'IN3 - Fentes et cicatrices',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'IN31', 'EFI_IN31', 'IN31 - Longueur  30-100 cm; Largeur > 1 cm; Profondeur > 10 cm', NULL, 'IN31 - Longueur  30-100 cm; Largeur > 1 cm; Profondeur > 10 cm',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'IN32', 'EFI_IN32', 'IN32 - Longueur ≥ 100 cm; Largeur > 1 cm; Profondeur > 10 cm', NULL, 'IN32 - Longueur ≥ 100 cm; Largeur > 1 cm; Profondeur > 10 cm',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'IN33', 'EFI_IN33', 'IN33 - Cicatrice due à la foudre', NULL, 'IN33 - Cicatrice due à la foudre',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'IN34', 'EFI_IN34', 'IN34 - Blessure due au feu ≥ 600 cm²', NULL, 'IN34 - Blessure due au feu ≥ 600 cm²',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'BA', 'EFI_BA', 'BA - Ecorce', NULL, 'BA - Ecorce',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'BA1', 'EFI_BA1', 'BA1 - Ecorce', NULL, 'BA1 - Ecorce',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'BA11', 'EFI_BA11', 'BA11 - Abri sous écorce, décollement > 1 cm; largeur > 10 cm; hauteur > 10 cm', NULL, 'BA11 - Abri sous écorce, décollement > 1 cm; largeur > 10 cm; hauteur > 10 cm',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'BA12', 'EFI_BA12', 'BA12 - Poche d’écorce décollement > 1 cm; profondeur > 10 cm; hauteur > 10 cm', NULL, 'BA12 - Poche d’écorce décollement > 1 cm; profondeur > 10 cm; hauteur > 10 cm',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'BA2', 'EFI_BA2', 'BA2 - Ecorce crevassée', NULL, 'BA2 - Ecorce crevassée',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'BA21', 'EFI_BA21', 'BA21 - Ecorce crevassée', NULL, 'BA21 - Ecorce crevassée',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'DE', 'EFI_DE', 'DE - Branches mortes', NULL, 'DE - Branches mortes',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'DE1', 'EFI_DE1', 'DE1 - Branches mortes', NULL, 'DE1 - Branches mortes',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'DE11', 'EFI_DE11', 'DE11 - Branches mortes de Diam 10-20 cm, L ≥ 50 cm, exposé au soleil', NULL, 'DE11 - Branches mortes de Diam 10-20 cm, L ≥ 50 cm, exposé au soleil',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'DE12', 'EFI_DE12', 'DE12 - Branches mortes de Diam > 20 cm, L ≥ 50 cm, exposé au soleil', NULL, 'DE12 - Branches mortes de Diam > 20 cm, L ≥ 50 cm, exposé au soleil',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'DE13', 'EFI_DE13', 'DE13 - Branches mortes de Diam 10-20 cm, L ≥ 50 cm, non exposé au soleil', NULL, 'DE13 - Branches mortes de Diam 10-20 cm, L ≥ 50 cm, non exposé au soleil',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'DE14', 'EFI_DE14', 'DE14 - Branches mortes de Diam > 20 cm, L ≥ 50 cm, non exposé au soleil', NULL, 'DE14 - Branches mortes de Diam > 20 cm, L ≥ 50 cm, non exposé au soleil',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'DE15', 'EFI_DE15', 'DE15 - Cime morte ø ≥ 10 cm', NULL, 'DE15 - Cime morte ø ≥ 10 cm',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'GR', 'EFI_GR', 'GR - Excroissance', NULL, 'GR - Excroissance',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'GR1', 'EFI_GR1', 'GR1 - Cavité des contreforts racinaires', NULL, 'GR1 - Cavité des contreforts racinaires',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'GR11', 'EFI_GR11', 'GR11 - Excroissance de Diam ≥ 5 cm', NULL, 'GR11 - Excroissance de Diam ≥ 5 cm',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'GR12', 'EFI_GR12', 'GR12 - Excroissance de Diam ≥ 10 cm', NULL, 'GR12 - Excroissance de Diam ≥ 10 cm',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'GR13', 'EFI_GR13', 'GR13 - Crevasse du tronc, longueur ≥ 30 cm', NULL, 'GR13 - Crevasse du tronc, longueur ≥ 30 cm',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'GR2', 'EFI_GR2', 'GR2 - Balais de sorcière', NULL, 'GR2 - Balais de sorcière',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'GR21', 'EFI_GR21', 'GR21 - Balais de sorcière, Diam > 50 cm', NULL, 'GR21 - Balais de sorcière, Diam > 50 cm',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'GR22', 'EFI_GR22', 'GR22 - Brogne, gourmands ou broussins', NULL, 'GR22 - Brogne, gourmands ou broussins',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'GR3', 'EFI_GR3', 'GR3 - Chancres et loupes', NULL, 'GR3 - Chancres et loupes',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'GR31', 'EFI_GR31', 'GR31 - Loupe, Diam > 20 cm', NULL, 'GR31 - Loupe, Diam > 20 cm',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'GR32', 'EFI_GR32', 'GR32 - Chancre décomposé, Diam > 20 cm', NULL, 'GR32 - Chancre décomposé, Diam > 20 cm',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'EP', 'EFI_EP', 'EP - Épiphytes', NULL, 'EP - Épiphytes',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'EP1', 'EFI_EP1', 'EP1 - Carpophores de champignons', NULL, 'EP1 - Carpophores de champignons',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'EP11', 'EFI_EP11', 'EP11 - Polypores annuels, Diam > 5cm', NULL, 'EP11 - Polypores annuels, Diam > 5cm',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'EP12', 'EFI_EP12', 'EP12 - Polypores pérennes, Diam > 10 cm', NULL, 'EP12 - Polypores pérennes, Diam > 10 cm',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'EP13', 'EFI_EP13', 'EP13 - Agaricales charnus, Diam > 5 cm', NULL, 'EP13 - Agaricales charnus, Diam > 5 cm',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'EP14', 'EFI_EP14', 'EP14 - Grands ascomycètes, Diam > 5 cm', NULL, 'EP14 - Grands ascomycètes, Diam > 5 cm',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'EP2', 'EFI_EP2', 'EP2 - Myxomycètes', NULL, 'EP2 - Myxomycètes',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'EP21', 'EFI_EP21', 'EP21 - Myxomycètes, Diam > 5 cm', NULL, 'EP21 - Myxomycètes, Diam > 5 cm',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'EP3', 'EFI_EP3', 'EP3 - Cryptogames et phanérogames épiphytes', NULL, 'EP3 - Cryptogames et phanérogames épiphytes',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'EP31', 'EFI_EP31', 'EP31 - Bryophytes épiphytes, surface couverte > 25 %', NULL, 'EP31 - Bryophytes épiphytes, surface couverte > 25 %',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'EP32', 'EFI_EP32', 'EP32 - Lichens épiphytes foliacés et ruticuleux ; surface couverte > 25 %', NULL, 'EP32 - Lichens épiphytes foliacés et ruticuleux ; surface couverte > 25 %',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'EP33', 'EFI_EP33', 'EP33 - Lianes; surface couverte > 25 %', NULL, 'EP33 - Lianes; surface couverte > 25 %',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'EP34', 'EFI_EP34', 'EP34 - Fougères épiphytes ; > 5 frondes', NULL, 'EP34 - Fougères épiphytes ; > 5 frondes',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'EP35', 'EFI_EP35', 'EP35 - Gui', NULL, 'EP35 - Gui',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'NE', 'EFI_NE', 'NE - Nids et aires', NULL, 'NE - Nids et aires',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'NE1', 'EFI_NE1', 'NE1 - Nids de vertébrés', NULL, 'NE1 - Nids de vertébrés',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'NE11', 'EFI_NE11', 'NE11 - Nids de grands vertébrés, Diam > 80 cm', NULL, 'NE11 - Nids de grands vertébrés, Diam > 80 cm',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'NE12', 'EFI_NE12', 'NE12 - Nids de petits vertébrés, Diam > 10 cm', NULL, 'NE12 - Nids de petits vertébrés, Diam > 10 cm',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'NE2', 'EFI_NE2', 'NE2 - Nids d''invertébrés', NULL, 'NE2 - Nids d''invertébrés',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'NE21', 'EFI_NE21', 'NE21 - Nids d’invertébrés', NULL, 'NE21 - Nids d’invertébrés',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'OT', 'EFI_OT', 'OT - Autres microhabitats', NULL, 'OT - Autres microhabitats',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'OT1', 'EFI_OT1', 'OT1 - Coulées de sève ou de résine', NULL, 'OT1 - Coulées de sève ou de résine',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'OT11', 'EFI_OT11', 'OT11 - Coulée de sève, > 50 cm', NULL, 'OT11 - Coulée de sève, > 50 cm',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'OT12', 'EFI_OT12', 'OT12 - Coulées et poches de résine, > 50 cm', NULL, 'OT12 - Coulées et poches de résine, > 50 cm',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'OT2', 'EFI_OT2', 'OT2 - Microsols', NULL, 'OT2 - Microsols',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'OT21', 'EFI_OT21', 'OT21 - Microsol du houppier', NULL, 'OT21 - Microsol du houppier',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'OT22', 'EFI_OT22', 'OT22 - Microsol de l’écorce', NULL, 'OT22 - Microsol de l’écorce',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'OT23', 'EFI_OT23', 'OT23 - Microsol dans une chandelle', NULL, 'OT23 - Microsol dans une chandelle',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'OT3', 'EFI_OT3', 'OT3 - Galette de chablis', NULL, 'OT3 - Galette de chablis',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'OT31', 'EFI_OT31', 'OT31 - Cuvette dans le sol', NULL, 'OT31 - Cuvette dans le sol',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), 'OT32', 'EFI_OT32', 'OT32 - Entrelacs racinaires', NULL, 'OT32 - Entrelacs racinaires',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '500', 'IRSTEA_500', '500 - Individu - conformation arbre', NULL, '500 - Individu - conformation arbre',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '520', 'IRSTEA_520', '520 - Arbre mort sur pied - squelette du houppier présent', NULL, '520 - Arbre mort sur pied - squelette du houppier présent',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '530', 'IRSTEA_530', '530 - Arbre vivant - branches mortes', NULL, '530 - Arbre vivant - branches mortes',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '531', 'IRSTEA_531', '531 - Arbre vivant - branches mortes (>10% et <25% du Vtot)', NULL, '531 - Arbre vivant - branches mortes (>10% et <25% du Vtot)',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '532', 'IRSTEA_532', '532 - Arbre vivant - branches mortes (>25% et <50% du Vtot)', NULL, '532 - Arbre vivant - branches mortes (>25% et <50% du Vtot)',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '533', 'IRSTEA_533', '533 - Arbre vivant - branches mortes (≥50% du Vtot)', NULL, '533 - Arbre vivant - branches mortes (≥50% du Vtot)',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '540', 'IRSTEA_540', '540 - Arbre vivant - tête cassée (non cicatrisé)', NULL, '540 - Arbre vivant - tête cassée (non cicatrisé)',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '550', 'IRSTEA_550', '550 - Fourche', NULL, '550 - Fourche',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '551', 'IRSTEA_551', '551 - Fourche cassée (charpentière)', NULL, '551 - Fourche cassée (charpentière)',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '560', 'IRSTEA_560', '560 - Rejets de souches', NULL, '560 - Rejets de souches',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '561', 'IRSTEA_561', '561 - Rejets de souches (+ de 5 ou > 50cm de long)', NULL, '561 - Rejets de souches (+ de 5 ou > 50cm de long)',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '600', 'IRSTEA_600', '600 - Présence de dendromicrohabitats', NULL, '600 - Présence de dendromicrohabitats',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '610', 'IRSTEA_610', '610 - Champignons', NULL, '610 - Champignons',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '611', 'IRSTEA_611', '611 - Carpophore de polypore (1-2; Diam > 5cm)', NULL, '611 - Carpophore de polypore (1-2; Diam > 5cm)',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '612', 'IRSTEA_612', '612 - Carpophore de polypore (> 3; Diam > 5cm)', NULL, '612 - Carpophore de polypore (> 3; Diam > 5cm)',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '613', 'IRSTEA_613', '613 - Carpophore de polypore (> 10cm couvert)', NULL, '613 - Carpophore de polypore (> 10cm couvert)',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '620', 'IRSTEA_620', '620 - Cavité de pic (ouverture > 2cm de Diam)', NULL, '620 - Cavité de pic (ouverture > 2cm de Diam)',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '621', 'IRSTEA_621', '621 - Cavité naturelle (ouverture > 2cm de Diam)', NULL, '621 - Cavité naturelle (ouverture > 2cm de Diam)',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '622', 'IRSTEA_622', '622 - Cavités de pic (ouverture > 2cm de Diam)', NULL, '622 - Cavités de pic (ouverture > 2cm de Diam)',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '623', 'IRSTEA_623', '623 - Cavité de pic (ouverture > 2cm de Diam)', NULL, '623 - Cavité de pic (ouverture > 2cm de Diam)',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '624', 'IRSTEA_624', '624 - Cavité de pic (ouverture > 2cm de Diam)', NULL, '624 - Cavité de pic (ouverture > 2cm de Diam)',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '625', 'IRSTEA_625', '625 - Cavité de pic (ouverture > 2cm de Diam)', NULL, '625 - Cavité de pic (ouverture > 2cm de Diam)',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '630', 'IRSTEA_630', '630 - Fentes', NULL, '630 - Fentes',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '631', 'IRSTEA_631', '631 - Fente causée par la foudre (≥ 3m; aubier atteint)', NULL, '631 - Fente causée par la foudre (≥ 3m; aubier atteint)',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '632', 'IRSTEA_632', '632 - Fente (L ≥ 25cm; Profondeur ≥ 2cm)', NULL, '632 - Fente (L ≥ 25cm; Profondeur ≥ 2cm)',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '640', 'IRSTEA_640', '640 - Caractéristique de l''écorce', NULL, '640 - Caractéristique de l''écorce',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '641', 'IRSTEA_641', '641 - Ecorce déhiscente (≥ 5x5cm; 2cm de décollement)', NULL, '641 - Ecorce déhiscente (≥ 5x5cm; 2cm de décollement)',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '642', 'IRSTEA_642', '642 - Ecorce déhiscente avec pourriture (≥ 5x5cm; 2cm de décollement)', NULL, '642 - Ecorce déhiscente avec pourriture (≥ 5x5cm; 2cm de décollement)',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '643', 'IRSTEA_643', '643 - Écorce absente (≥ 5x5cm)', NULL, '643 - Écorce absente (≥ 5x5cm)',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '644', 'IRSTEA_644', '644 - Éclatement noir de l''écorce', NULL, '644 - Éclatement noir de l''écorce',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '650', 'IRSTEA_650', '650 - Blessures, galles', NULL, '650 - Blessures, galles',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '651', 'IRSTEA_651', '651 - Blessure récente ≥ 10cm de Diam', NULL, '651 - Blessure récente ≥ 10cm de Diam',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '652', 'IRSTEA_652', '652 - Présence d''un chancre (Diam ≥ 10cm de Diam)', NULL, '652 - Présence d''un chancre (Diam ≥ 10cm de Diam)',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '653', 'IRSTEA_653', '653 - Balais de sorcière/brogne', NULL, '653 - Balais de sorcière/brogne',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '660', 'IRSTEA_660', '660 - Présence de résine', NULL, '660 - Présence de résine',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '661', 'IRSTEA_661', '661 - Coulée de résine/sève, ≥ 30 cm', NULL, '661 - Coulée de résine/sève, ≥ 30 cm',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '662', 'IRSTEA_662', '662 - Faible coulée de résine/sève', NULL, '662 - Faible coulée de résine/sève',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '670', 'IRSTEA_670', '670 - Lierre, bryophytes', NULL, '670 - Lierre, bryophytes',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '671', 'IRSTEA_671', '671 - Bryophytes sur > 1/2 surface', NULL, '671 - Bryophytes sur > 1/2 surface',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECOLOGIE'), '672', 'IRSTEA_672', '672 - Lierre sur > 1/2 surface', NULL, '672 - Lierre sur > 1/2 surface',  NULL, 'PSDRF', 'Validé', true);
 
 -- Code dureté
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_DURETE'), '1', '1', 'Dur ou non altéré', NULL, 'Dur ou non altéré',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_DURETE'), '2', '2', 'Pourriture <1/4 du diamètre', NULL, 'Pourriture <1/4 du diamètre',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_DURETE'), '3', '3', 'Pourriture entre 1/4 et 1/2 du diamètre', NULL, 'Pourriture entre 1/4 et 1/2 du diamètre',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_DURETE'), '4', '4', 'Pourriture entre 1/2 et 3/4 du diamètre', NULL, 'Pourriture entre 1/2 et 3/4 du diamètre',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_DURETE'), '5', '5', 'Pourriture supérieure à 3/4.', NULL, 'Pourriture supérieure à 3/4.',  NULL, 'PSDRF', 'Validé', true);
 
 -- Code écorce
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECORCE'), '3', '3', 'Présente sur moins de 50% de la surface', NULL, 'Présente sur moins de 50% de la surface',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECORCE'), '4', '4', 'Absente du billon', NULL, 'Absente du billon',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECORCE'), '1', '1', 'Présente sur tout le billon', NULL, 'Présente sur tout le billon',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ECORCE'), '2', '2', 'Présente sur plus de 50% de la surface', NULL, 'Présente sur plus de 50% de la surface',  NULL, 'PSDRF', 'Validé', true);
 
 -- Code Castor
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_CASTOR'), '0', '0', 'absent', NULL, 'absent',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_CASTOR'), '1', '1', 'Quelques brins', NULL, 'Quelques brins',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_CASTOR'), '2', '2', '< 50% des brins', NULL, '< 50% des brins',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_CASTOR'), '3', '3', '> 50% des brins', NULL, '> 50% des brins',  NULL, 'PSDRF', 'Validé', true);
 
 -- Code Frottis
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_FROTTIS'), '0', '0', 'absent', NULL, 'absent',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_FROTTIS'), '1', '1', 'Quelques brins', NULL, 'Quelques brins',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_FROTTIS'), '2', '2', '< 50% des brins', NULL, '< 50% des brins',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_FROTTIS'), '3', '3', '> 50% des brins', NULL, '> 50% des brins',  NULL, 'PSDRF', 'Validé', true);
 
 -- Code Boutis
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_BOUTIS'), '0', '0', 'absent', NULL, 'absent',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_BOUTIS'), '1', '1', '< 5% de la placette', NULL, '< 5% de la placette',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_BOUTIS'), '2', '2', 'de 5 à 50% de la placette', NULL, 'de 5 à 50% de la placette',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_BOUTIS'), '3', '3', '> 50% des brins', NULL, '> 50% des brins',  NULL, 'PSDRF', 'Validé', true);
 
 -- Etat sanitaire
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_SANITAIRE'), '0', '0',
 'Absence de symptôme de dépérissement', 'Houppier opaque, ramification fine dense',
 'Absence de symptôme de dépérissement', 'Houppier opaque, ramification fine dense', 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_SANITAIRE'), '1', '1',
 '1', 'rameaux fins desséchés dans la périphérie du houppier ; Et/ou présence de « fenêtres disjointes » ; Et/ou rameaux en « fouets »',
 '1', 'rameaux fins desséchés dans la périphérie du houppier ; Et/ou présence de « fenêtres disjointes » ; Et/ou rameaux en « fouets »', 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_SANITAIRE'), '2', '2',
 '2', 'Branches desséchées dans le houppier, mais moins de 50% ; Et/ou échancrure nette dans le houppier ; Et/ou feuilles en paquets',
 '2', 'Branches desséchées dans le houppier, mais moins de 50% ; Et/ou échancrure nette dans le houppier ; Et/ou feuilles en paquets', 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_SANITAIRE'), '3', '3',
 '3', 'Branches mortes composant plus de 50% du houppier',
 '3', 'Branches mortes composant plus de 50% du houppier', 'PSDRF', 'Validé', true);
 
 
 -- Typo arbres
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_TYPO_ARBRES'), 'A', 'A', 'Arbres',
 'il correspond aux bois morts qui peuvent être cubés en utilisant le même tarif de cubage que pour les arbres vivants. C''est le cas des arbres qui viennent de dépérir, ou bien des arbres qui ont perdu une partie de leurs rameaux fins, mais pas de parties importantes de leur squelette.', 'Arbres',
 'il correspond aux bois morts qui peuvent être cubés en utilisant le même tarif de cubage que pour les arbres vivants. C''est le cas des arbres qui viennent de dépérir, ou bien des arbres qui ont perdu une partie de leurs rameaux fins, mais pas de parties importantes de leur squelette.', 'PSDRF', 'Validé',  true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_TYPO_ARBRES'), 'V', 'V', 'Chandelles',
 'il comprend les volis  de hauteur supérieure à 1,30 m, ainsi que les arbres ayant perdu une partie importante de leur squelette. Ces objets seront cubés en appliquant au diamètre à 1,30m une décroissance métrique par défaut de 1cm/m et en estimant sur le terrain une hauteur. Le choix de la décroissance métrique pourra être adapté localement.', 'Chandelles',  'il comprend les volis  de hauteur supérieure à 1,30 m, ainsi que les arbres ayant perdu une partie importante de leur squelette. Ces objets seront cubés en appliquant au diamètre à 1,30m une décroissance métrique par défaut de 1cm/m et en estimant sur le terrain une hauteur. Le choix de la décroissance métrique pourra être adapté localement.', 'PSDRF', 'Validé',  true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_TYPO_ARBRES'), 'S', 'S', 'Souches',
 'il comprend les volis  de hauteur inférieure à 1,30 m, ainsi que les souches non déracinées. Les souches sont échantillonnées quelque soit leur hauteur. Ce type de bois mort sur pied sera cubé à partir d''un diamètre médian et d''une hauteur (formule du cylindre). On distinguera les souches d''origine naturelle (SN) et les souches d''origine anthropique (SA), issues de la gestion forestière.', 'Souches',
 'il comprend les volis  de hauteur inférieure à 1,30 m, ainsi que les souches non déracinées. Les souches sont échantillonnées quelque soit leur hauteur. Ce type de bois mort sur pied sera cubé à partir d''un diamètre médian et d''une hauteur (formule du cylindre). On distinguera les souches d''origine naturelle (SN) et les souches d''origine anthropique (SA), issues de la gestion forestière.', 'PSDRF', 'Validé',  true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_TYPO_ARBRES'), 'SA', 'SA', 'Souches d''origine anthropique', NULL, 'Souches d''origine anthropique',  NULL, 'PSDRF', 'Validé',  true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_TYPO_ARBRES'), 'SN', 'SN', 'Souches d''origine anthropique', NULL, 'Souches d''origine anthropique',  NULL, 'PSDRF', 'Validé', true);
 
 
 -- Abroutissement
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ABROUTIS'), '0', '0', 'absent', NULL, 'absent',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ABROUTIS'), '1', '1', 'Quelques brins', NULL, 'Quelques brins',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ABROUTIS'), '2', '2', '< 50% des brins de l''essence concernée', NULL, '< 50% des brins de l''essence concernée',  NULL, 'PSDRF', 'Validé', true);
-INSERT INTO ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
+INSERT INTO t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)
 VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ABROUTIS'), '3', '3', '> 50% des brins de l''essence concernée', NULL, '> 50% des brins de l''essence concernée',  NULL, 'PSDRF', 'Validé', true);
 
 
 -- Essences
-SET search_path = pr_psdrf, pg_catalog;
+SET search_path = pr_psdrf, pg_catalog, public;
 
 INSERT INTO bib_essences (code_essence, cd_nom, nom, ess_reg, couleur, nom_latin) VALUES ('ALI', 197762, 'Alisier sp.', 'AF', 'cyan4', 'Sorbus sp');
 INSERT INTO bib_essences (code_essence, cd_nom, nom, ess_reg, couleur, nom_latin) VALUES ('AIL', 80824, 'Ailante', 'AF', 'azure2', 'Ailantus altissima');
