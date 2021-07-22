@@ -5,7 +5,6 @@ __pycache__/
 module.config.ts
 # C extensions
 *.so
-
 # Distribution / packaging
 .Python
 build/
