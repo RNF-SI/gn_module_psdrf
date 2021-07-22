@@ -28,4 +28,15 @@ export class PsdrfDataService {
     );
   }
 
+  psdrfIntegrationToDatabase(data){
+    const httpOptions = {
+      headers: { 'Content-Type': 'application/json' },
+    };
+    return this._http.post<any>(
+      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/integration`,
+      data,
+      httpOptions
+    ); 
+  }
+
 }

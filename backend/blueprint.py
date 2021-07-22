@@ -11,6 +11,7 @@ from geonature.core.ref_geo.models import LiMunicipalities, LAreas, BibAreasType
 from .models import TDispositifs, TPlacettes, TArbres, TCycles, \
     CorCyclesPlacettes, TArbresMesures
 from .data_verification import data_verification
+from .data_integration import data_integration
 
 
 blueprint = Blueprint('psdrf', __name__)
@@ -223,3 +224,9 @@ def psdrf_data_verification_with_shape():
     data=json.loads(request.files.get('overrides', default_name).read())
     data_verification(data)
     return "good"
+
+@blueprint.route('/integration', methods=['POST'])
+@json_resp
+def psdrf_data_integration():
+    data = request.get_json()
+    return data_integration(data)

@@ -16,7 +16,7 @@ export class ErrorMainStepComponent implements OnInit, AfterViewInit {
 
   @Input() mainStepIndex: number;
   @Input() mainStepText: string;
-  @Input() step: {'errorList': PsdrfError[], 'correctionList': any};
+  @Input() step: {'errorList': PsdrfError[], 'errorType': any, 'isFatalError': boolean};
 
 
   @Output() subStepSelectionChange= new EventEmitter<{mainStepIndex: number, subStepIndex: number}>();
