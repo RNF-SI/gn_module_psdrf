@@ -1,5 +1,6 @@
 export const ModuleConfig = {
- "ID_MODULE": 14,
+ "FRONTEND_PATH": "/home/geonatureadmin/geonature/external_modules/psdrf/frontend",
+ "ID_MODULE": 17,
  "MODULE_CODE": "PSDRF",
- "MODULE_URL": "psdrf"
+ "MODULE_URL": "/psdrf"
 }

@@ -528,7 +528,6 @@ export class ImportDonneesComponent {
     this.totalErrorNumber = 0;
     this.progressBarValue = 0;
     this.mainStepTextArr = [];
-    this.isVerificationObjLoaded = false;
     this.isLabelVisible = true;
     this.MAX_STEP = 6;
     this.totalSteps = 0;
@@ -802,7 +801,7 @@ export class ImportDonneesComponent {
 
   integrationToDatabase(): void{
     this.dataSrv
-    .psdrf_data_verification(
+    .psdrfIntegrationToDatabase(
       JSON.stringify(this.psdrfArray, (k, v) =>
         v === undefined ? null : v
       )

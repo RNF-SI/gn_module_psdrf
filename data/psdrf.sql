@@ -331,32 +331,39 @@ ALTER TABLE ONLY t_dispositifs
 ALTER TABLE ONLY t_placettes
   ADD CONSTRAINT fk_t_placettes_t_dispositifs
   FOREIGN KEY (id_dispositif) REFERENCES t_dispositifs (id_dispositif)
-  ON UPDATE CASCADE;
+  ON UPDATE CASCADE
+  ON DELETE CASCADE;
 
 ALTER TABLE ONLY t_reperes
   ADD CONSTRAINT fk_t_reperes_t_placettes
   FOREIGN KEY (id_placette) REFERENCES t_placettes (id_placette)
-  ON UPDATE CASCADE;
+  ON UPDATE CASCADE
+  ON DELETE CASCADE;
 
 ALTER TABLE ONLY t_cycles
   ADD CONSTRAINT fk_t_cycles_t_placettes
   FOREIGN KEY (id_dispositif) REFERENCES t_dispositifs (id_dispositif)
-  ON UPDATE CASCADE;
+  ON UPDATE CASCADE
+  ON DELETE CASCADE;
 
 ALTER TABLE ONLY t_categories
   ADD CONSTRAINT fk_t_categories_t_dispositifs
   FOREIGN KEY (id_dispositif) REFERENCES t_dispositifs (id_dispositif)
-  ON UPDATE CASCADE;
+  ON UPDATE CASCADE
+  ON DELETE CASCADE;
 
 ALTER TABLE ONLY cor_cycles_placettes
   ADD CONSTRAINT fk_cor_cycles_placettes_t_cycles
   FOREIGN KEY (id_cycle) REFERENCES t_cycles (id_cycle)
-  ON UPDATE CASCADE;
+  ON UPDATE CASCADE
+  ON DELETE CASCADE;
 
 ALTER TABLE ONLY cor_cycles_placettes
   ADD CONSTRAINT fk_cor_cycles_placettes_t_placettes
   FOREIGN KEY (id_placette) REFERENCES t_placettes (id_placette)
-  ON UPDATE CASCADE;
+  ON UPDATE CASCADE
+  ON DELETE CASCADE;
+
 
 ALTER TABLE ONLY cor_dispositif_area
   ADD CONSTRAINT fk_cor_dispositifs_area_l_area
@@ -366,12 +373,16 @@ ALTER TABLE ONLY cor_dispositif_area
 ALTER TABLE ONLY cor_dispositif_area
   ADD CONSTRAINT fk_cor_dispositifs_area_t_dispositifs
   FOREIGN KEY (id_dispositif) REFERENCES t_dispositifs (id_dispositif)
-  ON UPDATE CASCADE;
+  ON UPDATE CASCADE
+  ON DELETE CASCADE;
+
 
 ALTER TABLE ONLY cor_dispositif_municipality
   ADD CONSTRAINT fk_cor_dispositifs_municipality_t_dispositifs
   FOREIGN KEY (id_dispositif) REFERENCES t_dispositifs (id_dispositif)
-  ON UPDATE CASCADE;
+  ON UPDATE CASCADE
+  ON DELETE CASCADE;
+
 
 ALTER TABLE ONLY cor_dispositif_municipality
   ADD CONSTRAINT fk_cor_dispositifs_municipality_li_municipalities
@@ -381,7 +392,9 @@ ALTER TABLE ONLY cor_dispositif_municipality
 ALTER TABLE ONLY t_tarifs
   ADD CONSTRAINT fk_t_tarifs_t_dispositifs
   FOREIGN KEY (id_dispositif) REFERENCES t_dispositifs (id_dispositif)
-  ON UPDATE CASCADE;
+  ON UPDATE CASCADE
+  ON DELETE CASCADE;
+
 
 ALTER TABLE ONLY t_tarifs
   ADD CONSTRAINT fk_t_tarifs_bib_essences
@@ -396,12 +409,15 @@ ALTER TABLE ONLY t_regroupements_essences
 ALTER TABLE ONLY t_regroupements_essences
   ADD CONSTRAINT fk_t_reg_essences_t_dispositifs
   FOREIGN KEY (id_dispositif) REFERENCES t_dispositifs (id_dispositif)
-  ON UPDATE CASCADE;
+  ON UPDATE CASCADE
+  ON DELETE CASCADE;
 
 ALTER TABLE ONLY cor_cycles_roles
   ADD CONSTRAINT fk_cor_cycles_roles_t_dispositifs
   FOREIGN KEY (id_cycle) REFERENCES t_cycles (id_cycle)
-  ON UPDATE CASCADE;
+  ON UPDATE CASCADE
+  ON DELETE CASCADE;
+
 
 ALTER TABLE ONLY cor_cycles_roles
   ADD CONSTRAINT fk_cor_cycles_roles_t_roles
@@ -421,12 +437,14 @@ ALTER TABLE ONLY t_arbres
 ALTER TABLE ONLY t_arbres_mesures
   ADD CONSTRAINT fk_t_arbres_mesures_t_arbres
   FOREIGN KEY (id_arbre) REFERENCES t_arbres (id_arbre)
-  ON UPDATE CASCADE;
+  ON UPDATE CASCADE
+  ON DELETE CASCADE;
 
 ALTER TABLE ONLY t_arbres_mesures
   ADD CONSTRAINT fk_t_arbres_mesures_t_cycles
   FOREIGN KEY (id_cycle) REFERENCES t_cycles (id_cycle)
-  ON UPDATE CASCADE;
+  ON UPDATE CASCADE
+  ON DELETE CASCADE;
 
 --ALTER TABLE ONLY t_arbres_mesures
 --  ADD CONSTRAINT fk_t_arbres_mesures_type
@@ -446,7 +464,8 @@ ALTER TABLE ONLY t_arbres_mesures
 ALTER TABLE ONLY t_bm_sup_30
   ADD CONSTRAINT fk_t_bm_sup_30_t_placettes
   FOREIGN KEY (id_placette) REFERENCES t_placettes (id_placette)
-  ON UPDATE CASCADE;
+  ON UPDATE CASCADE
+  ON DELETE CASCADE;
 
 ALTER TABLE ONLY t_bm_sup_30
   ADD CONSTRAINT fk_t_bm_sup_30_bib_essences
@@ -456,17 +475,20 @@ ALTER TABLE ONLY t_bm_sup_30
 ALTER TABLE ONLY t_bm_sup_30
   ADD CONSTRAINT fk_t_bm_sup_30_t_arbres
   FOREIGN KEY (id_arbre) REFERENCES t_arbres (id_arbre)
-  ON UPDATE CASCADE;
+  ON UPDATE CASCADE
+  ON DELETE CASCADE;
 
 ALTER TABLE ONLY t_bm_sup_30_mesures
   ADD CONSTRAINT fk_t_bm_sup_30_mesures_t_bm_sup_30
   FOREIGN KEY (id_bm_sup_30) REFERENCES t_bm_sup_30 (id_bm_sup_30)
-  ON UPDATE CASCADE;
+  ON UPDATE CASCADE
+  ON DELETE CASCADE;
 
 ALTER TABLE ONLY t_bm_sup_30_mesures
   ADD CONSTRAINT fk_t_bm_sup_30_mesures_t_cycles
   FOREIGN KEY (id_cycle) REFERENCES t_cycles (id_cycle)
-  ON UPDATE CASCADE;
+  ON UPDATE CASCADE
+  ON DELETE CASCADE;
 
 ALTER TABLE ONLY t_bm_sup_30_mesures
   ADD CONSTRAINT fk_t_bm_sup_30_mesures_stade_durete
@@ -481,7 +503,8 @@ ALTER TABLE ONLY t_bm_sup_30_mesures
 ALTER TABLE ONLY t_regenerations
   ADD CONSTRAINT fk_t_regenerations_cor_cycles_placettes
   FOREIGN KEY (id_cycle_placette) REFERENCES cor_cycles_placettes (id_cycle_placette)
-  ON UPDATE CASCADE;
+  ON UPDATE CASCADE
+  ON DELETE CASCADE;
 
 ALTER TABLE ONLY t_regenerations
   ADD CONSTRAINT fk_t_regenerations_abroutissement
@@ -496,7 +519,8 @@ ALTER TABLE ONLY t_regenerations
 ALTER TABLE ONLY t_transects
   ADD CONSTRAINT fk_t_transects_cor_cycles_placettes
   FOREIGN KEY (id_cycle_placette) REFERENCES cor_cycles_placettes (id_cycle_placette)
-  ON UPDATE CASCADE;
+  ON UPDATE CASCADE
+  ON DELETE CASCADE;
 
 ALTER TABLE ONLY t_transects
   ADD CONSTRAINT fk_t_transects_stade_durete

@@ -2,11 +2,13 @@
 
 from geoalchemy2 import Geometry
 
-from geonature.core.users.models import BibOrganismes
+from pypnusershub.db.models import Organisme
 from geonature.core.ref_geo.models import LiMunicipalities, LAreas
-from geonature.utils.utilssqlalchemy import serializable, geoserializable
+# from geonature.utils.utilssqlalchemy import serializable, geoserializable
 from geonature.utils.env import DB
 
+from utils_flask_sqla.serializers import serializable
+from utils_flask_sqla_geo.serializers import geoserializable
 
 SCHEMA = 'pr_psdrf'
 
@@ -32,8 +34,8 @@ class TDispositifs (DB.Model):
     name = DB.Column('name', DB.String)
     id_organisme = DB.Column('id_organisme', DB.Integer, DB.ForeignKey('utilisateurs.bib_organismes.id_organisme'))
     alluvial = DB.Column('alluvial', DB.Boolean)
-    organisme = DB.relationship('BibOrganismes')
-    placettes = DB.relationship('TPlacettes', back_populates='dispositif')
+    organisme = DB.relationship('Organisme')
+    placettes = DB.relationship('TPlacettes', back_populates='dispositif', passive_deletes=True)
     municipalities = DB.relationship('LiMunicipalities', secondary=dispositifs_municipalities_assoc)
     areas = DB.relationship('LAreas', secondary=dispositifs_area_assoc)
 
@@ -44,7 +46,7 @@ class TPlacettes (DB.Model):
     __tablename__ = "t_placettes"
     __table_args__ = {'schema': SCHEMA}
     id_placette = DB.Column('id_placette', DB.Integer, primary_key = True)
-    id_dispositif = DB.Column('id_dispositif', DB.Integer, DB.ForeignKey('pr_psdrf.t_dispositifs.id_dispositif'))
+    id_dispositif = DB.Column('id_dispositif', DB.Integer, DB.ForeignKey('pr_psdrf.t_dispositifs.id_dispositif', ondelete='CASCADE'))
     id_placette_orig = DB.Column('id_placette_orig', DB.String)
     strate = DB.Column('strate', DB.Integer)
     pente = DB.Column('pente', DB.Float)

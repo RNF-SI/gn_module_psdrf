@@ -6,12 +6,16 @@ from shapely.geometry import MultiPoint, Point
 import json
 
 from geonature.utils.env import DB
-from geonature.utils.utilssqlalchemy import json_resp, get_geojson_feature
+# from geonature.utils.utilssqlalchemy import json_resp, get_geojson_feature
+
 from geonature.core.ref_geo.models import LiMunicipalities, LAreas, BibAreasTypes
 from .models import TDispositifs, TPlacettes, TArbres, TCycles, \
     CorCyclesPlacettes, TArbresMesures
 from .data_verification import data_verification
 from .data_integration import data_integration
+
+from utils_flask_sqla.response import json_resp
+from utils_flask_sqla_geo.generic import get_geojson_feature
 
 
 blueprint = Blueprint('psdrf', __name__)

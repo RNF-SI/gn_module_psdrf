@@ -13,15 +13,16 @@ import * as XLSX from 'xlsx';
   
     public importFromExcelFile(bstr: string): XLSX.AOA2SheetOpts[] {
       /* read workbook */
-      const wb: XLSX.WorkBook = XLSX.read(bstr, { type: 'binary' });
+      const wb: XLSX.WorkBook = XLSX.read(bstr, { type: 'binary' , cellDates: true, dateNF: 'dd/mm/yyyy;@'});
       this.wsname = wb.SheetNames;
       let data:  XLSX.AOA2SheetOpts[]= [];
       for(let i = 0; i< wb.SheetNames.length; i++){
         /* grab first sheet */
         const ws: XLSX.WorkSheet = wb.Sheets[wb.SheetNames[i]];  
         /* save data */
-        data.push(<XLSX.AOA2SheetOpts>(XLSX.utils.sheet_to_json(ws, { header: 1 })));
+        data.push(<XLSX.AOA2SheetOpts>(XLSX.utils.sheet_to_json(ws, { header: 1, raw:false})));
       }
+      console.log(data)
       return data;
     }
 

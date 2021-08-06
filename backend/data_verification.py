@@ -6,7 +6,6 @@ import re
 
 from pathlib import Path
 
-from varname import nameof
 
 # Fonction principale de vérification des données du PSDRF
 def data_verification(data):
@@ -25,9 +24,18 @@ def data_verification(data):
   Transect = pd.json_normalize(data[4])
   BMSsup30 = pd.json_normalize(data[5])
   Reperes = pd.json_normalize(data[6])
-  print(data)
 
-  print(Transect)
+
+
+  # Convertion de types
+  # errors='ignore' permet de ne pas convertir si le type n'est pas convertible en nombre
+  Arbres = Arbres.apply(pd.to_numeric, errors='ignore')
+  BMSsup30 = BMSsup30.apply(pd.to_numeric, errors='ignore')
+  Transect = Transect.apply(pd.to_numeric, errors='ignore')
+  Placettes = Placettes.apply(pd.to_numeric, errors='ignore')
+  Regeneration = Regeneration.apply(pd.to_numeric, errors='ignore')
+  Cycles = Cycles.apply(pd.to_numeric, errors='ignore')
+  Reperes = Reperes.apply(pd.to_numeric, errors='ignore')
 
   # Trouver le chemin d'accès au dossier data, qui contient les tables nécessaires aux tests
   ROOT_DIR_PSDRF = Path(__file__).absolute().parent.parent
@@ -66,6 +74,7 @@ def data_verification(data):
   correctionList['Ref_CodeEcolo'].insert(0, None)
 
   disp_num = Placettes["NumDisp"][0]
+
   last_cycle = Cycles[Cycles["NumDisp"] == disp_num]["Cycle"].max()
 
   tables =["Placettes", "Cycles", "Arbres", "Regeneration", 
@@ -102,16 +111,6 @@ def data_verification(data):
   Communes = filter_by_disp(disp_num, last_cycle, Communes, disp_num)
   Referents = filter_by_disp(disp_num, last_cycle, Referents, disp_num)
   Tarifs = filter_by_disp(disp_num, last_cycle, Tarifs, disp_num)
-
-
-  # Convertion de types
-  # errors='ignore' permet de ne pas convertir si le type n'est pas convertible en nombre
-  Arbres = Arbres.apply(pd.to_numeric, errors='ignore')
-  BMSsup30 = BMSsup30.apply(pd.to_numeric, errors='ignore')
-  Transect = Transect.apply(pd.to_numeric, errors='ignore')
-  print(Transect["Angle"])
-  Transect["Angle"]= Transect["Angle"].astype(int)
-
 
   
   soundness_code = "de décomposition"
@@ -1224,7 +1223,6 @@ def filter_by_disp(disp_list, cycle, table, disp_num) :
   if isinstance(table, pd.DataFrame):
       if table.shape[0] > 0:
           table = table[table['NumDisp']==num_list ]
-          
           # -- filtre selon le cycle
           if "Cycle" in table.columns:
               table = table[table['Cycle'] <= cycle]
@@ -1260,8 +1258,8 @@ def check_species(table_to_test, species, status, tablename):
 
 ##### fonction contrôle des Cycles ####
 def check_cycle(table_to_test, status, cycle_admin, tablename, An, Dispositifs): 
+    error = []
     if table_to_test.shape[0] > 0 :
-      error = []
       temp = table_to_test.assign(Mark = 1) # add marker
 
       cycle_table =  pd.merge(cycle_admin, temp[["NumDisp", "Cycle", "Mark"]], how='outer').drop_duplicates()
@@ -1307,14 +1305,7 @@ def check_code(code_admin, table_to_test, code_to_check, tableName):
 
   # détection des codes non conformes
   table_to_test=table_to_test[table_to_test[stade].notna()]
-  print(table_to_test)
-  print(code_admin['Code'].values)
   df1 = table_to_test[~table_to_test[stade].isin( code_admin['Code'].values)]
-  print(table_to_test[stade].isin( code_admin['Code'].values))
-  print(code_admin['Code'].values.dtype)
-  print(table_to_test.dtypes)
-  print(df1)
-
   df = df1.loc[:,df1.columns.isin([stade])].drop_duplicates()
 
   if df.shape[0]>0:
