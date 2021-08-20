@@ -1,36 +1,4 @@
-DO
-$$
-BEGIN
-
-PERFORM pg_catalog.setval('ref_nomenclatures.bib_nomenclatures_types_id_type_seq', (SELECT max(id_type)+1 FROM ref_nomenclatures.bib_nomenclatures_types), false);
-EXCEPTION WHEN unique_violation  THEN
-        RAISE NOTICE 'Tentative d''insertion de valeur existante';
-END
-$$;
-
-DO
-$$
-BEGIN
-
-PERFORM pg_catalog.setval('ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)_id_nomenclature_seq', (SELECT max(id_nomenclature)+1 FROM ref_nomenclatures.t_nomenclatures (id_type, cd_nomenclature, mnemonique, label_default, definition_default, label_fr, definition_fr, source, statut, active)), false);
-EXCEPTION WHEN unique_violation  THEN
-        RAISE NOTICE 'Tentative d''insertion de valeur existante';
-END
-$$;
-
-DO
-$$
-BEGIN
-
-PERFORM pg_catalog.setval('gn_monitoring.t_base_sites_id_base_site_seq', (SELECT max(id_base_site)+1 FROM gn_monitoring.t_base_sites), false);
-EXCEPTION WHEN unique_violation  THEN
-        RAISE NOTICE 'Tentative d''insertion de valeur existante';
-END
-$$;
-
--- Add inserts here
-
-SET search_path = ref_nomenclatures, pg_catalog;
+SET search_path = ref_nomenclatures, pg_catalog, public;
 
 
 -- Types d'espaces
@@ -711,7 +679,7 @@ VALUES (ref_nomenclatures.get_id_nomenclature_type('PSDRF_ABROUTIS'), '3', '3', 
 
 
 -- Essences
-SET search_path = pr_psdrf, pg_catalog;
+SET search_path = pr_psdrf, pg_catalog, public;
 
 INSERT INTO bib_essences (code_essence, cd_nom, nom, ess_reg, couleur, nom_latin) VALUES ('ALI', 197762, 'Alisier sp.', 'AF', 'cyan4', 'Sorbus sp');
 INSERT INTO bib_essences (code_essence, cd_nom, nom, ess_reg, couleur, nom_latin) VALUES ('AIL', 80824, 'Ailante', 'AF', 'azure2', 'Ailantus altissima');
@@ -753,7 +721,7 @@ INSERT INTO bib_essences (code_essence, cd_nom, nom, ess_reg, couleur, nom_latin
 INSERT INTO bib_essences (code_essence, cd_nom, nom, ess_reg, couleur, nom_latin) VALUES ('CHP', 116759, 'Chêne pédonculé', 'CHE', 'gold', 'Quercus robur');
 INSERT INTO bib_essences (code_essence, cd_nom, nom, ess_reg, couleur, nom_latin) VALUES ('CHY', 116751, 'Chêne pubescent', 'CHE', 'gold', 'Quercus pubescens');
 INSERT INTO bib_essences (code_essence, cd_nom, nom, ess_reg, couleur, nom_latin) VALUES ('CHR', 116762, 'Chêne rouge', 'CHE', 'gold', 'Quercus rubra');
-INSERT INTO bib_essences (code_essence, cd_nom, nom, ess_reg, couleur, nom_latin) VALUES ('CHS', 116744, 'Chêne sessile', 'CHE', 'gold', 'Quercus petraea');
+INSERT INTO bib_essences (code_essence, cd_nom, nom, ess_reg, couleur, nom_latin) VALUES ('CHS', 521658, 'Chêne sessile', 'CHE', 'gold', 'Quercus petraea');
 INSERT INTO bib_essences (code_essence, cd_nom, nom, ess_reg, couleur, nom_latin) VALUES ('CHV', 116704, 'Chêne vert', 'CHE', 'gold', 'Quercus ilex');
 INSERT INTO bib_essences (code_essence, cd_nom, nom, ess_reg, couleur, nom_latin) VALUES ('CHEV', 106581, 'Chêvrefeuille', 'AF', 'azure2', 'Lonicera periclymenum');
 INSERT INTO bib_essences (code_essence, cd_nom, nom, ess_reg, couleur, nom_latin) VALUES ('SOD', 124319, 'Cormier', 'AF', 'cyan4', 'Sorbus domestica');

@@ -6,7 +6,6 @@ import re
 
 from pathlib import Path
 
-
 # Fonction principale de vérification des données du PSDRF
 def data_verification(data):
   # TODO: Expliquer à quoi sert cette variable
