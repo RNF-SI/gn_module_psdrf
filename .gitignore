@@ -136,3 +136,9 @@ data/CodeEcorce
 data/CodeTypoArbres
 .vscode/launch.json
 
+# Rdata
+backend/gn_module_psdrf/Rscripts/data
+backend/gn_module_psdrf/Rscripts/tables
+backend/gn_module_psdrf/Rscripts/rpackages_in_3.6.0.txt
+
+

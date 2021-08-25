@@ -1,0 +1,2230 @@
+\PassOptionsToPackage{svgnames}{xcolor}
+
+\documentclass[10pt, a4paper, twoside, openright]{book}
+
+<<Preambule, child = 'psdrf_Preambule.Rnw'>>= 
+@
+
+<<OptionsGenerales, include = F>>=
+# TODO : supprimer les arguments inutiles des chunks (répétition)
+# repFigures <- "figures/" # debug or "figures" ?
+opts_chunk$set(
+  concordance = T, include = T, eval = T, tidy = F, cache = FALSE, 
+  warning = F, comment = F, error = F, message = F, echo = F, 
+  
+  fig.path = "figures", dev = 'pdf', fig.align = 'center', fig.show = 'hold', 
+  size = 'normalsize', eval.after  =  'fig.cap', fig.pos = 'h', results = 'asis'
+)
+options(width = 45, guiToolkit = "tcltk")
+par(mar = c(0, 0, 0, 0))
+@
+
+<<Librairies>>=
+# suppressMessages({
+library("xtable")
+library("reshape2")
+# library(plyr)
+library("scales")
+library("doBy")
+library("grid")
+library("gridExtra")
+library("maptools")
+library("rgdal")
+# library(raster)
+library("tcltk")
+library("gWidgets2")
+library("gWidgets2tcltk")
+library("rgeos")
+# library(RgoogleMaps)
+library("tools")
+library("stringr")
+library("stringi")
+library("ggmap")
+library("dplyr")
+library("gtools")
+library("ggthemes")
+library("broom")
+library("gtable")
+library("ggplot2")
+library("dichromat")
+library("PermPSDRF")
+library("gWidgets2")
+library("gWidgets2tcltk")
+library("fmsb")
+library("rlang")
+library("tidyr")
+# })
+@
+
+<<Import>>= 
+
+### Lancement manuel de l'édition du livret PSDRF #####
+# --- Choix du répertoire de travail
+ repPSDRF <- tclvalue(tkchooseDirectory(title = "Choix du répertoire Administrateurs dans la base PSDRF"))
+#repPSDRF <- "/Users/Valentin/Travail/Outils/GitHub/PermPSDRF2"
+
+# --- Chargement des données administrateurs
+load(file.path(repPSDRF, "tables/psdrfCodes.Rdata"))
+
+# --- Chargement des données d'inventaire
+load(file.path(repPSDRF, "tables/psdrfDonneesBrutes.Rdata"))
+
+# --- Identification du dispositif
+# ----- numéro du dispositif
+#disp_num <- 192
+# disp_num <- 157
+# disp_num <- 152
+# disp_num <- 179
+# disp_num <- 180
+# disp_num <- 165
+# disp_num <- 155
+# disp_num <- 189
+
+# ----- nom du dispositif
+disp_name <- unique(Dispositifs$Nom[Dispositifs$NumDisp == disp_num])
+Name_rep <- gsub(" ", "_", disp_name, fixed = T)
+Name_rep <- gsub("'", "", Name_rep, fixed = T)
+Name_rep <- str_replace_all(Name_rep, "\u00EA", "e")
+Name_rep <- str_replace_all(Name_rep, "\u00E2", "a")
+Name_rep <- str_replace_all(Name_rep, "\u00E9", "e")
+Name_rep <- str_replace_all(Name_rep, "\u00E8", "e")
+Name_rep <- str_replace_all(Name_rep, "\u00FB", "u")
+Name_rep <- str_replace_all(Name_rep, "\u00EE", "i")
+Name_rep <- str_replace_all(Name_rep, "\u00F4", "o")
+repSav <- paste0(repPSDRF, "/out/", disp_num, "-", Name_rep)
+
+# ----- définition du répertoire de sauvegarde du livret et des figures
+repPdf <- paste0(
+  repPSDRF, "/out/", disp_num, "-", Name_rep, "/carnet/"
+)
+repFigures <- paste0(repPdf, "figures")
+
+# --- Paramètres groupes
+# ----- Sans analyse par groupe
+# analyze_by_group <-  "no"
+# chosen_group_combination <- data.frame(
+#   variable = c("Disp"),
+#   value = c(192),
+#   stringsAsFactors = F
+# )
+# group_list <- c("Disp")
+
+# # ----- Avec analyse par groupe
+# analyze_by_group = "yes"
+# group_list <- c("Disp", "Strate")
+# chosen_group_combination <- data.frame(
+#   variable = c("Disp", "Strate", "Strate"),
+#   value = c("1", "1", "2"),
+#   stringsAsFactors = F
+# )
+#
+# group_list <- c("Disp", "Gestion")
+# chosen_group_combination <- data.frame(
+#   variable = c("Disp", "Gestion"),
+#   value = c(1, "Non-géré"),
+#   stringsAsFactors = F
+# )
+# group_list <- c("Groupe")
+# chosen_group_combination <- data.frame(
+#   variable = c("Groupe"),
+#   value = c("Parcelle 1", "Parcelle 10"),
+#   stringsAsFactors = F
+# )
+# group_list <- c("Disp", "Habitat")
+# chosen_group_combination <- data.frame(
+#   variable = c("Disp", "Habitat"),
+#   value = c(1, "41.13"),
+#   stringsAsFactors = F
+# )
+# group_list <- c("Disp", "Strate", "Habitat", "Gestion")
+# chosen_group_combination <- data.frame(
+#   variable = c("Disp", "Strate", "Habitat", "Gestion"),
+#   value = c(1, 2, "41.16", "Non-géré"),
+#   stringsAsFactors = F
+# )
+#### / \ #####
+setwd(repPdf)
+
+# --- Chargement des tables de la base
+load(file.path(repPSDRF, "tables/corine.rda"))
+load(file.path(repPSDRF, "tables/ser.rda"))
+ser@data$NomSER <- as.character(ser@data$NomSER)
+
+load(file.path(repSav, "tables/psdrfTablesBrutes.Rdata"))
+load(file.path(repSav, "tables/psdrfTablesElaboreesPlac.Rdata"))
+for(i in 1:length(TabPla)) {assign(names(TabPla)[i], TabPla[[i]])}
+load(file.path(repSav, "tables/psdrfTablesElaborees.Rdata"))
+for(i in 1:length(Tableaux)) {assign(names(Tableaux)[i], Tableaux[[i]])}
+@
+
+<<Extraction>>=
+ListTables <- c(
+  "Placettes", "Arbres", "Taillis", "Cycles", 
+  "BMP", "BMSsup30", "BMSLineaires", "Reges", 
+  "EssReg",
+  
+  "acct_bv", "acct_bmp", "acct_bms"
+)
+
+for (df in ListTables) {
+   # print(df) # debug
+  df_NAME <- paste0(df, "_Sel")
+  df <- get(df)
+  
+  if (dim(df)[1] > 0) {
+    df <- df %>% filter(NumDisp == disp_num)
+    
+    if ("Cycle" %in% names(df)) {
+      df <- df %>% mutate(Cycle = as.numeric(Cycle))
+    }
+    if ("NumPlac" %in% names(df)) {
+      df <- df %>% mutate(NumPlac = as.character(NumPlac))
+    }
+    if (df_NAME == "EssReg_Sel") { df <- df %>% distinct(.keep_all = T) }
+  }
+  assign(df_NAME, df)
+}
+Rege_Sel <- Reges_Sel
+Placettes_Sel <- 
+  Placettes_Sel %>% 
+  left_join(Dispositifs[, c("NumDisp", "Nom")], by = "NumDisp") %>% 
+  rename(Disp = Nom)
+
+last_cycle <- max(as.numeric(Placettes_Sel$Cycle), na.rm = T)
+  # last_cycle <- 2 # debug
+@
+
+<<Formats>>=
+##### Thèmes de figure #####
+MyTheme <- 
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(size = 8), 
+    axis.title.x = element_text(size = 9), 
+    axis.text.y = element_text(size = 8), 
+    axis.title.y = element_text(size = 9), 
+    legend.text = element_text(size = 7), 
+    legend.title = element_text(size = 9, face = 'plain')
+  )
+MyTheme2 <- 
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(size = 12), 
+    axis.title.x = element_text(size = 13), 
+    axis.text.y = element_text(size = 12), 
+    axis.title.y = element_text(size = 13), 
+    legend.text = element_text(size = 11), 
+    legend.title = element_text(size = 13, face = 'plain')
+  )
+MyTheme3 <- 
+  theme_bw() +
+  theme(
+    axis.text.x  = element_text(size = 8), 
+    axis.title.x  = element_text(size = 9), 
+    axis.text.y  = element_text(size = 8), 
+    plot.margin = unit(c(0.1, 0.1, 0.1, 0.1), "cm")
+  )
+par(mar = c(0, 0, 0, 0))
+@
+
+<<Palettes>>=
+# -- Palettes Essence + EssReg
+df <-
+  EssReg %>% # TODO : prévoir une fonction de subset ?
+  filter(NumDisp == disp_num) %>% 
+  select(Essence, EssRegPar, Couleur) %>%
+  distinct(Essence, Couleur, .keep_all = T) %>%
+  rename(Nom = Essence)
+
+Palette_Essence <- df$Couleur
+names(Palette_Essence) <- df$Nom
+
+df <-
+  EssReg %>% # TODO : prévoir une fonction de subset
+  filter(NumDisp == disp_num) %>% 
+  select(EssRegPar, Couleur) %>%
+  distinct(EssRegPar, Couleur, .keep_all = T) %>%
+  rename(Nom = EssRegPar)
+
+if (dim(df)[1] == 0) {
+  df <-
+    CodeEssence %>% # TODO : prévoir une fonction de subset
+    select(EssReg, Couleur) %>%
+    distinct(EssReg, .keep_all = T) %>%
+    rename(Nom = EssReg) %>% 
+    filter(!is.na(Nom))
+}
+Palette_EssReg <- df$Couleur
+names(Palette_EssReg) <- df$Nom
+
+# -- Ordre de tri des essences
+# -> essence majoritaire == max de Gha
+order_DF <-
+  psdrfDispFpied_Essence %>%
+  filter(NumDisp == disp_num & Cycle == last_cycle) %>%
+  arrange(desc(Gha))
+Essence_ORDER <- order_DF$Essence
+Palette_Essence <- Palette_Essence[
+  c(
+    Essence_ORDER, 
+    names(Palette_Essence)[which(!is.element(names(Palette_Essence), Essence_ORDER))]
+  )
+  ]
+
+order_DF <-
+  psdrfDispFpied_EssReg %>%
+  filter(NumDisp == disp_num & Cycle == last_cycle) %>%
+  arrange(desc(Gha))
+EssReg_ORDER <- order_DF$EssReg
+Palette_EssReg <- Palette_EssReg[
+  c(
+    EssReg_ORDER, 
+    names(Palette_EssReg)[which(!is.element(names(Palette_EssReg), EssReg_ORDER))]
+  )
+  ]
+
+# -- Palette catégories de diamètre
+PaletteCat <- c("gold", "green3", "dodgerblue", "orangered3", "purple")
+names(PaletteCat) <- c("PER", "PB", "BM", "GB", "TGB")
+
+# --- Autre ordre des essences pour EssReg
+EssReg_ORDER1 <-
+  psdrfDispFpied_EssReg %>%
+  filter(Cycle == last_cycle & NumDisp == disp_num) %>%
+  mutate(Gha = round(Gha, 1)) %>%
+  rename(Essence = EssReg) %>%
+  select(Essence, Gha) %>%
+  filter(Gha >= 0) %>% # Ordre des essences classées par G décroissant
+  distinct() %>%
+  arrange(Gha) %>%
+  select(Essence) %>%
+  unlist() %>%
+  unname()
+
+# Ordre des essences pour tout le document :
+Niveaux_EssReg1 <- EssReg_ORDER1
+Niveaux_EssReg2 <- EssReg_ORDER1[length(EssReg_ORDER1):1]
+@
+
+<<Fonctions>>= 
+##### fonction de récupération des légendes (figures composées) #####
+g_legend <- function(a.gplot) {
+  tmp <- ggplot_gtable(ggplot_build(a.gplot))
+  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+  legend <- if (length(leg) > 0) tmp$grobs[[leg]] else grob()
+  
+  return(legend)
+}
+
+##### fonction de mise en forme texte (string vector) pour édition LaTeX #####
+utf82LaTeX <- function(string, ...) {
+  string <- paste0(string, ...)
+  string <- gsub("-", "--", string, fixed  = T)
+  string <- gsub("—", "---", string, fixed  = T)
+  string <- gsub("#", "\\#", string, fixed  = T)
+  # string <- gsub("{", "\\{", string, fixed  = T)
+  # string <- gsub("}", "\\}", string, fixed  = T)
+  string <- gsub("$", "\\$", string, fixed  = T)
+  string <- gsub("_", "\\_", string, fixed  = T)
+  string <- gsub("&", "\\&", string, fixed  = T)
+  string <- gsub("œ", "\\oe ", string, fixed  = T)
+  string <- gsub("æ", "\\ae ", string, fixed  = T)
+  string <- gsub("«", "\\og ", string, fixed  = T)
+  string <- gsub("»", "\\fg{}", string, fixed  = T)
+  string <- gsub("“", "``", string, fixed  = T)
+  string <- gsub("”", "''", string, fixed  = T)
+  string <- gsub("n°", "\\no ", string, fixed  = T)
+  string <- gsub("N°", "\\No ", string, fixed  = T)
+  string <- gsub("%", "\\%", string, fixed  = T)
+  string <- gsub("‰", "\\textperthousand", string, fixed  = T)
+  string <- gsub("€", "\\texteuro", string, fixed  = T)
+  string <- gsub("^", "\\textasciicircum", string, fixed  = T)
+  string <- gsub("~", "\\textasciitilde", string, fixed  = T)
+  # cat(string)
+  return(string)
+}
+
+# TODO : supprimer DOUBLONS
+##### fonction de traduction des caractères spéciaux LaTeX #####
+TabCharacters <- data.frame(
+  System = c(
+    "\\u00E8", "\\u00E9", "\\u00E0", "\\u00EA", "\u00E8", "\u00E9", 
+    "\u00E0", "\u00EA", "\\u00T", "\\u00B0", "\\u00F9", "\u00EE", "\\u00EE"
+  ), 
+  UTF = c(
+    "è", "é", "à", "ê", "è", "é", "à", "ê", "-", "°", "ù", "î", "î"
+  ), # , "à", "à "
+  stringsAsFactors = F
+)
+
+encoding <- function(
+  src, TabCharacters, reverse = F
+) {
+  temp <- src
+  if (reverse == F) {
+    for (char in TabCharacters$System) {
+      temp <- gsub(
+        char, 
+        TabCharacters$UTF[match(char, TabCharacters$System)], 
+        temp, 
+        fixed = T
+      )
+    }
+  } else {
+    for (char in TabCharacters$UTF) {
+      temp <- gsub(
+        char, 
+        TabCharacters$System[match(char, TabCharacters$UTF)], 
+        temp, 
+        fixed = T
+      )
+    }
+  }
+  return(temp)
+}
+
+##### fonction MultiRow1 (mise en forme des tableaux) #####
+MultiRow1 <- function(Table, Columns) {
+  Table <- as.data.frame(Table)
+  for (i in Columns) {
+    pos <- which(duplicated(Table[, i]))
+    if (length(pos) > 0) {
+      # pos <- sort(unique(c(pos, which(duplicated(t[, 1], fromLast = T)))))
+      Table <- 
+        Table %>% 
+        mutate(Mark = factor(Table[, i])) %>%
+        group_by(Mark) %>%
+        mutate(Count = length(Mark)) %>%
+        ungroup() %>%
+        data.frame()
+      Table[, i] <- as.character(Table[, i])
+      Table[pos, i] <- NA
+      
+      # Repere des lignes à mettre en multirow
+      pos2 <- which(Table$Count > 1 & !is.na(Table[, i]))
+      # pos3 <- which(!is.na(Table[, i]))
+      Table[pos2, i] <- paste0(
+        "\\multirow{", Table$Count[pos2], "}{*}{", Table[pos2, i], "}"
+      )
+      Table$Count <- NULL
+      Table$Mark <- NULL
+    }
+  }
+  return(Table)
+}
+
+##### fonction MultiRow2 (mise en forme des tableaux) #####
+MultiRow2 <- function(Table, Columns) {
+  for(i in Columns) {
+    pos <- which(duplicated(Table[, i]))
+    if (length(pos) > 0) {
+      # pos <- sort(unique(c(pos, which(duplicated(t[, 1], fromLast = T)))))
+      Table <- 
+        Table %>% 
+        mutate(Mark = factor(Table[, i])) %>%
+        group_by(Mark) %>%
+        mutate(Count = length(Mark)) %>%
+        ungroup() %>%
+        data.frame()
+      Table[, i] <- as.character(Table[, i])
+      Table[pos, i] <- NA
+      
+      # Repere des lignes à mettre en multirow
+      pos2 <- which(Table$Count > 1 & !is.na(Table[, i]))
+      # pos3 <- which(!is.na(Table[, i]))
+      Table[pos2, i] <- paste0(
+        "\\multirow{", Table$Count[pos2], "}{*}{", Table[pos2, i], "}"
+      )
+      Table$Count <- NULL
+      Table$Mark <- NULL
+    }
+  }
+  return(Table)
+}
+
+##### fonction de nettoyage des noms #####
+clean_names <- function(string) {
+  string <- gsub(".", "_", string, fixed = T)
+  string <- gsub("'", "", string, fixed = T)
+  string <- gsub(",", "_", string, fixed = T)
+  string <- gsub("\u00EA", "e", string, fixed = T)
+  string <- gsub("\u00E2", "a", string, fixed = T)
+  string <- gsub("\u00E9", "e", string, fixed = T)
+  string <- gsub("\u00E8", "e", string, fixed = T)
+  string <- gsub("\u00FB", "u", string, fixed = T)
+  string <- gsub("\u00EE", "i", string, fixed = T)
+  string <- gsub("\u00F4", "o", string, fixed = T)
+  
+  # retour de la fonction clean_names
+  return(string)
+}
+
+prepare_tables <- function ( # TODO : ne garder qu'1 fonction prepare_tables ? -> tester la fonction pour les parties évolutions
+  disp_num = NULL, group = NULL, tables_needed = NULL, 
+  evol = F, analyze_by_habitat = F, 
+  admin = NULL
+) {
+  ##### 1/ Initialisation #####
+  # -- intitulé du groupe
+  str <- gsub("GrOupe", "Groupe", group)
+  str <- gsub("GroUpe1", "Groupe1", str)
+  str <- gsub("GrouPe2", "Groupe2", str)
+  
+  # -- correspondance : intitulé du groupe/colonnes table Placettes (superassignement)
+  plot_group <<- 
+    str_sub(str, 1, str_locate(str, "_")[, 2] - 1)
+  
+  # -- numéro d'inventaire (superassignement)
+  # cycle_num <<- as.numeric( str_sub(str, str_locate_all(str, "-")[, 2] + 1, -1) )
+    cycle_num <<- as.numeric( str_sub(str, -1) )
+  
+  # -- expressions et chemins selon le/les groupes
+  if (plot_group == "Disp") {
+    # label/valeur du groupe dans la colonne !!plot_group de la table 'Placettes'
+    filter_group_value <- ""
+    
+    # expression dans la commande section (superassignement)
+    section_str <<- "A l'\u00E9chelle du dispositif"
+    
+    # figure path (superassignement)
+    output_dir <- 
+      if (evol == F) paste0("Cycle", cycle_num) else "Evol"
+    figure_path <<- paste0(output_dir, "/Dispositif/")
+    
+    # label pour l'édition des noms de table
+    plot_group_label <- 
+      if (analyze_by_habitat == T) "Habitat" else ""
+  } else {
+    # label/valeur du groupe dans la colonne !!plot_group de la table 'Placettes'
+    filter_group_value <- str_sub(
+      str, 
+      str_locate(str, "_")[, 2] + 1, 
+      # str_locate(str, "-")[, 2] - 1
+      -3 # -1 = cycle_num
+    )
+    
+    # # expression dans la commande section (superassignement)
+    # section_str <<- paste0(plot_group, " : ", filter_group_value)
+    
+    # figure path (superassignement)
+    output_dir <- 
+      if (evol == F) paste0("Cycle", cycle_num) else "Evol"
+    figure_path <<- 
+      paste0(output_dir, "/", plot_group, "/", filter_group_value, "/")
+    
+    # label pour l'édition des noms de table
+    plot_group_label <- plot_group
+  }
+  
+  ##### 2/ Liste des placettes et nom du/des groupe(s) retenus #####
+  # TODO : factoriser l'ensemble de la fonction ?
+  # -- get plot_group_value and group_plots to subset tables_needed and inv tables
+  # set up
+  filter_group <- quo(!!parse_expr(plot_group))
+  # filter_group <- plot_group # TODO : tester sans quo ?
+   # filter_by_group <- if (plot_group == "Disp") { # debug
+    # quo(Cycle == cycle_num) # debug
+  # } else { # debug
+    # quo(tmp == filter_group_value & Cycle == cycle_num)# debug
+  # } # debug
+  filter_by_group_expr <- if (plot_group == "Disp") {
+    ""
+  } else {
+    "tmp == filter_group_value & "
+  }
+  
+  # Rajouter Cycles
+  filter_by_cycle_expr <- if (evol == FALSE) {
+    "Cycle == cycle_num"
+  } else {
+    "is.element(Cycle, c(cycle_num, cycle_num - 1))"
+  }
+  
+  # build filter
+  filter_by_group_and_cycle <- 
+    paste0(filter_by_group_expr, filter_by_cycle_expr)
+  filter_by_group_and_cycle <- 
+    quo(!!parse_expr(filter_by_group_and_cycle))
+  
+  # get plot list from filter_group_value
+   # print(filter_by_group) # debug
+   # print(filter_by_group_and_cycle) # debug
+  get_group_plots <- 
+    admin %>% 
+    mutate(tmp = clean_names(!!filter_group)) %>% 
+    filter(!!filter_by_group_and_cycle)
+  # numéros des parcelles du groupe (superassignement)
+  group_plots <<- 
+    get_group_plots %>% select(NumPlac) %>% 
+    unlist() %>% unname()
+  
+  # get plot_group_value
+  if (plot_group != "Disp") {
+    get_plot_group_value <- 
+      get_group_plots %>% 
+      select(!!filter_group) %>%
+      distinct()
+        # expression dans la commande section (superassignement)
+    section_str <<- paste0(
+      plot_group, " : ", 
+      get_plot_group_value %>% unlist() %>% unname()
+    )
+    
+    if (dim(get_plot_group_value)[1] > 1) {
+      stop(
+        "Il y a plus d'un groupe correspondant aux caractères '", group, 
+        "' dans la colonne ", plot_group, " de la table Placettes"
+      )
+    }
+    plot_group_value <<- 
+      get_plot_group_value %>% unlist() %>% unname()
+  }
+  
+  ##### 3/ Filtre des tables de résultats #####
+  # -- tables demandées dans le livret
+  # tables_needed <- c(
+  #   "psdrfDispFpied_Cat", "psdrfDispFpied_Classe", 
+  #   "psdrfDispFpied_EssenceCat", "psdrfDispTot_", 
+  #   "psdrfDispTot_Cat", "psdrfDispTot_Essence", 
+  #   "psdrfDispTot_EssReg", "psdrfDispTot_EssRegCat", 
+  #   "psdrfDispTaillis_", "psdrfDispTaillis_Classe", 
+  #   "psdrfDispDen_", "psdrfDispDen_Essence", 
+  #   "psdrfDispTaillis_Essence", "psdrfDispRege_Essence", 
+  #   "psdrfDispDen_CodeSanit", "psdrfDispDen_EssenceCodeSanit"
+  # )
+  
+  # -- modification des noms de tables demandées si analyse par groupe(s)
+  # if (plot_group != "Disp") {
+    tables_needed <- gsub("Disp", paste0("Disp", plot_group_label), tables_needed)
+  # }
+  
+  # -- filtre des tables de résultats selon le groupe et selon le cycle
+  # set up
+  filter_by_group_value_and_cycle <- 
+    if (plot_group == "Disp") {
+      quo(
+        NumDisp == disp_num & 
+          !!parse_expr(filter_by_cycle_expr)
+      )
+    } else {
+      quo(
+        NumDisp == disp_num & 
+          !!parse_expr(filter_by_cycle_expr) & 
+          !!parse_expr(
+            paste0(plot_group," == plot_group_value")
+          )
+      )
+    }
+  
+  # -- save subsets in object 'tables'
+  tables <- c()
+   # print(filter_by_group_value_and_cycle) # debug
+  for (i in 1:length(tables_needed)) {
+    # print(i) # debug
+    # filter
+    tmp <- 
+      tables_needed[i] %>% 
+      get() %>% # TODO : add filter by disp
+      filter(!!filter_by_group_value_and_cycle)
+    tables <- c(tables, list(tmp))
+    
+    # table name
+    table_name <- gsub("_", "_by_", tables_needed[i])
+    table_name <- gsub(
+      paste0("psdrfDisp", plot_group_label), 
+      "grouped_results_of_", 
+      table_name
+    )
+    names(tables)[i] <- table_name
+     # print(table_name) # debug
+  }
+  tables_needed <- tables
+  
+  ##### 4/ Filtre des tables d'inventaire #####
+  # -- tables d'inventaire
+  inventory_tables <- c(
+    "Arbres", "BMP", "BMSLineaires", "BMSsup30", 
+    "Cycles", "Placettes", "Reges", "Taillis"
+  )
+  
+  # -- subset with group_plots
+  tables <- c()
+  
+  # build filter
+  filter_by_plots_and_cycle <- paste0(
+    "NumPlac %in% group_plots & ", 
+    filter_by_cycle_expr
+  )
+  filter_by_plots_and_cycle <- quo(!!parse_expr(filter_by_plots_and_cycle))
+  
+  for (i in 1:length(inventory_tables)) {
+    # filter
+    tmp <- 
+      paste0(inventory_tables[i], "_Sel") %>%  # TODO : remove suffix
+      get() %>% 
+      filter(!!filter_by_plots_and_cycle)
+    tables <- c(tables, list(tmp))
+    
+    # table name
+    table_name <- paste0(inventory_tables[i], "_SUB")
+    names(tables)[i] <- table_name
+  }
+  inventory_tables <- tables
+  
+  
+  # -- retour de la fonction prepare_tables ----
+  return_list <- list(tables_needed, inventory_tables)
+  return(return_list)
+}
+
+
+##### fonction pour la construction de la table des coordonnées du radars de l'état de conservation : #####
+get_radar_coords <- function(group = NULL, tables_needed = NULL) { # à tester par habitat
+ # group <- "Habitat" # debug
+  # quo_group <- enquo(group)
+  quo_group <- quo(!!parse_expr(group))
+
+  # -- critère 1 ratio volume de bois mort / volume de bois total
+  # arbres sur pied
+  vol_bv <- 
+    tables_needed$grouped_results_of_Fpied_by_ %>% 
+    filter(!is.na(Vha) & Vha != 0) %>%
+    select(NumDisp, group, Cycle, Vha) %>% 
+    rename(VhaArbres = Vha)
+  
+  # taillis
+  vol_taillis <- 
+    tables_needed$grouped_results_of_Taillis_by_ %>% 
+    filter(!is.na(Vha) & Vha != 0) %>% 
+    select(NumDisp, group, Cycle, Vha) %>% 
+    rename(VhaTaillis = Vha)
+
+  # bmp
+  vol_bmp <- 
+    tables_needed$grouped_results_of_BMP_by_ %>% 
+    filter(!is.na(Vha) & Vha != 0) %>% 
+    select(NumDisp, group, Cycle, Vha) %>% 
+    rename(VhaBMP = Vha)
+
+      # bms
+  vol_bms <- 
+    tables_needed$grouped_results_of_BMS_by_ %>% 
+    filter(!is.na(Vha) & Vha != 0) %>% 
+    select(NumDisp, group, Cycle, Vha) %>% 
+    rename(VhaBMS = Vha)
+  
+  volumes <- 
+    vol_bv %>% 
+    full_join(vol_taillis, by = c("NumDisp", group, "Cycle")) %>% 
+    full_join(vol_bmp, by = c("NumDisp", group, "Cycle")) %>% 
+    full_join(vol_bms, by = c("NumDisp", group, "Cycle")) %>% 
+    distinct() %>% 
+    group_by(NumDisp, !!quo_group, Cycle) %>% 
+    mutate(
+      BVivantT = sum(VhaArbres, na.rm = T) + sum(VhaTaillis, na.rm = T),
+      BMortT = sum(VhaBMP, na.rm = T) + sum(VhaBMS, na.rm = T),
+      BTot = sum(BVivantT, na.rm = T) + sum(BMortT, na.rm = T),
+      # calcul du ratio
+      RatioBMT = BMortT / BTot * 100,
+      NoteRatioBMT = cut(
+        RatioBMT, 
+        breaks = c(-Inf, 3, 5, 10, 15, 100), 
+        labels = c(1, 2, 3, 4, 5)
+      )
+    ) %>% 
+    ungroup() %>% 
+    select(NumDisp, group, Cycle, NoteRatioBMT)
+
+  # -- critère 2 : % de bois mort > 30
+bm_30_rate <- 
+  tables_needed$grouped_results_of_BM_by_ %>% 
+  # filter(NumDisp == Choix & Cycle == cycle_num) %>% 
+  
+  mutate(
+    RatioBM30 = (BMPsup + BMSsup) / VhaBMT * 100, # TODO : il y avait une erreur de calcul (voir ancienne version)
+    NoteRatioBM30 = cut(
+      RatioBM30, 
+      breaks = c(-Inf, 5, 25, 50, 75, 100), 
+      labels = c(1, 2, 3, 4, 5))
+  ) %>% 
+  select(NumDisp, group, Cycle, NoteRatioBM30)
+
+# -- critère 3 - diversité des stades de décomposition (sur le volume)
+stadeD_diversity <- 
+  tables_needed$grouped_results_of_BM_by_StadeD %>% 
+  # filter(NumDisp == Choix & Cycle == cycle_num) %>%
+  select(NumDisp, group, Cycle, StadeD, VhaBMT) %>%
+  group_by(NumDisp, !!quo_group, Cycle) %>%
+  mutate(
+    Vha = VhaBMT, 
+    VhaTot = sum(Vha, na.rm = T), 
+    RatioBMD = Vha / VhaTot * 100, 
+    NoteRatioBMD = ifelse(RatioBMD > 5, 1, 0)
+  ) %>%
+  group_by(NumDisp, !!quo_group, Cycle) %>%
+  summarise(NoteBMD = max(cumsum(NoteRatioBMD))) %>%
+  ungroup() %>% 
+  select(NumDisp, group, Cycle, NoteBMD)
+
+# -- critère 4 - structure horizontale : diversité des classes de diamètre (sur la surface terrière)
+# arbres
+ba_bv <- 
+  tables_needed$grouped_results_of_Fpied_by_Classe %>% 
+  filter(!is.na(Gha) & Gha != 0) %>%
+  select(NumDisp, group, Cycle, Classe, Gha) %>% 
+  rename(GhaArbres = Gha)
+
+# taillis
+ba_taillis <- 
+  tables_needed$grouped_results_of_Taillis_by_Classe %>% 
+  filter(!is.na(Vha) & Vha != 0) %>% 
+  select(NumDisp, group, Cycle, Classe, Gha) %>% 
+  rename(GhaTaillis = Gha)
+
+# surface terrières
+basal_areas <- 
+  ba_bv %>% 
+  full_join(ba_taillis, by = c("NumDisp", group, "Classe", "Cycle")) %>% 
+  mutate(
+    GhaArbres = ifelse(is.na(GhaArbres), 0, GhaArbres),
+    GhaTaillis = ifelse(is.na(GhaTaillis), 0, GhaTaillis),
+    Gha = GhaArbres + GhaTaillis
+  ) %>% 
+  group_by(NumDisp, !!quo_group, Cycle) %>%
+  mutate(GhaTot = sum(Gha, na.rm = T)) %>%
+  ungroup() %>%
+  data.frame()
+
+# diversité des classes de diamètre
+class_diversity <- 
+  basal_areas %>% 
+  mutate(
+    RatioGha = Gha / GhaTot * 100,
+    NoteRatioGha = ifelse(RatioGha > 5, 1, 0)
+  ) %>% 
+  group_by(NumDisp, !!quo_group, Cycle) %>%
+  summarise(CumGha = max(cumsum(NoteRatioGha), na.rm = T)) %>%
+  ungroup() %>%
+  mutate(
+    Note = cut(
+      CumGha, 
+      breaks = c(-Inf, 3, 4, 5, 6, +Inf), 
+      labels = c(1, 2, 3, 4, 5), 
+      right = F
+    )
+  ) %>% 
+  data.frame() %>% 
+  select(NumDisp, group, Cycle, Note)
+
+# -- critère 5 : % de TGB (% de G):
+tgb_rate <- 
+  basal_areas %>% 
+  mutate(
+    Cat = cut(
+      Classe, 
+      breaks = c(-Inf, 17.5, 27.5, 47.5, 67.5, +Inf), 
+      labels = c("PER", "PB", "BM", "GB", "TGB")
+    )
+  ) %>% 
+  group_by(NumDisp, !!quo_group, Cycle, Cat, GhaTot) %>% 
+  summarise(Gha = sum(Gha, na.rm = T)) %>% 
+  ungroup() %>% 
+  # sécurité
+  filter(!is.na(Cat)) %>% 
+  # calcul du ratio
+  mutate(RatioTGB = Gha / GhaTot * 100) %>% 
+  filter(Cat == "TGB") %>% 
+  mutate(
+    NoteRatioTGB = cut(
+      RatioTGB, 
+      breaks = c(-Inf, 0, 5, 10, 15, +Inf), 
+      labels = c(1, 2, 3, 4, 5), 
+      right = F
+    )
+  ) %>% 
+  select(NumDisp, group, Cycle, NoteRatioTGB)
+
+# -- assemblage des 5 critères
+radar_coords <- 
+  volumes %>% 
+  full_join(
+    bm_30_rate,
+    by = c("NumDisp", group, "Cycle")
+  ) %>% 
+  full_join(
+    stadeD_diversity, 
+    by = c("NumDisp", group, "Cycle")
+    ) %>% 
+  full_join(
+    class_diversity,
+    by = c("NumDisp", group, "Cycle")
+  ) %>% 
+  full_join(
+    tgb_rate,
+    by = c("NumDisp", group, "Cycle")
+  ) %>% 
+  mutate(
+    NoteRatioBMT = ifelse(is.na(NoteRatioBMT), 1, NoteRatioBMT),
+    NoteRatioBM30 = ifelse(is.na(NoteRatioBM30), 1, NoteRatioBM30),
+    NoteRatioTGB = ifelse(is.na(NoteRatioTGB), 1, NoteRatioTGB),
+    Note = ifelse(is.na(Note), 1, Note),
+    NoteBMD = ifelse(is.na(NoteBMD), 1, NoteBMD),
+    
+    NoteRatioBMT = factor(NoteRatioBMT, levels = c("1", "2", "3", "4", "5")),
+    NoteRatioBM30 = factor(NoteRatioBM30, levels = c("1", "2", "3", "4", "5")),
+    NoteRatioTGB = factor(NoteRatioTGB, levels = c("1", "2", "3", "4", "5")),
+    Note = factor(Note, levels = c("1", "2", "3", "4", "5"))
+    # NoteBMD = factor(NoteBMD, levels = c("1", "2", "3", "4", "5"))
+  ) %>% 
+  distinct() %>% 
+  mutate(
+    NoteRatioBMT = as.numeric(NoteRatioBMT),
+    NoteRatioBM30 = as.numeric(NoteRatioBM30),
+    NoteBMD = as.numeric(NoteBMD),
+    Note = as.numeric(Note),
+    NoteRatioTGB = as.numeric(NoteRatioTGB)
+  ) %>% 
+  rename(
+    BMort = NoteRatioBMT,
+    BMort30 = NoteRatioBM30,
+    StadeD = NoteBMD,
+    DivClasses = Note,
+    PartTGB = NoteRatioTGB
+  ) %>% 
+  select(group, BMort, BMort30, StadeD, DivClasses, PartTGB)
+
+# -- retour de la fonction get_radar_coords
+return(radar_coords)
+}
+
+##### fonction pour créer une figure radar (avec paramètres fixes) #####
+# TODO : à ranger
+draw_RNF_radar <- function(
+  figure_coords = NULL, radar_coords = NULL, habitat = NULL,
+  magnif = NULL, plot_nb = NULL, 
+  new_plot = F
+) {
+  par(
+    mar = c(0, 0, 1, 0), 
+    family = "Times", 
+    cex.main = magnif$cex.main, 
+    fig = figure_coords, 
+    mgp = c(5, 5, 5), 
+    new = new_plot
+  )
+  radarchart(
+    radar_coords, 
+    axistype = 1, 
+    pty = 32, 
+    pcol = "black", 
+    plty = 1, 
+    pdensity = 50, 
+    plwd = 0.3, 
+    pfcol = "salmon", 
+    title = paste0("Habitat ", habitat), 
+    centerzero = T, seg = 5, 
+    caxislabels = c(0, 1, 2, 3, 4, 5), 
+    calcex = magnif$calcex, 
+    vlcex = magnif$vlcex, 
+    vlabels = c(
+      "Rapport :\nBMort/BTotal", 
+      "\b\bRapport :\n\b\b\bBMort>30 /\n\b\b\bBMort total", 
+      "Stades de \npourriture pr\u00E9sents", 
+      "Diversit\u00E9 des \nclasses de diam\u00E8tre ", 
+      "Part de TGB             "
+    )
+  )
+  text(
+    x = 0.75, y = 0.9, 
+    labels = paste0("Nombre de \n placettes : ", plot_nb), 
+    cex = 0.75, col = "firebrick"
+  )
+}
+@
+
+<<Images>>= 
+NomPhoto = file.path(repPSDRF, "data/images/photos", "001.png")
+ImagesLogo = file.path(repPSDRF, "data/images/logos/logoRNF.png")
+ImagesLogoONF = file.path(repPSDRF, "data/images/logos/logoONF.png")
+ImagesLogoEDF = file.path(repPSDRF, "data/images/logos/logoEDF.png")
+
+# Adaptations pour quelques dispositifs
+if (disp_num == 125) {
+  NomPhoto <- file.path(repPSDRF, "data/images/images_PNC/DSC07002.JPG")
+}
+if (disp_num == 93) {
+  NomPhoto <- file.path(repPSDRF, "data/images/images_PNC/BM075.JPG")
+}
+if (disp_num == 183) {
+  NomPhoto <- 
+    file.path(repPSDRF, "data/images/images_Fleckenstein/20180306_124759.jpg")
+}
+LogoPNC <- 
+  file.path(repPSDRF, "data/images/images_PNC/marquage_cevennes_partenaire.jpg")
+LogoUE <- 
+  file.path(repPSDRF, "data/images/images_PNC/Logo_UE.jpg")
+LogoPNC <- 
+  file.path(repPSDRF, "data/images/images_Fleckenstein/LOGO_PNRVN-Q-2017-grand.jpg")
+LogoUE <- 
+  file.path(repPSDRF, "data/images/images_Fleckenstein/Grand_Est_logo_RVB.jpg")
+LogoFNADT <- file.path(repPSDRF, "data/images/images_PNC/Logo_FNADT_2.jpg")
+@
+
+<<ChoixAjouts>>= 
+Evol <- if (last_cycle > 1) TRUE else FALSE
+
+pos <- with(
+  CyclesCodes, 
+  which(Monitor[NumDisp == disp_num] %in% c("PSDRF Alluvial", "PFA"))
+)
+Eval_PSDRFMA <- if (length(pos) > 0) TRUE else FALSE
+
+# Evol <- T
+DetailGroupe <- ifelse("gfGroupeClasseEssRegDen" %in% ls(), 1, 0)
+DetailTypo <- ifelse("gfTypologieClasseEssRegDen" %in% ls(), 1, 0)
+# DetailBM <- ifelse(dim(gfBMP)[1]+ dim(gfBMS)[1]>0, 1, 0)
+DetailCarto <- 1
+
+Answer_Radar <- tk_messageBox(
+  type = "yesno", 
+  message = "R\u00E9aliser l'analyse de l'\u00E9tat de conservation du dispositif ?", 
+  caption = "Etat de conservation"
+)
+if (Answer_Radar == "yes") {
+  EvalRadar <- T
+  EvalRadar2 <- 1
+} else {
+  EvalRadar <- F
+  EvalRadar2 <- 2
+  src2 <- c()
+}
+@
+
+%%%%%%%%%%%%%%%% Différentes versions
+\def\ChoixDeVersion{1}
+% ------- Remesure
+\newcommand{\VersionEvol}[2]{
+  \ifthenelse{
+    \equal{\ChoixDeVersion}{\Sexpr{Evol}}
+             }{#1}{#2}
+}
+
+\newcommand{\equalsNothing}[2]{
+\ifthenelse{\equal{\Sexpr{Evol}}{\ChoixDeVersion}}{#1}{#2}
+}
+
+\newcommand{\VersionRadar}[2]{
+  \ifthenelse{
+    \equal{\ChoixDeVersion}{\Sexpr{EvalRadar2}}
+             }{#1}{#2}
+}
+
+\newcommand{\EditIf}[4]{
+\ifthenelse{
+\equal{#1}{#2}
+}{#3}{#4}
+}
+
+% \newcommand{\VersionEvol}[2]{%
+%     \IfEqCase{\Sexpr}{%
+%         {FALSE}{#2}%
+%         {TRUE}{#2}%
+%         % you can add more cases here as desired
+%     }[\PackageError{tree}{Undefined option to tree: #1}{}]%
+% }%
+
+% ------- Détail par groupe
+\newcommand{\VersionGroupe}[2]{
+  \ifthenelse{
+    \equal{\ChoixDeVersion}{\Sexpr{DetailGroupe}}
+             }{#1}{#2}
+}
+% ------- Détail par type de peuplement
+\newcommand{\VersionTypo}[2]{
+  \ifthenelse{
+    \equal{\ChoixDeVersion}{\Sexpr{DetailTypo}}
+             }{#1}{#2}
+}
+% % ------- Inventaire bois mort
+% \newcommand{\VersionBM}[2]{
+%   \ifthenelse{
+%     \equal{\ChoixDeVersion}{\Sexpr{DetailBM}}
+%              }{#1}{#2}
+% }
+% ------- Cartographie
+\newcommand{\VersionCarto}[2]{
+  \ifthenelse{
+    \equal{\ChoixDeVersion}{\Sexpr{DetailCarto}}
+             }{#1}{#2}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+<<PG, child = 'psdrf_PG.Rnw'>>= 
+@
+
+\tableofcontents
+\thispagestyle{empty} % la page en tour n'a pas de numéro de page
+\setcounter{page}{0}
+
+<<Intro>>= 
+NbDisp <- 
+  CyclesCodes %>% 
+  filter(
+    Monitor == "PSDRF" & DateIni < as.numeric(format(Sys.Date(), "%Y"))
+  ) %>%  #  & Cycle == 1 supprimé (certains dispositifs sont repris du COST-E4)
+  select(NumDisp) %>% 
+  distinct() %>% 
+  unlist() %>% 
+  unname()
+
+NbRB <- 
+  Dispositifs %>% 
+  filter(
+    NumDisp %in% NbDisp & 
+      Statut1 %in% c(
+        "Reserve biologique dirigee", 
+        "Reserve biologique integrale", 
+        "Projet de réserve biologique"
+      )
+  )
+NbRN <- 
+  Dispositifs %>% 
+  filter(
+    NumDisp %in% NbDisp & 
+      Statut1 %in% c(
+        "Reserve naturelle nationale", 
+        "Reserve naturelle régionale"
+      )
+  )
+
+NbAutre <- 
+  Dispositifs %>% 
+  setdiff(union(NbRB, NbRN)) %>%
+  filter(NumDisp %in% NbDisp)
+
+@
+
+\chapter*{Introduction}
+\addcontentsline{toc}{chapter}{Introduction}
+Le présent carnet a été réalisé par Réserves naturelles de France (RNF), grâce à la participation de l'Office National des Forêts (ONF) et d'Electricité de France (EDF).\\
+Il est issu du développement d'un certain nombre de scripts d'analyse réalisés sous R Studio et utilise des sources de données diverses (voir ci-dessous).\\
+
+Le carnet est accompagné :
+\begin{itemize}
+\item d'un tableur excel et d'un shapefile compilant l'ensemble des résultats par placette
+\item de documents facilitant la remesure (plan de localisation des arbres, fiche et tableur de remesure).
+\end{itemize}
+Pour plus de renseignements, une notice est disponible sur le site internet de RNF (www.reserves-naturelles.o\\ rg/sites/default/files/fichiers/notice\_psdrf.pdf) ou sur demande (rnf@espaces-naturels.fr).\\
+
+\textbf{Données dendrométriques}\\
+Les données dendrométriques sont relevées via l'application du Protocole de Suivi Dendrométrique des Réserves forestières (PSDRF) dont la notice peut être retrouvée sur le site internet de RNF (www.reserves-naturelles.org) ou sur demande (rnf@espaces-naturels.fr).\\
+
+Le PSDRF a été formalisé par AgroParisTech-ENGREF en partenariat avec l'Office National des Forêts (ONF), Réserves Naturelles de France (RNF), l'Institut National de Recherche en Sciences et Technologies pour l'Environnement et l'Agriculture (IRSTEA) et l'Institut Géographique National (IGN), sur financements du ministère de l'environnement en 2005. Il a pour finalité de décrire les peuplements protégés par les réserves forestières (réserves naturelles et biologiques) de manière robuste et harmonisée.\\
+
+Son assise dendrométrique et le recours aux placettes permanentes permettent également de suivre efficacement l'évolution des caractéristiques des peuplements dans le temps (chaque cycle de mesure étant espacé d'une dizaine d'années). Elle facilite la comparaison avec des contextes de forêts diversement gérées, du fait de sa compatibilité avec les dispositifs de suivi utilisés en gestion forestière.\\
+
+Fin \the\year, le PSDRF a été appliqué sur \Sexpr{length(NbDisp)} dispositifs ; soit sur \Sexpr{dim(NbRB)[1]} réserves biologiques (RB), \Sexpr{dim(NbRN)[1]} réserves naturelles (RN), et \Sexpr{length(NbAutre)} dispositifs hors réserves ; soit \np{\Sexpr{dim(Placettes)[1]}} placettes relevées sur \np{\Sexpr{as.character(round(sum(Placettes$PoidsPlacette, na.rm = T), 0))}} ha et couvrant ainsi la majorité des grands types d'habitats forestiers français.\\
+
+\textbf{Métadonnées}\\
+On appelle ici métadonnées les données non dendrométriques associées au dispositif sur lequel a été installé le PSDRF. On distingue trois types de métadonnées :\
+
+\begin{enumerate}
+\item Les métadonnées liées à la stratégie d'échantillonnage : taille du maillage et surface échantillonnée, angle relascopique et diamètre précomptable associé, rayons des deux placettes concentriques.
+\item Les métadonnées dites contextuelles : date de dernière exploitation, habitats naturels.
+\item Les métadonnées liées à la localisation des placettes : coordonnées géographiques, plans de cheminement, repérage du centre des placettes.
+\end{enumerate}
+Il est important de préciser ici que l'absence de certaines métadonnées peut bloquer l'édition de certaines parties de ce carnet de traitement.
+
+\part{Contexte}
+\chapter{Présentation du dispositif}
+% \section{Généralités}
+\section{Renseignements administratifs}
+La table \ref{Statuts} présente les informations administratives liées au dispositif. Un dispositif peut être intégré au sein d'un ou plusieurs espaces naturels protégés. Il peut également être rattaché à un projet de réserve, voire n'être rattaché à aucun statut de protection particulier. Ainsi, les champs "code INPN", "surface" et "date de création" peuvent ne pas être remplis. Les communes listées sont celles concernées par le périmètre du dispositif et non du ou des statuts auxquels ce dernier peut être rattaché.
+
+<<TabStatuts>>= 
+
+tab <- 
+  Dispositifs %>% 
+  filter(NumDisp == disp_num) %>% 
+  select(
+    Nom1, Statut1, Code1, Surface1, DateCreation1, 
+    Nom2, Statut2, Code2, Surface2, DateCreation2
+  ) %>% 
+  mutate(
+    Nom1 = paste0(Statut1, " :\n", Nom1),
+    Nom2 = paste0(Statut2, " :\n", Nom2)
+  ) %>% 
+  melt(id.vars = NULL) %>% 
+  mutate(
+    Ensemble = str_sub(variable, -1),
+    variable = str_sub(variable, 1, -2)
+  ) %>% 
+  dcast(Ensemble ~ variable) %>% 
+  filter(!is.na(Statut)) %>% 
+  select(Nom, Statut, Code, Surface, DateCreation) %>% 
+  rename(
+    "Statut (RB/RN/Autre)" = "Statut",
+    "Code INPN" = "Code",
+    "Date Création" = "DateCreation"
+    ) %>% 
+  mutate(
+    Surface = ifelse(!is.na(Surface), paste0(Surface, " ha"), "")
+    )
+
+tab <- 
+  Communes %>% 
+  filter(NumDisp == disp_num) %>%
+  select(-NumDisp) %>% 
+  arrange(Nom, Dep, CPT) %>% 
+  mutate(Pays = "France")
+
+  tab <- 
+    tab %>% 
+    MultiRow1(c(1, 2, 3, 4, 5)) %>% 
+    rename(
+      "Code Postal" = "CPT", 
+      "Communes Concernées" = "Ville", 
+      "Département" = "Dep"
+    )
+
+pos <- which(!is.na(tab[, 2])) - 1
+pos <- pos[!pos %in% 0]
+
+if (length(pos) > 0) {
+  List <- list()
+  
+  for (i in 1:length(pos)) {
+    List <- c(List, pos[i])
+  }
+  
+  pos2 <- which(!is.na(tab[, 4])) - 1
+  pos2 <- pos2[!pos2 %in% 0]
+  List2 <- list()
+  
+  if (length(pos2) > 0) {
+    for (i in 1:length(pos2)) {
+      List2 <- c(List2, pos2[i])
+    }
+  }
+}
+
+print(
+  xtable(
+    tab, 
+    digits = c(0, 0, 0, 0, 0, 0), 
+    align = c(
+      "M{0cm}|", "M{4cm}|", 
+      rep("M{2.5cm}|", dim(tab)[2] - 2), 
+      "M{2.5cm}"
+    ), 
+    caption = NULL, 
+    label = ""
+  ), 
+  include.rownames = FALSE, 
+  size = "\\footnotesize"
+)
+
+if (length(pos) > 0) {
+  print(
+    xtable(
+      tab, 
+      digits = c(0, 0, 0, 0, 0, 0), 
+      align = c("M{0cm}|", "M{4cm}|", rep("M{2.5cm}", dim(tab)[2]-3), "|M{2.5cm}", "|M{2.5cm}"), 
+      label = "Statuts", 
+      caption = "Informations administratives sur le dispositif", 
+      caption.placement = "top"
+    ), 
+    include.rownames = FALSE, 
+    sanitize.text.function = function(x) return(x), 
+    add.to.row = list(
+      pos = c(List, List2), 
+      command = c(
+        rep("\\cline{2-3}", length(List)), 
+        rep("\\cline{4-4}", length(List2))
+      )
+    ), 
+    hline.after = c(-1, 0), 
+    size = "\\footnotesize"
+  )
+  
+} else {
+  print(
+    xtable(
+      tab, 
+      digits = c(0, 0, 0, 0, 0, 0), 
+      align = c("c", "c|", rep("c", dim(tab)[2] - 3), "|c", "|c"), 
+      label = "Statuts", 
+      caption = "Informations administratives sur le dispositif", 
+      caption.placement = "top"
+    ), 
+    include.rownames = FALSE, 
+    sanitize.text.function = function(x) return(x), 
+    hline.after = c(-1, 0), 
+    size = "\\footnotesize"
+  )
+  
+}
+@
+
+\section{Contacts}
+La table \ref{Contacts} présente le ou les contacts des personnes référentes du dispositif. Les opérateurs ayant participé aux mesures ne sont pas listés ici.
+
+<<TabContacts, fig.width = 17>>= 
+ListContact <- 
+  Referents %>% 
+  filter(NumDisp == disp_num) %>% 
+  select(NumRef1, NumRef2)
+ListContact <- with(ListContact, c(NumRef1, NumRef2))
+ListContact <- ListContact[!is.na(ListContact)]
+
+tab <- 
+  Tiers %>% 
+  filter(Id %in% ListContact) %>% 
+  select(-Id) %>% 
+  rename(
+    "Code Postal" = "CPT",
+    "Tél" = "Tel", 
+    "Commune" = "Ville", 
+    "Rôle" = "Role"
+  ) %>% 
+  melt(id = "Nom") %>% 
+  dcast(variable ~ Nom) %>% 
+  mutate(
+    variable = factor(variable)#,
+    # variable = NULL
+  ) %>% 
+  arrange(variable) %>% 
+  rename(" " = "variable")
+
+
+tab <- na.omit(tab)
+
+for (i in 2:dim(tab)[2]) {
+  for (j in 1:dim(tab)[1]) {
+    if (nchar(tab[j, i]) > 25) {
+      tab[j, i] <- paste0(str_sub(tab[j, i], 1, 15), " ", str_sub(tab[j, i], 16, -1))
+    }
+  }
+  # tab[, i] <- str_wrap(tab[, i], 15)
+}
+
+print(
+  xtable(
+    tab, 
+    caption = "Contacts", 
+    digits = rep(0, dim(tab)[2] + 1), 
+    align = c("M{2cm}", rep("|M{3cm}", dim(tab)[2])), 
+    label = "Contacts", 
+    caption.placement = "top"
+  ), 
+  include.rownames = F, 
+  size = "\\footnotesize"
+)
+@
+\FloatBarrier
+\newpage
+
+<<Expression>>=
+tAns <- 
+  Cycles %>% 
+  filter(NumDisp == disp_num) %>%
+  select(NumDisp, Cycle, Annee) %>%
+  distinct()
+
+Expr0 <- ifelse(
+  max(tAns$Cycle) > 1, 
+  paste0("de ", max(tAns$Cycle), " cycles de mesure, réalisés respectivement en "), 
+  "d'un seul cycle de mesure, réalisé en "
+)
+
+Expr1 <- c()
+for (i in unique(tAns$Cycle)) {
+  temp <- 
+    tAns %>% 
+    filter(Cycle == i & !is.na(Annee)) %>% 
+    arrange(Annee)
+  
+  if (dim(temp)[1] > 1) {
+    Expr1 <- c(
+      Expr1, 
+      list(
+        paste0(
+          paste0( temp$Annee[1:(dim(temp)[1] - 1)] , collapse = ", "), 
+          " et ", 
+          temp$Annee[dim(temp)[1]], 
+          " au cycle ", i
+        )
+      )
+    )
+  } else {
+    Expr1 <- c(
+      Expr1, 
+      list(
+        paste0(temp$Annee, " au cycle ", i)
+      )
+    )
+  }
+}
+
+ExprFin <- paste0(
+  Expr0, paste0(Expr1, collapse = " et ")
+)
+@
+
+\section{Echantillonnage}
+\subsection{Stratégie d'échantillonnage}
+Installé en \Sexpr{CyclesCodes[which(CyclesCodes$NumDisp == disp_num & CyclesCodes$Cycle == 1), "DateIni"]}, le dispositif a fait l'objet \Sexpr{ExprFin}.\\
+Le tableau \ref{Echantillonnage} résume les principaux paramètres de l'échantillonnage. \\
+
+<<Echantillonnage>>=
+
+NbArbres <- 
+  Arbres %>% 
+  filter(NumDisp == disp_num & Cycle <= last_cycle) %>%
+  select(NumPlac, IdArbre, Cycle) %>%
+  group_by(Cycle) %>%
+  summarise(Effectif = length(IdArbre)) %>%
+  ungroup()
+
+NbTaillis <- 
+  Taillis %>% 
+  filter(NumDisp == disp_num & Cycle <= last_cycle) %>%
+  select(IdArbre, Cycle) %>%
+  group_by(Cycle) %>%
+  summarise(Effectif = length(IdArbre)) %>%
+  ungroup() %>%
+  mutate(variable = "NbTaillis") %>%
+  select(variable, Effectif, Cycle)
+
+NbPlacTot <- 
+  Placettes %>% 
+  filter(NumDisp == disp_num) %>%
+  select(NumPlac, Cycle) %>%
+  group_by(Cycle) %>%
+  summarise(
+    EffectifA = length(NumPlac), 
+    variable = "NbPlacTot"
+  ) %>%
+  ungroup() %>%
+  right_join(NbArbres, by = "Cycle") %>%
+  mutate(EffectifB = round(Effectif / EffectifA, 1)) %>%
+  select(EffectifA, EffectifB, Cycle) %>%
+  melt(id = "Cycle") %>%
+  mutate(
+    variable = ifelse(
+      variable == "EffectifA", 
+      "NbPlacTot", 
+      "NbArbresMoy"
+    )
+  ) %>%
+  rename(Effectif = value)
+
+Maille <- 
+  Placettes %>% 
+  filter(NumDisp == disp_num) %>%
+  select(PoidsPlacette, Cycle, Strate) %>%
+  # distinct() %>%
+  mutate(PoidsPlacette = round(PoidsPlacette, 1)) %>%
+  group_by(PoidsPlacette, Cycle, Strate) %>%
+  summarise(NbPlac = length(PoidsPlacette)) %>%
+  ungroup() %>%
+  mutate(
+    Effectif = paste0(
+      "Strate ", Strate, " : 1 placette/", PoidsPlacette, " ha (", NbPlac, ")\n"
+    ), 
+    variable = "Maille"
+  ) %>%
+  select(variable, Effectif, Cycle)
+
+AngleRayon <- 
+  Cycles %>% 
+  filter(NumDisp == disp_num) %>%
+  select(Cycle, NumPlac, Coeff, DiamLim) %>%
+  melt(id = c("Cycle", "NumPlac")) %>%
+  group_by(Cycle, variable, value) %>%
+  summarise(NbPlac = length(NumPlac)) %>%
+  ungroup() %>%
+  mutate(Effectif = paste0(value, " (", NbPlac, ")")) %>%
+  select(variable, Effectif, Cycle)
+
+t <- 
+  NbPlacTot %>% 
+  rbind(Maille, AngleRayon) %>%
+  dcast(
+    variable ~ Cycle, value.var = "Effectif", 
+    fun.aggregate = function(x) paste0(x, collapse = "\n")
+  ) %>%
+  mutate(
+    variable = factor(
+      variable, 
+      levels = c("NbPlacTot", "Maille", "Coeff", "DiamLim", "NbArbresMoy"))
+  ) %>%
+  arrange(variable)
+
+names(t) <- paste0("Cycle ", names(t))
+names(t)[1] <- " "
+
+t[, 1] <- c(
+  "Nombre de placettes", 
+  # "Nom", 
+  "Densité du maillage (nbre de placettes concernées)", 
+  "Angle relascopique (nbre de placettes concernées)", 
+  "Diamètre de précomptage pour l'angle fixe (cm)", 
+  "Nombre moyen d'arbres (franc-pied) par placette"
+)
+
+print(
+  xtable(
+    t, 
+    caption = "Principaux paramètres de l'échantillonnage global.", 
+    align = c("c", "M{2.5cm}|", rep("M{4cm}", dim(t)[2] - 1)), 
+    digits = rep(0, dim(t)[2] + 1), 
+    label = "Echantillonnage", 
+    caption.placement = "top"
+  ), 
+  include.rownames = F, 
+  hline.after = c(-1, 0:nrow(t)), 
+  size = "\\footnotesize"
+)
+@
+\FloatBarrier
+
+\subsection{Nombre d'individus échantillonnés}
+Le tableau \ref{Releves} liste les éléments échantillonnés par le PSDRF pour le dispositif considéré. Sont distingués, selon leur origine végétative, les tiges de franc-pied et les tiges de taillis. Le nombre de billons au sol ne correspond pas nécessairement à un nombre d'individus ; un chablis pouvant par exemple être découpé en plusieurs billons homogènes, en termes de décomposition et de diamètre.\\
+
+<<Releves>>= 
+NbArbres <- 
+  Arbres %>% 
+  filter(NumDisp == disp_num & Cycle <= last_cycle) %>%
+  select(NumPlac, IdArbre, Cycle) %>%
+  group_by(Cycle) %>%
+  summarise(Effectif = length(IdArbre)) %>%
+  ungroup() %>%
+  mutate(variable1 = "Tiges de franc-pied") %>%
+  select(variable1, Effectif, Cycle)
+
+NbTaillis <- 
+  Taillis %>% 
+  filter(NumDisp == disp_num & Cycle <= last_cycle) %>%
+  select(IdArbre, Cycle) %>%
+  group_by(Cycle) %>%
+  summarise(Effectif = length(IdArbre)) %>%
+  ungroup() %>%
+  mutate(variable1 = "Tiges de taillis") %>%
+  select(variable1, Effectif, Cycle)
+
+NbTiges <- 
+  NbArbres %>% 
+  rbind(NbTaillis) %>%
+  mutate(variable = "Arbres vivants") %>%
+  select(variable, variable1, Effectif, Cycle)
+
+BMP_Rel <- 
+  BMP %>% 
+  filter(NumDisp == disp_num & Cycle <= last_cycle) %>%
+  select(Cycle, NumPlac, Type) %>%
+  group_by(Cycle, Type) %>%
+  summarise(Effectif = length(NumPlac)) %>%
+  ungroup() %>%
+  rename(variable1 = Type) %>%
+  mutate(
+    variable = "Bois mort sur pied", 
+    variable1 = ifelse(variable1 == 1, "Arbres morts sur pied", variable1), 
+    variable1 = ifelse(variable1 == 2, "Arbres morts de type chandelle", variable1), 
+    variable1 = ifelse(variable1 == 3, "Souches", variable1)
+  ) %>%
+  select(variable, variable1, Effectif, Cycle)
+
+BMS_temp1 <- 
+  BMSsup30 %>% 
+  filter(NumDisp == disp_num & Cycle <= last_cycle) %>%
+  select(Cycle, NumPlac) %>%
+  mutate(variable1 = "Billons au sol de diam sup à 30 cm")
+
+BMS_temp2 <- 
+  BMSLineaires %>% 
+  filter(NumDisp == disp_num & Cycle <= last_cycle) %>%
+  select(Cycle, NumPlac) %>%
+  mutate(variable1 = "Billons au sol de diam inf à 30 cm")
+
+BMS_Rel <- 
+  BMS_temp1 %>% 
+  rbind(BMS_temp2) %>%
+  group_by(Cycle, variable1) %>%
+  summarise(Effectif = length(NumPlac)) %>%
+  ungroup() %>%
+  mutate(variable = "Bois mort au sol") %>%
+  select(variable, variable1, Effectif, Cycle)
+
+Reges_Rel <- 
+  Reges %>% 
+  filter(NumDisp == disp_num & Cycle <= last_cycle) %>%
+  select(Cycle, NumPlac) %>%
+  group_by(Cycle) %>%
+  summarise(Effectif = length(NumPlac)) %>%
+  ungroup() %>%
+  mutate(
+    variable = "Régénération", 
+    variable1 = "Relevés de régénération"
+  ) %>%
+  select(variable, variable1, Effectif, Cycle)
+
+t <- 
+  NbTiges %>% 
+  rbind(BMP_Rel, BMS_Rel, Reges_Rel) %>%
+  dcast(variable + variable1 ~ Cycle, value.var = "Effectif") %>%
+  mutate(
+    variable = factor(variable, levels = c(
+      "Arbres vivants", 
+      "Bois mort sur pied", 
+      "Bois mort au sol", 
+      "Régénération"
+    )), 
+    variable1 = factor(variable1, levels = c(
+      "Tiges de franc-pied", 
+      "Tiges de taillis", 
+      "Arbres morts sur pied", 
+      "Arbres morts de type chandelle", 
+      "Souches", 
+      "Billons au sol de diam sup à 30 cm", 
+      "Billons au sol de diam inf à 30 cm", 
+      "Relevés de régénération"
+    ))
+  ) %>%
+  arrange(variable1, variable)
+
+names(t)[3:dim(t)[2]] <- paste0("Cycle", names(t)[3:dim(t)[2]])
+
+t <- 
+  t %>% 
+  MultiRow2(c("variable", "variable1"))
+
+names(t)[3:dim(t)[2]] <- paste0(
+  "Cycle ", 
+  str_sub(
+    names(t)[3:dim(t)[2]], 
+    str_locate(names(t)[ 3:dim(t)[2] ], "Cycle")[, 2] + 1, 
+    -1
+  )
+)
+t <- t[, c(1, 3:(dim(t)[2]), 2)]
+names(t)[names(t) %in% c("variable", "variable1")] <- " "
+
+pos <- unique(c(which(!is.na(t[, 1]))-1, dim(t)[1]))
+
+print(
+  xtable(
+    t, 
+    caption = "Principaux paramètres de l'échantillonnage global.", 
+    align = c("c", "M{3cm}|", rep("M{1cm}", dim(t)[2]-2), "|M{3cm}"), 
+    digits = rep(0, dim(t)[2]+1), 
+    label = "Releves", 
+    caption.placement = "top"
+  ), 
+  include.rownames = F, 
+  hline.after = c(-1, pos), 
+  size = "\\footnotesize", 
+  sanitize.text.function = function(x) return(x)
+)
+@
+
+Le tableau \ref{Tarifs} situé en annexe \ref{AnnexeTarifs} rappelle les tarifs de cubage retenus par l'opérateur.\\
+La figure \ref{fig:DiamDist} également située en annexe \ref{AnnexeEchantillon} permet de vérifier la cohérence du jeu de données (dernier cycle d'inventaire) avec les règles métiers précisées dans le protocole . Elle permet notamment de détecter les arbres limites\footnote{Les arbres limites sont les individus relevés en dehors de  la zone d'échantillonnage. Ils sont soit relevés par erreur, soit relevés dans la perspective des campagnes d'échantillonnage à venir. Ils ne sont néanmoins jamais pris en compte dans les calculs.}.\\
+
+\FloatBarrier
+\newpage
+
+\subsection{Habitats naturels échantillonnés}
+Le tableau \ref{TabMilieux} présente les habitats naturels échantillonnés sur le dispositif au dernier passage en inventaire. A noter que la qualité de ces informations est tributaire de la fiabilité des relevés initiaux (ancienneté et méthodologie de réalisation de la cartographie des habitats). Si aucune cartographie des habitats n'est disponible, ces données peuvent être relevées et transmises \textit{a posteriori} (\textit{id est} dans l'intervalle entre deux campagnes par exemples).
+<<TabMilieux, fig.pos = 'H', fig.width = 17>>= 
+CodesCorine <- CodesCorine[!is.na(CodesCorine$CD_CB_SUP), ]
+
+tab <- 
+  Placettes_Sel %>% 
+  filter(Cycle == last_cycle) %>% 
+  select(NumPlac, Habitat) %>% 
+  group_by(Habitat) %>%
+  summarise(NbPlac = length(NumPlac)) %>% 
+  ungroup() %>% 
+  left_join(
+    CodesCorine[, c("CD_CB", "LB_CB97_FR")], 
+    by = c("Habitat" = "CD_CB")
+  ) %>% 
+  select(Habitat, LB_CB97_FR, NbPlac) %>% 
+  arrange(NbPlac) %>% 
+  # -- remplissage des vides
+  mutate(
+    LB_CB97_FR = ifelse(
+      is.na(LB_CB97_FR),
+      CodesCorine$LB_CB97_FR[match(Habitat, CodesCorine$CD_CB_SUP)],
+      LB_CB97_FR
+    ),
+    LB_CB97_FR = ifelse(
+      is.na(LB_CB97_FR),
+      "Pas de correspondance",
+      LB_CB97_FR
+    )
+  ) %>% 
+  rename(
+    "Intitulé CORINE Biotopes" = "LB_CB97_FR",
+    "Nombre de placettes" = "NbPlac"
+  )
+    
+TotPlac <- sum(tab[, "Nombre de placettes"], na.rm = T)
+
+format2 <- c("p{1cm}", "M{1.5cm}", "|M{0.5\\textwidth}", "|M{1.5cm}")
+
+print(
+  xtable(
+    tab, 
+    caption = "Habitats naturels échantillonnés par le PSDRF (et nombre de placettes correspondantes).", 
+    align = format2, 
+    digits = rep(0, dim(tab)[2] + 1), 
+    label = "TabMilieux", 
+    caption.placement = "top"
+  ),
+  include.rownames = F, 
+  size = "\\footnotesize", 
+  hline.after = c(-1:(dim(tab)[1] - 1)), 
+  add.to.row = list(
+    pos = list(dim(tab)[1]), 
+    command = paste0(
+      "\\hline & \\multicolumn{1}{|r|}{\\textbf{Total}} & ", 
+      TotPlac, 
+      "\\\\ \\cline{2-3}"
+    )
+  )
+)
+@
+
+
+% \renewcommand{\thechapter}{\thepart.\arabic{chapter}} TODO : à paramétrer
+<<knit_groups>>= 
+  # -- balise texte (ex : txt introduction bois mort)
+  Balise_TextBM = 1
+  Balise_TextCodeEco = 1
+
+# -- list des cycles (à insérer dans les template)
+cycles_list <- sort(unique(Cycles_Sel$Cycle))
+
+# -- orientation : analyse par dispositif uniquement ou groupes à prendre en compte ?
+# cas 1 : analyse par dispositif uniquement
+# if (analyze_by_group == "no") {
+#    src_Final <- list()
+#    # TODO : supprimer Analyse.Rnw
+#    
+#   for (i in cycles_list) {
+#     src_TEMP <- 
+#       knit_expand(
+#         paste0(repPSDRF, '/template/psdrf_Analyse.Rnw'), 
+#         delim = c("{{{", "}}}")
+#       )
+#     src_TEMP <- stri_replace_all_fixed(src_TEMP, "{{x}}", i)
+#     src_TEMP<- encoding(src_TEMP, TabCharacters)
+#     src_Final <- c(src_Final, src_TEMP)
+#   }
+#   
+#   src_Final<- encoding(src_Final, TabCharacters)
+#   
+# } else {
+# group_list <- unique(chosen_group_combination$variable) # group_list = ListAgreg anciennement
+  # cas 2 : analyse par groupe demandée
+# ListEnsemble <- ListAgreg  # en fait group_list = ListEnsemble anciennement
+
+src_Final <- c()
+
+for (cycle in cycles_list) {
+group_knit_table <- c()
+
+  # for (i in 1:length(group_list)) {
+  #   group <- group_list[i]
+  #   if (group == "Disp") {
+  #     group_value <- disp_num
+  #   } else {
+  #     group_value <-  
+  #       chosen_group_combination$value[chosen_group_combination$variable == group]
+  #     # changement les intitulés "Groupe" trop semblables (impossible de distinguer les chaînes de caractères)
+  #     group <- gsub("Groupe1", "GroUpe1", group)
+  #     group <- gsub("Groupe2", "GrouPe2", group)
+  #     group <- gsub("Groupe", "GrOupe", group)
+  #     group_value <- clean_names(group_value)
+  #   }
+  #   
+  #   tmp <- expand.grid(group, group_value, cycle)
+  #   group_knit_table <- rbind(group_knit_table, tmp)
+  # }
+group_knit_table <- 
+  chosen_group_combination %>% 
+  mutate(
+    value = clean_names(value), 
+    Var3 = cycle
+  ) %>% 
+  rename(Var1 = variable, Var2 = value)
+
+# -- list of arguments to pass to knit children
+group_knit_arg <- 
+  group_knit_table %>% 
+  mutate(
+    Groups = ifelse(
+      Var1 == "Disp", 
+      paste0(Var1, "_-", Var3), 
+      paste0(Var1, "_", Var2, "-", Var3)
+    ), 
+    Var1 = NULL, 
+    Var2 = NULL, 
+    Var3 = NULL,
+    call = NULL
+  ) %>%
+  unname() %>%
+  unlist()
+   # tk_messageBox(type="ok", message = group_knit_arg) # debug
+##### fonction to build knit code #####
+# function (group_knit_arg) {
+#   
+# }
+  # Initialisation :
+  src_chapBV <- list()
+  src_chapBM <- list()
+  src_chapRege <- list()
+  
+  for (i in group_knit_arg) {
+    # Bois vivant :
+    src_chapBV_TEMP <- knit_expand(
+      paste0(repPSDRF, '/template/psdrf_BV.Rnw'), 
+      delim = c("{{{", "}}}")
+    )
+    src_chapBV_TEMP <- stri_replace_all_fixed(src_chapBV_TEMP, "{{x}}", i)
+    src_chapBV_TEMP<- encoding(src_chapBV_TEMP, TabCharacters)
+    src_chapBV <- c(src_chapBV, src_chapBV_TEMP)
+    
+    # Bois mort :
+    src_chapBM_TEMP <- knit_expand(
+      paste0(repPSDRF, '/template/psdrf_BM.Rnw'),
+      delim = c("{{{", "}}}")
+    )
+    src_chapBM_TEMP <- stri_replace_all_fixed(src_chapBM_TEMP, "{{x}}", i)
+    src_chapBM_TEMP<- encoding(src_chapBM_TEMP, TabCharacters)
+    src_chapBM <- c(src_chapBM, src_chapBM_TEMP)
+
+    # Régénération :
+    src_chapRege_TEMP <- knit_expand(
+      paste0(repPSDRF, '/template/psdrf_Rege.Rnw'),
+      delim = c("{{{", "}}}")
+    )
+    src_chapRege_TEMP <- stri_replace_all_fixed(src_chapRege_TEMP, "{{x}}", i)
+    src_chapRege_TEMP<- encoding(src_chapRege_TEMP, TabCharacters)
+    src_chapRege <- c(src_chapRege, src_chapRege_TEMP)
+  }
+  
+  t <- 
+    Arbres %>% 
+    filter(NumDisp == disp_num & Cycle == cycle & !is.na(CodeEcolo))
+  Eval_CodeEco <- ifelse(dim(t)[1] == 0, F, T) # TODO : argument à mettre plus haut
+   # Eval_CodeEco <- F # debug
+  
+  if (Eval_CodeEco) {
+    # Code écolo :
+    src_chapCodeEco <- list()
+    
+    for (i in group_knit_arg) {
+    src_chapCodeEco_TEMP <- knit_expand(
+      paste0(repPSDRF, '/template/psdrf_CodeEco.Rnw'), 
+      delim = c("{{{", "}}}")
+    )
+    src_chapCodeEco_TEMP <- stri_replace_all_fixed(src_chapCodeEco_TEMP, "{{x}}", i)
+    src_chapCodeEco_TEMP<- encoding(src_chapCodeEco_TEMP, TabCharacters)
+    src_chapCodeEco <- c(src_chapCodeEco, src_chapCodeEco_TEMP)
+    }
+  } else {
+    src_chapCodeEco = c()
+  }
+  
+  # -- cas où analyse de l'état de conservation demandée
+  if (EvalRadar == T) {
+    src_chapConservation <- lapply(
+      group_knit_arg, 
+      function(x) {
+        knit_expand(paste0(repPSDRF, '/template/psdrf_Conservation.Rnw')) # TODO : à faire
+      }
+    )
+  } else {
+    src_chapConservation <- c()
+  }
+  
+  # ----- Application de la fonction encoding
+  src_chapBV <- encoding(src_chapBV, TabCharacters)
+  src_chapBM <- encoding(src_chapBM, TabCharacters)
+  src_chapRege <- encoding(src_chapRege, TabCharacters)
+  src_chapCodeEco <- encoding(src_chapCodeEco, TabCharacters)
+  
+  if (Eval_CodeEco) {
+    src_chapCodeEco <- c("\\chapter{Dendromicrohabitats}
+
+                ", 
+                src_chapCodeEco)
+  }
+  
+  if (EvalRadar == T) {
+  src_chapConservation <- encoding(src_chapConservation, TabCharacters)
+  src_chapConservation <- c("\\chapter[Evaluation de l'état de conservation]{Evaluation de l'état de conservation des habitats forestiers : analyse des données de structure\\protect\\footnote{Commission scientifique  et groupe forêts de Réserves naturelles de France. Evaluation de l'état de conservation (habitats forestiers et éco-complexes alluviaux). Cahier  RNF n°02. 2013, 72 p. La méthode est disponible en téléchargement sur le site internet de RNF (www.reserves-naturelles.org/publications/numero-2-des-cahiers-rnf-evaluation-de-l-etat-de-conservation-habitats-forestiers-et) ou sur demande (rnf@espaces-naturels.fr)}}\\
+
+                      ", 
+                      src_chapConservation)
+  }
+  # tk_messageBox(type = "ok", message = "test")
+  # ----- Assemblage des expressions des template
+  src_Temp <- c(
+    "\\chapter{Bois Vivant}
+                
+                ", 
+    src_chapBV, 
+    "\\chapter{Bois Mort}
+
+                ",
+    src_chapBM,
+    "\\chapter{Régénération}
+
+                ",
+    src_chapRege,
+    src_chapCodeEco,
+    src_chapConservation
+  )
+
+  src_Final <- c(
+    src_Final, "
+
+\\part{Bilan au cycle ", cycle, "}
+
+                 ", 
+src_Temp
+  )
+}
+# }
+
+# TODO : ramener la fonction prepare_tables dans le parent (version dans psdrf_Evol_BV)
+@
+\Sexpr{knit_child(text = unlist(src_Final))}
+
+<<Evol, eval = T>>= 
+# if (travail == F) {
+src_EvolFinal <- c()
+src_chapEvol_BV <- c()
+src_chapEvol_BM <- c()
+
+if (Evol == T) {
+  txt_Evol <- c("\\part{Evolution}")
+  # ----- Orientation : analyse par dispositif uniquement ou groupes à prendre en compte ?
+# if (analyze_by_group == "no") {
+#   group_list <- "Disp"
+#   chosen_group_combination <- data.frame(
+#     variable = c("Disp"), 
+#     value = last_cycle
+#   )
+# } else {
+group_list <- group_list
+# }
+src_Final <- c()
+
+group_knit_table <- c()
+
+  # for (i in 1:length(group_list)) {
+  #   group <- group_list[i]
+  #   if (group == "Disp") {
+  #     group_value <- disp_num
+  #   } else {
+  #     group_value <-  
+  #       chosen_group_combination$value[chosen_group_combination$variable == group]
+  #     # changement les intitulés "Groupe" trop semblables (impossible de distinguer les chaînes de caractères)
+  #     group <- gsub("Groupe1", "GroUpe1", group)
+  #     group <- gsub("Groupe2", "GrouPe2", group)
+  #     group <- gsub("Groupe", "GrOupe", group)
+  #     group_value <- clean_names(group_value)
+  #   }
+  # 
+  #   tmp <- expand.grid(group, group_value, last_cycle)
+  #   group_knit_table <- rbind(group_knit_table, tmp)
+  # }
+group_knit_table <- 
+  chosen_group_combination %>% 
+  mutate(
+    value = clean_names(value), 
+    Var3 = last_cycle
+  ) %>% 
+  rename(Var1 = variable, Var2 = value)
+
+# -- list of arguments to pass to knit children
+group_knit_arg <- 
+  group_knit_table %>% 
+  mutate(
+    Groups = ifelse(
+      Var1 == "Disp", 
+      paste0(Var1, "_-", Var3), 
+      paste0(Var1, "_", Var2, "-", Var3)
+    ), 
+    Var1 = NULL, 
+    Var2 = NULL, 
+    Var3 = NULL,
+    call = NULL
+  ) %>%
+  unname() %>%
+  unlist()
+
+
+  # Initialisation :
+  src_chapEvol_BV <- list()
+  src_chapEvol_BM <- list()
+  
+  for (i in group_knit_arg) {
+    # Bois vivant :
+    src_chapEvol_BV_TEMP <- knit_expand(
+      paste0(repPSDRF, '/template/psdrf_Evol_BV.Rnw'), 
+      delim = c("{{{", "}}}")
+    )
+    src_chapEvol_BV_TEMP <- stri_replace_all_fixed(src_chapEvol_BV_TEMP, "{{x}}", i)
+    src_chapEvol_BV_TEMP<- encoding(src_chapEvol_BV_TEMP, TabCharacters)
+    src_chapEvol_BV <- c(src_chapEvol_BV, src_chapEvol_BV_TEMP)
+    
+    # Bois mort :
+    src_chapEvol_BM_TEMP <- knit_expand(
+      paste0(repPSDRF, '/template/psdrf_Evol_BM.Rnw'),
+      delim = c("{{{", "}}}")
+    )
+    src_chapEvol_BM_TEMP <- stri_replace_all_fixed(src_chapEvol_BM_TEMP, "{{x}}", i)
+    src_chapEvol_BM_TEMP<- encoding(src_chapEvol_BM_TEMP, TabCharacters)
+    src_chapEvol_BM <- c(src_chapEvol_BM, src_chapEvol_BM_TEMP)
+  }
+
+  src_chapEvol_BM <- encoding(src_chapEvol_BM, TabCharacters)
+  
+  # ----- Assemblage des expressions des template
+  src_EvolFinal <- c(
+    txt_Evol, 
+    
+    "\\chapter{Bois vivant}
+
+                     ", 
+    src_chapEvol_BV, 
+    "\\chapter{Bois Mort}
+
+                     ", 
+    src_chapEvol_BM
+  )
+  
+} else {
+  txt_Evol <- c()
+  src_chapEvol <- c()
+  src_EvolFinal <- ""
+}
+# }
+@
+\Sexpr{knit_child(text = unlist(src_EvolFinal))}
+
+\begin{appendices}
+\addtocontents{toc}{\protect\setcounter{tocdepth}{0}}
+% % \clearpage\thispagestyle{empty}
+% \appendix
+% \appendixpage
+% \addappheadtotoc
+
+\chapter{Adéquation échantillon/protocole}\label{AnnexeEchantillon}
+La figure \ref{fig:DiamDist} permet de vérifier la cohérence du jeu de données avec les règles métiers précisées dans le protocole \underline{au cours du dernier inventaire} (inventaire \Sexpr{last_cycle}). Elle permet notamment de détecter les arbres limites \footnote{Les arbres limites sont les individus relevés en dehors de  la zone d'échantillonnage. Ils sont soit relevés par erreur, soit relevés dans la perspective des campagnes d'échantillonnage à venir. Ils ne sont néanmoins jamais pris en compte dans les calculs.}.
+<<DiamDist, fig.height = 3.5, fig.cap =  "Vérification de l'échantillon.">>= 
+Angle <- as.numeric(unique(Cycles_Sel$Coeff))
+
+t <- 
+  Arbres %>% 
+  filter(
+    NumDisp == disp_num & Cycle == last_cycle & !is.na(Dist)) %>% 
+  select(Dist, Diam1, Diam) %>%
+  mutate(Type = ifelse(
+    Diam < 17.5, 
+    "Perches de\nfranc-pied", "Précomptables\nde franc-pied"), 
+    Error = ifelse(Dist > 10 & Diam1 < Angle * Dist, 1, 0)
+  )
+tbis <- 
+  Taillis %>% 
+  filter(NumDisp == disp_num & Cycle == last_cycle & !is.na(Dist)) %>% 
+  select(Dist, Diam1, Diam) %>%
+  mutate(
+    Type = "Taillis", 
+    Error = ifelse(Dist > 10 & Diam1 < Angle * Dist, 1, 0)
+  )
+t2 <- 
+  BMP %>% 
+  filter(NumDisp == disp_num & Cycle == last_cycle) %>% 
+  select(Dist, Diam1, Diam) %>%
+  mutate(
+    Type = "Bois mort\nsur pied", 
+    Error = ifelse(Dist > 20, 1, 0)
+  ) %>%
+  rbind(t, tbis) %>% 
+  mutate(
+    Type = factor(
+      Type, levels = c(
+        "Précomptables\nde franc-pied", 
+        "Perches de\nfranc-pied", 
+        "Taillis", 
+        "Bois mort\nsur pied"
+      )
+    )
+  )
+
+p <- 
+  t2 %>% 
+  ggplot(aes(Dist, Diam1, colour = Type)) +
+  geom_point(alpha = 0.5) +
+  geom_hline(yintercept = c(7.5, 30), colour = "blue", linetype = 2, size = 0.5)+
+  # theme_bw() +
+  geom_abline(intercept = 0, slope = Angle, colour = "blue") +
+  geom_vline(xintercept = c(10, 20), colour = "blue", linetype = 2, size = 0.5) +
+  geom_point(
+    filter(t2, Error == 1), 
+    mapping = aes(Dist, Diam1, shape = Type), 
+    colour = "red", size = 3
+  ) +
+  scale_colour_manual(
+    values = c("chartreuse4", "dodgerblue4", "goldenrod2", "black")
+  ) +
+  scale_shape_manual(
+    name = "Erreurs", values = c(1, 0, 2, 5)[1:length(unique(t2$Type))]
+  ) +
+  scale_y_continuous(
+    expand = c(0, 0), 
+    limits = c(0, max(t2$Diam1, na.rm = T) + 10), 
+    breaks = c(0, 7.5, 17.5, seq(30, max(t2$Diam1, na.rm = T) + 10, 20))
+  ) +
+  scale_x_continuous(
+    expand = c(0, 0), 
+    limits = c(0, max(t2$Dist, na.rm = T) + 5), 
+    breaks = c(0, 10, seq(20, max(t2$Dist, na.rm = T) + 5, 20))
+  ) +
+  labs(x = "Distance (m)", y = "Diamètre (cm)") +
+  MyTheme + theme(legend.key = element_blank()) +
+  guides(
+    colour = guide_legend(order = 1), 
+    shape = guide_legend(order = 2)
+  )
+
+p
+@
+\FloatBarrier
+
+\chapter{Tarifs de cubage retenus par l'opérateur}\label{AnnexeTarifs}
+Le tableau \ref{Tarifs} liste les tarifs de cubage par essence retenus par le gestionnaire.
+<<Tarifs>>= 
+tab <- 
+  Tarifs %>% 
+  filter(NumDisp == disp_num) %>% 
+  select(-NumDisp) %>% 
+  left_join(CodeEssence[, c("Nom", "Essence")]) %>% 
+  select(Nom, TypeTarif, NumTarif) %>% 
+  arrange(TypeTarif, NumTarif) %>% 
+  mutate(
+    Id = paste0(
+      as.numeric(factor(TypeTarif)), 
+      as.numeric(factor(NumTarif))
+    )
+  )
+
+# --- Multirow NumTarif
+pos <- which(duplicated(tab[, "Id"]))
+
+if (length(pos) > 0) {
+  tab3 <- 
+    tab %>% 
+    mutate(Id = as.character(Id)) %>%
+    group_by(Id) %>%
+    mutate(Count = length(Id)) %>%
+    ungroup()
+  
+  tab3[pos, c("TypeTarif", "NumTarif", "Count")] <- NA
+  
+  # Repere des lignes à mettre en multirow
+  pos2 <- which(tab3$Count > 1 & !is.na(tab3$Count))
+  pos3 <- which(!is.na(tab3$Count))
+  
+  tab3[pos2, "TypeTarif"] <- paste0(
+    "\\multirow{", tab3$Count[pos2], 
+    "}{*}{\\parbox{1.5cm}{\\centering  ", 
+    tab3$TypeTarif[pos2], "}}"
+  )
+  
+  tab3[pos2, "NumTarif"] <- paste0(
+    "\\multirow{", tab3$Count[pos2], 
+    "}{*}{\\parbox{1.5cm}{\\centering  ", 
+    tab3$NumTarif[pos2], "}}"
+  )
+  
+  tab3$Count <- NULL
+} else {
+  
+  tab3 <- tab
+  pos3 <- c()
+}
+
+tab <- 
+  tab3 %>% 
+  mutate(Id = NULL) %>% 
+  rename(
+    "Type de tarif" = "TypeTarif", 
+    "Numéro" = "NumTarif"
+  )
+
+pos_NA <- which(!is.na(tab[, 2]))
+
+print(
+  xtable(
+    tab, 
+    caption = "Tarifs de cubage retenus par le gestionnaire.", 
+    digits = rep(0, 4), 
+    align = (c("l", "l", "|c", "|c")), 
+    label = "Tarifs", 
+    caption.placement = "top"
+  ), 
+  include.rownames = F, 
+  size = "\\footnotesize", 
+  hline.after = c(-1, pos_NA - 1, dim(tab)[1]), 
+  sanitize.text.function = function(x) return(x)
+)
+@
+
+\chapter{Regroupements d'essence}\label{Regroupement}
+Le tableau \ref{EssReg} liste les regroupements d'essence.
+<<EssReg, fig.pos = "th">>=
+t <- 
+  rbind(
+    unique(Arbres[ Arbres$NumDisp == disp_num, c("Essence", "EssReg") ]), 
+    unique(Taillis[ Taillis$NumDisp == disp_num, c("Essence", "EssReg") ]), 
+    unique(Reges[ Reges$NumDisp == disp_num, c("Essence", "EssReg") ]), 
+    unique(BMSLineaires[ BMSLineaires$NumDisp == disp_num, c("Essence", "EssReg") ]), 
+    unique(BMSsup30[ BMSsup30$NumDisp == disp_num, c("Essence", "EssReg") ])
+  ) %>% 
+  distinct(.keep_all = T) %>% 
+  left_join(CodeEssence[, c("Nom", "Essence")], by = "Essence") %>% 
+  select(Nom, EssReg) %>% 
+  arrange(EssReg)
+
+t <- t %>% MultiRow1(2) %>% rename("Essences regroupées" = "EssReg")
+
+pos_NA <- which(!is.na(t[, 2]))
+
+print(
+  xtable(
+    t, 
+    label = "EssReg", 
+    align = c("l", "l", "|c"), 
+    caption = "Regroupements d'essence", 
+    caption.placement = "bottom"
+  ), 
+  include.rownames = F, 
+  sanitize.text.function = function(x) return(x), 
+  hline.after = c(-1, pos_NA - 1, dim(t)[1]), 
+  size = "\\footnotesize"
+)
+@
+\end{appendices}
+
+\end{document}

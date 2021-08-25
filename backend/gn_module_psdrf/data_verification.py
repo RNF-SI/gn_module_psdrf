@@ -1,5 +1,5 @@
-import json
 import pandas as pd
+import json
 import numpy as np
 import datetime
 import re
@@ -37,7 +37,7 @@ def data_verification(data):
   Reperes = Reperes.apply(pd.to_numeric, errors='ignore')
 
   # Trouver le chemin d'accès au dossier data, qui contient les tables nécessaires aux tests
-  ROOT_DIR_PSDRF = Path(__file__).absolute().parent.parent
+  ROOT_DIR_PSDRF = Path(__file__).absolute().parent.parent.parent
   DATA_DIR_PSDRF = ROOT_DIR_PSDRF / "data"
 
   #chargement des tables nécessaires aux tests 

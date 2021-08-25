@@ -5,6 +5,9 @@ import { FormControl, FormGroup } from "@angular/forms";
 import { MapService } from "@geonature_common/map/map.service";
 import { AppConfig } from '@geonature_config/app.config';
 
+import { PsdrfDataService } from "../services/route.service";
+
+
 
 @Component({
     selector: "rnf-psdrf-dispositifs",
@@ -51,7 +54,12 @@ import { AppConfig } from '@geonature_config/app.config';
       3: 'red'
     };
 
-    constructor(private _api: HttpClient, private _router: Router, private mapservice: MapService) { }
+    constructor(
+      private _api: HttpClient, 
+      private _router: Router, 
+      private mapservice: MapService,
+      private dataSrv: PsdrfDataService
+      ) { }
 
     ngOnInit() {
         // Chargement des statistiques
@@ -115,4 +123,19 @@ import { AppConfig } from '@geonature_config/app.config';
     openImportPage(): void {
       this._router.navigate(["psdrf/importdonnees"])
     }
+
+    launchAnalysis(): void{
+      console.log("rorgfn")
+
+      let testObject: FormData = new FormData();
+      testObject.append("test", "tastytest");
+
+      this.dataSrv
+        .psdrf_data_analysis(testObject)
+        .subscribe((test) => {
+          console.log(test)
+        });
+    }
+
   }
+

@@ -13,6 +13,8 @@ from .models import TDispositifs, TPlacettes, TArbres, TCycles, \
     CorCyclesPlacettes, TArbresMesures
 from .data_verification import data_verification
 from .data_integration import data_integration
+from .data_analysis import data_analysis
+
 
 from utils_flask_sqla.response import json_resp
 from utils_flask_sqla_geo.generic import get_geojson_feature
@@ -234,3 +236,12 @@ def psdrf_data_verification_with_shape():
 def psdrf_data_integration():
     data = request.get_json()
     return data_integration(data)
+
+@blueprint.route('/analysis', methods=['POST'])
+def psdrf_data_analysis():
+    default_name = "None"
+    test = request.files.get('test', default_name)
+    test = request.form['test']
+    print(test)
+    print("LA")
+    return data_analysis(test)
