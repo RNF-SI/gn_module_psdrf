@@ -1,0 +1,180 @@
+<<PreparationRege{{x}}>>= 
+# -- extraction des informations de x
+group <- "{{x}}"
+# group <- "Disp_-1" # debug
+
+# liste des tables demandées
+tables_list <- c("psdrfDispRege_EssReg")
+
+# filtre des données d'inventaire et de résultats
+prepare_tables_results <- 
+  prepare_tables(disp_num, group, tables_list, admin = Placettes_Sel)
+tables_needed <- prepare_tables_results[[1]]
+inventory_tables <- prepare_tables_results[[2]]
+
+# extraction des tables d'inventaire et de résultats # TODO : à modifier ?
+for (i in 1:length(tables_needed)) {
+  assign(names(tables_needed)[i], tables_needed[[i]])
+}
+for (i in 1:length(inventory_tables)) {
+  assign(names(inventory_tables)[i], inventory_tables[[i]])
+}
+
+# -- répertoire des figures :
+# path
+output_dir <- file.path(repFigures, figure_path)
+# create directory
+dir.create(output_dir, showWarnings = F, recursive = T)
+# set chunck option
+opts_chunk$set(fig.path = output_dir, dev = 'png')
+
+# argument : évaluation des chuncks ?
+Eval_Rege <- ifelse(dim(grouped_results_of_Rege_by_EssReg)[1] > 0, TRUE, FALSE)
+@
+
+
+\section{\Sexpr{section_str}}
+\EditIf{\Sexpr{Eval_Rege}}{TRUE}{
+
+\subsection{Stades de d\u00E9veloppement}
+La figure \ref{fig:Rege1{{x}}} pr\u00E9sente la densit\u00E9 de r\u00E9g\u00E9n\u00E9ration par essences\footnote{Regroupements d'essences \u00E0 voir en annexe \ref{Regroupement}} et par classes de semis.
+<<Rege1{{x}}, size = 'footnotesize', fig.height = 3, fig.cap =  "R\u00E9g\u00E9n\u00E9ration par stade de d\u00E9veloppement.\\\\\\footnotesize{Recouvrement = hauteur semis < 50 cm\\\\ Classe 1 = hauteur semis > 50cm et < 1, 50 m\\\\ Classe 2 = hauteur semis > 1, 50 m et diam\u00E8tre < 2, 5 cm\\\\ Classe 3 = 2, 5 cm < diam\u00E8tre < 7, 5 cm}", eval = Eval_Rege>>= 
+
+t <- 
+  grouped_results_of_Rege_by_EssReg %>% 
+  filter(!is.na(EssReg) & EssReg != 0) %>%
+  select(
+    Cycle, EssReg, Recouv, 
+    Classe1Ha, Classe2Ha, Classe3Ha
+  ) %>%
+  mutate(Recouv = Recouv * 50) %>% 
+  rename(
+    "Recouvrement" = "Recouv", 
+    "Classe 1" = "Classe1Ha", 
+    "Classe 2" = "Classe2Ha", 
+    "Classe 3" = "Classe3Ha"
+  ) %>%
+  melt(id = c("Cycle", "EssReg")) %>%
+  mutate(
+    variable = factor(
+      variable, 
+      levels = c("Recouvrement", "Classe 1", "Classe 2", "Classe 3")
+    )
+  ) %>%
+  arrange(variable)
+
+p1 <- 
+  ggplot() +
+  geom_bar(
+    t, mapping = aes(x = variable, y = value, fill = EssReg), 
+           stat = "identity", position = 'stack', width = 0.5
+    ) +
+  guides(fill = guide_legend(nrow = 1, byrow = TRUE)) +
+  scale_fill_manual("Essences\nRegroup\u00E9es", values = Palette_EssReg) +
+  # guides(fill = guide_legend(title = "Essences \nRegroup\u00E9es", values = ColPalette))
+  guides(
+    fill = guide_legend(nrow = ifelse(length(unique(t$EssReg)) > 10, 2, 1), byrow = T)
+  ) +
+  labs(
+    x = "", 
+    y = "Densit\u00E9 de tiges \u00E0 l'hectare (tiges/ha)"
+  ) +
+  coord_flip() +
+  MyTheme + 
+  theme(
+    axis.text.x = element_text(angle = 0, hjust = 1), 
+    legend.text = element_text(size = 7), 
+    legend.title = element_text(size = 9, face = 'plain'), 
+    legend.position = "bottom"
+  )
+p2 <- 
+  ggplot(t, aes(x = variable, y = value, fill = EssReg)) +
+  geom_bar(stat = "identity", position = 'fill') +
+  scale_fill_manual("Essences Regroup\u00E9es", values = Palette_EssReg) +
+  scale_y_continuous(labels = percent) +
+  labs(x = "", y = "Part de la densit\u00E9 de tiges") +
+  coord_flip() +
+  MyTheme + 
+  theme(
+    axis.text.x = element_text(angle = 0, hjust = 1), 
+    legend.position = 'none'
+  )
+
+mylegend <- g_legend(p1)
+
+grid.arrange(
+  arrangeGrob(
+    p1 + theme(legend.position = "none"), 
+    p2 + theme(legend.position = "none"), 
+    nrow = 1
+  ), 
+  mylegend, nrow = 2, heights = c(9, 2)
+)
+@
+
+<<Abroutissement{{x}}, size = 'footnotesize', include = T, fig.pos = 'H', fig.height = 1.5, fig.width = 4, fig.cap =  "Abroutissement.", eval = Eval_Rege>>= 
+
+if (length(which(Rege_Sel$Abroutis == "t")) > 0) {
+  cat("\\subsection{Abroutissement}\n
+L'histogramme de la figure \\ref{fig:Abroutissement{{x}}} repr\u00E9sente le taux d'abroutissement des semis de hauteur inf\u00E9rieure \u00E0 1, 50 m. Ne sont repr\u00E9sent\u00E9es ici que les 2 classes de semis susceptibles d'\u00EAtre abrouties par le gibier du fait de leur faible hauteur.")
+  # if (dim(Rege_Sel)[1] > 0) {
+  t1 <- 
+    Reges %>% 
+    filter(NumPlac %in% group_plots) %>% 
+    select(Recouv, Abroutis, Essence, Class1)
+  
+  posf <- which(t1$Abroutis == "f")
+  post <- which(t1$Abroutis == "t")
+  t1$Abroutis[posf] <- "non"
+  t1$Abroutis[post] <- "oui"
+  t1$Abroutis[-c(post, posf)] <- "non" # Par d\u00E9faut les vides ou les erreurs sont not\u00E9es "non"
+  t1 <- 
+    t1 %>%
+    group_by(Abroutis) %>%
+    summarise(
+      Recouv = sum(Recouv), 
+      Class1 = sum(Class1)
+    )
+  t1$Abroutis <- factor(t1$Abroutis, levels = c("oui", "non"))
+  if (length(unique(t1$Abroutis)) == 1) {
+    t1[2, ] <- c(levels(t1$Abroutis)[!levels(t1$Abroutis) %in% factor(t1$Abroutis)], 0, 0)
+    t1$Recouv <- as.numeric(as.character(t1$Recouv))
+    t1$Class1 <- as.numeric(as.character(t1$Class1))
+  } # TODO : simplifier
+  t1 <- t1[order(t1$Abroutis), ]
+  if (sum(t1$Recouv) != 0) {
+    t1$Recouv <- t1$Recouv / sum(t1$Recouv)
+  }
+  if (sum(t1$Class1) != 0) {
+    t1$Class1 <- t1$Class1 / sum(t1$Class1)
+  }
+  t1.m <- melt(t1, id = "Abroutis")
+  t1.m <- t1.m[t1.m$Abroutis == "oui", ]
+
+  if (dim(t1.m)[1] > 0) {
+    ggplot(t1.m, aes(x = variable, y = value)) +
+      geom_bar(
+        stat = "identity", 
+        position = 'stack', 
+        colour = "black", 
+        width = 0.5
+      ) +
+      geom_text(
+        aes(label = paste0(round(value * 100, 1), " %")), 
+        vjust = -1, 
+        size = 2.5
+      ) +
+      geom_vline(xintercept = 1.5, linetype = 2) +
+      scale_y_continuous(labels = percent, limits = c(0, 1)) +
+      scale_x_discrete(
+        expand = c(0, 1), 
+        label = c("Recouvrement", "Classe 1 \n(50 cm < H < 1, 50 m)")
+      ) +
+      guides(fill = guide_legend(title = "Abroutissement")) +
+      labs(x = "", y = "") +
+      MyTheme
+  }
+}
+@
+
+}{Pas de donn\u00E9es renseign\u00E9es}

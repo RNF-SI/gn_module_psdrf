@@ -1,0 +1,1146 @@
+<<PreparationBM{{x}}>>= 
+# -- extraction des informations de x
+group <- "{{x}}"
+# group <- "GrOupe_Parcelle1-1" # debug
+# group <- "Disp_-1" # debug
+
+# liste des tables demandées
+tables_list <- c(
+  "psdrfDispBM_", "psdrfDispBM_EssRegClasse", 
+  "psdrfDispBMP_ClasseType", "psdrfDispTot_EssenceClasse", 
+  "psdrfDispBM_StadeDStadeE", "psdrfDispBM_Essence", 
+  "psdrfDispBM_StadeD", "psdrfDispBM_StadeE",
+  
+  "psdrfDispTot_Essence", "psdrfDispRege_Essence"
+)
+
+# filtre des données d'inventaire et de résultats
+prepare_tables_results <- 
+  prepare_tables(disp_num, group, tables_list, admin = Placettes_Sel)
+tables_needed <- prepare_tables_results[[1]]
+inventory_tables <- prepare_tables_results[[2]]
+# extraction des tables d'inventaire et de résultats # TODO : à modifier ?
+for (i in 1:length(tables_needed)) {
+  assign(names(tables_needed)[i], tables_needed[[i]])
+}
+for (i in 1:length(inventory_tables)) {
+  assign(names(inventory_tables)[i], inventory_tables[[i]])
+}
+
+# -- répertoire des figures :
+# path
+output_dir <- file.path(repFigures, figure_path)
+# create directory
+dir.create(output_dir, showWarnings = F, recursive = T)
+# set chunck option
+opts_chunk$set(fig.path = output_dir, dev = 'png')
+
+# -- expression pour citer le sous-ensemble :
+quote_group <- with( df_Expr, quote[match(plot_group, group)] )
+@
+
+\EditIf{\Sexpr{Balise_TextBM}}{1}{
+
+Le bois mort est impliqu\u00E9 dans le cycle de vie de nombreuses esp\u00E8ces animales (insectes, oiseaux, mammif\u00E8res, reptiles, amphibiens, etc...). Ils sont aussi extr\u00EAmement pr\u00E9cieux pour d'autres organismes, comme les champignons, les plantes et les lichens. On estime qu'1/5 de la faune et de la flore de nos for\u00EAts ont besoin de l'habitat et de la nourriture offerts par le bois mort. Une grande diversit\u00E9 de types de bois mort (cat\u00E9gories de diam\u00E8tres, stades de d\u00E9composition, etc.) est essentielle \u00E0 l'accueil de l'ensemble du cort\u00E8ge saproxylique. La d\u00E9composition du bois, par les champignons lignicoles notamment, permet d'autre part de recycler la mati\u00E8re organique en nutriments essentiels \u00E0 la r\u00E9g\u00E9n\u00E9ration naturelle notamment dans les cas des r\u00E9sineux en montagne). Ce m\u00E9canisme entretient de fait la fertilit\u00E9 des sols forestiers.
+}{}
+
+<<Balise_TextBM{{x}}, fig.subcap = "test", out.width = '.49\\linewidth'>>= 
+# -- test si évaluation du BM
+Eval_BM <- 
+  ifelse( dim(grouped_results_of_BM_by_)[1] > 0 , TRUE, FALSE)
+
+# -- balise texte (ex : txt introduction bois mort)
+Balise_TextBM = Balise_TextBM + 1
+@
+
+\section{\Sexpr{section_str}}
+\EditIf{\Sexpr{Eval_BM}}{TRUE}{
+\subsection{Moyennes et variations}
+Le tableau \ref{BoisMortBis{{x}}} pr\u00E9sente la moyenne obtenue pour le volume de bois mort ainsi que sa r\u00E9partition selon la taille et la position. Les moyennes sont accompagn\u00E9es du coefficient de variation\footnote{Le coefficient de variation (CV) est le rapport de l'\u00E9cart-type \u00E0 la moyenne. Plus la valeur du coefficient de variation est faible, plus les valeurs sont homog\u00E8nes et plus l'estimation est meilleure} et de la pr\u00E9cision\footnote{L'erreur relative, exprim\u00E9e en pourcentage, est li\u00E9e \u00E0 l'effort d'\u00E9chantillonnage. Plus il y a de placettes \u00E9chantillonn\u00E9es, plus la pr\u00E9cision est meilleure. La pr\u00E9cision souhait\u00E9e est, dans le cas de ce protocole, situ\u00E9e aux alentours de 10\% sur le volume vivant.} associ\u00E9e.\\
+
+<<BoisMortBis{{x}}, fig.subcap = "test", out.width = '.49\\linewidth', eval = Eval_BM>>= 
+t <- 
+  grouped_results_of_BM_by_ %>% 
+  # filter(NumDisp == disp_num & Cycle == cycle_num) %>%
+  select(
+    NumDisp, Cycle, Disp, 
+    BMSinf, BMSsup, BMPinf, BMPsup, VhaBMT, 
+    CV_BMSinf, CV_BMSsup, CV_BMPinf, CV_BMPsup, CV_VhaBMT, 
+    Er_BMSinf, Er_BMSsup, Er_BMPinf, Er_BMPsup, Er_VhaBMT, 
+    NbrePlacettes, PoidsPlacettes
+  )
+
+t2 <- 
+  t %>% 
+  melt(id = c(
+    "NumDisp", "Cycle", "Disp", 
+    "NbrePlacettes", "PoidsPlacettes"
+  )
+  ) %>%
+  mutate(value = round(value, 1)) %>%
+  dcast(NumDisp + Cycle + Disp + NbrePlacettes ~ variable) %>%
+  mutate(
+    IC_BMPinf = ifelse(
+      !is.na(Er_BMPinf), 
+      paste0(
+        "[", round(BMPinf - Er_BMPinf * BMPinf / 100, 1), 
+        "-", round(BMPinf + Er_BMPinf * BMPinf / 100, 1), "]"
+      ), 
+      ""), 
+    IC_BMPsup = ifelse(
+      !is.na(Er_BMPsup), 
+      paste0(
+        "[", round(BMPsup - Er_BMPsup * BMPsup / 100, 1), 
+        "-", round(BMPsup + Er_BMPsup * BMPsup / 100, 1), "]"
+      ), 
+      ""
+    ), 
+    IC_BMSinf = ifelse(
+      !is.na(Er_BMSinf), 
+      paste0(
+        "[", round(BMSinf - Er_BMSinf * BMSinf / 100, 1), 
+        "-", round(BMSinf + Er_BMSinf * BMSinf / 100, 1), "]"
+      ), 
+      ""
+    ), 
+    IC_BMSsup = ifelse(
+      !is.na(Er_BMSsup), 
+      paste0(
+        "[", round(BMSsup - Er_BMSsup * BMSsup / 100, 1), 
+        "-", round(BMSsup + Er_BMSsup * BMSsup / 100, 1), "]"
+      ), 
+      ""
+    ), 
+    IC_VhaBMT = ifelse(
+      !is.na(Er_VhaBMT), 
+      paste0(
+        "[", round(VhaBMT - Er_VhaBMT * VhaBMT / 100, 1), 
+        "-", round(VhaBMT + Er_VhaBMT * VhaBMT / 100, 1), "]"
+      ), 
+      ""
+    )
+  ) %>%
+  replace(is.na(.), "") %>%
+  melt(id = c("NumDisp", "Cycle", "Disp", "NbrePlacettes")) %>%
+  mutate(
+    stat = variable, 
+    variable = str_replace(variable, "CV_", ""), 
+    variable = str_replace(variable, "Er_", ""), 
+    variable = str_replace(variable, "IC_", ""), 
+    stat = str_replace(stat, "_BMPinf", ""), 
+    stat = str_replace(stat, "_BMPsup", ""), 
+    stat = str_replace(stat, "_BMSinf", ""), 
+    stat = str_replace(stat, "_BMSsup", ""), 
+    stat = str_replace(stat, "_VhaBMT", ""), 
+    stat = str_replace(stat, "BMPinf", "Moy"), 
+    stat = str_replace(stat, "BMPsup", "Moy"), 
+    stat = str_replace(stat, "BMSinf", "Moy"), 
+    stat = str_replace(stat, "BMSsup", "Moy"), 
+    stat = str_replace(stat, "VhaBMT", "Moy"), 
+    stat = factor(stat, levels = c("Moy", "CV", "Er", "IC"))
+  ) %>%
+  arrange(Cycle, variable, stat) %>%
+  dcast(NumDisp + Cycle + Disp + NbrePlacettes + stat ~ variable)
+t3 <- 
+  t2 %>% 
+  select(
+    Cycle, stat, BMPinf, BMPsup, 
+    BMSinf, BMSsup, VhaBMT, NbrePlacettes
+  ) %>%
+  mutate(
+    stat = str_replace(stat, "Moy", "Moyenne"), # Mise en forme du tableau
+    stat = str_replace(stat, "CV", "Coefficient de variation"), 
+    stat = str_replace(stat, "Er", "Erreur relative (\\\\%)"), 
+    stat = str_replace(stat, "IC", "Intervalle de confiance")
+  )
+
+t4 <- 
+  t3 %>% 
+  MultiRow2( c(1, 8) ) %>%
+  rename(
+    "Volume au sol < 30 cm de diam" = "BMSinf", 
+    "Volume au sol > 30 cm de diam" = "BMSsup", 
+    "Volume sur pied < 30 cm de diam" = "BMPinf", 
+    "Volume sur pied > 30 cm de diam" = "BMPsup", 
+    "Volume total" = "VhaBMT", 
+    "Nombre de placettes" = "NbrePlacettes", 
+    " " = "stat"
+  )
+
+ListPos <- list()
+for (i in 1:(dim(t4)[1]-1)) {
+  ListPos[i] <- i
+}
+
+print(
+  xtable(
+    t4, 
+    caption = "Volume de bois mort (total et selon la taille et la position)\\\\ \\vspace{0.2cm}\\footnotesize{Les volumes sont en m\\up{3}/ha}", 
+    caption.placement = "top", 
+    digits = c(rep(0, 3), rep(1, 5), 0), 
+    align = c(
+      "|M{0.5cm}|", "M{0.8cm}|", "M{3.2cm}|", 
+      rep("M{1.5cm}|", 5), "M{1.2cm}|"
+    ), 
+    label = paste0("BoisMortBis", group)
+  ), 
+  include.rownames = FALSE, 
+  sanitize.text.function = function(x){return(x)}, 
+  hline.after = c(-1, 0, dim(t4)[1]), 
+  add.to.row = list(
+    pos = ListPos, 
+    command = rep("\\cline{3-7}", 3)), 
+  latex.environments = "center", 
+  size = "\\footnotesize"
+)
+
+@
+\FloatBarrier
+
+La figure \ref{fig:GraphBMT2{{x}}}\footnote{Ces figures (boites \u00E0 moustache) permettent d'observer la r\u00E9partition des donn\u00E9es, la position de la valeur m\u00E9diane et la dispersion des donn\u00E9es. Le rectangle correspond \u00E0 l'intervalle contenant la moiti\u00E9 des observations. Lorsqu'une observation se trouve au-del\u00E0 des valeurs adjacentes (les « moustaches »), elle peut \u00EAtre consid\u00E9r\u00E9e comme extr\u00EAme.} compl\u00E8te le tableau \ref{BoisMortBis{{x}}} en illustrant la variabilit\u00E9 des donn\u00E9es.
+
+<<GraphBMT2{{x}}, size = 'footnotesize', fig.height = 2.5 , fig.cap = "Variabilit\u00E9 des types de bois mort", eval = Eval_BM>>= 
+
+t <- 
+  psdrfPlaBM_ %>% 
+  filter(NumDisp == disp_num & Cycle == cycle_num & NumPlac %in% group_plots) %>% # TODO : intégrer résultats par placettes dans prepare_tables ?
+  select(-NumPlac) %>%
+  melt(id = c("NumDisp", "Cycle"))
+
+tBMSinf <- 
+  t %>% 
+  filter(variable == "BMSinf") %>%
+  mutate(variable = "Volume\nau sol\ninf\u00E9rieur\n\u00E0 30 cm")
+tBMSsup <- 
+  t %>% 
+  filter(variable == "BMSsup") %>%
+  mutate(variable = "Volume\nau sol\nsup\u00E9rieur\n\u00E0 30 cm")
+tBMPinf <- 
+  t %>% filter(variable == "BMPinf") %>%
+  mutate(variable = "Volume\nsur pied\ninf\u00E9rieur\n\u00E0 30 cm")
+tBMPsup <- 
+  t %>% 
+  filter(variable == "BMPsup") %>%
+  mutate(variable = "Volume\nsur pied\nsup\u00E9rieur\n\u00E0 30 cm")
+tVhaBMT <- 
+  t %>% 
+  filter(variable == "VhaBMT") %>%
+  mutate(variable = "Volume\nde bois\nmort total")
+
+box <- function(table) {
+  ggplot() +
+    geom_boxplot(table, mapping = aes(variable, value)) +
+    scale_y_continuous(expand = c(0, 0), 
+                       limits = c(0, max(table$value, na.rm = T)+max(table$value, na.rm = T)*0.1), name = "(m3/ha)") +
+    theme_bw() +
+    theme(axis.title.x = element_blank(), 
+          axis.title.y = element_text(size = 11, colour = "navy"), 
+          axis.ticks.x = element_blank(), 
+          axis.line.x = element_blank(), 
+          axis.text.x = element_text(size = 10, colour = "springgreen4"), 
+          axis.text.y = element_text(size = 11, colour = "navy")) #blue
+}
+p1 <- box(tBMSinf)
+p2 <- box(tBMSsup)
+p3 <- box(tBMPinf)
+p4 <- box(tBMPsup)
+p5 <- box(tVhaBMT)
+grid.arrange(
+  p1, p2, p3, p4, p5, 
+  widths = c(1, 1, 1, 1, 1)
+)
+@
+\FloatBarrier
+\newpage
+
+\subsection{Structure}
+\subsubsection{R\u00E9partition du bois mort par classe de diam\u00E8tre}
+
+La figure \ref{fig:HistBMClasse2{{x}}}  permet de visualiser la r\u00E9partition \u00T en absolu et en relatif \u00T du volume de bois mort par classe de diam\u00E8tre (espac\u00E9es chacune de 5 cm). On distingue ici les arbres morts au sol et morts sur pied.\\
+
+<<HistBMClasse2{{x}}, echo = F, size = 'footnotesize', fig.pos = 'h', fig.height = 4.5, fig.cap =  "R\u00E9partition des volumes de bois mort par classes de diam\u00E8tre", eval = Eval_BM>>= 
+
+t <- 
+  grouped_results_of_BM_by_EssRegClasse %>% 
+  # filter(NumDisp == disp_num & Cycle == cycle_num) %>%
+  group_by(NumDisp, Cycle, Classe) %>%
+  summarise(
+    VS = sum(BMSinf, BMSsup, na.rm = T), 
+    VP = sum(BMPinf, BMPsup, na.rm = T)
+  ) %>%
+  ungroup %>%
+  melt(id = c("NumDisp", "Cycle", "Classe")) %>%
+  mutate(
+    variable = factor(variable, levels = c("VS", "VP"))
+  ) %>%
+  group_by(NumDisp, Cycle, Classe) %>%
+  mutate(VhaTot = sum(value, na.rm = T)) %>%
+  ungroup()
+
+X <- max(t$Classe, na.rm = T)
+if (X <= 50) {
+  X = 50
+  Breaks = seq(10, 50, 10)
+} else {
+  Breaks = c(10, 30, seq(50, X, 20))
+}
+Y <- max(t$value, na.rm = T)
+Y<- 1.5*Y
+
+p1 <- 
+  ggplot(t, aes(Classe, value, fill = variable)) +
+  geom_bar(stat = "identity", position = 'stack') +
+  labs(
+    x = "Classes de diam\u00E8tre", 
+    y = "Volume \u00E0 l'hectare (m3/ha)"
+  ) +
+  scale_x_continuous(
+    limits = c(0, X + 5), 
+    expand = c(0, 0), 
+    breaks = Breaks
+  ) +
+  scale_y_continuous(
+    limits = c(0, Y * 1.1), 
+    expand = c(0, 0)
+  ) +
+  scale_fill_manual(
+    name = "Type de \nbois mort", 
+    label = c("Bois mort au sol", "Bois mort sur pied"), 
+    values = c("deepskyblue3", "green3")
+  ) + 
+  guides(fill = guide_legend(reverse = T)) +
+  MyTheme + 
+  theme(legend.position = 'bottom')
+
+p2 <- 
+  ggplot(t, aes(Classe, value, fill = variable)) +
+  geom_bar(stat = "identity", position = 'fill') +
+  labs(
+    x = "Classes de diam\u00E8tre", 
+    y = "Part du volume de bois"
+  ) +
+  scale_x_continuous(
+    limits = c(0, X + 5), 
+    expand = c(0, 0), 
+    breaks = Breaks
+  ) +
+  scale_y_continuous(
+    expand = c(0, 0), 
+    labels = percent
+  ) +
+  scale_fill_manual(
+    name = "Type de \nbois mort", 
+    label = c("Bois mort au sol", "Bois mort sur pied"), 
+    values = c("deepskyblue3", "green3"), 
+    guide = 'none'
+  ) +
+  guides(fill = guide_legend(reverse = T)) +
+  MyTheme + 
+  theme(axis.text.y = element_text(angle = 90))
+
+mylegend <- g_legend(p1)
+
+grid.arrange(
+  arrangeGrob(
+    p1 + theme(legend.position = "none"), 
+    p2 + theme(legend.position = "none"), 
+    nrow = 2
+  ), 
+  mylegend, nrow = 2, heights = c(9, 1)
+)
+@
+\FloatBarrier
+
+La figure \ref{fig:BMPtypo{{x}}} s'int\u00E9resse uniquement au bois mort sur pied et permet de visualiser la r\u00E9partition \u00T en absolu et en relatif \u00T du volume, selon les 3 types de bois morts sur pied relev\u00E9s par le PSDRF  (types arbres\footnote{\underline{Type arbre :} c'est le cas des arbres qui viennent de d\u00E9p\u00E9rir, ou bien des arbres qui ont perdu une partie de leurs rameaux fins, mais pas de parties importantes de leur squelette.}, chandelles\footnote{\underline{Type chandelle :} il comprend les volis de hauteur sup\u00E9rieure \u00E0 1, 30 m, ainsi que les arbres ayant perdu une partie importante de leur squelette.} et souches\footnote{\underline{Type souche :} il comprend les volis de hauteur inf\u00E9rieure \u00E0 1,30 m, ainsi que les souches non d\u00E9racin\u00E9es. Les souches sont \u00E9chantillonn\u00E9es quelle que soit leur hauteur.} ).
+
+<<BMPtypo{{x}}, size = 'footnotesize', fig.height = 3.5, fig.cap =  "R\u00E9partition du bois mort sur pied par type.\\\\\\footnotesize{Arbre = arbre mort ayant conserv\u00E9 son squelette d'arbre vivant\\\\Souches = hauteur < 1, 30 m\\\\Chandelles = arbre mort n'ayant pas conserv\u00E9 son squelette + hauteur > 1, 30 m.}", eval = Eval_BM>>= 
+
+tab <- grouped_results_of_BMP_by_ClasseType %>% filter(!is.na(Type))
+
+if (dim(grouped_results_of_BMP_by_ClasseType)[1]  ==  0) {
+  cat("Pas de donn\u00E9es inventori\u00E9es")
+} else {
+  tab <- 
+    tab %>% 
+    select(NumDisp, Disp, Classe, Type, Vha) %>%
+    mutate(Type = as.numeric(Type)) %>%  # TODO : à supprimer en amont
+    left_join(CodeTypoArbres, by = c("Type" = "Id")) %>% 
+    mutate(
+      Descriptif = factor(
+        Descriptif, 
+        levels = c(
+          "Souches", 
+          "Souches d'origine anthropique", 
+          "Souches d'origine naturelle", 
+          "Chandelles", "Arbres"
+        )
+      )
+    ) %>%
+    arrange(Descriptif) %>%
+    group_by(NumDisp, Classe) %>%
+    mutate(
+      VhaTot = sum(Vha, na.rm = T), 
+      PartVha = Vha / VhaTot
+    ) %>%
+    ungroup()
+  # TODO : à tester ci-dessous :
+  SumS <- with(
+    tab,
+    sum(
+      Vha[Descriptif %in% c(
+        "Souches", 
+        "Souches d'origine anthropique", 
+        "Souches d'origine naturelle"
+      )], 
+      na.rm = T
+    )
+  )
+  SumS <- round(SumS, 1)
+  
+  SumS <- round(sum(tab$Vha[
+    tab$Descriptif %in% c(
+      "Souches", 
+      "Souches d'origine anthropique", 
+      "Souches d'origine naturelle"
+    )], na.rm = T), 1)
+  
+  SumA <- round(sum(tab$Vha[tab$Descriptif == "Arbres"], na.rm = T), 1)
+  SumC <- round(sum(tab$Vha[tab$Descriptif == "Chandelles"], na.rm = T), 1)
+
+  X <- max(tab$Classe, na.rm = T)
+  if (X <= 50) {
+    X = 50
+    Breaks = seq(10, 50, 10)
+  } else {
+    Breaks = c(10, 30, seq(50, X, 20))
+  }
+  Y <- max(tab$VhaTot, na.rm = T)
+  
+  p1 <- 
+    ggplot(tab, aes(x = Classe, y = Vha, fill = Descriptif)) +
+    geom_bar(stat = "identity", position = 'stack') +
+    annotate(
+      "text", 
+      label = paste0("Volume 'Arbres' total  = ", SumA,  "m3/ha"), 
+      x = X * 0.8, 
+      y = Y * 0.9, 
+      vjust = -3.5, 
+      size = 2, 
+      col = "darkred"
+    ) +
+    annotate(
+      "text", 
+      label = paste0("Volume 'Chandelles' total  = ", SumC, "m3/ha"), 
+      x = X * 0.8, 
+      y = Y * 0.9, 
+      vjust = -1.5, 
+      size = 2, 
+      col = "darkred"
+    ) +
+    annotate(
+      "text", 
+      label = paste0("Volume 'Souches' total  = ", SumS, "m3/ha"), 
+      x = X * 0.8, 
+      y = Y * 0.9, 
+      size = 2, 
+      col = "darkred"
+    ) +
+    labs(
+      x = "Classes de diam\u00E8tre", 
+      y = "Volume \u00E0 l'hectare (m3/ha)"
+    ) +
+    scale_x_continuous(
+      limits = c(0, X + 5), 
+      expand = c(0, 0), 
+      breaks = Breaks
+    ) +
+    scale_y_continuous(
+      limits = c(0, Y * 1.1), 
+      expand = c(0, 0)
+    ) +
+    guides(fill = guide_legend(reverse = T)) +
+    scale_fill_grey() +
+    MyTheme + 
+    theme(legend.direction = "horizontal")
+  
+  tab <- arrange(tab, Descriptif)
+  Y <- max(tab$PartVha, na.rm = T)
+  
+  p2 <- 
+    ggplot(
+      tab, 
+      aes(x = Classe, y = Vha, fill = Descriptif)
+    ) +
+    geom_bar(stat = "identity", position = 'fill') +
+    labs(x = "Classes de diam\u00E8tre", y = "Part du volume (%)") +
+    scale_x_continuous(
+      limits = c(0, X + 5), 
+      expand = c(0, 0), 
+      breaks = Breaks
+    ) +
+    scale_y_continuous(
+      labels = percent, 
+      expand = c(0, 0)
+    ) +
+    guides(fill = guide_legend(reverse = T)) +
+    scale_fill_grey() +
+    MyTheme
+  
+  mylegend <- g_legend(p1)
+  
+  grid.arrange(
+    arrangeGrob(
+      p1 + theme(legend.position = "none"), 
+      p2 + theme(legend.position = "none"), 
+      nrow = 1
+    ), 
+    mylegend, nrow = 2, heights = c(9, 1)
+  )
+}
+@
+\FloatBarrier
+\newpage
+
+\subsubsection{Ratio volume de bois mort / volume total}
+
+Cet indicateur exprime une potentialit\u00E9 en fonction de la productivit\u00E9 du peuplement. On consid\u00E8re qu'au-del\u00E0 de 15\% en moyenne sur toutes les phases du cycle, on est dans des proportions proches des conditions naturelles.\\
+La figure \ref{fig:RatioBis{{x}}}  est une repr\u00E9sentation graphique du ratio. Elle  permet de visualiser la r\u00E9partition \u00T en absolu et en relatif \u00T du volume de bois mort et de bois vivant par classe de diam\u00E8tre (espac\u00E9es chacune de 5 cm).\\
+
+<<RatioBis{{x}}, size = 'footnotesize', fig.height = 3.5, fig.cap =  "Importance relative du bois mort par classes de diam\u00E8tre.", eval = Eval_BM>>= 
+# RatioBis, 
+t <- 
+  grouped_results_of_BM_by_EssRegClasse %>% 
+  # filter(NumDisp == disp_num & Cycle == cycle_num) %>%
+  mutate(Vha = BMSinf + BMSsup + BMPinf + BMPsup) %>%
+  group_by(NumDisp, Disp, Classe) %>%
+  summarise(VhaBMT = sum(Vha, na.rm = T)) %>%
+  ungroup()
+
+t1 <- 
+  grouped_results_of_Tot_by_EssenceClasse %>% 
+  # filter(NumDisp == disp_num & Cycle == cycle_num) %>%
+  select(NumDisp, Disp, Classe, Essence, Vha) %>%
+  group_by(NumDisp, Disp, Classe) %>%
+  summarise(Vha = sum(Vha, na.rm = T)) %>%
+  ungroup()
+
+t2 <- full_join(t, t1) %>%
+  replace(is.na(.), 0) %>%
+  ungroup()
+
+t2_abs <- full_join(t, t1) %>%
+  replace(is.na(.), 0) %>%
+  ungroup()
+
+t2_rel <- full_join(t1, t2) %>%
+  replace(is.na(.), 0) %>%
+  ungroup()
+
+# Ratio = round(mean(t2$VhaBMT/(t2$Vha+t2$VhaBMT), na.rm = T), 3)
+# Mean  = round(mean(t2$VhaBMT, na.rm = T), 2)
+BMTot = round(sum(t2$VhaBMT, na.rm = T), 2)
+BTot = round(sum(t2$Vha+t2$VhaBMT, na.rm = T), 2)
+Ratio = round(BMTot/BTot, 3)
+t2 <- melt(t2, id = c("NumDisp", "Disp", "Classe")) %>%
+  mutate(value = ifelse(is.na(value), 0, value), 
+         variable = factor(variable, levels = c("VhaBMT", "Vha"))) %>%
+  arrange(variable)
+
+t2_abs <- melt(t2_abs, id = c("NumDisp", "Disp", "Classe")) %>%
+  mutate(value = ifelse(is.na(value), 0, value), 
+         variable = factor(variable, levels = c("VhaBMT", "Vha"))) %>%
+  arrange(variable)
+
+t2_rel <- melt(t2_rel, id = c("NumDisp", "Disp", "Classe")) %>%
+  mutate(value = ifelse(is.na(value), 0, value), 
+         variable = factor(variable, levels = c("Vha","VhaBMT"))) %>%
+  arrange(variable)
+
+# En absolu
+p1 <- ggplot() +
+  geom_bar(arrange(t2_abs, variable), mapping = aes(Classe, value, fill = variable), #, colour = variable
+           stat = 'identity', position = 'stack', alpha = 1) +
+  # geom_hline(yintercept = Mean, colour = "blue", linetype = 2, size = 0.5) +
+  scale_x_continuous(expand = c(0, 0), 
+                     limits = c(0, max(t2$Classe+5, na.rm = T)), 
+                     breaks = c(0, 10, 30, ifelse(max(t2$Classe, na.rm = T) > 50, 
+                                                  seq(50, max(t2$Classe, na.rm = T), 20), 50)), 
+                     name = "Classes de diam\u00E8tre") +
+  scale_y_continuous(expand = c(0, 0), 
+                     limits = c(0, max(t2$value, na.rm = T)+5), 
+                     breaks = seq(0, max(t2$value, na.rm = T)+5, 10), 
+                     # labels = percent, 
+                     name = "Volume de bois (m3/ha)") +
+  scale_fill_manual(name = "Population", 
+                    values = c("limegreen", "palegoldenrod"), 
+                    labels = c("Bois mort", "Bois vivant")) +
+  #   scale_colour_manual(name = "Population", 
+  #                     values = c("gray60", "limegreen"), 
+  #                     labels = c("Bois vivant", "Bois mort")) +
+  annotate("text", label = c(paste("Volume bois mort total = ", BMTot, "m3/ha"), 
+                             # paste("Volume bois mort moyen = ", Mean, "m3/ha"), 
+                             paste("Volume bois total = ", BTot, "m3/ha")), 
+           x = rep(0.5*(max(t2$Classe, na.rm = T)+5), 2), #3
+           y = c(max(t2$value, na.rm = T), 
+                 # Mean, 
+                 max(t2$value, na.rm = T)), 
+           vjust = c(-1.5, 
+                     # -0.7, 
+                     0), 
+           size = 2.5, fontface = 'plain', color = "navyblue") +
+  MyTheme + theme(legend.direction = "horizontal")
+# En relatif
+p2 <- ggplot() +
+  geom_bar(t2_rel, mapping = aes(Classe, value, fill = variable), 
+           stat = 'identity', position = 'fill') +
+  geom_hline(yintercept = Ratio, colour = "blue", linetype = 2, size = 0.5) +
+  scale_x_continuous(expand = c(0, 0), 
+                     limits = c(0, max(t2$Classe, na.rm = T)+5), 
+                     breaks = c(0, 10, 30, ifelse(max(t2$Classe, na.rm = T) > 50, 
+                                                  seq(50, max(t2$Classe, na.rm = T), 20), 50)), 
+                     name = "Classes de diam\u00E8tre") +
+  scale_y_continuous(expand = c(0, 0), 
+                     # limits = c(-1, 3), 
+                     breaks = seq(0, 1, 0.2), 
+                     labels = percent, 
+                     name = "Part du volume total") +
+  scale_fill_manual(name = "Population", 
+                    values = c("palegoldenrod","limegreen"), 
+                    labels = c("Bois vivant","Bois mort")) +
+  annotate("text", label = paste("ratio bois mort / bois total = ", Ratio*100, "%"), 
+           x = 0.5*(max(t2$Classe, na.rm = T)+5), y = Ratio, 
+           vjust = -0.7, size = 2.5, fontface = 'plain', color = "navyblue") +
+  MyTheme
+
+mylegend <- g_legend(p1)
+
+grid.arrange(arrangeGrob(p1 + theme(legend.position = "none"), 
+                         p2 + theme(legend.position = "none"), 
+                         nrow = 1), 
+             mylegend, nrow = 2, heights = c(9, 1))
+# print(getwd())
+@
+\FloatBarrier
+
+<<Test_Stades{{x}}>>=
+t <- 
+  grouped_results_of_BM_by_StadeDStadeE %>% filter(!is.na(StadeD))
+Eval_Stades <- if(dim(t)[1] == 0) F else T
+@
+
+\EditIf{\Sexpr{dim(t)[1]}}{0}{}{
+\subsubsection{Diversit\u00E9 des stades de d\u00E9composition (pourriture et \u00E9corce) par types de bois mort}
+
+En plus de l'essence et du diam\u00E8tre du bois mort, de nombreuses esp\u00E8ces saproxyliques sont particuli\u00E8rement sensibles au stade de d\u00E9composition. On rencontre en effet des cort\u00E8ges tr\u00E8s diff\u00E9rents selon les cas de figure (notamment chez les champignons lignicoles). L'application du PSDRF pr\u00E9voit de relever cette information selon les classes suivantes
+
+\begin{table}[ht]
+\centering
+{\footnotesize
+\begin{tabular}{cc}
+\hline
+Pourriture & Ecorce\\
+\hline
+1. Dur ou non alt\u00E9r\u00E9 & 1. Pr\u00E9sente sur tout le billon\\
+2. Pourriture <1/4 du diam\u00E8tre & 2. Pr\u00E9sente sur plus de 50\% de la surface\\
+3. Pourriture entre 1/4 et 1/2 du diam\u00E8tre & 3. Pr\u00E9sente sur moins de 50\% de la surface\\
+4. Pourriture entre 1/2 et 3/4 du diam\u00E8tre & 4. Absente du billon\\
+5. Pourriture sup\u00E9rieure \u00E0 3/4. & \\
+\hline
+\end{tabular}
+\caption{Codification des stades de d\u00E9composition (pourriture et \u00E9corce)}
+\label{TabCodeStade{{x}}}
+}
+\end{table}
+\FloatBarrier
+La figure \ref{BMStades2{{x}}}  permet de visualiser la distribution du volume de bois mort selon la taille et la position par paires de stades de d\u00E9composition (pourriture et \u00E9corce)
+
+\begin{figure}[h]
+{\centering
+<<BMStades2{{x}}, fig.height = 4, fig.cap =  NULL, fig.subcap = c('one plot', 'the other one', 'the other one', 'the other one'), eval = Eval_Stades, include = F>>= 
+
+t <- 
+  grouped_results_of_BM_by_StadeDStadeE %>% 
+  filter(!is.na(StadeD)) %>%
+  select(
+    NumDisp, Cycle, StadeD, StadeE, 
+    BMSinf, BMSsup, BMPinf, BMPsup
+  ) %>%
+  melt(
+    id = c("NumDisp", "Cycle", "StadeD", "StadeE"), 
+    variable.name = "Type", 
+    value.name = "Vha"
+  ) %>%
+  group_by(NumDisp, Cycle, Type) %>%
+  mutate(
+    VhaTot = sum(Vha, na.rm = T), 
+    taux = Vha / VhaTot * 100, 
+    StadeD = as.numeric(StadeD), 
+    StadeE = as.numeric(StadeE)
+  ) %>%
+  ungroup() %>% 
+  replace(is.na(.), 0)
+
+tempBM <- data.frame(
+  Type = c("BMSinf", "BMSsup", "BMPinf", "BMPsup"), 
+  Col = c("deepskyblue4", "navyblue", "forestgreen", "darkgreen"), 
+  Name = c(
+    "de bois\nmort au\nsol < 30 cm\nde Diam (%)", 
+    "de bois\nmort au\nsol > 30 cm\nde Diam (%)", 
+    "de bois\nmort sur\npied < 30 cm\nde Diam (%)", 
+    "de bois\nmort sur\npied < 30 cm\nde Diam (%)"
+  ), 
+  stringsAsFactors = F
+)
+
+plotBM <- function(data, type) {
+  p <- 
+    ggplot() +
+    geom_tile(filter(data, Type == type), 
+              mapping = aes(StadeD, StadeE, fill = taux), colour = "black") +
+    scale_fill_gradient(
+      name = paste0("Part du \nvolume"), 
+      low = "white", 
+      high = tempBM$Col[match(type, tempBM$Type)], 
+      limits = c(0, 100), 
+      breaks = c(0, 25, 50, 75, 100)
+    ) +
+    labs(
+      x = "Stade de pourriture", 
+      y = "Stade \u00E9corce"
+    ) +
+    scale_x_continuous(
+      expand = c(0, 0), 
+      limits = c(0.5, 5.5), 
+      breaks = seq(1, 5), 
+      minor_breaks = seq(0.5, 5.5, 0.1)
+    ) +
+    scale_y_continuous(
+      expand = c(0, 0), 
+      limits = c(0.5, 4.5), 
+      breaks = seq(1, 4), 
+      minor_breaks = seq(0.5, 4.5, 0.1)
+    ) +
+    # guides(fill = guide_legend(title = "Importance relative")) +
+    MyTheme2 +
+    theme(
+      panel.grid.major = element_line(colour = "gray"), 
+      panel.grid.minor = element_line(colour = "gray"), 
+      #         panel.grid = element_line(), 
+      #         panel.grid = element_line(), 
+      panel.background = element_rect(fill = "white"), 
+      # legend.key = element_rect(col = "gray"), 
+      legend.key.height = unit(0.5, "cm"), 
+      legend.key.width = unit(0.5, "cm")
+    )
+} 
+p1 <- plotBM(t, "BMSinf")
+p2 <- plotBM(t, "BMSsup")
+p3 <- plotBM(t, "BMPinf")
+p4 <- plotBM(t, "BMPsup")
+
+p1
+p2
+p3
+p4
+@
+% \subfloat[Bois mort au sol < 30 cm\label{fig:BMStades2{{x}}}]{\includegraphics[width = .49\linewidth]{\Sexpr{paste0(repFigures, "Cycle", cycle_num, "/BMStades2{{x}}-1")}}}
+% \subfloat[Bois mort au sol > 30 cm\label{fig:BMStades2{{x}}}]{\includegraphics[width = .49\linewidth]{\Sexpr{paste0(repFigures, "Cycle", cycle_num, "/BMStades2{{x}}-2")}}}\\ %#\vspace{0.5cm}
+% \subfloat[Bois mort sur pied < 30 cm\label{fig:BMStades2{{x}}}]{\includegraphics[width = .49\linewidth]{\Sexpr{paste0(repFigures, "Cycle", cycle_num, "/BMStades2{{x}}-3")}}}
+% \subfloat[Bois mort sur pied > 30 cm\label{fig:BMStades2{{x}}}]{\includegraphics[width = .49\linewidth]{\Sexpr{paste0(repFigures, "Cycle", cycle_num, "/BMStades2{{x}}-4")}}}
+% }
+
+% \subfloat[Bois mort au sol < 30 cm\label{fig:BMStades2{{x}}}]{\includegraphics[width = .49\linewidth]{\Sexpr{paste0(FigPath, "BMStades2{{x}}-1")}}}
+% \subfloat[Bois mort au sol > 30 cm\label{fig:BMStades2{{x}}}]{\includegraphics[width = .49\linewidth]{\Sexpr{paste0(FigPath, "BMStades2{{x}}-2")}}}\\ %#\vspace{0.5cm}
+% \subfloat[Bois mort sur pied < 30 cm\label{fig:BMStades2{{x}}}]{\includegraphics[width = .49\linewidth]{\Sexpr{paste0(FigPath, "BMStades2{{x}}-3")}}}
+% \subfloat[Bois mort sur pied > 30 cm\label{fig:BMStades2{{x}}}]{\includegraphics[width = .49\linewidth]{\Sexpr{paste0(FigPath, "BMStades2{{x}}-4")}}}
+% }
+\subfloat[Bois mort au sol < 30 cm\label{fig:BMStades2{{x}}}]{\includegraphics[width = .49\linewidth]{\Sexpr{paste0(output_dir, gsub(".", "_", "BMStades2{{x}}-1", fixed = T))}}}
+\subfloat[Bois mort au sol > 30 cm\label{fig:BMStades2{{x}}}]{\includegraphics[width = .49\linewidth]{\Sexpr{paste0(output_dir, gsub(".", "_", "BMStades2{{x}}-2", fixed = T))}}}\\ %#\vspace{0.5cm}
+\subfloat[Bois mort sur pied < 30 cm\label{fig:BMStades2{{x}}}]{\includegraphics[width = .49\linewidth]{\Sexpr{paste0(output_dir, gsub(".", "_", "BMStades2{{x}}-3", fixed = T))}}}
+\subfloat[Bois mort sur pied > 30 cm\label{fig:BMStades2{{x}}}]{\includegraphics[width = .49\linewidth]{\Sexpr{paste0(output_dir, gsub(".", "_", "BMStades2{{x}}-4", fixed = T))}}}
+}
+
+\caption[Distribution des volumes de bois mort par stades de pourriture et par stades \u00E9corce]{Distribution des volumes de bois mort par stades de pourriture et par stades \u00E9corce}%\label{fig:BMStades2}
+\label{BMStades2{{x}}}
+\end{figure}
+
+\FloatBarrier
+
+La figure \ref{fig:BMStades3{{x}}} permet de visualiser la distribution du volume de bois mort par paires de stades de d\u00E9composition (pourriture et \u00E9corce), sans distinction de taille ou de position.
+<<BMStades3{{x}}, fig.pos = 'ht', fig.height = 2.5, fig.cap =  "R\u00E9partition du volume de bois mort total par stades de pourriture et par stades \u00E9corce", eval = Eval_Stades>>= 
+
+t <- 
+  grouped_results_of_BM_by_StadeDStadeE %>% 
+  filter(!is.na(StadeD)) %>%
+  select(NumDisp, Cycle, StadeD, StadeE, BMSinf, BMSsup, BMPinf, BMPsup) %>%
+  melt(
+    id = c("NumDisp", "Cycle", "StadeD", "StadeE"), 
+    variable.name = "Type", value.name = "Vha"
+  ) %>%
+  group_by(NumDisp, Cycle, StadeD, StadeE) %>%
+  summarise(Vha = sum(Vha, na.rm = T)) %>%
+  ungroup() %>%
+  group_by(NumDisp, Cycle) %>%
+  mutate(
+    VhaTot = sum(Vha, na.rm = T), 
+    taux = Vha / VhaTot * 100, 
+    StadeD = as.numeric(StadeD), 
+    StadeE = as.numeric(StadeE)
+  ) %>%
+  ungroup() %>% 
+  replace(is.na(.), 0)
+
+
+ggplot() +
+  geom_tile(
+    t, 
+    mapping = aes(StadeD, StadeE, fill = taux), colour = "black"
+  ) +
+  scale_fill_gradient(
+    name = "Part du volume\nde bois mort total (%) ", 
+    low = "ghostwhite", high = "black", 
+    limits = c(0, 100), 
+    breaks = c(0, 25, 50, 75, 100)
+  ) +
+  scale_x_continuous(
+    expand = c(0, 0), 
+    limits = c(0.5, 5.5), 
+    breaks = seq(1, 5), 
+    minor_breaks = seq(0.5, 5.5, 0.1)
+  ) +
+  scale_y_continuous(
+    expand = c(0, 0), 
+    limits = c(0.5, 4.5), 
+    breaks = seq(1, 4), 
+    minor_breaks = seq(0.5, 4.5, 0.1)
+  ) +
+  labs(
+    x = "Stade de pourriture", 
+    y = "Stade \u00E9corce"
+  ) +
+  theme(
+    axis.text.x = element_text(size = 9, angle = 0, hjust = 1), 
+    axis.text.y = element_text(size = 9), 
+    legend.text = element_text(size = 8), 
+    legend.title = element_text(size = 9, face = 'plain'), 
+    panel.grid.major = element_line(colour = "gray"), 
+    panel.grid.minor = element_line(colour = "gray"), 
+    panel.background = element_rect(fill = "white")
+  )
+@
+\clearpage
+\FloatBarrier
+}
+
+
+<<Preparation_CompositionBM{{x}}, eval = Eval_BM >>=
+t1 <- 
+  grouped_results_of_Tot_by_Essence %>% 
+  # filter(NumDisp == disp_num) %>% 
+  select(NumDisp, Disp, Cycle, Essence, Nha)
+
+t2 <- 
+  grouped_results_of_Rege_by_Essence %>% 
+  # filter(NumDisp == disp_num) %>% 
+  select(
+    NumDisp, Disp, Cycle, Essence, 
+    Recouv, Classe1Ha, Classe2Ha, Classe3Ha
+  )
+
+tab <- 
+  t1 %>% 
+  full_join(t2) %>% 
+  left_join(CodeEssence[, c("Essence", "Nom")], by = "Essence")
+ListEss <- tab[order(tab$Nom), -1]
+
+
+t <- 
+  grouped_results_of_BM_by_Essence %>% 
+  filter(!is.na(Essence)) %>%
+  select(NumDisp, Cycle, Essence, BMSinf, BMSsup, BMPinf, BMPsup) %>%
+  melt(
+    id = c("NumDisp", "Cycle", "Essence"), 
+    variable.name = "Type", value.name = "Vha"
+  ) %>%
+  left_join(CodeEssence)
+
+ListEss_BM <- unique(t$Nom)
+@
+\FloatBarrier
+
+\subsection{Composition}
+Sur les \Sexpr{length(unique(ListEss[, "Nom"]))} esp\u00E8ces \u00E9chantillonn\u00E9es au total sur \Sexpr{quote_group}, \Sexpr{length(ListEss_BM)} pr\u00E9sentent des signes de mortalit\u00E9. La figure \ref{fig:DiversiteBoisMort{{x}}} donne une  image  de la r\u00E9partition du volume de bois mort repr\u00E9sent\u00E9 par les diff\u00E9rentes essences selon la taille et la position.
+
+<<Preparation{{x}}, eval = Eval_BM>>=
+t <- 
+  grouped_results_of_BM_by_Essence %>% 
+  filter(!is.na(Essence)) %>%
+  select(
+    NumDisp, Cycle, Essence, 
+    BMSinf, BMSsup, BMPinf, BMPsup
+  ) %>%
+  melt(
+    id = c("NumDisp", "Cycle", "Essence"), 
+    variable.name = "Type", value.name = "Vha"
+  ) %>%
+  left_join(CodeEssence, by = "Essence")
+
+Levels1 <- sort(unique(t$Nom))
+Levels2 <- c("BMSinf", "BMSsup", "BMPinf", "BMPsup")
+
+df_Scales <- data.frame(
+  Nb_Essences = seq(0, 40), 
+  Classe_Essence = sort(c(
+    rep( c(1, seq(5, 35, 5)) , 5),
+    35)), 
+  Height_Essence = c(sort( rep(seq(1, 8), 5) ), 8)
+) %>% 
+  mutate(
+    Height_Essence = ifelse(
+      Height_Essence == 1 | Height_Essence == 2, 3, Height_Essence
+    )
+  )
+
+Param_Essence <- 
+  df_Scales$Height_Essence[match(length(Levels1), df_Scales$Nb_Essences)]
+if (is.na(Param_Essence)) {
+  Param_Essence <- 8
+}
+@
+
+<<DiversiteBoisMort{{x}}, fig.pos = 'H', fig.cap = "R\u00E9partition des volumes de bois mort par essence (m3/ha)", fig.height = Param_Essence,  eval = Eval_BM>>=
+# TODO : check if arg fig.width = "\\textwidth" can be suppressed
+
+# Voir paramétrage du chunk ci-dessus
+t <- 
+  t %>% 
+  mutate(
+    Nom = match(Nom, Levels1), 
+    Type = match(Type, Levels2)
+  ) %>%
+  select(NumDisp, Cycle, Type, Nom, Vha) %>%
+  group_by(Type) %>%
+  mutate(
+    rescale = rescale(Vha), 
+    taux = Vha / sum(Vha, na.rm = T) * 100, 
+    Vha = ifelse(Vha < 0.1, round(Vha, 3), round(Vha, 1))
+  ) %>%
+  ungroup() %>% 
+  replace(is.na(.), 0)
+
+ggplot(t, aes(Type, Nom)) +
+  geom_tile(aes(fill = taux), colour = "black") +
+  geom_text(
+    aes(Type, Nom, label = round(Vha, 3)), 
+    size = 2.5
+  ) +
+  scale_fill_gradient(
+    name = "Part du \nvolume (%)", 
+    low = "white", high = "darkgreen", 
+    limits = c(0, 100), 
+    breaks = c(0, 25, 50, 75, 100)
+  ) +
+  scale_x_continuous(
+    expand = c(0, 0), 
+    breaks = seq(1, 4), 
+    limits = c(0.5, 4.5), 
+    minor_breaks = seq(0.5, 4.5, 0.1), 
+    label = c(
+      "Bois Mort au sol \n< 30 cm de Diam", 
+      "Bois Mort au sol \n> 30 cm de Diam", 
+      "Bois Mort sur pied \n< 30 cm de Diam", 
+      "Bois Mort sur pied \n> 30 cm de Diam"
+    )
+  ) +
+  scale_y_continuous(
+    expand = c(0, 0), 
+    limits = c(0.5, max(t$Nom, na.rm = T) + 0.5), 
+    breaks = seq(1, max(t$Nom, na.rm = T)), 
+    minor_breaks = seq(0.5, max(t$Nom, na.rm = T) + 0.5, 0.1), 
+    label = Levels1
+  ) +
+  labs(x = NULL, y = NULL) + 
+  MyTheme +
+  theme(
+    axis.text.x = element_text(size = 9, angle = 45, hjust = 1), 
+    axis.text.y = element_text(size = 9), 
+    legend.text = element_text(size = 8), 
+    legend.title = element_text(size = 9, face = 'plain'), 
+    panel.grid.major = element_line(colour = "gray"), 
+    panel.grid.minor = element_line(colour = "gray"), 
+    panel.background = element_rect(fill = "white")
+  )
+@
+\FloatBarrier
+
+La figure \ref{fig:CompoBoisMort{{x}}} illustre la part relative des  diff\u00E9rentes essences relev\u00E9es en volume et selon un regroupement op\u00E9r\u00E9 et pr\u00E9cis\u00E9 dans le tableau \ref{EssReg} en annexe \ref{Regroupement}.
+
+<<CompoBoisMort{{x}}, fig.height = 4, fig.cap = "R\u00E9partition du volume de bois mort entre les diff\u00E9rentes essences relev\u00E9es.", eval = Eval_BM>>= 
+
+List_EssReg <- unique(grouped_results_of_BM_by_EssRegClasse$EssReg)
+List_EssReg <- List_EssReg[length(List_EssReg):1]
+
+t <- 
+  grouped_results_of_BM_by_EssRegClasse %>% 
+  filter(NumDisp == disp_num) %>%
+  group_by(EssReg) %>%
+  summarise(Vha = sum(BMSinf, BMSsup, BMPinf, BMPsup, na.rm = T)) %>%
+  ungroup() %>%
+  melt(id = "EssReg") %>%
+  group_by(variable) %>%
+  mutate(
+    Tot = sum(value, na.rm = T), 
+    Ratio = value / Tot, 
+    RatioCum = cumsum(value / Tot)
+  ) %>%
+  ungroup() %>%
+  mutate(EssReg = factor(EssReg, levels = List_EssReg)) %>% 
+  arrange(variable)
+
+ggplot() +
+  geom_bar(
+    t, mapping = aes(variable, y = value, fill = EssReg), 
+    stat = "identity", 
+    position = "fill", 
+    width = 1
+  ) +
+  coord_polar(theta = "y") +
+  geom_text(
+    t, 
+    mapping = aes(
+      x = 1, 
+      y = round(RatioCum - Ratio / 2, 3), 
+      label = ifelse(
+        Ratio > 0.1, paste0(round(value, 1), " m3/ha"), ""
+      )
+    ), 
+    size = 2.5, 
+    alpha = 1, 
+    colour = "black"
+  ) +
+  coord_polar(theta = "y") +
+  scale_x_discrete("") +
+  scale_y_continuous(
+    name = "Part relative des essences", 
+    labels = percent
+  ) +
+  scale_fill_manual(
+    "Essences Regroup\u00E9es :", 
+    values = Palette_EssReg
+  ) +
+  guides(
+    fill = guide_legend(
+      ncol = ifelse(length(unique(t$EssReg)) > 10, 2, 1), 
+      bycol = T
+    )
+  ) +
+  theme_bw() + 
+  theme(
+    title = element_text(face = 'plain'), 
+    axis.text.y = element_blank(), 
+    axis.text.x = element_text(size = 6), 
+    axis.ticks = element_blank(), 
+    axis.title.x = element_text(face = 'plain'), 
+    legend.text = element_text(size = 7), 
+    legend.position = "right", 
+    strip.text = element_text(size = 7, colour = "white"), 
+    legend.title = element_text(size = 8), 
+    plot.margin = unit(c(0.1, 0.1, 0.1, 0.1), "cm"), 
+    panel.grid.major = element_blank(), 
+    panel.border = element_blank(), 
+    strip.background = element_rect(fill = "forestgreen", colour = "black")
+  )
+
+@
+\FloatBarrier
+
+\EditIf{\Sexpr{Eval_PSDRFMA}}{TRUE}{
+\subsection{Orientation des billons de bois mort de diamètre > 30 cm}
+La figure \ref{fig:Orientation_futs{{x}}} offre un aperçu de l'orientation des gros billons de bois morts (Diam > 30cm) inventoriés, par rapport à leur souche. Elle reflète les conditions de chute des billons de bois mort qui peuvent être liées aux conditions de croissance des arbres (anéomtropie, héliotropie, obstacle physique à la croissance, etc.) mais aussi aux conditions environnementales au moment de la chute de l'arbre ou du billon (tempête, etc.).
+
+<<Orientation_futs{{x}}, fig.height = 3.5, fig.cap =  "Orientation des f\u00FBts de bois mort (de diamètre >  30 cm) par rapport à leur souche", eval = Eval_PSDRFMA, include = Eval_PSDRFMA>>= 
+
+df <- 
+  BMSsup30_SUB %>% 
+  filter(!is.na(Orientation)) %>% 
+  select(NumDisp, NumPlac, Cycle, Orientation) %>% 
+  mutate(
+    Orientation = floor(Orientation / 50 + 0.5) * 50, 
+    Orientation = ifelse(Orientation == 400, 0, Orientation)
+  ) %>% 
+  group_by(Orientation) %>% 
+  summarize(Nbre = length(NumDisp)) %>% 
+  ungroup() %>% 
+  mutate(Freq = Nbre) %>% 
+  select(Orientation, Freq)
+
+Max_VAL = ceiling(max(df$Freq) / 10 + 0.5) * 10
+Az_ALIBI <- expand.grid(
+  Freq = c(0, Max_VAL), 
+  Orientation = seq(0, 350, 50), 
+  stringsAsFactors = F
+)
+df2 <- 
+  Az_ALIBI %>% 
+  rbind(df) %>% 
+  filter(!is.na(Orientation)) %>% 
+  melt(id = "Orientation") %>% 
+  mutate(
+    variable = as.character(variable), 
+    variable = ifelse(value == 0, "Freq_Min", variable), 
+    variable = ifelse(value == Max_VAL, "Freq_Max", variable), 
+    
+    Orientation = factor(
+      Orientation, 
+      levels = c(0, seq(350, 50, length.out = 7))
+    )
+  ) %>% 
+  dcast(variable ~ Orientation) %>% 
+  mutate(
+    variable = factor(
+      variable, 
+      levels = c("Freq_Max", "Freq_Min", "Freq"))
+  ) %>% 
+  arrange(variable) %>% 
+  mutate(variable = NULL)
+
+
+
+Titre = "Orientation des billons > 30 cm"
+
+par(
+  mar = c(0, 0, 1, 0), 
+  family = "Times", 
+  cex.main = 1, 
+  fig = c(0, 1, 0, 1), 
+  mgp = c(5, 5, 5)
+)
+
+radarchart(
+  df2, axistype = 1, 
+  pty = 32, 
+  pcol = "black", 
+  plty = 1, 
+  pdensity = 50, 
+  plwd = 0.3, 
+  pfcol = "dodgerblue", 
+  title = Titre, 
+  centerzero = T, 
+  seg = 5, 
+  caxislabels = seq(0, Max_VAL, length.out = 6), 
+  calcex = 0.8, 
+  vlcex = 0.85, 
+  vlabels = names(df2)
+)
+text(
+  0.75, 0.9, 
+  paste0("Nombre de \n billons : ", sum(df$Freq)), 
+  cex = 0.75, 
+  col = "firebrick"
+)
+@
+\FloatBarrier
+}{}
+
+}{Pas de donn\u00E9es renseign\u00E9es}
+

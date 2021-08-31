@@ -1,0 +1,1027 @@
+<<Preparation_Evol_BM{{x}}>>= 
+# -- extraction des informations de x
+group <- "{{x}}"
+# group <- "GrOupe_Parcelle1-1" # debug
+# group <- "Disp_-2" # debug
+
+# liste des tables demandées
+tables_list <- c(
+  "psdrfDispBM_", "psdrfDispBM_Classe", 
+  "psdrfDispBMS_", "psdrfDispBMP_", 
+  "psdrfDispBM_EssReg", 
+  "psdrfDispBM_EssRegClasse" 
+)
+
+# filtre des données d'inventaire et de résultats
+prepare_tables_results <- 
+  prepare_tables(
+    disp_num, group, tables_list, 
+    admin = Placettes_Sel,
+    evol = T
+  )
+tables_needed <- prepare_tables_results[[1]]
+inventory_tables <- prepare_tables_results[[2]]
+
+# extraction des tables d'inventaire et de résultats # TODO : à modifier ?
+for (i in 1:length(tables_needed)) {
+  assign(names(tables_needed)[i], tables_needed[[i]])
+}
+for (i in 1:length(inventory_tables)) {
+  assign(names(inventory_tables)[i], inventory_tables[[i]])
+}
+
+# -- répertoire des figures :
+# path
+output_dir <- file.path(repFigures, figure_path)
+# create directory
+dir.create(output_dir, showWarnings = F, recursive = T)
+# set chunck option
+opts_chunk$set(fig.path = output_dir, dev = 'png')
+
+# -- expression pour citer le sous-ensemble :
+quote_group <- with( df_Expr, quote[match(plot_group, group)] )
+@
+
+<<Palette_Evol_BM{{x}}>>= 
+
+# -- Palette Cycles
+Palette_Cycles <- c("forestgreen", "dodgerblue3")
+names(Palette_Cycles) <- c(cycle_num-1, cycle_num)
+
+# -- Figures sur l'accroissement des billons de bois mort sur pied ?
+acctD_VAL <- c(
+  with(
+    acct_bmp, 
+    AcctD[
+      NumDisp == disp_num & 
+        Cycle == cycle_num & 
+        NumPlac %in% group_plots
+      ]
+  ), 
+  with(
+    acct_bms, 
+    AcctD[
+      NumDisp == disp_num & Cycle == cycle_num & 
+        NumPlac %in% group_plots
+      ])
+)
+acctD_VAL <- na.omit(acctD_VAL)
+Eval_AccD <- if (length(acctD_VAL) == 0) FALSE else TRUE
+@
+
+\section{\Sexpr{section_str}}
+\subsection{Structure}
+La figure \ref{fig:EvolBM{{x}}} repr\u00E9sente l'\u00E9volution des volumes des diff\u00E9rents types de bois mort entre les deux derniers cycles (cycles \Sexpr{cycle_num-1} et \Sexpr{cycle_num}). Elle est compl\u00E9t\u00E9e par le tableau \ref{EvolBoisMortBis{{x}}}. L'interpr\u00E9tation de ces r\u00E9sultats doit tenir compte des erreurs relatives d'\u00E9chantillonnage tributaires de la taille souvent r\u00E9duite des \u00E9chantillons de ces populations.\\
+
+<<EvolBM{{x}}, fig.height = 4, fig.cap =  'Evolution du bois mort'>>= 
+t <- 
+  grouped_results_of_BM_by_ %>% 
+  # filter(
+  #   NumDisp == disp_num & 
+  #     (Cycle == cycle_num | Cycle == cycle_num - 1)
+  # ) %>%
+  select(NumDisp, Cycle, BMSinf, BMSsup, BMPinf, BMPsup, VhaBMT) %>%
+  melt(id = c("NumDisp", "Cycle", "VhaBMT")) %>%
+  mutate(
+    variable = as.character(variable), 
+    variable = ifelse(
+      variable == "BMSinf", 
+      "Bois mort au sol\ninf\u00E9rieur \u00E0 30cm\nde diam\u00E8tre",
+      variable
+    ), 
+    variable = ifelse(
+      variable == "BMSsup", 
+      "Bois mort au sol\nsup\u00E9rieur \u00E0 30cm\nde diam\u00E8tre",
+      variable
+    ), 
+    variable = ifelse(
+      variable == "BMPinf", 
+      "Bois mort sur pied\ninf\u00E9rieur \u00E0 30cm\nde diam\u00E8tre",
+      variable
+    ), 
+    variable = ifelse(
+      variable == "BMPsup", 
+      "Bois mort sur pied\nsup\u00E9rieur \u00E0 30cm\nde diam\u00E8tre",
+      variable
+    )
+  )
+
+VhaBMT_Current <- round(unique(t$VhaBMT[t$Cycle == cycle_num]), 1)
+VhaBMT_Past <- round(unique(t$VhaBMT[t$Cycle == cycle_num-1]), 1)
+VhaBMT_Max <- max(t$value, na.rm = T)
+
+ggplot() +
+  geom_bar(
+    t, 
+    mapping = aes(variable, value, fill = factor(Cycle)), 
+    position = position_dodge(width = 0.7), 
+    stat = "identity", 
+    width = 0.6
+  ) +
+  annotate(
+    "text", 
+    x = 3.5, 
+    y = 0.8 * VhaBMT_Max, 
+    label = paste0(
+      "Volume bois mort total cycle ", 
+      cycle_num, " = ", VhaBMT_Current, " m3/ha"
+    ), 
+    size = 2.5
+  ) +
+  annotate(
+    "text", 
+    x = 3.5, 
+    y = 0.87 * VhaBMT_Max, 
+    label = paste0(
+      "Volume bois mort total cycle ", 
+      cycle_num - 1, " = ", VhaBMT_Past, " m3/ha"
+    ), 
+    size = 2.5
+  ) +
+  scale_y_continuous(
+    limits = c(0, max(t$value, na.rm = T)), 
+    breaks = seq(0, max(t$value, na.rm = T), 5)
+  ) +
+  scale_fill_manual(
+    name = "Cycle d'inventaire", 
+    values = Palette_Cycles
+  ) +
+  labs(x = "", y = "Volume (m3/ha)") +
+  MyTheme + 
+  theme(
+    legend.position = "right", 
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+@
+
+<<EvolBoisMortBis{{x}}, fig.subcap = "test", out.width = '.49\\linewidth'>>= 
+t <- 
+  grouped_results_of_BM_by_ %>% 
+  # filter(
+  #   NumDisp == disp_num & 
+  #     is.element(Cycle, c(cycle_num, cycle_num - 1))
+  # ) %>% 
+  select(
+    NumDisp, Cycle, Disp, 
+    BMSinf, BMSsup, BMPinf, BMPsup, VhaBMT, 
+    CV_BMSinf, CV_BMSsup, CV_BMPinf, CV_BMPsup, CV_VhaBMT, 
+    Er_BMSinf, Er_BMSsup, Er_BMPinf, Er_BMPsup, Er_VhaBMT, 
+    NbrePlacettes, PoidsPlacettes
+  )
+
+t2 <- 
+  t %>% 
+  melt(id = c("NumDisp", "Cycle", "Disp", "NbrePlacettes", "PoidsPlacettes")) %>%
+  mutate(
+    value = ifelse(
+      is.element(variable, c("AcctVper", "AcctGper")), 
+      round(value, 2), 
+      round(value, 1)
+    )
+  ) %>%
+  dcast(NumDisp + Cycle + Disp + NbrePlacettes ~ variable) %>%
+  mutate(
+    IC_BMPinf = ifelse(
+      !is.na(Er_BMPinf), 
+      paste0(
+        "[", round(BMPinf - Er_BMPinf * BMPinf / 100, 1), "-", 
+        round(BMPinf + Er_BMPinf * BMPinf / 100, 1), "]"
+      ), 
+      ""
+    ), 
+    IC_BMPsup = ifelse(
+      !is.na(Er_BMPsup), 
+      paste0(
+        "[", round(BMPsup - Er_BMPsup * BMPsup / 100, 1), 
+        "-", round(BMPsup + Er_BMPsup * BMPsup / 100, 1), "]"
+      ), 
+      ""
+    ), 
+    IC_BMSinf = ifelse(
+      !is.na(Er_BMSinf), 
+      paste0(
+        "[", round(BMSinf - Er_BMSinf * BMSinf / 100, 1), 
+        "-", round(BMSinf + Er_BMSinf * BMSinf / 100, 1), "]"
+      ), 
+      ""
+    ), 
+    IC_BMSsup = ifelse(
+      !is.na(Er_BMSsup), 
+      paste0(
+        "[", round(BMSsup - Er_BMSsup * BMSsup / 100, 1), 
+        "-", round(BMSsup + Er_BMSsup * BMSsup / 100, 1), "]"
+      ), 
+      ""
+    ), 
+    IC_VhaBMT = ifelse(
+      !is.na(Er_VhaBMT), 
+      paste0(
+        "[", round(VhaBMT - Er_VhaBMT * VhaBMT / 100, 1), 
+        "-", round(VhaBMT + Er_VhaBMT * VhaBMT / 100, 1), "]"
+      ), 
+      ""
+    )
+  ) %>%
+  replace(is.na(.), "") %>%
+  melt(id = c("NumDisp", "Cycle", "Disp", "NbrePlacettes")) %>%
+  mutate(
+    stat = variable, 
+    variable = str_replace(variable, "CV_", ""), 
+    variable = str_replace(variable, "Er_", ""), 
+    variable = str_replace(variable, "IC_", ""), 
+    stat = str_replace(stat, "_BMPinf", ""), 
+    stat = str_replace(stat, "_BMPsup", ""), 
+    stat = str_replace(stat, "_BMSinf", ""), 
+    stat = str_replace(stat, "_BMSsup", ""), 
+    stat = str_replace(stat, "_VhaBMT", ""), 
+    stat = str_replace(stat, "BMPinf", "Moy"), 
+    stat = str_replace(stat, "BMPsup", "Moy"), 
+    stat = str_replace(stat, "BMSinf", "Moy"), 
+    stat = str_replace(stat, "BMSsup", "Moy"), 
+    stat = str_replace(stat, "VhaBMT", "Moy"), 
+    stat = factor(stat, levels = c("Moy", "CV", "Er", "IC"))
+  ) %>%
+  arrange(Cycle, variable, stat) %>%
+  dcast(NumDisp + Cycle + Disp + NbrePlacettes + stat ~ variable)
+
+t3 <- 
+  t2 %>% 
+  select(
+    Cycle, stat, BMPinf, BMPsup, BMSinf, 
+    BMSsup, VhaBMT, NbrePlacettes
+  ) %>%
+  mutate(
+    stat = str_replace(stat, "Moy", "Moyenne"), # Mise en forme du tableau
+    stat = str_replace(stat, "CV", "Coefficient de variation"), 
+    stat = str_replace(stat, "Er", "Erreur relative (\\\\%)"), 
+    stat = str_replace(stat, "IC", "Intervalle de confiance")
+  )
+
+NbreCycle <- length(unique(t3$Cycle))
+
+t4 <- 
+  t3 %>% 
+  MultiRow2(c(1, 8)) %>%
+  rename(
+    "Volume au sol < 30 cm de diam" = "BMSinf", 
+    "Volume au sol > 30 cm de diam" = "BMSsup", 
+    "Volume sur pied < 30 cm de diam" = "BMPinf", 
+    "Volume sur pied > 30 cm de diam" = "BMPsup", 
+    "Volume total" = "VhaBMT", 
+    "Nombre de placettes" = "NbrePlacettes", 
+    " " = "stat"
+  )
+
+ListPos <- list()
+for (i in 1:(dim(t4)[1] - 1)) {
+  ListPos[i] <- i
+}
+for (i in 1:(dim(t4)[1])) {
+  ListPos[i] <- i
+}
+
+print(
+  xtable(
+    t4, 
+    caption = "Volume de bois mort (total et selon la taille et la position)\\\\ \\vspace{0.2cm}\\footnotesize{Les volumes sont en m\\up{3}/ha}", 
+    caption.placement = "top", 
+    digits = c(rep(0, 3), rep(1, 5), 0), 
+    align = c(
+      "|M{0.5cm}|", "M{0.8cm}|", "M{3.2cm}|", 
+      rep("M{1.5cm}|", 5), "M{1.2cm}"
+    ), 
+    label = "EvolBoisMortBis{{x}}"
+  ), 
+  include.rownames = FALSE, 
+  sanitize.text.function = function(x) return(x), 
+  hline.after = c(-1, 0, dim(t4)[1]), 
+  add.to.row = list(
+    pos = ListPos, 
+    command = rep(c(rep("\\cline{3-7}", 3), "\\cline{1-8}"), NbreCycle)
+  ),  
+  latex.environments = "center", 
+  size = "\\footnotesize"
+)
+
+@
+\FloatBarrier
+
+La figure \ref{fig:Taux_BM{{x}}} est une repr\u00E9sentation de l'\u00E9volution de la quantit\u00E9 de bois mort. Elle repr\u00E9sente le rapport entre le volume pr\u00E9sent au cycle pr\u00E9c\u00E9dent et le volume pr\u00E9sent au cycle courant. Cela permet de dessiner des tendances quant au taux de fonctionnement (accumulation et disparition/d\u00E9gradation) de ce volume.\\
+En effet, si le taux de fonctionnement du volume de bois mort est sup\u00E9rieur \u00E0 100\%, cela signifie que le volume de bois mort tend a augmenter. A l'inverse, si le taux est inf\u00E9rieur \u00E0 100\% cela d\u00E9montre une tendance \u00E0 la diminution du volume de bois mort.\\
+
+Il est important de nuancer ces tendances \u00E0 l'aide des erreurs relatives constat\u00E9es sur les r\u00E9sultats d'analyse. Ainsi le tableau \ref{Tab_Taux{{x}}} rappelle les erreurs relatives sur le volume de bois mort inventori\u00E9.\\ A la lecture de ce tableau, il n'est correct d'affirmer une perte ou une accumulation du volume de bois mort que si les intervalles de confiance ne se chevauchent pas.\\
+
+On trouve \u00E9galement dans le tableau \ref{Tab_Taux{{x}}} des valeurs d'accroissement sur le volume. En remarque pr\u00E9liminaire du commentaire de la figure \ref{fig:Fig_AccD_BM{{x}}}, il est important de pr\u00E9ciser que, si l'accroissement en volume du bois mort sur pied porte sur toutes les cat\u00E9gories de bois de cette population, l'accroissement en volume du bois mort au sol en revanche ne tient compte que des billons de plus grandes dimensions.\\
+\FloatBarrier
+
+<<Taux_BM{{x}}, fig.subcap = "test", fig.cap = "Taux de fonctionnement du volume du bois mort r\u00E9parti par classes de diam\u00E8tre", fig.height = 2.5>>= 
+t <- 
+  grouped_results_of_BM_by_Classe %>% 
+  # filter(
+  #   NumDisp == disp_num & is.element(Cycle, c(cycle_num, cycle_num - 1))
+  # ) %>%
+  select(NumDisp, Cycle, Classe, VhaBMT) %>%
+  dcast(NumDisp + Classe ~ Cycle, value.var = "VhaBMT")
+
+NbCol <- dim(t)[2]
+for (i in 3:(NbCol - 1)) {
+  t[, dim(t)[2] + 1] <- t[, i + 1] / t[, i]
+  names(t)[dim(t)[2]] <- paste0("Taux cycle", names(t)[i+1], "/\ncycle", names(t)[i])
+  
+  # security (Inf value)
+  pos <- which(t[, dim(t)[2]] == "Inf")
+  if (length(pos) > 0) {
+    t[pos, dim(t)[2]] <- NA
+  }
+}
+
+pos <- grep("Taux", names(t))
+
+t1 <- t[, c(1, 2, pos)] %>%
+  melt(id = c("NumDisp", "Classe"))
+
+
+ggplot() +
+  geom_point(
+    t1, 
+    mapping = aes(Classe, value, color = variable), 
+    size = 3
+  ) +
+  geom_point(
+    t1, 
+    mapping = aes(Classe, value, fill = variable), 
+    size = 3, 
+    shape = 1
+  ) +
+  labs(
+    x = "Classes de diam\u00E8tre", 
+    y = "Taux (vol pass\u00E9/vol courant)"
+  ) +
+  scale_y_continuous(
+    expand = c(0, 0), 
+    labels = percent, 
+    limits = c(0, ceiling(max(t1$value, na.rm = T) + 0.1))
+  ) +
+  scale_x_continuous(
+    expand = c(0, 0), 
+    breaks = c(0, seq(10, max(t1$Classe, na.rm = T), 20)), 
+    limits = c(0, ceiling(max(t1$Classe, na.rm = T)))
+  ) +
+  annotate(
+    "text", 
+    label = "100 %", 
+    y = 1.2, 
+    x = 5, 
+    col = "grey"
+  ) +
+  scale_color_brewer(
+    name = "L\u00E9gende", 
+    palette = "Blues"
+  ) +
+  guides(fill = guide_legend(title = "L\u00E9gende")) +
+  geom_hline(
+    yintercept = 1, 
+    colour = "grey", 
+    linetype = 2, 
+    size = 0.5
+  ) +
+  MyTheme
+
+
+@
+\FloatBarrier
+
+<<Tab_Taux{{x}}, fig.pos = "H">>= 
+t <- 
+  grouped_results_of_BM_by_ %>% 
+  # filter(
+  #   NumDisp == disp_num & is.element(Cycle, c(cycle_num, cycle_num - 1))
+  # ) %>% 
+  select(
+    NumDisp, Cycle, 
+    BMSsup, BMPinf, BMPsup, 
+    CV_BMSsup, CV_BMPinf, CV_BMPsup, 
+    Er_BMSsup, Er_BMPinf, Er_BMPsup, 
+    NbrePlacettes
+  )
+
+t1 <- 
+  grouped_results_of_BMS_by_ %>% 
+  # filter(
+  #   NumDisp == disp_num & is.element(Cycle, c(cycle_num, cycle_num - 1))
+  # ) %>% 
+  rename(
+    "NbrePlacettes_Acct" = "NbrePlacettes_Acct",
+    "AcctVper_BMS" = "AcctVper", 
+    "CV_AcctVper_BMS" = "CV_AcctVper", 
+    "Er_AcctVper_BMS" = "Er_AcctVper") %>% 
+  select(
+    NumDisp, Cycle, 
+    AcctVper_BMS, CV_AcctVper_BMS, Er_AcctVper_BMS, 
+    NbrePlacettes, NbrePlacettes_Acct
+  )
+
+t2 <- 
+  grouped_results_of_BMP_by_ %>% 
+  # filter(
+  #   NumDisp == disp_num & is.element(Cycle, c(cycle_num, cycle_num - 1))
+  # ) %>% 
+  rename(
+    "NbrePlacettes_Acct" = "NbrePlacettes_Acct",
+    "AcctVper_BMP" = "AcctVper", 
+    "CV_AcctVper_BMP" = "CV_AcctVper", 
+    "Er_AcctVper_BMP" = "Er_AcctVper"
+  ) %>% 
+  select(
+    NumDisp, Cycle, 
+    AcctVper_BMP, CV_AcctVper_BMP, Er_AcctVper_BMP, 
+    NbrePlacettes, NbrePlacettes_Acct
+  )
+
+t3 <- 
+  t %>% 
+  left_join(t1, by = c("NumDisp", "Cycle", "NbrePlacettes")) %>% 
+  left_join(t2, by = c("NumDisp", "Cycle", "NbrePlacettes", "NbrePlacettes_Acct"))
+
+t4 <- 
+  t3 %>% 
+  melt(id = c("NumDisp", "Cycle", "NbrePlacettes", "NbrePlacettes_Acct")) %>%
+  mutate(
+    value = ifelse(
+      is.element(variable, c("AcctVper", "AcctGper")),
+      round(value, 2), 
+      round(value, 1)
+    )
+  ) %>%
+  dcast(NumDisp + Cycle + NbrePlacettes + NbrePlacettes_Acct ~ variable) %>%
+  mutate(IC_BMPinf = ifelse(
+    !is.na(Er_BMPinf), 
+    paste0(
+      "[", round(BMPinf - Er_BMPinf * BMPinf / 100, 1), 
+      "-", round(BMPinf + Er_BMPinf * BMPinf / 100, 1), 
+      "]"
+    ), 
+    ""
+  ), 
+  IC_BMPsup = ifelse(
+    !is.na(Er_BMPsup), 
+    paste0(
+      "[", round(BMPsup - Er_BMPsup * BMPsup / 100, 1),  
+      "-", round(BMPsup + Er_BMPsup * BMPsup / 100, 1), "]"
+    ), 
+    ""
+  ), 
+  IC_BMSsup = ifelse(
+    !is.na(Er_BMSsup), 
+    paste0(
+      "[", round(BMSsup - Er_BMSsup * BMSsup / 100, 1), 
+      "-", round(BMSsup + Er_BMSsup * BMSsup / 100, 1), "]"
+    ), 
+    ""
+  ), 
+  IC_AcctVper_BMS = ifelse(
+    !is.na(Er_AcctVper_BMS), 
+    paste0(
+      "[", round(AcctVper_BMS - Er_AcctVper_BMS * AcctVper_BMS / 100, 1),
+      "-", round(AcctVper_BMS + Er_AcctVper_BMS * AcctVper_BMS / 100, 1), "]"
+    ), 
+    ""
+  ), 
+  IC_AcctVper_BMP = ifelse(
+    !is.na(Er_AcctVper_BMP), 
+    paste0(
+      "[", round(AcctVper_BMP - Er_AcctVper_BMP * AcctVper_BMP / 100, 1), 
+      "-", round(AcctVper_BMP + Er_AcctVper_BMP * AcctVper_BMP / 100, 1), "]"
+    ), 
+    ""
+  )
+  ) %>%
+  replace(is.na(.), "") %>%
+  melt(id = c("NumDisp", "Cycle", "NbrePlacettes", "NbrePlacettes_Acct")) %>%
+  mutate(
+    stat = variable, 
+    variable = str_replace(variable, "CV_", ""), 
+    variable = str_replace(variable, "Er_", ""), 
+    variable = str_replace(variable, "IC_", ""), 
+    stat = str_replace(stat, "_BMPinf", ""), 
+    stat = str_replace(stat, "_BMPsup", ""), 
+    stat = str_replace(stat, "_BMSinf", ""), 
+    stat = str_replace(stat, "_BMSsup", ""), 
+    stat = str_replace(stat, "_VhaBMT", ""), 
+    stat = str_replace(stat, "_AcctVper_BMS", ""), 
+    stat = str_replace(stat, "_AcctVper_BMP", ""), 
+    stat = str_replace(stat, "BMPinf", "Moy"), 
+    stat = str_replace(stat, "BMPsup", "Moy"), 
+    stat = str_replace(stat, "BMSinf", "Moy"), 
+    stat = str_replace(stat, "BMSsup", "Moy"), 
+    stat = str_replace(stat, "VhaBMT", "Moy"), 
+    stat = str_replace(stat, "AcctVper_BMS", "Moy"), 
+    stat = str_replace(stat, "AcctVper_BMP", "Moy"), 
+    stat = factor(stat, levels = c("Moy", "CV", "Er", "IC"))
+  ) %>%
+  arrange(Cycle, variable, stat) %>%
+  dcast(NumDisp + Cycle + NbrePlacettes + NbrePlacettes_Acct + stat ~ variable)
+
+t5 <- 
+  t4 %>% 
+  mutate(
+    NbrePlacettes = paste0(NbrePlacettes, " (", NbrePlacettes_Acct, ")")
+  ) %>% 
+  select(
+    Cycle, stat, BMSsup, BMPinf, BMPsup, 
+    AcctVper_BMS, AcctVper_BMP, 
+    NbrePlacettes
+  ) %>%
+  mutate(
+    stat = str_replace(stat, "Moy", "Moyenne"), # Mise en forme du tableau
+    stat = str_replace(stat, "CV", "Coefficient de variation"), 
+    stat = str_replace(stat, "Er", "Erreur relative (\\\\%)"), 
+    stat = str_replace(stat, "IC", "Intervalle de confiance")
+  )
+
+NbreCycle <- length(unique(t5$Cycle))
+
+t6 <- 
+  t5 %>% 
+  MultiRow2(c(1, 8)) %>%
+  rename(
+    "Volume au sol\n> 30 cm de diam" = "BMSsup", 
+    "Volume sur pied\n< 30 cm de diam" = "BMPinf", 
+    "Volume sur pied\n> 30 cm de diam" = "BMPsup", 
+    "Accroissement en volume\ndu bois mort au sol\nsup\u00E9rieur \u00E0 30" = "AcctVper_BMS", 
+    "Accroissement en volume\ndu bois mort sur pied" = "AcctVper_BMP", 
+    "Nombre de placettes" = "NbrePlacettes", 
+    " " = "stat"
+  )
+
+ListPos <- list()
+for (i in 1:(dim(t6)[1]-1)) {
+  ListPos[i] <- i
+}
+for (i in 1:(dim(t6)[1])) {
+  ListPos[i] <- i
+}
+
+print(
+  xtable(
+    t6, 
+    caption = "Volume de bois mort (total et selon la taille et la position)\\\\ \\vspace{0.2cm}\\footnotesize{Les volumes sont en m\\up{3}/ha}", 
+    caption.placement = "top", 
+    digits = c(rep(0, 3), rep(1, dim(t6)[2]-3), 0), 
+    align = c(
+      "|M{0.5cm}|", "|M{0.8cm}|", "M{3.2cm}|", 
+      rep("M{1.5cm}|", 3), rep("M{2cm}|", 2), "M{1.2cm}|"
+    ), 
+    label = "Tab_Taux{{x}}"
+  ), 
+  include.rownames = FALSE, 
+  sanitize.text.function = function(x) return(x), 
+  hline.after = c(-1, 0, dim(t4)[1]), 
+  add.to.row = list(
+    pos = ListPos, 
+    command = rep(c(rep("\\cline{3-7}", 3), "\\cline{1-8}"), NbreCycle)
+  ), 
+  latex.environments = "center", 
+  size = "\\footnotesize"
+)
+@
+\FloatBarrier
+
+\subsection{Composition}
+La figure \ref{fig:EvolCompo_BM{{x}}} pr\u00E9sente un aperçu de l'\u00E9volution de la composition du bois mort (tous types confondus) entre les deux derniers inventaires (cycles \Sexpr{cycle_num-1} et \Sexpr{cycle_num}). Son interpr\u00E9tation est compl\u00E9t\u00E9e par le tableau \ref{TabCompoBis_BM_Evol{{x}}} qui pr\u00E9sente la r\u00E9partion (en absolu et en relatif) du volume de bois mort par essences.\\
+
+<<EvolCompo_BM{{x}}, fig.height = 6, fig.cap = "R\u00E9partition sur le volume des diff\u00E9rentes essences relev\u00E9es sur le bois mort.">>= 
+t <- 
+  grouped_results_of_BM_by_EssReg %>% 
+  # filter(
+  #   NumDisp == disp_num & 
+  #     is.element(Cycle, c(cycle_num, cycle_num - 1) )
+  # ) %>%
+  select(NumDisp, Cycle, EssReg, VhaBMT) %>%
+  gather(variable, value, VhaBMT) %>% 
+  group_by(NumDisp, Cycle, variable) %>%
+  mutate(
+    Tot = sum(value, na.rm = T), 
+    Ratio = value / Tot, 
+    RatioCum = cumsum(value / Tot), 
+    Titre = paste0("Cycle ", as.numeric(Cycle)), 
+    EssReg = factor(EssReg, Niveaux_EssReg2)
+  ) %>%
+  ungroup() %>%
+  arrange(NumDisp, Cycle, variable)
+
+p1 <- 
+  ggplot() + 
+  geom_bar(
+    t[t$variable == "VhaBMT", ], 
+    mapping = aes(variable, value, fill = EssReg), 
+    stat = 'identity', position = 'fill', width = 1
+  ) + 
+  geom_text(
+    t[t$variable == "VhaBMT", ], 
+    mapping = aes(
+      x = 1, 
+      y = round(RatioCum - Ratio / 2, 3), 
+      label = ifelse(
+        Ratio > 0.1, 
+        # paste0(round(value, 0), " m3/ha"), 
+        paste0(round(Ratio, 3) * 100, " %"), 
+        ""
+      )
+    ), 
+    size = 2.25, alpha = 1, colour = "black"
+  ) + 
+  annotate(
+    "text", x = 1.55, y = 0.5, label = "Volume", 
+    size = 2.5, colour = "black", alpha = 1, fontface = "bold"
+  ) + 
+  coord_polar(theta = "y") + 
+  facet_grid(Titre ~ ., switch = "y") + 
+  scale_x_discrete("") +  
+  scale_y_continuous(
+    name = "Part relative des essences sur le volume" , 
+    labels = percent
+  ) + 
+  scale_fill_manual("Essences regroup\u00E9es :", values = Palette_EssReg) + 
+  theme_bw() +  
+  theme(
+    title = element_text(face = 'plain', size = 7), 
+    axis.text.y  = element_blank(), 
+    axis.text.x = element_text(size = 5), 
+    axis.ticks = element_blank(), 
+    legend.text = element_text(size = 7), 
+    legend.title = element_text(size = 7, face = 'plain'), 
+    legend.position = "bottom", 
+    legend.direction = "horizontal", 
+    plot.margin = unit(c(0.1, 0.1, 0.1, 0.1), "cm"), 
+    panel.grid.major = element_blank(), 
+    panel.border = element_blank(), 
+    strip.text = element_text(
+      size = 7, colour = "lightsteelblue4", 
+      face = "bold", angle = -90
+    ), 
+    strip.background = element_rect(fill = NA, colour = NA)
+  )
+
+# P1 <- grid.arrange(arrangeGrob(p1 +  theme(legend.position = "none")))
+
+
+tab <- 
+  grouped_results_of_BM_by_EssRegClasse %>% 
+  filter(!is.na(Classe)) %>%
+  select(NumDisp, Cycle, EssReg, Classe, VhaBMT) %>%
+  group_by(NumDisp, Cycle, Classe) %>%
+  mutate(
+    VhaBMTTot = sum(VhaBMT, na.rm = T), 
+    EssReg = factor(EssReg, Niveaux_EssReg2)
+  ) %>%
+  arrange(NumDisp, Cycle, EssReg)
+
+p3 <- 
+  ggplot() + 
+  geom_bar(
+    tab, 
+    mapping = aes(Classe, VhaBMT, fill = EssReg), 
+    stat = "identity", position = "stack"
+  ) + 
+  facet_grid(Cycle ~ .) + 
+  scale_x_continuous(
+    name = "Classes de diam\u00E8tre", 
+    limits = c(10, max(tab$Classe, na.rm = T)), 
+    breaks = seq(10, floor(max(tab$Classe, na.rm = T) / 20 + 0.5) * 20, 20), 
+    expand = c(0, 0)
+  ) + 
+  scale_y_continuous(
+    name = "V (m3/ha)", 
+    limits = c(0, max(tab$VhaBMTTot, na.rm = T) + 10), 
+    breaks = seq(
+      0, 
+      floor((max(tab$VhaBMTTot, na.rm = T) + 10) / 10 + 0.5) * 10, 
+      ifelse(
+        floor((max(tab$VhaBMTTot, na.rm = T) + 10) / 10 + 0.5) * 10 < 50, 
+        5, 
+        floor((max(tab$VhaBMTTot, na.rm = T) + 10) / 5 / 10 + 0.5) * 10
+      )
+    ), 
+    expand = c(0, 0)
+  ) + 
+  scale_fill_manual("Essences regroup\u00E9es", values = Palette_EssReg) + 
+  guides(
+    fill = guide_legend(
+      nrow = ifelse(length(unique(tab$EssReg)) > 10, 2, 1), 
+      byrow = TRUE
+    )
+  ) + 
+  MyTheme +  
+  theme(
+    axis.title.x = element_text(face = 'plain', size = 7), 
+    axis.title.y = element_text(face = 'plain', size = 7), 
+    axis.text.x = element_text(size = 6), 
+    legend.text = element_text(size = 7), 
+    legend.title = element_text(size = 7, face = 'plain'), 
+    legend.position = "bottom", 
+    # strip.text = element_text(size = 7, colour = "lightsteelblue4", face = "bold", angle = 90), 
+    strip.text = element_blank(), 
+    strip.background = element_rect(fill = NA, colour = NA)
+  )
+
+mylegend <- g_legend(p3)
+
+# P2 <- grid.arrange(
+#   arrangeGrob(
+#     p3 +  theme(legend.position = "none")
+#   )
+# )
+# P <- grid.arrange(P1, P2, nrow = 1, widths = c(4, 6))
+# P <- grid.arrange(P, mylegend, ncol = 1, heights = c(9, 1))
+
+P <- 
+  grid.arrange(
+    arrangeGrob(
+      arrangeGrob(
+        p1 + theme(legend.position = "none"), 
+        p2 + theme(legend.position = "none")
+      ), 
+      arrangeGrob(
+        p3 + theme(legend.position = "none"), 
+        p4 + theme(legend.position = "none")
+      ), nrow = 1, widths = c(4, 6)
+    ), 
+    mylegend, ncol = 1, heights = c(9, 1)
+  )
+@
+\FloatBarrier
+
+<<TabCompoBis_BM_Evol{{x}}, fig.pos = "H">>= 
+t <- 
+  grouped_results_of_BM_by_EssReg %>% 
+  # filter(
+  #   NumDisp == disp_num & is.element(Cycle, c(cycle_num, cycle_num - 1))
+  # ) %>%
+  group_by(Cycle, EssReg) %>%
+  summarise(VhaBMT = sum(VhaBMT, na.rm = T)) %>%
+  ungroup() %>%
+  melt(id = c("Cycle", "EssReg")) %>%
+  group_by(variable) %>%
+  mutate(
+    Tot = sum(value, na.rm = T), 
+    Ratio = value/Tot, 
+    RatioCum = cumsum(value / Tot)
+  ) %>%
+  ungroup() %>%
+  arrange(variable)
+
+t2 <- 
+  t %>% 
+  dcast(Cycle + EssReg ~ variable) %>%
+  group_by(Cycle) %>% 
+  mutate(
+    VhaBMTTot = sum(VhaBMT, na.rm = T), 
+    VhaBMTRel = paste0("\\color{blue}", round(VhaBMT / VhaBMTTot * 100, 1), " \\%"), 
+    VhaBMT = paste0("\\multicolumn{1}{|c|}{", round(VhaBMT, 1), "}"), 
+    VhaBMTTot = NULL
+  ) %>%
+  ungroup() %>% 
+  select(Cycle, EssReg, VhaBMT, VhaBMTRel) %>% 
+  data.frame() %>% 
+  MultiRow2(1) %>% 
+  rename(
+    "Groupes d'essence" = "EssReg", 
+    "\\multicolumn{2}{|c}{V}" = "VhaBMT"
+  )
+names(t2)[names(t2) %in% c("VhaBMTRel")] <- NA
+
+Sep_Cycles <- which(!is.na(t2$Cycle)) - 1
+ListPos <- list()
+for (i in 1:(dim(t2)[1])) {
+  if (is.na(t2[i, "Cycle"])) {
+    ListPos[length(ListPos) + 1] <- i - 1
+  }
+}
+
+print(
+  xtable(
+    t2, 
+    caption = "R\u00E9partition absolue et relative des diff\u00E9rentes essences relev\u00E9es sur le bois mort - en en volume.", 
+    caption.placement = "top", 
+    digits = c(0, 0, 0, rep(1, 2)), 
+    label = paste0("TabCompoBis-Evol"), 
+    align = c("c", "c|", rep("c", dim(t2)[2] - 1))
+  ), 
+  include.rownames = FALSE, 
+  size = "\\footnotesize", 
+  hline.after = c(-1, Sep_Cycles, dim(t2)[1]), 
+  floating = T, 
+  table.placement = "H", 
+  sanitize.colnames.function = function(x) na.omit(x), 
+  sanitize.text.function = function(x) ifelse(is.na(x), "", x), 
+  add.to.row = list(
+    pos = ListPos, 
+    command = rep("\\cline{2-4}", dim(t2)[1] - length(Sep_Cycles)))
+)
+@
+\FloatBarrier
+
+\EditIf{\Sexpr{Eval_PSDRFMA}}{TRUE}{
+\subsection{Orientation des billons de bois mort de diamètre > 30 cm}
+La figure \ref{fig:Orientation_futs{{x}}} offre un aperçu de l'orientation des gros billons de bois morts (Diam > 30cm) inventoriés, par rapport à leur souche, à travers les différents inventaires. Elle reflète les conditions de chute des billons de bois mort qui peuvent être liées aux conditions de croissance des arbres (anéomtropie, héliotropie, obstacle physique à la croissance, etc.) mais aussi aux conditions environnementales au moment de la chute de l'arbre ou du billon (tempête, etc.).
+<<Evol_Orientation_futs{{x}}, fig.height = 3.5, fig.cap =  "Orientation des f\u00FBts de bois mort (de diamètre >  30 cm) par rapport à leur souche", eval = Eval_PSDRFMA, include = Eval_PSDRFMA>>= 
+
+df <- 
+  BMSsup30_Sel %>% 
+  filter(!is.na(Orientation)) %>% 
+  select(NumDisp, NumPlac, Cycle, Orientation) %>% 
+  mutate(
+    Orientation = floor(Orientation / 50 + 0.5) * 50, 
+    Orientation = ifelse(
+      Orientation == 400, 0, Orientation
+    )
+  ) %>% 
+  group_by(Cycle, Orientation) %>% 
+  summarize(Nbre = length(NumDisp)) %>% 
+  ungroup() %>% 
+  mutate(Freq = Nbre) %>% 
+  select(Cycle, Orientation, Freq)
+
+Max_VAL = ceiling(max(df$Freq) / 10 + 0.5) * 10
+
+Az_ALIBI <- expand.grid(
+  Cycle = 1, 
+  Freq = c(0, Max_VAL), 
+  Orientation = seq(0, 350, 50), 
+  stringsAsFactors = F
+)
+
+df2 <- 
+  Az_ALIBI %>% 
+  rbind(df) %>% 
+  filter(!is.na(Orientation)) %>% 
+  melt(id = c("Cycle", "Orientation")) %>% 
+  mutate(
+    variable = as.character(variable), 
+    variable = ifelse(value == 0, "Freq_Min", variable), 
+    variable = ifelse(value == Max_VAL, "Freq_Max", variable), 
+    
+    Orientation = factor(
+      Orientation, 
+      levels = c(0, seq(350, 50, length.out = 7))
+    )
+  ) %>% 
+  dcast(Cycle + variable ~ Orientation) %>% 
+  mutate(
+    variable = factor(
+      variable, 
+      levels = c("Freq_Max", "Freq_Min", "Freq")
+    )
+  ) %>% 
+  arrange(variable, Cycle) %>% 
+  mutate(
+    variable = NULL, 
+    Cycle = NULL
+  ) %>%
+  replace(is.na(.), 0)
+
+
+Titre = paste0("Nombre de billons : ", sum(df$Freq))
+Colours <- c("dodgerblue", "red", "green3", "gray80")
+names(Colours) <- c("Cycle 1", "Cycle 2")
+
+par(
+  mar = c(0, 0, 1, 0), 
+  family = "Times", 
+  cex.main = 1, 
+  fig = c(0, 1, 0, 1), 
+  mgp = c(5, 5, 5)
+)
+
+radarchart(
+  df2, 
+  axistype = 1, 
+  pty = 32, 
+  pcol = Colours, 
+  plty = 1,  
+  title = Titre, 
+  centerzero = T, 
+  seg = 5, 
+  caxislabels = seq(0, Max_VAL, length.out = 6), 
+  calcex = 0.8, 
+  vlcex = 0.85, 
+  vlabels = names(df2)
+)
+
+legend(
+  1, 1, 
+  legend = paste0("Cycle ", 1:cycle_num), 
+  col = Colours[1:cycle_num], 
+  lty = 1
+)
+@
+}{}
+
+\subsection{Accroissements en diam\u00E8tre}
+\EditIf{\Sexpr{Eval_AccD}}{TRUE}{
+La figure \ref{fig:Fig_AccD_BM{{x}}} repr\u00E9sente les diff\u00E9rents d'accroissements sur le bois mort constat\u00E9 entre les deux derniers passages en inventaire.\\
+Il est \u00E0 noter que pour le bois mort sur pied, certains valeurs d'accroissement sont positives. Ces valeurs correspondent \u00E0 des arbres morts qui, d'un type arbre ou chandelle, sont pass\u00E9s au type souche, ce qui signifie que le diam\u00E8tre aura \u00E9t\u00E9 pris \u00E0 une hauteur inf\u00E9rieure \u00E0 1, 30m au stade souche. Cela explique que l'accroissement en diam\u00E8tre de ces arbres morts apparaisse comme positif.\\
+Les valeurs d'accroissement pour le bois mort au sol sont uniquement tir\u00E9es de l'inventaire des billons de bois mort sup\u00E9rieur \u00E0 30 cm de diam\u00E8tre. En effet, seuls ces billons de grande dimension peuvent \u00EAtre suivis individuellement (azimut, distance) et de mani\u00E8re fiable dans le temps. Ce n'est pas le cas par exemple des \u00E9l\u00E9ments de bois mort inventori\u00E9s sur les transects, qui sont susceptibles de dispara\u00EEtre d'un inventaire \u00E0 l'autre pour des raisons autres que leur simple d\u00E9composition (d\u00E9placement de la pi\u00E8ce de bois, ...).\\
+
+<<Fig_AccD_BM{{x}}, fig.height = 2.5, fig.cap = "Valeurs d'accroissements en diam\u00E8tre", eval = Eval_AccD, include = Eval_AccD>>= 
+# BMP
+t1 <- BMP_Sel %>% left_join(Placettes_Sel) %>% data.frame()
+
+if (plot_group != "Disp") {
+  t1 <- t1[which(t1[, plot_group] == plot_group_value), ]
+}
+# # Vérification qu'il n'y a pas d'AcctD dans la table BMP
+# df <-
+#   BMP %>%
+#   select(NumDisp, NumPlac, NumArbre, Cycle, Diam1) %>%
+#   spread(Cycle, Diam1)
+# which(!is.na(df$'1') & !is.na(df$'2'))
+df_AcctD1 <- 
+  t1[, c(
+    "NumDisp", "NumPlac", "NumArbre", 
+    "Essence", "EssReg", "Cycle", 
+    "Diam1", "Diam2", "Diam", "Classe"
+  )] %>% 
+  left_join(acct_bmp) %>% 
+  select(
+    NumDisp, NumPlac, NumArbre, Cycle, 
+    Essence, EssReg, Diam, Classe, AcctD, Population
+  ) %>%  # , Type
+  filter(Cycle == cycle_num)
+
+# BMSsup30
+BMSsup30_Sel <- BMSsup30_Sel %>% mutate(NumPlac = as.character(NumPlac))
+t2 <- BMSsup30_Sel %>% left_join(Placettes_Sel)
+
+if (plot_group != "Disp") {
+  t2 <- t2[which(t2[, plot_group] == plot_group_value), ]
+}
+df_AcctD2 <- 
+  t2[, c(
+    "NumDisp", "NumPlac", "Id", 
+    "Essence", "EssReg", "Cycle", 
+    "DiamIni", "DiamMed", "DiamFin", "Classe"
+  )] %>% 
+  left_join(acct_bms) %>% 
+  select(NumDisp, NumPlac, Id, Cycle, 
+         Essence, EssReg, DiamMed, Classe, AcctD, Population) %>% 
+  filter(Cycle == cycle_num) %>% 
+  rename(Diam = DiamMed, NumArbre = Id)
+
+df_AcctD <- 
+  df_AcctD1 %>% 
+  rbind(df_AcctD2) %>%
+  mutate(
+    Population = ifelse(
+      Population == "BMP", 
+      "Bois mort\nsur pied", 
+      "Bois mort au sol\nsup\u00E9rieur \u00E0 30cm\n(Diam)"
+    )
+  )
+
+ggplot() +
+  geom_point(
+    df_AcctD, 
+    mapping = aes(Diam, AcctD, colour = Population)
+  ) +
+  scale_x_continuous(
+    name = "Classes de diam\u00E8tre", 
+    limits = c(10, max(df_AcctD$Classe, na.rm = T)), 
+    breaks = seq(
+      10, floor(max(df_AcctD$Classe, na.rm = T) / 20 + 0.5) * 20, 20
+    )
+  ) + 
+  scale_y_continuous(
+    name = "AcctD (cm/an)", 
+    limits = c(
+      min(df_AcctD$AcctD, na.rm = T) - 0.5, 
+      max(df_AcctD$AcctD, na.rm = T) + 0.5
+    ), 
+    breaks = seq(
+      floor((min(df_AcctD$AcctD, na.rm = T) - 0.5) / 0.5 - 0.5) * 0.5, 
+      floor((max(df_AcctD$AcctD, na.rm = T) + 0.5) / 0.5 + 0.5) * 0.5, 
+      ifelse(
+        floor((max(df_AcctD$AcctD, na.rm = T) + 0.5) / 5 / 0.5 + 0.5) * 0.5 == 0, 
+        0.5, 
+        floor((max(df_AcctD$AcctD, na.rm = T) + 0.5) / 5 / 0.5 + 0.5) * 0.5
+      )
+    ), 
+    expand = c(0, 0)
+  ) +
+  scale_colour_manual(
+    name = "Population", 
+    values = c("darkviolet", "goldenrod1")
+  ) +
+  MyTheme
+
+@
+\FloatBarrier
+
+En comparant les valeurs d'accroissement sur le diam\u00E8tre de la figure \ref{fig:Fig_AccD_BM{{x}}} et les valeurs d'accroissement sur le volume du tableau \ref{Tab_Taux{{x}}}, on constate que malgr\u00E9 des valeurs d'accroissement en diam\u00E8tre strictement n\u00E9gatives, on obtient des valeurs d'accroissement en volume positives.\\
+Il est important d'identifier les \u00E9l\u00E9ments pr\u00E9sent\u00E9s dans ces analyses pour expliquer ce constat :
+\begin{itemize}
+\item les valeurs d'accroissement n\u00E9gatives constat\u00E9es sur les diam\u00E8tres du bois mort au sol illustrent uniquement la d\u00E9composition des pi\u00E8ces de bois (par les micro-organismes, les insectes saproxyliques, ...).
+\item les valeurs d'accroissement en volume de ces m\u00EAmes billons illustrent, \u00E0 l'\u00E9chelle de  chaque placette (et plus g\u00E9n\u00E9ralement pour \Sexpr{quote_group}) non seulement la d\u00E9composition des pi\u00E8ces de bois, mais aussi l'apparition de nouveaux \u00E9l\u00E9ments \u00E0 inventorier (chablis, volis, exploitation foresti\u00E8re).
+\end{itemize}
+}{}

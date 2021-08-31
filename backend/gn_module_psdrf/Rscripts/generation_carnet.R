@@ -4,40 +4,46 @@
 library(easypackages)
 library(lubridate)  # gestion des dates
 
-suppressMessages(
-  packages(
-    "stringr", "openxlsx", "rmarkdown", "tools",
-    "tidyr", "dplyr", "gWidgets2", "gWidgets2tcltk", "knitr", "maptools",
-    "xtable", "ggplot2", "ggrepel", "ggthemes", "scales", "gridExtra",
-    "rgeos", "rgdal", "gdata", "grid", "fmsb", "rlang", "tcltk","reshape2", "sf"
-  )
-)
+# suppressMessages(
+#   packages(
+#     "stringr", "openxlsx", "rmarkdown", "tools",
+#     "tidyr", "dplyr", "gWidgets2", "gWidgets2tcltk", "knitr", "maptools",
+#     "xtable", "ggplot2", "ggrepel", "ggthemes", "scales", "gridExtra",
+#     "rgeos", "rgdal", "gdata", "grid", "fmsb", "rlang", "tcltk","reshape2", "sf"
+#   )
+# )
 
-# library("stringr")
-# library("openxlsx") 
-# library("rmarkdown") 
-# library("tools")
-# library("tidyr")
-# library("dplyr") 
-# library("gWidgets2")
+  # install.packages(c("stringr", "openxlsx", "rmarkdown", "tools",
+  # "tidyr", "dplyr", "gWidgets2", "gWidgets2tcltk", "knitr", "maptools",
+
+  # "xtable", "ggplot2", "ggrepel", "ggthemes", "scales", "gridExtra",
+  # "rgeos", "rgdal", "gdata", "grid", "fmsb", "rlang", "tcltk","reshape2", "sf", 'doBy'))
+
+library("stringr")
+library("openxlsx") 
+library("rmarkdown") 
+library("tools")
+library("tidyr")
+library("dplyr") 
+library("gWidgets2")
 # library("gWidgets2tcltk")
-# library("knitr")
-# library("maptools")
-# library("xtable")
-# library("ggplot2")
-# library("ggrepel") 
-# library("ggthemes")
-# library("scales")
-# library("gridExtra")
-# library("rgeos")
-# library("rgdal")
-# library("gdata") 
-# library("grid")
-# library("fmsb")
-# library("rlang")
-# library("tcltk")
-# library("reshape2")
-# library("sf")
+library("knitr")
+library("maptools")
+library("xtable")
+library("ggplot2")
+library("ggrepel") 
+library("ggthemes")
+library("scales")
+library("gridExtra")
+library("rgeos")
+library("rgdal")
+library("gdata") 
+library("grid")
+library("fmsb")
+library("rlang")
+library("tcltk")
+library("reshape2")
+library("sf")
 
 
 
@@ -54,5 +60,22 @@ source(
   file.path("./annexes.R"), 
   encoding = 'UTF-8', echo = TRUE
 )
+
+source(
+  file.path("./psdrf_Calculs.R"), 
+  encoding = 'UTF-8', echo = TRUE
+)
+
+source(
+  file.path("./psdrf_AgregArbres.R"), 
+  encoding = 'UTF-8', echo = TRUE
+)
+
+source(
+  file.path("./psdrf_AgregPlacettes.R"), 
+  encoding = 'UTF-8', echo = TRUE
+)
+
+
 
 psdrf_EditCarnet(repPSDRF)

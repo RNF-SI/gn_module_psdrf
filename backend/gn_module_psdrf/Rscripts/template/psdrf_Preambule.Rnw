@@ -1,0 +1,152 @@
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage[french]{babel}
+\usepackage[autolanguage,np]{numprint} % permet un espace entre milliers et centaines
+\usepackage[T1]{fontenc}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage[usenames,dvipsnames,svgnames,table]{colortbl,xcolor}
+\PassOptionsToPackage{hyphens}{url}\usepackage{hyperref}
+\usepackage{tikz}
+\usepackage{grffile}
+\usepackage{fancyvrb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{pgfsys}
+\usepackage{keyval}
+\usepackage{subfig}
+\usepackage{multicol}
+\usepackage{tabularx}
+\usepackage{array}
+% \usepackage{placeins} % gestion des flottants
+\usepackage[justification=centering]{caption}
+% \usepackage{subcaption}
+\usepackage{rotating}
+\usepackage{multirow}
+\usepackage[section]{placeins}
+% \usepackage{uarial}
+\usepackage{helvet}
+\usepackage{xifthen}
+\usepackage[toc,page]{appendix}
+\usepackage{enumitem}
+\usepackage{float}
+\renewcommand{\familydefault}{\sfdefault}
+
+% \usepackage[utf8]{inputenc}
+% \usepackage[T1]{fontenc}
+% \usepackage{amsmath}
+% \usepackage[french]{babel}
+% \usepackage{amsfonts}
+% \usepackage{amssymb}
+% \usepackage{eurosym}
+% \usepackage[usenames,dvipsnames,svgnames,table]{colortbl,xcolor}
+% \usepackage{tikz}
+% \usepackage{fancyvrb}
+% \usepackage{fix-cm} % Allows increasing the font size of specific fonts beyond LaTeX default specifications
+% \usepackage{ifthen}
+% \usepackage{booktabs}
+% \usepackage{graphicx}
+% \usepackage{fullpage}
+% \usepackage{eso-pic}
+% \usepackage{geometry}
+% \usepackage{pgfsys}
+% \usepackage{keyval}
+% \usepackage{subfig}
+% \usepackage{multicol}
+% \usepackage{tabularx}
+% \usepackage{array}
+% % \usepackage{placeins} % gestion des flottants
+% \usepackage[justification=centering]{caption}
+% % \usepackage{subcaption}
+% \usepackage{rotating}
+% \usepackage{multirow}
+% \usepackage[section]{placeins}
+% % \usepackage{uarial}
+% \usepackage{helvet}
+% \usepackage[toc,page]{appendix}
+% \usepackage{enumitem}
+% \renewcommand{\familydefault}{\sfdefault}
+% \PassOptionsToPackage{hyphens}{url}\usepackage{hyperref}
+
+\voffset -2cm
+\hoffset 0cm
+\oddsidemargin 0cm
+\evensidemargin -0.5cm
+\textwidth 17cm
+\topmargin 1cm
+\textheight 26cm %24cm
+\parindent 0cm
+\columnsep 0.7cm
+
+\newcolumntype{P}[1]{>{\centering\arraybackslash}p{#1}}
+\newcolumntype{M}[1]{>{\centering\arraybackslash}m{#1}}
+
+\def\appendixtocname{Annexes}
+\def\appendixpagename{Annexes}
+\def\appendixname{Annexe}
+
+% ---------- Reset numerotation avec \part
+\makeatletter
+\@addtoreset{chapter}{part}
+\makeatother 
+
+% ---------- Gestion des figures sur des pages vides (apparaissaient au milieu de la page)
+\makeatletter% Set distance from top of page to first float
+\setlength{\@fptop}{5pt}
+\makeatother
+
+% ----- Réglages des espaces entre floats
+\setlength{\textfloatsep}{0.2cm plus 0.1cm minus 0.1cm} % 0.25
+\setlength{\floatsep}{0.2cm plus 0.1cm minus 0.1cm}
+\setlength{\intextsep}{0.2cm plus 0.1cm minus 0.1cm}
+
+% \usepackage[T1]{fontenc}
+% \usepackage{amsmath}
+% \usepackage[french]{babel}
+% \usepackage{amsfonts}
+% \usepackage{amssymb}
+% \usepackage{eurosym}
+% \usepackage{xcolor}
+% \usepackage{hyperref}
+% \usepackage{tikz}
+% \usepackage{fancyvrb}
+\usepackage{float}
+% \usepackage{fix-cm} % Allows increasing the font size of specific fonts beyond LaTeX default specifications
+% \usepackage{ifthen}
+% \usepackage{graphicx}
+% \usepackage{fullpage}
+% \usepackage{eso-pic}
+% \usepackage{geometry}
+% \usepackage{multicol}
+
+% \voffset -2cm
+% \hoffset 0cm
+% \oddsidemargin 0cm
+% \evensidemargin -0.5cm
+% \textwidth 17cm
+% \topmargin 1cm
+% \textheight 24cm
+% \parindent 0cm
+% \columnsep 0.7cm
+
+\setcounter{tocdepth}{3}     % Dans la table des matieres
+\setcounter{secnumdepth}{3}  % Avec un numero.
+
+% \setlength{\oddsidemargin}{0mm} % Adjust margins to center the colored title box
+% \setlength{\evensidemargin}{0mm} % Margins on even pages - only necessary if adding more content to this template
+\addto\captionsfrench{\def\tablename{Tableau}}
+\addto\captionsfrench{\def\figurename{Figure}}
+% \newcommand{\HRule}[1]{\hfill \rule{0.2\linewidth}{#1}} % Horizontal rule at the bottom of the page, adjust width here
+\definecolor{grey}{rgb}{0.9,0.9,0.9}
+
+
+
+% ---------- Change Chapter title
+% \usepackage{titlesec}
+% 
+% \titleformat{\chapter}[display]
+% {\normalfont\huge\bfseries}{\chaptertitlename\ \thechapter}{20pt}{\Huge}
+% 
+% % this alters "before" spacing (the second length argument) to 0
+% \titlespacing*{\chapter}{0pt}{0pt}{40pt}
+

@@ -254,30 +254,33 @@ choose_disp <- function(
     all_num_list, "-", admin$Nom[match(all_num_list, admin$NumDisp)]
   )
   
-  # -- choix du dispositif
-  disp_list <- tk_select.list(
-    choices = c(check_all_msg, as.character(all_disp_list)), 
-    multiple = T, 
-    title = "Choisir un ou plusieurs dispositifs"
-  )
-  # -- sortie si aucun choix fait
-  if (length(disp_list) == 0) stop("traitement interrompu - aucun dispositif choisi", call. = FALSE)
-  if (is.element(check_all_msg, disp_list)) {disp_list = all_disp_list}
+  # # -- choix du dispositif
+  # disp_list <- tk_select.list(
+  #   choices = c(check_all_msg, as.character(all_disp_list)), 
+  #   multiple = T, 
+  #   title = "Choisir un ou plusieurs dispositifs"
+  # )
+  # # -- sortie si aucun choix fait
+  # if (length(disp_list) == 0) stop("traitement interrompu - aucun dispositif choisi", call. = FALSE)
+  # if (is.element(check_all_msg, disp_list)) {disp_list = all_disp_list}
   
-  if (!is.null(df_2_test)) {
-    # test si les numéros de disp_list sont présents dans la table df_2_test
-    num_list <-
-      as.numeric( str_sub(disp_list, 1, str_locate(disp_list, "-")[, 1] - 1) )
-    pos <- which(!num_list %in% df_2_test$NumDisp)
-    if (length(pos) > 0) {
-      stop(
-        "Can't find the chosen stand number(s) '", 
-        paste0(num_list[pos], collapse = ", "), 
-        "' within the '", substitute(df_2_test), "' table"
-      )
-    }
-  }
-  
+  disp_list = all_disp_list[1]
+
+  # if (!is.null(df_2_test)) {
+  #   # test si les numéros de disp_list sont présents dans la table df_2_test
+  #   num_list <-
+  #     as.numeric( str_sub(disp_list, 1, str_locate(disp_list, "-")[, 1] - 1) )
+  #   pos <- which(!num_list %in% df_2_test$NumDisp)
+  #   if (length(pos) > 0) {
+  #     stop(
+  #       "Can't find the chosen stand number(s) '", 
+  #       paste0(num_list[pos], collapse = ", "), 
+  #       "' within the '", substitute(df_2_test), "' table"
+  #     )
+  #   }
+  # }
+
+
   # -- retour de la fonction choose_disp
   return(disp_list)
 }

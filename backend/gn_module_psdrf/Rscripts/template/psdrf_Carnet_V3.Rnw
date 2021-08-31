@@ -25,7 +25,7 @@ library("xtable")
 library("reshape2")
 # library(plyr)
 library("scales")
-library("doBy")
+# library("doBy")
 library("grid")
 library("gridExtra")
 library("maptools")
@@ -33,7 +33,7 @@ library("rgdal")
 # library(raster)
 library("tcltk")
 library("gWidgets2")
-library("gWidgets2tcltk")
+# library("gWidgets2tcltk")
 library("rgeos")
 # library(RgoogleMaps)
 library("tools")
@@ -47,9 +47,9 @@ library("broom")
 library("gtable")
 library("ggplot2")
 library("dichromat")
-library("PermPSDRF")
+# library("PermPSDRF")
 library("gWidgets2")
-library("gWidgets2tcltk")
+# library("gWidgets2tcltk")
 library("fmsb")
 library("rlang")
 library("tidyr")
@@ -60,8 +60,8 @@ library("tidyr")
 
 ### Lancement manuel de l'édition du livret PSDRF #####
 # --- Choix du répertoire de travail
- repPSDRF <- tclvalue(tkchooseDirectory(title = "Choix du répertoire Administrateurs dans la base PSDRF"))
-#repPSDRF <- "/Users/Valentin/Travail/Outils/GitHub/PermPSDRF2"
+#  repPSDRF <- tclvalue(tkchooseDirectory(title = "Choix du répertoire Administrateurs dans la base PSDRF"))
+repPSDRF <- "/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts"
 
 # --- Chargement des données administrateurs
 load(file.path(repPSDRF, "tables/psdrfCodes.Rdata"))
@@ -985,11 +985,12 @@ DetailTypo <- ifelse("gfTypologieClasseEssRegDen" %in% ls(), 1, 0)
 # DetailBM <- ifelse(dim(gfBMP)[1]+ dim(gfBMS)[1]>0, 1, 0)
 DetailCarto <- 1
 
-Answer_Radar <- tk_messageBox(
-  type = "yesno", 
-  message = "R\u00E9aliser l'analyse de l'\u00E9tat de conservation du dispositif ?", 
-  caption = "Etat de conservation"
-)
+# Answer_Radar <- tk_messageBox(
+#   type = "yesno", 
+#   message = "R\u00E9aliser l'analyse de l'\u00E9tat de conservation du dispositif ?", 
+#   caption = "Etat de conservation"
+# )
+Answer_Radar = "yes"
 if (Answer_Radar == "yes") {
   EvalRadar <- T
   EvalRadar2 <- 1
@@ -1602,6 +1603,8 @@ t <-
   t %>% 
   MultiRow2(c("variable", "variable1"))
 
+
+
 names(t)[3:dim(t)[2]] <- paste0(
   "Cycle ", 
   str_sub(
@@ -2128,7 +2131,7 @@ tab <-
       as.numeric(factor(NumTarif))
     )
   )
-
+message("1")
 # --- Multirow NumTarif
 pos <- which(duplicated(tab[, "Id"]))
 
@@ -2152,11 +2155,11 @@ if (length(pos) > 0) {
     tab3$TypeTarif[pos2], "}}"
   )
   
-  tab3[pos2, "NumTarif"] <- paste0(
+  tab3[pos2, "NumTarif"] <- as.numeric(paste0(
     "\\multirow{", tab3$Count[pos2], 
     "}{*}{\\parbox{1.5cm}{\\centering  ", 
     tab3$NumTarif[pos2], "}}"
-  )
+  ))
   
   tab3$Count <- NULL
 } else {

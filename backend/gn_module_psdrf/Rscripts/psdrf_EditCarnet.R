@@ -460,18 +460,18 @@ psdrf_EditCarnet <- function(
   
   
   
-  # --  création de la barre de progression
-  disp_name <- 
-    str_sub(disp_list[1], str_locate(disp_list[1], "-")[, 2] + 1, -1)
-  pb_title <- "Progression"
-  pb_label <- paste0(
-    "Edition du/des livret(s) d'analyse PSDRF : 0\u0025 done - dispositif ", 
-    disp_name, 
-    " en cours."
-  )
-  pb <- tkProgressBar(pb_title, pb_label, 0, 100, width = 800)
-  ##### / \ #####
-  
+  # # --  création de la barre de progression
+  # disp_name <- 
+  #   str_sub(disp_list[1], str_locate(disp_list[1], "-")[, 2] + 1, -1)
+  # pb_title <- "Progression"
+  # pb_label <- paste0(
+  #   "Edition du/des livret(s) d'analyse PSDRF : 0\u0025 done - dispositif ", 
+  #   disp_name, 
+  #   " en cours."
+  # )
+  # pb <- tkProgressBar(pb_title, pb_label, 0, 100, width = 800)
+  # ##### / \ #####
+
   
   for (disp in disp_list) {
     ##### 2/ Préparation des données #####
@@ -533,34 +533,34 @@ psdrf_EditCarnet <- function(
     load(arch1, db)
     load(arch2, db)
     
-    # -- MAJ de la barre de progression
-    info <- round(match(disp, disp_list) / length(disp_list) * 100)
-    pb_label <- paste0(
-      "Edition des carnets d'analyse PSDRF : ", 
-      info, "\u0025 done - dispositif ", 
-      disp_name, 
-      " \u00E9dit\u00E9."
-    )
+  #   # -- MAJ de la barre de progression
+  #   info <- round(match(disp, disp_list) / length(disp_list) * 100)
+  #   pb_label <- paste0(
+  #     "Edition des carnets d'analyse PSDRF : ", 
+  #     info, "\u0025 done - dispositif ", 
+  #     disp_name, 
+  #     " \u00E9dit\u00E9."
+  #   )
     
-    pb_title <- paste0(
-      "Edition (",
-      info,
-      " \u0025)"
-    )
+  #   pb_title <- paste0(
+  #     "Edition (",
+  #     info,
+  #     " \u0025)"
+  #   )
     
-    setTkProgressBar(pb, info, pb_title, pb_label)
+  #   setTkProgressBar(pb, info, pb_title, pb_label)
   }
   
-  # -- close barre de progression
-  close(pb)
-  ##### / \ #####
+  # # -- close barre de progression
+  # close(pb)
+  # ##### / \ #####
   
-  # -- message de fin
-  msg <- tk_messageBox(
-    type = "ok", 
-    message = "Edition du/des rapport(s) d'analyse termin\u00E9e", 
-    icon = "info"
-  )
+  # # -- message de fin
+  # msg <- tk_messageBox(
+  #   type = "ok", 
+  #   message = "Edition du/des rapport(s) d'analyse termin\u00E9e", 
+  #   icon = "info"
+  # )
 }
 ##### /\ #####
 
@@ -667,25 +667,27 @@ build_results_by_group <- function(
     distinct()
   # group_list <- unique(group_combination$variable)
   ui_title <- "Choix des agr\u00E9gations par ensembles :"
-  
-  # -- choice to make
-  answ <- 
-    if (dim(group_combination)[1] > 1) {
-      tk_messageBox(
-        type = "yesno", 
-        message = paste0(
-          "Des ensembles sont renseign\u00E9s dans la table Placettes :\n\n", 
-          paste0(
-            unique(group_combination$variable) , 
-            collapse = ", "
-          ), 
-          ".\n\nUtiliser ces ensembles pour r\u00E9aliser l'analyse ?"
-        ), 
-        caption = "Ensembles d'analyse d\u00E9tect\u00E9s"
-      )
-    } else {
-      "no"
-    }
+
+  # # -- choice to make
+  # answ <- 
+  #   if (dim(group_combination)[1] > 1) {
+  #     tk_messageBox(
+  #       type = "yesno", 
+  #       message = paste0(
+  #         "Des ensembles sont renseign\u00E9s dans la table Placettes :\n\n", 
+  #         paste0(
+  #           unique(group_combination$variable) , 
+  #           collapse = ", "
+  #         ), 
+  #         ".\n\nUtiliser ces ensembles pour r\u00E9aliser l'analyse ?"
+  #       ), 
+  #       caption = "Ensembles d'analyse d\u00E9tect\u00E9s"
+  #     )
+  #   } else {
+  #     "no"
+  #   }
+
+answ = "no"
   
 if (answ == "yes") { # TODO : à terminer
   done <- tclVar(0)
@@ -775,7 +777,6 @@ if (answ == "yes") { # TODO : à terminer
       # }
       
       group_list <<- unique(chosen_group_combination$variable)
-      
       # psdrf_AgregPlacettes call
       psdrf_AgregPlacettes(
         repPSDRF, 
@@ -812,7 +813,6 @@ if (answ == "yes") { # TODO : à terminer
     results_by_group_to_get, 
     repSav, disp, last_cycle #Arguments dispo plus haut dans le script
   )
-  
   # -- retour de la fonction build_results_by_group_to_get
   # return(list(results_by_group_to_get, chosen_group_combination))
 } # end of cond answ == "yes"

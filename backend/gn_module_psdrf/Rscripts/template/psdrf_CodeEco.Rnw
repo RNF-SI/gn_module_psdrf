@@ -1,0 +1,391 @@
+<<PreparationCodeEco{{x}}>>= 
+# -- extraction des informations de x
+group <- "{{x}}"
+
+# liste des tables demandées
+tables_list <- c(
+  "psdrfDispCodes_CodeEcolo", 
+  "psdrfDispCodes_CatCodeEcolo", 
+  "psdrfDispTot_CatCodeEcolo"
+)
+
+# filtre des données d'inventaire et de résultats
+prepare_tables_results <- 
+  prepare_tables(disp_num, group, tables_list, admin = Placettes_Sel)
+tables_needed <- prepare_tables_results[[1]]
+inventory_tables <- prepare_tables_results[[2]]
+
+# extraction des tables d'inventaire et de résultats
+for (i in 1:length(tables_needed)) {
+  assign(names(tables_needed)[i], tables_needed[[i]])
+}
+for (i in 1:length(inventory_tables)) {
+  assign(names(inventory_tables)[i], inventory_tables[[i]])
+}
+
+# -- répertoire des figures :
+# path
+output_dir <- file.path(repFigures, figure_path)
+# create directory
+dir.create(output_dir, showWarnings = F, recursive = T)
+# set chunck option
+opts_chunk$set(fig.path = output_dir, dev = 'png')
+@
+
+<<Test_CodesEco{{x}}>>= 
+t <- grouped_results_of_Codes_by_CodeEcolo
+Eval_CodeEco <- if(dim(t)[1] == 0) FALSE else TRUE
+@
+
+\EditIf{\Sexpr{Balise_TextCodeEco}}{1}{
+Les dendromicrohabitats (DMH) constituent une grande part de la complexit\u00E9 de l'\u00E9cosyst\u00E8me forestier. Ils offrent des refuges, des lieux de reproduction, d'hibernation et de nutrition pour de nombreuses esp\u00E8ces. A ce jour, le PSDRF permet de relever ces DMH selon 2 principales codifications.}{}
+
+<<Balise_TextCodeEco{{x}}, fig.subcap = "test", out.width = '.49\\linewidth'>>= 
+  # ----- Balise texte (ex : txt introduction bois mort)
+  Balise_TextCodeEco = Balise_TextCodeEco + 1
+@
+
+\section{\Sexpr{section_str}}
+\EditIf{\Sexpr{Eval_CodeEco}}{TRUE}{
+
+La figure \ref{fig:CodesEco{{x}}} pr\u00E9sente la densit\u00E9 des DMH les plus repr\u00E9sent\u00E9s (leur densit\u00E9 repr\u00E9sente au moins 1\% de la densit\u00E9 totale de DMH).
+
+<<PreparationCodesEco{{x}}, eval = Eval_CodeEco>>= 
+Palette_Code <- CodeEcologie$Couleur
+names(Palette_Code) <- CodeEcologie$Descriptif
+Seuil <- 0.01 #(seuil pour filtrer valeurs trop faible)
+
+t <- 
+  grouped_results_of_Codes_by_CodeEcolo %>% 
+  # filter(NumDisp == disp_num & Cycle == cycle_num) %>%
+  select(NumDisp, Disp, Cycle, CodeEcolo, Nha, NbrePlacettes)
+
+# TODO : à tester ci-dessous
+# t.m <- 
+#   t %>% 
+#   mutate(
+#     Note = CodeEcologie$Descriptif[ match(CodeEcolo, CodeEcologie$Code) ]
+#     ) %>% 
+#   group_by(NumDisp, Disp, Cycle, Note, NbrePlacettes) %>%
+#   summarise(Nha = sum(Nha, na.rm = T)) %>%
+#   ungroup()
+# 
+# sum <- sum(t.m$Nha, na.rm = T)
+# tRare <- t.m %>% filter(Nha <= sum * Seuil)
+# t.m <- 
+#   t.m %>% 
+#   filter(Nha > sum * Seuil) %>% 
+#   arrange(Nha) %>% 
+#   mutate(
+#     Note = str_wrap(Note, width = 50, indent = 0, exdent = 0),
+#     Note = factor(Note, levels = t.m$Note)
+#   )
+
+t.m <- t
+t.m$Note <- CodeEcologie$Descriptif[match(t.m$CodeEcolo, CodeEcologie$Code)]
+t.m <- 
+  t.m %>%
+  group_by(NumDisp, Disp, Cycle, Note, NbrePlacettes) %>%
+  summarise(Nha = sum(Nha, na.rm = T)) %>%
+  ungroup()
+
+tRare <- t.m[t.m$Nha <= sum(t.m$Nha, na.rm = T)*Seuil, ]
+t.m <- t.m[t.m$Nha > sum(t.m$Nha, na.rm = T)*Seuil, ]
+t.m <- t.m[order(t.m$Nha), ]
+t.m$Note <- str_wrap(t.m$Note, width = 50, indent = 0, exdent = 0)
+t.m$Note <- factor(t.m$Note, levels = t.m$Note)
+
+Levels1 <- sort(unique(t.m$Note))
+
+df_Scales <- data.frame(
+  Nb_CodesEco = seq(0, 40), 
+  Classe_CodesEco = sort(c(rep(c(1, seq(5, 35, 5)), 5), 35)), 
+  Height_CodesEco = c(sort(rep(seq(1, 8), 5)), 8)
+) %>% 
+  mutate(Height_CodesEco = ifelse(
+      Height_CodesEco == 1 | Height_CodesEco == 2, 3, Height_CodesEco
+    ))
+
+# TODO : à modifier ?
+Param_CodesEco <- 
+  df_Scales$Height_CodesEco[match(length(Levels1), df_Scales$Nb_CodesEco)]
+if (is.na(Param_CodesEco)) {
+  Param_CodesEco <- 8
+}
+@
+
+<<CodesEco{{x}}, fig.height = Param_CodesEco, fig.cap =  "Densit\u00E9 \u00E0 l'hectare des dendromicrohabitats les plus repr\u00E9sent\u00E9s", eval = Eval_CodeEco>>= 
+# Voir preparation chunk ci-dessus
+
+ggplot() +
+  geom_bar(
+    t.m, 
+    mapping = aes(Note, Nha), 
+    position = "identity", 
+    stat = "identity", 
+    fill = "grey60", 
+    width = 0.5
+  ) +
+  geom_text(
+    t.m, 
+    mapping = aes(Note, Nha, label = round(Nha, 0)), 
+    hjust = -0.5, 
+    size = 2, 
+    col = "grey40"
+  ) +
+  coord_flip() +
+  theme_bw() +
+  labs(
+    y = paste0(
+      "Densit\u00E9 \u00E0 l'hectare \n(Seuil : N/ha > ", 
+      Seuil * 100, 
+      "% de la densit\u00E9 totale)"
+    ), 
+    x = "Microhabitats"
+  ) +
+  scale_y_continuous(limits = c(0, max(t.m$Nha) * 1.1)) +
+  MyTheme
+@
+
+<<PreparationCodesEcoRare{{x}}, eval = Eval_CodeEco>>= 
+
+tRare <- tRare[order(tRare$Nha), ]
+tRare$Note <- str_wrap(tRare$Note, width = 50, indent = 0, exdent = 0)
+tRare <- tRare[order(tRare$Nha), ]
+tRare$Note <- factor(tRare$Note, levels = tRare$Note)
+
+Levels1 <- sort(unique(tRare$Note))
+
+df_Scales <- data.frame(
+  Nb_CodesEco = seq(0, 40), 
+  Classe_CodesEco = sort(c(
+    rep(c(1, seq(5, 35, 5)), 5), 
+    35
+  )), 
+  Height_CodesEco = c(sort(rep(seq(1, 8), 5)), 8)
+) %>% 
+  mutate(Height_CodesEco = ifelse(
+    Height_CodesEco == 1 | Height_CodesEco == 2, 3, Height_CodesEco
+  ))
+
+Param_CodesEcoRare <- 
+  df_Scales$Height_CodesEco[match(length(Levels1), df_Scales$Nb_CodesEco)]
+
+if (is.na(Param_CodesEcoRare)) {
+  Param_CodesEcoRare <- 8
+}
+@
+\FloatBarrier
+
+<<CodesEcoRare{{x}}, eval = Eval_CodeEco, fig.cap =  "Densit\u00E9 \u00E0 l'hectare des dendromicrohabitats les plus rares", fig.height = Param_CodesEcoRare>>= 
+# Voir preparation chunk ci-dessus
+
+if (dim(tRare)[1] > 0) {
+   cat("Les DMH moins repr\u00E9sent\u00E9s peuvent \u00EAtre visualis\u00E9s \u00E0 la figure \\ref{fig:CodesEcoRare{{x}}}.")
+  
+  ggplot() +
+    geom_bar(
+      tRare, mapping = aes(Note, Nha), 
+      position = "identity", 
+      stat = "identity", 
+      fill = "grey80", 
+      width = 0.5
+    ) +
+    geom_text(
+      tRare, 
+      mapping = aes(Note, Nha, label = round(Nha, 2)), 
+      hjust = -0.5, 
+      size = 2, 
+      col = "grey40"
+    ) +
+    coord_flip() +
+    theme_bw() +
+    labs(
+      y = paste0(
+        "Densit\u00E9 \u00E0 l'hectare \n(Seuil : N/ha inf\u00E9rieur ou \u00E9gal \u00E0\n ", 
+        Seuil * 100, 
+        "% de la densit\u00E9 totale)"
+      ), 
+      x = "Microhabitats"
+    ) +
+    scale_y_continuous(limits = c(0, max(tRare$Nha) * 1.1)) +
+    MyTheme
+
+}
+
+Levels <- grouped_results_of_Codes_by_CatCodeEcolo[, "CodeEcolo"]
+Levels1 <- sort(unique(Levels1))
+
+df_Scales <- data.frame(
+  Nb_CodesEco = seq(0, 100), 
+  Classe_CodesEco = sort(c(rep(c(1, seq(5, 95, 5)), 5), 35)), 
+  Height_CodesEco = rep(5, 101)
+) %>%
+  mutate(
+    Height_CodesEco = ifelse(Classe_CodesEco > 15, 6, Height_CodesEco), 
+    Height_CodesEco = ifelse(Classe_CodesEco > 30, 7, Height_CodesEco), 
+    Height_CodesEco = ifelse(Classe_CodesEco > 45, 8, Height_CodesEco)
+  )
+
+Param_CodesEcoRare <- 
+  df_Scales$Height_CodesEco[match(length(Levels1), df_Scales$Nb_CodesEco)]
+
+if (is.na(Param_CodesEcoRare)) {
+  Param_CodesEcoRare <- 8
+}
+@
+\FloatBarrier
+
+<<CodesEco3{{x}}, eval = Eval_CodeEco, fig.height = Param_CodesEcoRare, fig.cap =  "Microhabitats par cat\u00E9gories de diam\u00E8tre.\\\\ \\vspace{0.2cm}\\footnotesize{PER (Perches) = diam\u00E8tre compris entre 7, 5 cm et 17, 5 cm\\\\PB (Petits Bois) = diam\u00E8tre compris entre 17, 5 cm et 27, 5 cm\\\\BM (Bois Moyens) = diam\u00E8tre compris entre 27, 5 cm et 47, 5 cm\\\\GB (Gros Bois) = diam\u00E8tre compris entre 47, 5 cm et 67, 5 cm\\\\TGB (Tr\u00E8s Gros Bois) = diam\u00E8tre sup\u00E9rieur \u00E0 67, 5 cm.}">>= 
+
+if (dim(grouped_results_of_Tot_by_CatCodeEcolo)[1] > 0) {
+  cat("Dans la figure \\ref{fig:CodesEco3{{x}}}, l'histogramme du haut pr\u00E9sente la densit\u00E9 \u00E0 l'hectare des principaux  DMH relev\u00E9s par cat\u00E9gorie de diam\u00E8tre. L'histogramme du bas indique le nombre moyen de DMH par arbre porteur de DMH et par cat\u00E9gorie de diam\u00E8tre.")
+  
+Seuil2 <- 0.01
+t <- 
+  grouped_results_of_Codes_by_CatCodeEcolo %>% 
+  # filter(NumDisp == disp_num & Cycle == cycle_num) %>%
+  select(NumDisp, Disp, Cycle, CodeEcolo, Cat, Nha, NbrePlacettes)
+
+t.m <- t
+
+t.m <- 
+  t.m %>%
+  group_by(NumDisp, Disp, Cycle, Cat, NbrePlacettes) %>%
+  mutate(Tot = sum(Nha, na.rm = T)) %>%
+  ungroup()
+t.m <- t.m[t.m$Nha > t.m$Tot*Seuil2, ]
+t.m <- t.m[order(t.m$Nha), ]
+
+t.m$Note <- CodeEcologie$Descriptif[match(t.m$CodeEcolo, CodeEcologie$Code)]
+t.m$Note <- str_wrap(t.m$Note, width = 35, indent = 3, exdent = 0)
+t.m <- arrange(t.m, Note) %>%
+  mutate(Cat = factor(Cat, levels = c("PER", "PB", "BM", "GB", "TGB"))) %>%
+  arrange(Cat, Note)
+
+names(Palette_Code) <- str_wrap(
+  CodeEcologie$Descriptif, 
+  width = 35, indent = 3, exdent = 0
+)
+
+p1 <- 
+  ggplot() +
+  geom_bar(
+    t.m, 
+    mapping = aes(Cat, Nha, fill = Note), 
+    position = "stack", 
+    stat = "identity"
+  ) +
+  scale_fill_manual(values = Palette_Code) +
+  labs(x = "", y = "Cumul microhabitats (N/ha)") +
+  guides(fill = guide_legend(reverse = T)) +
+  MyTheme + 
+  theme(
+    legend.position = "right", 
+    legend.direction = "vertical", 
+    legend.text = element_text(size = 5)
+  )
+
+temp <- 
+  grouped_results_of_Tot_by_CatCodeEcolo %>% 
+  filter(!is.na(CodeEcolo)) %>% 
+  select(NumDisp, Cycle, Cat, CodeEcolo, Nha) %>% 
+  group_by(NumDisp, Cycle, Cat) %>% 
+  summarise(Nha = sum(Nha)) %>% 
+  ungroup() %>% 
+# TODO : à supprimer (supprimer aussi l'utilisation de reshape2)
+  rename(NhaTot = Nha)
+
+t3 <- 
+  t.m %>% 
+  left_join(temp) %>% 
+  mutate(Relatif2 = Nha / NhaTot) %>% 
+  arrange(Note)
+
+p2 <- 
+  ggplot() +
+  geom_bar(
+    t3, 
+    mapping = aes(Cat, Relatif2, fill = Note), 
+    position = "stack", stat = "identity"
+  ) +
+  scale_fill_manual(values = Palette_Code) +
+  labs(x = "", y = "Nbre microhabitats/Arbres porteurs") +
+  guides(fill = guide_legend(reverse = T)) +
+  MyTheme
+
+mylegend <- g_legend(p1)
+
+grid.arrange(
+  arrangeGrob(
+    p1 + theme(legend.position = "none"), 
+    p2 + theme(legend.position = "none"), 
+    nrow = 2
+  ), 
+  mylegend, nrow = 1, widths = c(5, 5)
+)
+} else {
+  cat("Pas de données inventoriées.")
+}
+@
+
+\EditIf{Eval_PSDRFMA}{TRUE}{
+\subsection{Lianes}
+La figure \ref{fig:Presence_lianes{{x}}} représente la répartition par essence de la densité d'arbres porteurs de lianes (atteignant le houppier) par classe de diamètre. 
+<<Presence_lianes{{x}}, fig.height = 3.5, fig.cap =  "Diversité spécifique des arbres porteurs de lianes (atteignant le houppier)", eval = Eval_PSDRFMA, include = Eval_PSDRFMA>>= 
+df <- 
+  Arbres_SUB %>% 
+  filter(is.element("EP36", CodeEcolo)) %>% 
+  select(EssReg, Cat, Nha, Gha, CodeEcolo) %>% 
+  mutate(Cat = factor(Cat, levels = c("PER", "PB", "BM", "GB", "TGB")))
+
+p1 <- 
+  ggplot() +
+  geom_bar(
+    df, 
+    mapping = aes(Cat, Nha, fill = EssReg), 
+    stat = "identity", 
+    position = "stack"
+  ) +
+  scale_fill_manual(
+    name = "Essences regroup\u00E9es", 
+    values = Palette_EssReg
+  ) +
+  labs(y = "Densit\u00E9 de tiges \u00E0 l'hectare (tiges/ha)") +
+  guides(fill = guide_legend(ncol = 2)) +
+  theme_bw() +
+  MyTheme
+
+p2 <- 
+  ggplot() +
+  geom_bar(
+    df, 
+    mapping = aes(Cat, Nha, fill = EssReg), 
+    stat = "identity", 
+    position = "fill"
+  ) +
+  scale_fill_manual(
+    name = "Essences regroup\u00E9es", 
+    values = Palette_EssReg
+  ) +
+  scale_y_continuous(labels = percent) +
+  labs(y = "Part de la densit\u00E9 de tiges \u00E0 l'hectare (%)") +
+  guides(
+    fill = guide_legend(nrow = ceiling( length(unique(df$EssReg)) / 6 ))) +
+  theme_bw() +
+  MyTheme
+
+mylegend <- g_legend(p2)
+
+grid.arrange(
+  arrangeGrob(
+    p1 + theme(legend.position = "none"), 
+    p2 + theme(legend.position = "none"), 
+    nrow = 1
+  ), 
+  mylegend, nrow = 2, heights = c(9, 2)
+)
+  
+@
+}{}
+}{Pas de donn\u00E9es renseign\u00E9es}

@@ -3,7 +3,7 @@ import pandas as pd
 from sqlalchemy.sql.expression import false, null
 from geonature.utils.env import DB
 from .models import TDispositifs, TPlacettes, TArbres, TCycles, \
-    CorCyclesPlacettes, TArbresMesures, TReperes, BibEssences, TRegenerations, TBmSup30
+    CorCyclesPlacettes, TArbresMesures, TReperes, BibEssences, TRegenerations, TBmSup30,TBmSup30Mesures, TTransects
 from .geonature_PSDRF_function import get_id_type_from_mnemonique, get_id_nomenclature_from_id_type_and_cd_nomenclature
 from datetime import datetime
 
@@ -90,9 +90,12 @@ def data_integration(data):
             .filter((TPlacettes.id_placette_orig == repere["NumPlac"]) & (TPlacettes.id_dispositif == id_dispositif))
             .one()
         )
-        repere["Azimut"]=float(repere["Azimut"].replace(',', '.'))
-        repere["Dist"]=float(repere["Dist"].replace(',', '.'))
-        repere["Diam"]=float(repere["Diam"].replace(',', '.'))
+        if(repere["Azimut"]):
+            repere["Azimut"]=float(repere["Azimut"].replace(',', '.'))
+        if(repere["Dist"]):
+            repere["Dist"]=float(repere["Dist"].replace(',', '.'))
+        if(repere["Diam"]):
+            repere["Diam"]=float(repere["Diam"].replace(',', '.'))
 
         # repereBoolean = DB.session.query(
         #         DB.session.query(TReperes)
@@ -460,25 +463,65 @@ def data_integration(data):
     DB.session.commit()
 
     # # # BMSsup30Mesurés
-    # # for bmsSup30 in BMSsup30:
+    bmsSup30MesuresList = []
+    
+    for bmsSup30 in BMSsup30:
 
-    # #     id_bm_sup_30 = 
-    # #     id_cycle = 
-    # #     diametre_ini = 
-    # #     diametre_med = 
-    # #     diametre_fin = 
-    # #     diametre_130 = 
-    # #     longueur = 
-    # #     ratio_hauteur = 
-    # #     contact = 
-    # #     chablis = 
-    # #     stade_durete = 
-    # #     stade_ecorce = 
-    # #     observation = 
+        placette_id = DB.session.query(TPlacettes.id_placette).filter(
+            (TPlacettes.id_dispositif == id_dispositif) & (TPlacettes.id_placette_orig == bmsSup30["NumPlac"])
+        ).one()
+
+        arbre_id = DB.session.query(TBmSup30.id_bm_sup_30).filter(
+            (TBmSup30.id_arbre_orig == int(bmsSup30["NumArbre"])) & (TBmSup30.id_placette == placette_id) 
+        ).one()
+
+        new_bmsSup30Mesures = TBmSup30Mesures(
+            id_bm_sup_30 = arbre_id, 
+            id_cycle = bmsSup30["Cycle"],
+            diametre_ini = bmsSup30["DiamIni"],
+            diametre_med = bmsSup30["DiamMed"],
+            diametre_fin = bmsSup30["DiamFin"],
+            longueur = bmsSup30["Longueur"],
+            contact = bmsSup30["Contact"],
+            chablis = True if bmsSup30["Chablis"] == "t" else False,
+            stade_durete = bmsSup30["StadeD"],
+            stade_ecorce = bmsSup30["StadeE"],
+            observation = bmsSup30["Observation"]
+        )
+        bmsSup30MesuresList.append(new_bmsSup30Mesures)
+    DB.session.bulk_save_objects(bmsSup30MesuresList)
+    DB.session.commit()
 
 
+    transectList = []
+    for transect in Transect:
 
+        placette_id = DB.session.query(TPlacettes.id_placette).filter(
+            (TPlacettes.id_dispositif == id_dispositif) & (TPlacettes.id_placette_orig == str(transect["NumPlac"]))
+        ).one()
+        cycle_id = DB.session.query(TCycles.id_cycle).filter(
+            (TCycles.num_cycle == transect["Cycle"]) & (TCycles.id_dispositif == id_dispositif)  
+        ).one()
+        cycle_transect_id = DB.session.query(CorCyclesPlacettes.id_cycle_placette).filter(
+            (CorCyclesPlacettes.id_cycle == cycle_id) & (CorCyclesPlacettes.id_placette == placette_id)
+        ).one()
 
+        new_transect = TTransects(
+            id_cycle_placette = cycle_transect_id,
+            code_essence = transect['Essence'],
+            ref_transect = transect['Transect'],
+            distance = transect['Dist'],
+            diametre = transect['Diam'],
+            contact = True if transect["Contact"] == "t" else False,
+            angle = transect['Angle'],
+            chablis = True if transect["Chablis"] == "t" else False,
+            stade_durete = transect['StadeD'],
+            stade_ecorce = transect['StadeE'],
+            observation = transect['Observation']
+        )
+        transectList.append(new_transect)
+    DB.session.bulk_save_objects(transectList)
+    DB.session.commit()
 
     # # # Voir si le Cycle existe déjà, sinon on l'ajoute
     # # # Checker si ce Numdisp avec ce Numcycle existe déjà dans la BDD sinon ajouter
