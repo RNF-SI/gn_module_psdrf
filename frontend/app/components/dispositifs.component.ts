@@ -124,14 +124,13 @@ import { PsdrfDataService } from "../services/route.service";
       this._router.navigate(["psdrf/importdonnees"])
     }
 
-    launchAnalysis(): void{
-      console.log("rorgfn")
+    launchAnalysis(dispositifId: number): void{
 
-      let testObject: FormData = new FormData();
-      testObject.append("test", "tastytest");
+      let dispInfo: FormData = new FormData();
+      dispInfo.append("dispositifId", dispositifId.toString());
 
       this.dataSrv
-        .psdrf_data_analysis(testObject)
+        .psdrf_data_analysis(dispInfo)
         .subscribe((test) => {
           console.log(test)
         });

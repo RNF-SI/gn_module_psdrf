@@ -15,10 +15,6 @@
                 </span>
             </button>
 
-            <button class="m-1" mat-raised-button matTooltip="Analyser des données" (click)="launchAnalysis()">
-                <mat-icon> bar_chart </mat-icon>
-            </button>
-
             <div class="dispositifs-nbre" *ngIf="stats">
                 <p><strong>{{stats.nb_dispositifs | formatnum}} dispositifs sur {{stats.nb_cycles}} cycles de mesures.</strong></p>
             </div>
@@ -94,24 +90,30 @@
                         [selected]="[]" [externalPaging]="false" [scrollbarH]="false" [selectionType]="'single'" [limit]="20" [rowClass]="" [messages]="" (select)="onRowSelect($event)">
 
                         <!-- ACTION COLUMNS -->
-
                         <ngx-datatable-column maxWidth="10">
                             <ng-template let-row="row" ngx-datatable-cell-template>
                                 <button class="btn btn-outline-shadow btn-no-padding btn-ghost" [disabled]="!row.rights.R" (click)="onDetailDispositif(row['id_dispositif'])">
-                    <i [ngClass]="{'disabled' : !row.rights.R}" matTooltip="{{ 'Dispositif.Info' | translate }} {{row['id_dispositif']}}"
-                      class="fa fa-info-circle" aria-hidden="true"></i>
-                  </button>
+                                    <i [ngClass]="{'disabled' : !row.rights.R}" matTooltip="{{ 'Dispositif.Info' | translate }} {{row['id_dispositif']}}"
+                                    class="fa fa-info-circle" aria-hidden="true"></i>
+                                </button>
                             </ng-template>
                         </ngx-datatable-column>
 
-
                         <!-- DATA COLUMNS -->
                         <span *ngFor="let col of tableColumns">
-                    <ngx-datatable-column  [name]="col.name " [prop]="col.prop">
-                    </ngx-datatable-column>
-              </span>
-                    </ngx-datatable>
+                            <ngx-datatable-column  [name]="col.name " [prop]="col.prop">
+                            </ngx-datatable-column>
+                        </span>
 
+                        <ngx-datatable-column maxWidth="10">
+                            <ng-template let-row="row" ngx-datatable-cell-template>
+                                <button class="mat-elevation-z1 small-icon-button" mat-icon-button matTooltip="Générer le carnet" (click)="launchAnalysis(row['id_dispositif'])">
+                                    <mat-icon>bar_chart</mat-icon>
+                                </button>
+                            </ng-template>
+                        </ngx-datatable-column>
+
+                    </ngx-datatable>
                 </div>
             </div>
         </div>

@@ -800,15 +800,28 @@ export class ImportDonneesComponent {
   }
 
   integrationToDatabase(): void{
-    this.dataSrv
-    .psdrfIntegrationToDatabase(
-      JSON.stringify(this.psdrfArray, (k, v) =>
-        v === undefined ? null : v
-      )
+    let idAndData: FormData = new FormData();
+
+    let dispositifId = this.excelFileName.split(".")[0].split("_")[0].split("-")[0]
+    idAndData.append("dispositifId", dispositifId.toString());
+
+    let dispositifName = this.excelFileName.split(".")[0].split("_")[0].split("-")[1]
+    idAndData.append("dispositifName", dispositifName);
+
+    let psdrfDataJson = JSON.stringify(this.psdrfArray, (k, v) =>
+      v === undefined ? null : v
     )
-    .subscribe((verificationJson) => {
-      console.log(verificationJson)
+    const blobPsdrf = new Blob([psdrfDataJson], {
+      type: "application/json",
     });
+    idAndData.append("psdrfData", blobPsdrf);
+    
+    
+    this.dataSrv
+    .psdrfIntegrationToDatabase(idAndData)
+    .subscribe((verificationJson) => {
+        console.log(verificationJson)
+      });
   }
 
 }

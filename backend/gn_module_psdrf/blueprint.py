@@ -234,14 +234,14 @@ def psdrf_data_verification_with_shape():
 @blueprint.route('/integration', methods=['POST'])
 @json_resp
 def psdrf_data_integration():
-    data = request.get_json()
-    return data_integration(data)
+    dispId = request.form.get('dispositifId')
+    dispName = request.form.get('dispositifName')
+    default_name = "None"
+    data = json.loads(request.files.get('psdrfData', default_name).read())
+    return data_integration(dispId, dispName, data)
 
 @blueprint.route('/analysis', methods=['POST'])
 def psdrf_data_analysis():
-    default_name = "None"
-    test = request.files.get('test', default_name)
-    test = request.form['test']
-    print(test)
-    print("LA")
-    return data_analysis(test)
+    dispId = request.form.get('dispositifId')
+    print(dispId)
+    return data_analysis(dispId)

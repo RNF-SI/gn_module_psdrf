@@ -8,7 +8,7 @@ from .geonature_PSDRF_function import get_id_type_from_mnemonique, get_id_nomenc
 from datetime import datetime
 
 
-def data_integration(data):
+def data_integration(dispId, dispName, data):
     Placettes = data[0]
     Cycles = data[1]
     Arbres = data[2]
@@ -17,12 +17,14 @@ def data_integration(data):
     BMSsup30 = data[5]
     Reperes = data[6]
 
-    id_dispositif = int(data[0][0]['NumDisp'])
+    id_dispositif = dispId
     if( DB.session.query(TDispositifs.id_dispositif).filter_by(id_dispositif=id_dispositif).first() is not None):
         delete_obj = TDispositifs.query.filter_by(id_dispositif=id_dispositif).one()
         DB.session.delete(delete_obj)
         DB.session.commit()
 
+
+    
     # # Dispositif
     # disp_request = DB.session.query(TDispositifs).all()
     # dispositifs = [disp.id_dispositif for disp in disp_request]
@@ -34,7 +36,7 @@ def data_integration(data):
 
     new_disp= TDispositifs( 
         id_dispositif = id_dispositif,
-        name = 'Chalmessin',
+        name = dispName,
         alluvial = False
     )
     DB.session.add(new_disp)
@@ -450,7 +452,7 @@ def data_integration(data):
         else :
             arbre_id = None
         new_bmsSup30 = TBmSup30(
-            id_bm_sup_30_orig = bmsSup30["NumArbre"],
+            id_bm_sup_30_orig = bmsSup30["Id"],
             id_placette = placette_id,
             id_arbre = arbre_id,
             code_essence = bmsSup30["Essence"],
@@ -467,25 +469,40 @@ def data_integration(data):
     
     for bmsSup30 in BMSsup30:
 
+        if(bmsSup30["DiamIni"]):
+            bmsSup30["DiamIni"]=float(bmsSup30["DiamIni"].replace(',', '.'))
+        if(bmsSup30["DiamMed"]):
+            bmsSup30["DiamMed"]=float(bmsSup30["DiamMed"].replace(',', '.'))
+        if(bmsSup30["DiamFin"]):
+            bmsSup30["DiamFin"]=float(bmsSup30["DiamFin"].replace(',', '.'))
+        if(bmsSup30["Longueur"]):
+            bmsSup30["Longueur"]=float(bmsSup30["Longueur"].replace(',', '.'))
+        if(bmsSup30["Contact"] and bmsSup30["Contact"] != "t" and bmsSup30["Contact"] != "f"):
+            bmsSup30["Contact"]=float(bmsSup30["Contact"].replace(',', '.'))
+
         placette_id = DB.session.query(TPlacettes.id_placette).filter(
             (TPlacettes.id_dispositif == id_dispositif) & (TPlacettes.id_placette_orig == bmsSup30["NumPlac"])
         ).one()
 
-        arbre_id = DB.session.query(TBmSup30.id_bm_sup_30).filter(
-            (TBmSup30.id_arbre_orig == int(bmsSup30["NumArbre"])) & (TBmSup30.id_placette == placette_id) 
+        bmsSup30_id = DB.session.query(TBmSup30.id_bm_sup_30).filter(
+            (TBmSup30.id_bm_sup_30_orig ==  bmsSup30["Id"]) & (TBmSup30.id_placette == placette_id) 
+        ).one()
+
+        cycle_id = DB.session.query(TCycles.id_cycle).filter(
+            (TCycles.num_cycle == bmsSup30["Cycle"]) & (TCycles.id_dispositif == id_dispositif)  
         ).one()
 
         new_bmsSup30Mesures = TBmSup30Mesures(
-            id_bm_sup_30 = arbre_id, 
-            id_cycle = bmsSup30["Cycle"],
+            id_bm_sup_30 = bmsSup30_id, 
+            id_cycle = cycle_id,
             diametre_ini = bmsSup30["DiamIni"],
             diametre_med = bmsSup30["DiamMed"],
             diametre_fin = bmsSup30["DiamFin"],
             longueur = bmsSup30["Longueur"],
             contact = bmsSup30["Contact"],
             chablis = True if bmsSup30["Chablis"] == "t" else False,
-            stade_durete = bmsSup30["StadeD"],
-            stade_ecorce = bmsSup30["StadeE"],
+            stade_durete = get_id_nomenclature_from_id_type_and_cd_nomenclature(id_type_durete, bmsSup30["StadeD"]) if bmsSup30["StadeD"] else None,
+            stade_ecorce = get_id_nomenclature_from_id_type_and_cd_nomenclature(id_type_ecorce, bmsSup30["StadeE"]) if bmsSup30["StadeE"] else None,
             observation = bmsSup30["Observation"]
         )
         bmsSup30MesuresList.append(new_bmsSup30Mesures)
@@ -515,8 +532,8 @@ def data_integration(data):
             contact = True if transect["Contact"] == "t" else False,
             angle = transect['Angle'],
             chablis = True if transect["Chablis"] == "t" else False,
-            stade_durete = transect['StadeD'],
-            stade_ecorce = transect['StadeE'],
+            stade_durete = get_id_nomenclature_from_id_type_and_cd_nomenclature(id_type_durete, transect["StadeD"]) if transect["StadeD"] else None,
+            stade_ecorce = get_id_nomenclature_from_id_type_and_cd_nomenclature(id_type_ecorce, transect["StadeE"]) if transect["StadeE"] else None,
             observation = transect['Observation']
         )
         transectList.append(new_transect)
