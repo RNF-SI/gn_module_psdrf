@@ -82,7 +82,7 @@ class TReperes (DB.Model):
     __tablename__ = "t_reperes"
     __table_args__ = {'schema': SCHEMA}
     id_repere = DB.Column('id_repere', DB.Integer, primary_key = True)
-    id_placette = DB.Column('id_placette', DB.Integer, DB.ForeignKey('pr_psdrf.t_placettes.id_placette'))
+    id_placette = DB.Column('id_placette', DB.Integer, DB.ForeignKey('pr_psdrf.t_placettes.id_placette', ondelete='CASCADE'))
     azimut = DB.Column('azimut', DB.Float)
     distance = DB.Column('distance', DB.Float)
     diametre = DB.Column('diametre', DB.Float)
@@ -96,7 +96,7 @@ class TCycles (DB.Model):
     __tablename__ = "t_cycles"
     __table_args__ = {'schema': SCHEMA}
     id_cycle = DB.Column('id_cycle', DB.Integer, primary_key = True)
-    id_dispositif = DB.Column('id_dispositif', DB.Integer, DB.ForeignKey('pr_psdrf.t_dispositifs.id_dispositif'))
+    id_dispositif = DB.Column('id_dispositif', DB.Integer, DB.ForeignKey('pr_psdrf.t_dispositifs.id_dispositif', ondelete='CASCADE'))
     num_cycle = DB.Column('num_cycle', DB.Integer)
     coeff = DB.Column('coeff', DB.Integer)
     date_debut = DB.Column('date_debut', DB.Date)
@@ -124,8 +124,8 @@ class CorCyclesPlacettes (DB.Model):
     __tablename__ = "cor_cycles_placettes"
     __table_args__ = {'schema': SCHEMA}
     id_cycle_placette = DB.Column('id_cycle_placette', DB.Integer, primary_key = True)
-    id_cycle = DB.Column('id_cycle', DB.Integer, DB.ForeignKey('pr_psdrf.t_cycles.id_cycle'))
-    id_placette = DB.Column('id_placette', DB.Integer, DB.ForeignKey('pr_psdrf.t_placettes.id_placette'))
+    id_cycle = DB.Column('id_cycle', DB.Integer, DB.ForeignKey('pr_psdrf.t_cycles.id_cycle', ondelete='CASCADE'))
+    id_placette = DB.Column('id_placette', DB.Integer, DB.ForeignKey('pr_psdrf.t_placettes.id_placette', ondelete='CASCADE'))
     date_releve = DB.Column('date_releve', DB.Date)
     date_intervention = DB.Column('date_intervention', DB.String)
     nature_intervention = DB.Column('nature_intervention', DB.String)
@@ -146,7 +146,7 @@ class CorCyclesPlacettes (DB.Model):
 class CorCyclesRoles (DB.Model):
     __tablename__ = "cor_cycles_roles"
     __table_args__ = {'schema': SCHEMA}
-    id_cycle = DB.Column('id_cycle', DB.Integer, DB.ForeignKey('pr_psdrf.t_cycles.id_cycle'), primary_key = True)
+    id_cycle = DB.Column('id_cycle', DB.Integer, DB.ForeignKey('pr_psdrf.t_cycles.id_cycle', ondelete='CASCADE'), primary_key = True)
     id_role = DB.Column('id_role', DB.Integer, primary_key = True)
 
     cycle = DB.relationship('TCycles', foreign_keys=id_cycle)
@@ -158,7 +158,7 @@ class TArbres (DB.Model):
     __table_args__ = {'schema': SCHEMA}
     id_arbre = DB.Column('id_arbre', DB.Integer, primary_key = True)
     id_arbre_orig = DB.Column('id_arbre_orig', DB.Integer)
-    id_placette = DB.Column('id_placette', DB.Integer, DB.ForeignKey('pr_psdrf.t_placettes.id_placette'))
+    id_placette = DB.Column('id_placette', DB.Integer, DB.ForeignKey('pr_psdrf.t_placettes.id_placette', ondelete='CASCADE'))
     code_essence = DB.Column('code_essence', DB.String, DB.ForeignKey('pr_psdrf.bib_essences.code_essence'))
     azimut = DB.Column('azimut', DB.Float)
     distance = DB.Column('distance', DB.Float)
@@ -174,8 +174,8 @@ class TArbresMesures (DB.Model):
     __tablename__ = "t_arbres_mesures"
     __table_args__ = {'schema': SCHEMA}
     id_arbre_mesure = DB.Column('id_arbre_mesure', DB.Integer, primary_key = True)
-    id_arbre = DB.Column('id_arbre', DB.Integer, DB.ForeignKey('pr_psdrf.t_arbres.id_arbre'))
-    id_cycle = DB.Column('id_cycle', DB.Integer, DB.ForeignKey('pr_psdrf.t_cycles.id_cycle'))
+    id_arbre = DB.Column('id_arbre', DB.Integer, DB.ForeignKey('pr_psdrf.t_arbres.id_arbre', ondelete='CASCADE'))
+    id_cycle = DB.Column('id_cycle', DB.Integer, DB.ForeignKey('pr_psdrf.t_cycles.id_cycle', ondelete='CASCADE'))
     diametre1 = DB.Column('diametre1', DB.Float)
     diametre2 = DB.Column('diametre2', DB.Float)
     type = DB.Column('type', DB.String)
@@ -202,7 +202,7 @@ class TRegenerations (DB.Model):
     __tablename__ = "t_regenerations"
     __table_args__ = {'schema': SCHEMA}
     id_regeneration = DB.Column('id_regeneration', DB.Integer, primary_key = True)
-    id_cycle_placette = DB.Column('id_cycle_placette', DB.Integer, DB.ForeignKey('pr_psdrf.cor_cycles_placettes.id_cycle_placette'))
+    id_cycle_placette = DB.Column('id_cycle_placette', DB.Integer, DB.ForeignKey('pr_psdrf.cor_cycles_placettes.id_cycle_placette', ondelete='CASCADE'))
     sous_placette = DB.Column('sous_placette', DB.Integer)
     code_essence = DB.Column('code_essence', DB.String)
     recouvrement = DB.Column('recouvrement', DB.Float)
@@ -237,7 +237,7 @@ class TBmSup30 (DB.Model):
     __table_args__ = {'schema': SCHEMA}
     id_bm_sup_30 = DB.Column('id_bm_sup_30', DB.Integer, primary_key = True)
     id_bm_sup_30_orig = DB.Column('id_bm_sup_30_orig', DB.Integer)
-    id_placette = DB.Column('id_placette', DB.Integer, DB.ForeignKey('pr_psdrf.t_placettes.id_placette'))
+    id_placette = DB.Column('id_placette', DB.Integer, DB.ForeignKey('pr_psdrf.t_placettes.id_placette', ondelete='CASCADE'))
     id_arbre = DB.Column('id_arbre', DB.Integer, DB.ForeignKey('pr_psdrf.t_arbres.id_arbre'))
     code_essence = DB.Column('code_essence', DB.String, DB.ForeignKey('pr_psdrf.bib_essences.code_essence'))
     azimut = DB.Column('azimut', DB.Float)
@@ -257,8 +257,8 @@ class TBmSup30Mesures (DB.Model):
     __tablename__ = "t_bm_sup_30_mesures"
     __table_args__ = {'schema': SCHEMA}
     id_bm_sup_30_mesure = DB.Column('id_bm_sup_30_mesure', DB.Integer, primary_key = True)
-    id_bm_sup_30 = DB.Column('id_bm_sup_30', DB.Integer, DB.ForeignKey('pr_psdrf.t_bm_sup_30.id_bm_sup_30'))
-    id_cycle = DB.Column('id_cycle', DB.Integer, DB.ForeignKey('pr_psdrf.t_cycles.id_cycle'))
+    id_bm_sup_30 = DB.Column('id_bm_sup_30', DB.Integer, DB.ForeignKey('pr_psdrf.t_bm_sup_30.id_bm_sup_30', ondelete='CASCADE'))
+    id_cycle = DB.Column('id_cycle', DB.Integer, DB.ForeignKey('pr_psdrf.t_cycles.id_cycle', ondelete='CASCADE'))
     diametre_ini = DB.Column('diametre_ini', DB.Float)
     diametre_med = DB.Column('diametre_med', DB.Float)
     diametre_fin = DB.Column('diametre_fin', DB.Float)
@@ -280,7 +280,7 @@ class TTransects (DB.Model):
     __tablename__ = "t_transects"
     __table_args__ = {'schema': SCHEMA}
     id_transect = DB.Column('id_transect', DB.Integer, primary_key = True)
-    id_cycle_placette = DB.Column('id_cycle_placette', DB.Integer, DB.ForeignKey('pr_psdrf.cor_cycles_placettes.id_cycle_placette'))
+    id_cycle_placette = DB.Column('id_cycle_placette', DB.Integer, DB.ForeignKey('pr_psdrf.cor_cycles_placettes.id_cycle_placette', ondelete='CASCADE'))
     code_essence = DB.Column('code_essence', DB.String)
     ref_transect = DB.Column('ref_transect', DB.String)
     distance = DB.Column('distance', DB.Float)
@@ -305,7 +305,7 @@ class TTarifs (DB.Model):
     __tablename__ = "t_tarifs"
     __table_args__ = {'schema': SCHEMA}
     id_tarif = DB.Column('id_tarif', DB.Integer, primary_key = True)
-    id_dispositif = DB.Column('id_dispositif', DB.Integer, DB.ForeignKey('pr_psdrf.t_dispositifs.id_dispositif'))
+    id_dispositif = DB.Column('id_dispositif', DB.Integer, DB.ForeignKey('pr_psdrf.t_dispositifs.id_dispositif', ondelete='CASCADE'))
     code_essence = DB.Column('code_essence', DB.String, DB.ForeignKey('pr_psdrf.bib_essences.code_essence'))
     type_tarif = DB.Column('type_tarif', DB.String)
     num_tarif = DB.Column('num_tarif', DB.Float)
@@ -318,7 +318,7 @@ class TTarifs (DB.Model):
 class TRegroupementsEssences (DB.Model):
     __tablename__ = "t_regroupements_essences"
     __table_args__ = {'schema': SCHEMA}
-    id_dispositif = DB.Column('id_dispositif', DB.Integer, DB.ForeignKey('pr_psdrf.t_dispositifs.id_dispositif'), primary_key = True)
+    id_dispositif = DB.Column('id_dispositif', DB.Integer, DB.ForeignKey('pr_psdrf.t_dispositifs.id_dispositif', ondelete='CASCADE'), primary_key = True)
     code_essence = DB.Column('code_essence', DB.String, DB.ForeignKey('pr_psdrf.bib_essences.code_essence'), primary_key = True)
     code_regroupement = DB.Column('code_regroupement', DB.String)
     couleur = DB.Column('couleur', DB.String)
