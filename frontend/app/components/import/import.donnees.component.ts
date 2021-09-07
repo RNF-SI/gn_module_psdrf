@@ -9,6 +9,7 @@ import {
 } from "@angular/core";
 import { MatPaginator } from "@angular/material/paginator";
 import { MatTableDataSource } from "@angular/material/table";
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { HttpClient } from "@angular/common/http";
 import { Router } from "@angular/router";
 import * as _ from "lodash";
@@ -97,6 +98,8 @@ export class ImportDonneesComponent {
   totalPages = 0;
   //Visibilité des labels du mainStep
   isLabelVisible: boolean = true;
+  //Boolean de l'intégration des données à la BD (vrai si requête en cours)
+  integrationLoading = false; 
 
   @ViewChild("mainStepper") private mainStepper: MatStepper;
 
@@ -110,7 +113,8 @@ export class ImportDonneesComponent {
     private historyService: ErrorHistoryService,
     private _router: Router,
     private changeDetector: ChangeDetectorRef,
-    private elementRef: ElementRef
+    private elementRef: ElementRef,
+    private _snackBar: MatSnackBar
   ) {}
 
   /**
@@ -800,28 +804,39 @@ export class ImportDonneesComponent {
   }
 
   integrationToDatabase(): void{
-    let idAndData: FormData = new FormData();
-
-    let dispositifId = this.excelFileName.split(".")[0].split("_")[0].split("-")[0]
-    idAndData.append("dispositifId", dispositifId.toString());
-
-    let dispositifName = this.excelFileName.split(".")[0].split("_")[0].split("-")[1]
-    idAndData.append("dispositifName", dispositifName);
-
-    let psdrfDataJson = JSON.stringify(this.psdrfArray, (k, v) =>
-      v === undefined ? null : v
-    )
-    const blobPsdrf = new Blob([psdrfDataJson], {
-      type: "application/json",
-    });
-    idAndData.append("psdrfData", blobPsdrf);
-    
-    
-    this.dataSrv
-    .psdrfIntegrationToDatabase(idAndData)
-    .subscribe((verificationJson) => {
-        console.log(verificationJson)
+    if(!this.integrationLoading){
+      let idAndData: FormData = new FormData();
+  
+      let dispositifId = this.excelFileName.split(".")[0].split("_")[0].split("-")[0]
+      idAndData.append("dispositifId", dispositifId.toString());
+  
+      let dispositifName = this.excelFileName.split(".")[0].split("_")[0].split("-")[1]
+      idAndData.append("dispositifName", dispositifName);
+  
+      let psdrfDataJson = JSON.stringify(this.psdrfArray, (k, v) =>
+        v === undefined ? null : v
+      )
+      const blobPsdrf = new Blob([psdrfDataJson], {
+        type: "application/json",
       });
+      idAndData.append("psdrfData", blobPsdrf);
+      
+      this.integrationLoading = true;   
+      this.dataSrv
+      .psdrfIntegrationToDatabase(idAndData)
+      .subscribe((integrationJson) => {
+          let integrationObj = JSON.parse(integrationJson);
+          this.integrationLoading = false;
+          if(integrationObj.success){
+            this.openSnackBar("Les données ont bien été ajoutées à la BDD", "Ok");
+          }
+        });
+
+    }
+  }
+
+  openSnackBar(message: string, action: string) {
+    this._snackBar.open(message, action);
   }
 
 }

@@ -16,6 +16,7 @@ import { ErrorCorrectionService } from "./services/error.correction.service";
 import { KeyValue, FormatNum } from "./utils";
 import { DndDirective } from './directives/dnd.directive';
 import { MatTableModule } from '@angular/material';
+import { MatSnackBarModule } from '@angular/material'; 
 import { CdkStepperModule } from '@angular/cdk/stepper';
 
 // my module routing
@@ -43,6 +44,7 @@ const routes: Routes = [
     CommonModule,
     ReactiveFormsModule,
     MatTableModule,
+    MatSnackBarModule,
     CdkStepperModule,
   ],
   providers: [

@@ -1,21 +1,18 @@
 @import '../../../styles/styles.scss';
-
 .importzone {
     width: 600px;
     height: 85vh;
     padding: 2rem;
     text-align: center;
-    position: relative; 
+    position: relative;
     margin: 0 auto;
-
     input {
         opacity: 0;
-        position: absolute; 
+        position: absolute;
         z-index: 2;
         top: 0;
         left: 0;
     }
-
     label {
         color: white;
         width: 300px;
@@ -24,14 +21,12 @@
         background-color: $dark-green;
         padding: 8px 16px;
     }
-
     h3 {
         font-size: 20px;
-        font-weight: 600; 
+        font-weight: 600;
         color: #38424c
     }
 }
-
 
 .single-file {
     display: flex;
@@ -39,31 +34,27 @@
     justify-content: space-between;
     align-items: center;
     border: dashed 1px #979797;
-    width:500px;
-
+    width: 500px;
     img.delete {
-    margin-left: 0.5rem;
-    cursor: pointer;
-    align-self: flex-end;
+        margin-left: 0.5rem;
+        cursor: pointer;
+        align-self: flex-end;
     }
-
     .name {
-    font-size: 14px;
-    font-weight: 500;
-    color: #353f4a;
-    margin: 0;
+        font-size: 14px;
+        font-weight: 500;
+        color: #353f4a;
+        margin: 0;
     }
-
     .size {
-    font-size: 12px;
-    font-weight: 500;
-    color: #a4a4a4;
-    margin: 0;
-    margin-bottom: 0.25rem;
+        font-size: 12px;
+        font-weight: 500;
+        color: #a4a4a4;
+        margin: 0;
+        margin-bottom: 0.25rem;
     }
-
     .info {
-    width: 100%
+        width: 100%
     }
 }
 
@@ -76,21 +67,22 @@ table {
     background: #BAD2CA;
 }
 
-.mat-header-row{
+.mat-header-row {
     background: #DCE8E4;
 }
 
-.mat-header-cell, .mat-cell {
+.mat-header-cell,
+.mat-cell {
     text-align: center;
 }
 
-.mat-tab-group.mat-primary .mat-ink-bar, .mat-tab-nav-bar.mat-primary .mat-ink-bar{
-    background: rgba(149, 165, 166,0.3);
-     height: 35px;
-     border-radius: 100px;
-     margin-bottom: 5px;
- } 
-
+.mat-tab-group.mat-primary .mat-ink-bar,
+.mat-tab-nav-bar.mat-primary .mat-ink-bar {
+    background: rgba(149, 165, 166, 0.3);
+    height: 35px;
+    border-radius: 100px;
+    margin-bottom: 5px;
+}
 
 .example-loading-shade {
     position: absolute;
@@ -103,7 +95,7 @@ table {
     display: flex;
     align-items: center;
     justify-content: center;
-  }
+}
 
 .isError {
     background-color: $error-color;
@@ -137,18 +129,18 @@ table {
 
 ::ng-deep .mat-step-header[aria-selected="true"] {
     border: solid 1px black;
-  }
+}
 
 .stepperPart {
     display: flex;
     margin-left: 2rem;
     margin-right: 2rem;
-  }
+}
 
 .stepper {
     flex-grow: 2;
-  }
-  
+}
+
 .stepper-arrow-icons {
     display: flex;
     height: 72px;
@@ -163,14 +155,21 @@ table {
     background-color: $error-color!important
 }
 
-::ng-deep.mat-step-icon-state-edit{
+::ng-deep.mat-step-icon-state-edit {
     background-color: $corrified-color!important
 }
 
-::ng-deep.mat-step-icon-selected{
+::ng-deep.mat-step-icon-selected {
     background-color: $dark-green!important
 }
 
-.extensionIcon-rotation{
+.extensionIcon-rotation {
     transform: rotate(90deg);
+}
+
+.spinner-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 35px;
 }

@@ -29,7 +29,7 @@ def data_integration(dispId, dispName, data):
         alluvial = False
     )
     DB.session.add(new_disp)
-    DB.session.commit()
+    DB.session.flush()
 
     # Placettes 
     newPlacettesList = []
@@ -61,7 +61,7 @@ def data_integration(dispId, dispName, data):
             )
             placettesIdOrigInDisp.append(placette['NumPlac'])
     DB.session.bulk_save_objects(newPlacettesList)
-    DB.session.commit()
+    DB.session.flush()
 
 
     # Reperes 
@@ -87,7 +87,7 @@ def data_integration(dispId, dispName, data):
                 observation = repere["Observation"]
             ))
     DB.session.bulk_save_objects(newReperesList)
-    DB.session.commit()
+    DB.session.flush()
 
     # Cycle
     # Récupérer les cycles présents dans le dispositif
@@ -124,7 +124,7 @@ def data_integration(dispId, dispName, data):
         )    
         listCycle.append(new_cycle) 
     DB.session.bulk_save_objects(listCycle)
-    DB.session.commit()   
+    DB.session.flush()   
 
  
     
@@ -151,7 +151,7 @@ def data_integration(dispId, dispName, data):
                 )
                 new_cor_cycle_placette_array.append(new_cor_cycle_placette)
     DB.session.bulk_save_objects(new_cor_cycle_placette_array)
-    DB.session.commit()
+    DB.session.flush()
 
     # #CorCyclesRoles
     # TODO: Remplir avec userHub
@@ -179,7 +179,7 @@ def data_integration(dispId, dispName, data):
             new_arbres_array.append(new_arbre)
             list_arbres_id.append((int(arbre["NumPlac"]), int(arbre["NumArbre"])))
     DB.session.bulk_save_objects(new_arbres_array)
-    DB.session.commit()
+    DB.session.flush()
 
 
 
@@ -221,7 +221,7 @@ def data_integration(dispId, dispName, data):
         )
         new_arbres_mesures_array.append(new_arbre_mesure)
     DB.session.bulk_save_objects(new_arbres_mesures_array)
-    DB.session.commit()
+    DB.session.flush()
 
 
     # TRegenerations
@@ -261,7 +261,7 @@ def data_integration(dispId, dispName, data):
         )
         listRege.append(new_regeneration)
     DB.session.bulk_save_objects(listRege)
-    DB.session.commit()
+    DB.session.flush()
 
     # TCategories
 
@@ -296,7 +296,7 @@ def data_integration(dispId, dispName, data):
             bmsSup30List.append(new_bmsSup30)
             list_bms_id.append((int(bmsSup30["NumPlac"]), int(bmsSup30["Id"])))
     DB.session.bulk_save_objects(bmsSup30List)
-    DB.session.commit()
+    DB.session.flush()
 
     # # # BMSsup30Mesurés
     bmsSup30MesuresList = [] 
@@ -347,7 +347,7 @@ def data_integration(dispId, dispName, data):
         )
         bmsSup30MesuresList.append(new_bmsSup30Mesures)
     DB.session.bulk_save_objects(bmsSup30MesuresList)
-    DB.session.commit()
+    DB.session.flush()
 
 
     transectList = []
@@ -381,7 +381,8 @@ def data_integration(dispId, dispName, data):
         )
         transectList.append(new_transect)
     DB.session.bulk_save_objects(transectList)
-    DB.session.commit()
+    DB.session.flush()
 
-    pass
+    DB.session.commit()
+    return json.dumps({'success':True}), 200, {'ContentType':'application/json'} 
 

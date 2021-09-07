@@ -225,11 +225,15 @@
                     <button class="m-1 float-left" mat-raised-button matTooltip="Relancer la vérification avec les modifications" (click)="dataVerifModifiedFile()">
                         <mat-icon> published_with_changes </mat-icon>
                     </button>
-                    <button *ngIf="!isFileContainingFatalError" class="m-1 float-left" mat-raised-button matTooltip="Intégrer les données à la base de données" (click)="integrationToDatabase()">
-                        <mat-icon> cloud_upload </mat-icon>
-                    </button>
+                    <div *ngIf="!isFileContainingFatalError">
+                        <button *ngIf="!integrationLoading" class="m-1 float-left" mat-raised-button matTooltip="Intégrer les données à la base de données" (click)="integrationToDatabase()">
+                            <mat-icon > cloud_upload </mat-icon>
+                        </button>
+                        <button *ngIf="integrationLoading" class="m-1 float-left spinner-button" mat-raised-button matTooltip="Intégration des données en cours" disabled>
+                            <mat-spinner diameter="22" color="primary"></mat-spinner>
+                        </button>
+                    </div>
                 </div>
-
                 <mat-progress-bar class="example-margin" [color]="color" mode="determinate" [value]="progressBarValue">
                 </mat-progress-bar>
 
