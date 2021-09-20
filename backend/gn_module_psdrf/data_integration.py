@@ -84,6 +84,7 @@ def data_integration(dispId, dispName, data):
                 azimut = repere["Azimut"], 
                 distance = repere["Dist"],
                 diametre = repere["Diam"],
+                repere = repere["Repere"],
                 observation = repere["Observation"]
             ))
     DB.session.bulk_save_objects(newReperesList)
@@ -145,6 +146,7 @@ def data_integration(dispId, dispName, data):
                     id_cycle = cycle_id,
                     id_placette = placette_id,
                     date_releve = datetime.strptime(cycle["Date"], '%d/%m/%Y') if cycle["Date"] else cycle["Date"],
+                    annee = cycle["Ann\u00E9e"],
                     date_intervention = placette["Date_Intervention"],
                     nature_intervention = placette["Nature_Intervention"],
                     gestion_placette = placette["Gestion"]
@@ -368,6 +370,7 @@ def data_integration(dispId, dispName, data):
             transect["Diam"]=float(transect["Diam"].replace(',', '.'))
         new_transect = TTransects(
             id_cycle_placette = cycle_transect_id,
+            id_transect_orig = transect['Id'],
             code_essence = transect['Essence'],
             ref_transect = transect['Transect'],
             distance = transect['Dist'],

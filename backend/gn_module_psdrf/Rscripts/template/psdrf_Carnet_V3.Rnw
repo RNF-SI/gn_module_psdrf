@@ -91,13 +91,13 @@ Name_rep <- str_replace_all(Name_rep, "\u00E8", "e")
 Name_rep <- str_replace_all(Name_rep, "\u00FB", "u")
 Name_rep <- str_replace_all(Name_rep, "\u00EE", "i")
 Name_rep <- str_replace_all(Name_rep, "\u00F4", "o")
-repSav <- paste0(repPSDRF, "/out/", disp_num, "-", Name_rep)
+repSav <- paste0(repPSDRF, "/tables")
 
 # ----- définition du répertoire de sauvegarde du livret et des figures
-repPdf <- paste0(
-  repPSDRF, "/out/", disp_num, "-", Name_rep, "/carnet/"
+repOut <- paste0(
+  repPSDRF, "/out/"
 )
-repFigures <- paste0(repPdf, "figures")
+repFigures <- paste0(repOut, "figures")
 
 # --- Paramètres groupes
 # ----- Sans analyse par groupe
@@ -143,17 +143,19 @@ repFigures <- paste0(repPdf, "figures")
 #   stringsAsFactors = F
 # )
 #### / \ #####
-setwd(repPdf)
+setwd(repOut)
 
 # --- Chargement des tables de la base
 load(file.path(repPSDRF, "tables/corine.rda"))
 load(file.path(repPSDRF, "tables/ser.rda"))
 ser@data$NomSER <- as.character(ser@data$NomSER)
 
-load(file.path(repSav, "tables/psdrfTablesBrutes.Rdata"))
-load(file.path(repSav, "tables/psdrfTablesElaboreesPlac.Rdata"))
+
+
+load(file.path(repPSDRF, "tables/psdrfTablesBrutes.Rdata"))
+load(file.path(repPSDRF, "tables/psdrfTablesElaboreesPlac.Rdata"))
 for(i in 1:length(TabPla)) {assign(names(TabPla)[i], TabPla[[i]])}
-load(file.path(repSav, "tables/psdrfTablesElaborees.Rdata"))
+load(file.path(repPSDRF, "tables/psdrfTablesElaborees.Rdata"))
 for(i in 1:length(Tableaux)) {assign(names(Tableaux)[i], Tableaux[[i]])}
 @
 
@@ -1380,6 +1382,10 @@ ExprFin <- paste0(
 Installé en \Sexpr{CyclesCodes[which(CyclesCodes$NumDisp == disp_num & CyclesCodes$Cycle == 1), "DateIni"]}, le dispositif a fait l'objet \Sexpr{ExprFin}.\\
 Le tableau \ref{Echantillonnage} résume les principaux paramètres de l'échantillonnage. \\
 
+
+
+
+
 <<Echantillonnage>>=
 
 NbArbres <- 
@@ -1491,6 +1497,8 @@ print(
   size = "\\footnotesize"
 )
 @
+
+
 \FloatBarrier
 
 \subsection{Nombre d'individus échantillonnés}

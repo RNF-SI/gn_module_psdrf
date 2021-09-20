@@ -725,10 +725,6 @@ if (cycle_num == 1) {
 \subsection {Structure}
 La figure \ref{fig:Classe{{x}}} permet de visualiser la r\u00E9partition du volume et du nombre de tiges par classe de diam\u00E8tre (espac\u00E9es chacune de 5 cm). On distingue ici, selon leur origine v\u00E9g\u00E9tative, les arbres de franc-pied des tiges de taillis.
 
-<<debug = TRUE>>=
-print("pipi")
-@
-
 <<Classe{{x}}, size = 'footnotesize', fig.height = 3, fig.cap =  "R\u00E9partition du volume et du nombre de tiges par classes de diam\u00E8tre (arbres vivants).">>=
 if (dim(grouped_results_of_Fpied_by_Classe)[1] == 0) {
   cat("Pas de données inventoriées")

@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, make_response, send_from_directory
 from sqlalchemy.orm import subqueryload, joinedload
 from sqlalchemy.sql import func, distinct
 from geoalchemy2.shape import to_shape, from_shape
@@ -240,8 +240,20 @@ def psdrf_data_integration():
     data = json.loads(request.files.get('psdrfData', default_name).read())
     return data_integration(dispId, dispName, data)
 
-@blueprint.route('/analysis', methods=['POST'])
-def psdrf_data_analysis():
-    dispId = request.form.get('dispositifId')
-    print(dispId)
-    return data_analysis(dispId)
+
+@blueprint.route('/analysis/<int:id_dispositif>', methods=['GET'])
+def psdrf_data_analysis(id_dispositif):
+
+    outputFilename = data_analysis(str(id_dispositif))
+    filePath = "/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/out"
+
+    result = send_from_directory(filePath,
+                               filename=outputFilename, as_attachment=True)
+    
+    response = make_response(result)
+    response.headers["filename"]=outputFilename
+    response.headers['Access-Control-Expose-Headers'] = 'filename'   
+    try:
+        return response
+    except FileNotFoundError:
+        abort(404)

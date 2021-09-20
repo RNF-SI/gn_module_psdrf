@@ -6,7 +6,7 @@ psdrf_AgregMoySdEr <- function(
   table_ponderation = NULL,
   plot_table = NULL
 ) {
-  
+
   df <-
     plot_table[, c("NumDisp", Regroup, "NumPlac", "Cycle", "PoidsPlacette")] %>%
     right_join(data_table, by = c("NumDisp", "NumPlac", "Cycle"))
@@ -154,46 +154,42 @@ psdrf_AgregMoySdEr <- function(
 #' @export
 
 psdrf_AgregPlacettes <- function(
-  repPSDRF = NULL, 
+  repPSDRF = NULL, donneesBrutesObj,
   results_by_group_to_get = NULL, 
   repSav = repPSDRF, 
-  disp_list = NULL, last_cycle = NULL # lorsque appel pour édition du livret
+  disp_list = NULL, last_cycle = NULL, TabPla # lorsque appel pour édition du livret
   ) {
   # -- définition nulle des variables utilisées
   objects <- c(
     "Arbres", "CV", "Cycle", "Disp", "Dispositifs", "Er", "Moy", 
     "NbPlacettes", "nbre", "Nbre", "NbreAcct", "Nom", "NumDisp", 
     "NumPlac", "poids", "Poids", "PoidsAcct", "PoidsPlacette", 
-    "Sd", "TabData", "TabPla", "value", "value1", "value2", "var", 
+    "Sd", "TabData", "value", "value1", "value2", "var", 
     "var_result", "variable"
   )
   create_null(objects)
   
   ##### 1/ Initialisation #####
   # -- répertoire de travail
+
   setwd(repPSDRF)
   
   # -- chargement des données d'inventaire et administratives
-  load("tables/psdrfDonneesBrutes.Rdata")
   load("tables/psdrfCodes.Rdata")
+  IdArbres = donneesBrutesObj$IdArbres
+  BMSsup30 = donneesBrutesObj$BMSsup30
+  Transect = donneesBrutesObj$Transect
+  Cycles = donneesBrutesObj$Cycles
+  Reges = donneesBrutesObj$Reges
+  Reperes = donneesBrutesObj$Reperes
+  PCQM = donneesBrutesObj$PCQM
+  ValArbres = donneesBrutesObj$ValArbres
+  Placettes = donneesBrutesObj$Placettes
   
   # -- chargement des tables élaborées par placettes
-  load(paste0(repSav, "/tables/psdrfTablesElaboreesPlac.Rdata"))
-  
-  # -- list des tables pour le choix du dispositif/pour le calcul du dernier cycle/ à filtrer
-  df_list <- load(file.path(repSav, "tables/psdrfTablesElaboreesPlac.Rdata"))
-  
-  # -- chargement des résultats de psdrf_AgregPlac()
-  if (repSav == repPSDRF) {
-    # -- choix du dispositif
-    # initialisation
-    check_all_msg <- "Editer les r\u00E9sultats pour tous les dispositifs"
-    df_list <- load("tables/psdrfTablesElaboreesPlac.Rdata")
-    disp_list <- choose_disp(df_list, Dispositifs, check_all_msg) # TODO : laisser le choix du dispositif ?(même si déjà fait au job4)
-  }# else {
-  #   disp_list <- disp
-  # } # end condition "repSav == repPSDRF"
-  last_cycle <- get_last_cycle(df_list, disp_list)
+  TabPla = TabPla$TabPla
+  df_list <- TabPla
+
   
   # -- filtre des tables d'inventaire en fonction des numéros de dispositif sélectionnés
   # Placettes,IdArbres,ValArbres,PCQM,Reges,Transect,BMSsup30,Reperes,Cycles
@@ -201,16 +197,6 @@ psdrf_AgregPlacettes <- function(
   filter_by_disp(tables, disp_list, last_cycle)
   filter_by_disp("Placettes", disp_list, last_cycle)
   
-  # #  Définition de count_vars_by_pop
-  # count_vars_by_pop <- data.frame(
-  #   Pop = c(
-  #     "Fpied", "Den", "PFutaie", "Exploit", "Per", "Taillis", "Codes", 
-  #     "Rege", "BM", "BMS", "BMP"
-  #   ), 
-  #   Donnees = c(
-  #     rep("Dendro", 4), "Per", "Taillis", "Codes", "Rege", "BM", "BMS", "BMP"
-  #   )
-  # )
 
   #  Définition de TabData
   TabData <-
@@ -308,8 +294,8 @@ psdrf_AgregPlacettes <- function(
       summarise_at(c("Poids", "Nbre", "PoidsAcct", "NbreAcct"), sum, na.rm = T) %>%
       ungroup() %>%
       data.frame()
-    
-   
+
+
     for (k in 1:length(TabPla)) {
       # print(k) # debug
       # k=1 # debug
@@ -344,22 +330,12 @@ psdrf_AgregPlacettes <- function(
     
     Tableaux <- c(Tableaux, tempTableaux)
   }
-  
+
   ##### 3/ Sauvegarde  #####
-    output_dir <- file.path(repSav, "tables")
-    dir.create(
-      output_dir,
-      showWarnings = F, recursive = T
-    )
-    save(
-      Tableaux,
-      file = file.path(output_dir, "psdrfTablesElaborees.Rdata")
-    )
+  file = file.path(repPSDRF,"tables", "psdrfTablesElaborees.Rdata")
+  save(
+    Tableaux,
+    file = file
+  )
     
-#   msg <- tk_messageBox(
-#     type = "ok",
-#     message = "Agr\u00E9gation des r\u00E9sultats par ensemble(s) termin\u00E9e",
-#     caption = "Fin agr\u00E9gation des r\u00E9sultats par ensembles",
-#     icon = 'info'
-#   )
  }

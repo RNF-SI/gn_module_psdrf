@@ -39,9 +39,10 @@ Agreg01 <- function(df, vars, group_var) {
 
 psdrf_AgregArbres <- function(
   repPSDRF = NULL, 
-  results_by_plot_to_get = NULL, 
-  repSav = repPSDRF, 
-  disp_list = NULL, last_cycle = NULL # lorsque appel pour édition du livret
+  dispId, last_cycle,
+  donneesBrutesObj, 
+  psdrfTablesBrutes,
+  results_by_plot_to_get = NULL
 ) {
   # -- Définition nulle des variables utilisées
   objects <- c(
@@ -57,33 +58,31 @@ psdrf_AgregArbres <- function(
   setwd(repPSDRF)
   
   # -- chargement des données --- ####
-  load("tables/psdrfDonneesBrutes.Rdata")
   load("tables/psdrfCodes.Rdata")
-  load("tables/psdrfTablesBrutes.Rdata")
 
-  # -- list des tables pour le choix du dispositif/pour le calcul du dernier cycle/ à filtrer
-  df_list <- load(file.path(repSav, "tables/psdrfTablesBrutes.Rdata"))
+  IdArbres = donneesBrutesObj$IdArbres
+  BMSsup30 = donneesBrutesObj$BMSsup30
+  Transect = donneesBrutesObj$Transect
+  Cycles = donneesBrutesObj$Cycles
+  Reges = donneesBrutesObj$Reges
+  Reperes = donneesBrutesObj$Reperes
+  PCQM = donneesBrutesObj$PCQM
+  ValArbres = donneesBrutesObj$ValArbres
+  Placettes = donneesBrutesObj$Placettes
 
-  # -- chargement des résultats de psdrf_Calculs()
-  if (repSav == repPSDRF) {
-    # -- choix du dispositif
-    # initialisation
-    df_list <- load("tables/psdrfTablesBrutes.Rdata")
-    if (is.null(disp_list)) {
-      # choix du dispositif (si fonction appelée hors interface et hors édition carnet)
-      check_all_msg <- "Editer les r\u00E9sultats pour tous les dispositifs"
-      disp_list <- choose_disp(df_list, Dispositifs, check_all_msg)
-    }
-  }# else {
-  #   disp_list <- disp
-  # } # end condition "repSav == repPSDRF"
-  last_cycle <- get_last_cycle(df_list, disp_list)
-  
-  # -- filtre des tables d'inventaire en fonction des numéros de dispositif sélectionnés
-  tables <- df_list
-  filter_by_disp(tables, disp_list, last_cycle)
-  
-  
+  Arbres = psdrfTablesBrutes$Arbres 
+  Perches = psdrfTablesBrutes$Perches 
+  Taillis = psdrfTablesBrutes$Taillis 
+  BMP = psdrfTablesBrutes$BMP 
+  BMSLineaires = psdrfTablesBrutes$BMSLineaires 
+  BMSsup30 = psdrfTablesBrutes$BMSsup30 
+  Reges = psdrfTablesBrutes$Reges 
+  Codes = psdrfTablesBrutes$Codes
+  acct_bv = psdrfTablesBrutes$acct_bv 
+  acct_bmp = psdrfTablesBrutes$acct_bmp 
+  acct_bms = psdrfTablesBrutes$acct_bms
+
+
   ##### 2/ Définition des populations #####
   ######## ---------- 2.1/Bois vivant ---------- ########
   tBoisVivant <- Arbres %>% rbind(Perches) %>% rbind(Taillis)
@@ -173,7 +172,6 @@ psdrf_AgregArbres <- function(
   # ----- Arbres porteurs de micro-habitats
   vCodes <- c("Nha", "Gha", "Vha", "VhaIFN")
   
-  
   # ---2.2/ Bois Mort --- ####
   # ----- Bois mort au Sol
   # Construction de BMSsup, vBMS et BMSinf sans ou avec "AcctVper"et "Coupe" en fonction du cycle 1 ou plus
@@ -196,7 +194,7 @@ psdrf_AgregArbres <- function(
     if (last_cycle > 1) {
       BMSinf <- BMSinf %>% mutate(AcctVper = NA, Coupe = "BMSinf30")
     } else {
-      BMSinf <- BMSinf %>% mutate(Coupe = "BMSinf30")
+      BMSinf <- BMSinf %>% mutate(AcctVper = NA, Coupe = "BMSinf30")
       vBMS <- c("Vha")
     #   BMSinf <- BMSinf %>% mutate(Coupe = NA)
     #   BMSsup <- BMSsup %>% mutate(Coupe = NA)
@@ -345,13 +343,8 @@ psdrf_AgregArbres <- function(
     TabPla <- c(TabPla, TabPla_temp)
   } # end of loop unique(results_by_plot_to_get$data)
   
-  ##### 4/ Sauvegarde #####
-  if (repSav == repPSDRF) {
-    save("TabPla", file = "tables/psdrfTablesElaboreesPlac.Rdata")
-  } else  {
-    dir.create(paste0(repSav, "/tables"), showWarnings = F, recursive = T)
-    save("TabPla", file = paste0(repSav, "/tables/psdrfTablesElaboreesPlac.Rdata"))
-  }
-  
+  # ##### 4/ Sauvegarde #####
+  save("TabPla", file = "tables/psdrfTablesElaboreesPlac.Rdata")
+  list("TabPla"= TabPla)
   
 }

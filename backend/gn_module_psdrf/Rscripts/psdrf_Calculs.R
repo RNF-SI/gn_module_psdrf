@@ -592,14 +592,11 @@ calculs_acct_bv <- function(
 calculs_PCQM <- function(
   pcqm = NULL, placettes = NULL
 ) {
-  Population <- NULL
-  Diam <- NULL
   # -- df et vecteurs annexes
   Coeffts <- data.frame(
     Vides = c(0:4), 
     Coeffts = c(1, 0.58159, 0.33930, 0.15351, 0)
   )
-  print(parent.frame())
   populations <- 
     c("VivantInf20", "VivantSup20", "VivantSup40", "MortSup20D", "MortInf20D")
   # -- jonction
@@ -626,7 +623,6 @@ calculs_PCQM <- function(
     stringsAsFactors = F
   )
   for (pop in populations) {
-    print(pop)
     # pop <- populations[1] # debug
     df0 <- pcqm %>% filter(Population == pop & !is.na(Diam))
     
@@ -712,7 +708,6 @@ calculs_PCQM <- function(
     df <- rbind(df, df1)
   }
   
-  print("prout")
   # -- retour fonction calculs_PCQM
   return(df)
 }
@@ -1494,8 +1489,7 @@ calculs_dmh <- function(
 #' @export
 
 psdrf_Calculs <- function(
-  repPSDRF = NULL, repSav = repPSDRF, 
-  disp_list = NULL, last_cycle = NULL # lorsque appel pour édition du livret
+  repPSDRF = NULL, dispId, last_cycle, donneesBrutesObj
   ) {
   # -- définition nulle des variables utilisées
   objects <- c(
@@ -1523,27 +1517,16 @@ psdrf_Calculs <- function(
   
   # -- chargement des données d'inventaire et administratives
   load("tables/psdrfCodes.Rdata")
-  df_list <- load("tables/psdrfDonneesBrutes.Rdata")
-  
-  # -- sélection des données propres au(x) dispositif(s) choisi(s) :
-  if (is.null(disp_list)) {
-    # choix du dispositif
-    check_all_msg <- "Editer les r\u00E9sultats pour tous les dispositifs"
-    disp_list <- choose_disp(df_list, Dispositifs, check_all_msg) # TODO : laisser le choix du dispositif ?(même si déjà fait au job4)
-  }
-  if (is.null(last_cycle)) {
-  # dernier passage en inventaire 
-  last_cycle <- get_last_cycle(df_list, disp_list)
-  }
-  
-  # filtre des tables d'inventaire en fonction des numéros de dispositif sélectionnés
-  tables <- c(
-    "IdArbres", "BMSsup30", "Transect", "Cycles", #"Placettes",
-    "Reges", "Reperes", "CyclesCodes", "PCQM"
-  )
-  filter_by_disp(tables, disp_list, last_cycle)
-  ##### / \ #####
-  
+  IdArbres = donneesBrutesObj$IdArbres
+  BMSsup30 = donneesBrutesObj$BMSsup30
+  Transect = donneesBrutesObj$Transect
+  Cycles = donneesBrutesObj$Cycles
+  Reges = donneesBrutesObj$Reges
+  Reperes = donneesBrutesObj$Reperes
+  PCQM = donneesBrutesObj$PCQM
+  ValArbres = donneesBrutesObj$ValArbres
+  Placettes = donneesBrutesObj$Placettes
+
   ##### 2/ Calculs sur les précomptables #####
   Arbres <- 
     IdArbres %>% 
@@ -1554,11 +1537,11 @@ psdrf_Calculs <- function(
       CyclesCodes,
       Tarifs
     )
-  ##### --- 2.1/ Calculs de Nha, Gha, Vha, ... #####
+  #### --- 2.1/ Calculs de Nha, Gha, Vha, ... #####
   Arbres <- Arbres %>% calculs_Arbres()
   
   ##### --- 2.2/ Distinction des populations (prec, per, bmp) #####
-  # Perches
+  ## Perches
   Perches <- 
     Arbres %>% 
     filter(Diam1 < 17.5 & is.na(Type)) %>% 
@@ -1569,9 +1552,9 @@ psdrf_Calculs <- function(
       AcctG = NA,
       AcctV = NA
     )
-  # BMP
+  ## BMP
   BMP <- Arbres %>% filter(!is.na(Type))
-  # Précomptables
+  ## Précomptables
   Arbres <- Arbres %>% filter(Diam1 >= 17.5 & is.na(Type))
   
   ##### --- 2.3/ Calculs d'accroissement (précomptables) #####
@@ -1585,8 +1568,6 @@ psdrf_Calculs <- function(
     )
   ##### / \ #####
   
-  print(Population)
-  print(parent.frame())
   ##### 3/ PCQM #####
   PCQM <- 
     PCQM %>% 
@@ -1649,7 +1630,10 @@ psdrf_Calculs <- function(
     )
   echant_DF <- change_protocole(echant_DF)
   
-  if (dim(echant_DF)[1] > length(disp_list)) {
+  # TODO: Version lorsque génération pour plusieurs dispositifs
+  # if (dim(echant_DF)[1] > length(disp_list)) {
+
+  if (dim(echant_DF)[1] > 1) {
     # doublons
     dupl <- duplicated(echant_DF$NumDisp) | duplicated(echant_DF$NumDisp, fromLast = T)
     echant_DF <- echant_DF %>% filter(dupl)
@@ -1765,7 +1749,6 @@ psdrf_Calculs <- function(
       select(-echant_ID) %>% 
       as.data.frame()
   }
-  
   ##### --- 7.2/ BMP #####
   # extrait des tables Cycles et CyclesCodes des cycles concernés par
   # le changement de protocole (s'il existe)
@@ -1778,8 +1761,10 @@ psdrf_Calculs <- function(
       Rayon = ifelse(Monitor == "PFA", 13.8, Rayon)
     )
   echant_DF <- change_protocole(echant_DF)
-  
-  if (dim(echant_DF)[1] > length(disp_list)) {
+  # TODO: Version lorsque génération pour plusieurs dispositifs
+  # if (dim(echant_DF)[1] > length(disp_list)) {
+
+  if (dim(echant_DF)[1] > 1) {
     # doublons
     dupl <- duplicated(echant_DF$NumDisp) | duplicated(echant_DF$NumDisp, fromLast = T)
     echant_DF <- echant_DF %>% filter(dupl)
@@ -1900,7 +1885,11 @@ psdrf_Calculs <- function(
     )
   echant_DF <- change_protocole(echant_DF)
   
-  if (dim(echant_DF)[1] > length(disp_list)) {
+
+  # TODO: Version lorsque génération pour plusieurs dispositifs
+  # if (dim(echant_DF)[1] > length(disp_list)) {
+  
+  if (dim(echant_DF)[1] > 1) {
     # doublons
     dupl <- duplicated(echant_DF$NumDisp) | duplicated(echant_DF$NumDisp, fromLast = T)
     echant_DF <- echant_DF %>% filter(dupl)
@@ -2161,17 +2150,17 @@ psdrf_Calculs <- function(
       )
   }
   
-  # -- répertoire de sauvegarde
-  output_dir <- file.path(repSav, "tables")
-  dir.create(
-    output_dir, showWarnings = F, recursive = T
-  )
-  # -- sauvegarde
+  # # -- sauvegarde
+  file = file.path(repPSDRF,"tables", "psdrfTablesBrutes.Rdata")
   save(
     Arbres, Perches, Taillis, BMP, BMSLineaires, BMSsup30, Reges, Codes,
     acct_bv, acct_bmp, acct_bms,
-    file = file.path(repSav, "tables/psdrfTablesBrutes.Rdata")
+    file = file
   )
-  ##### / \ #####
+  # ##### / \ #####
   
+  
+  list("Arbres"= Arbres, "Perches"= Perches, "Taillis"= Taillis, "BMP"= BMP, 
+  "BMSLineaires"= BMSLineaires, "BMSsup30"= BMSsup30, "Reges"= Reges, "Codes"= Codes,
+  "acct_bv"= acct_bv, "acct_bmp"= acct_bmp, "acct_bms"= acct_bms)
 }

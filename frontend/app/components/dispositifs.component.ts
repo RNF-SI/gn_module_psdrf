@@ -126,14 +126,29 @@ import { PsdrfDataService } from "../services/route.service";
 
     launchAnalysis(dispositifId: number): void{
 
-      let dispInfo: FormData = new FormData();
-      dispInfo.append("dispositifId", dispositifId.toString());
 
       this.dataSrv
-        .psdrf_data_analysis(dispInfo)
-        .subscribe((test) => {
-          console.log(test)
-        });
+        .psdrf_data_analysis(dispositifId)
+        .subscribe(
+          (data: any) => {
+            var file = new Blob([data.pdf], { type: 'application/pdf' })
+            var fileURL = URL.createObjectURL(file);
+  
+            console.log(data)
+
+            // if you want to open PDF in new tab
+            // window.open(fileURL); 
+            var a         = document.createElement('a');
+            a.href        = fileURL; 
+            a.target      = '_blank';
+            a.download    = data.filename;
+            document.body.appendChild(a);
+            a.click();
+          },
+          (error) => {
+            console.log('getPDF error: ',error);
+          }
+        );
     }
 
   }

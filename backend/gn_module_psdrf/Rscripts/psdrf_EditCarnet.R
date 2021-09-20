@@ -417,7 +417,7 @@ create_group <- function(
 
 ##### fonction pour éditer le livret d'analyse #####
 psdrf_EditCarnet <- function(
-  repPSDRF = NULL, continue = T, 
+  repPSDRF = NULL, dispId, last_cycle, dispName, donneesBrutesObj, psdrfTablesBrutes, results_by_plot_to_get, continue = T, 
   template = "psdrf_Carnet_V3.Rnw"
 ) {
   # -- définition nulle des variables utilisées
@@ -431,17 +431,37 @@ psdrf_EditCarnet <- function(
   ##### 1/ Initialisation #####
   # -- Répertoire de travail
   setwd(repPSDRF)
-  
+  IdArbres = donneesBrutesObj$IdArbres
+  BMSsup30 = donneesBrutesObj$BMSsup30
+  Transect = donneesBrutesObj$Transect
+  Cycles = donneesBrutesObj$Cycles
+  Reges = donneesBrutesObj$Reges
+  Reperes = donneesBrutesObj$Reperes
+  PCQM = donneesBrutesObj$PCQM
+  ValArbres = donneesBrutesObj$ValArbres
+  Placettes = donneesBrutesObj$Placettes
+
+  Arbres = psdrfTablesBrutes$Arbres 
+  Perches = psdrfTablesBrutes$Perches 
+  Taillis = psdrfTablesBrutes$Taillis 
+  BMP = psdrfTablesBrutes$BMP 
+  BMSLineaires = psdrfTablesBrutes$BMSLineaires 
+  BMSsup30 = psdrfTablesBrutes$BMSsup30 
+  Reges = psdrfTablesBrutes$Reges 
+  Codes = psdrfTablesBrutes$Codes
+  acct_bv = psdrfTablesBrutes$acct_bv 
+  acct_bmp = psdrfTablesBrutes$acct_bmp 
+  acct_bms = psdrfTablesBrutes$acct_bms
+  load("tables/psdrfCodes.Rdata")
+
   # -- chargement des données
   # chemins relatifs des archives
-  arch1 <- "tables/psdrfDonneesBrutes.Rdata"
+  # arch1 <- "tables/psdrfDonneesBrutes.Rdata"
   arch2 <- "tables/psdrfCodes.Rdata"
   arch3 <- "tables/psdrf_tables_livret.Rdata"
   
   # création d'un nouvel environnement et chargement
   db = new.env()
-  # db = global_env() # debug
-  load(arch1, db)
   load(arch2, db)
   load(arch3, db)
   
@@ -453,114 +473,82 @@ psdrf_EditCarnet <- function(
   # initialisation
   check_all_msg <-  "Editer le livret pour tous les dispositifs"
   
-  df_list <- load(arch1) #; load(arch2) # récupérer la table 'Dispositifs'
-  disp_list <- 
-    choose_disp(df_list, get("Dispositifs", envir = db), check_all_msg) %>% 
-    clean_names()
   
-  
-  
-  # # --  création de la barre de progression
-  # disp_name <- 
-  #   str_sub(disp_list[1], str_locate(disp_list[1], "-")[, 2] + 1, -1)
-  # pb_title <- "Progression"
-  # pb_label <- paste0(
-  #   "Edition du/des livret(s) d'analyse PSDRF : 0\u0025 done - dispositif ", 
-  #   disp_name, 
-  #   " en cours."
-  # )
-  # pb <- tkProgressBar(pb_title, pb_label, 0, 100, width = 800)
-  # ##### / \ #####
-
-  
-  for (disp in disp_list) {
     ##### 2/ Préparation des données #####
     # disp <- disp_list[1] # debug
-    with(db, {
-      # -- gestion des noms et num du dispositif
-      disp_num <- as.numeric(str_sub(disp, 1, str_locate(disp, "-")[, 1] - 1)) #changement2
-      disp_name <- 
-        with(Dispositifs, Nom[match(disp_num, NumDisp)])
-      
-      # -- arguments relatifs au dispositifs
-      last_cycle <- 
-        with(Cycles, max(Cycle[NumDisp == disp_num], na.rm = T))
-      ending_year <-
-        with(CyclesCodes, DateFin[NumDisp == disp_num & Cycle == last_cycle])
-      
-      if (length(ending_year) > 1) {
-        stop("Correction du classeur administrateur nécessaire : il y a 2 années identiques renseignées dans la feuille Cycles")
-      }
-      
-      # -- création du dossier de sortie
-      output_dir <- file.path("out", disp, "carnet")
-      dir.create(output_dir, showWarnings = F, recursive = T)
-      
-      # -- définition des arguments nécessaires au knit
-      repPdf <- file.path(repPSDRF, output_dir)
-      repLogos <- file.path(repPSDRF, "data/images/logos/")
-      repFigures <- file.path(repPdf, "figures")
-      
-      # -- superassignements
-      # répertoire de sauvegarde pour les tables spécifiques du dispositif
-      repSav <<- dirname(repPdf)
-      # nom de la sortie en .tex
-      output_filename <- paste0(
-        "carnet_", clean_names(disp_name), 
-        "_", ending_year, ".tex"
-      )
-      output <<- file.path(repPdf, output_filename)
-      
-      # -- building tables needed for edition
-      build_tables(
-        repPSDRF, repSav, tables_list, Placettes,
-        disp, last_cycle
-      )
-    })
-    ##### /\ #####
+  with(db, {
+    # -- gestion des noms et num du dispositif
+    disp_num <- dispId
+    disp_name <- dispName
+
+    disp = paste0(disp_num,"-",dispName)
+    # -- arguments relatifs au dispositifs
+    ending_year <-
+      with(CyclesCodes, DateFin[NumDisp == disp_num & Cycle == last_cycle])
     
-    ##### 3/ Edition du/des carnets PSDRF #####
-    # TODO : supprimer les messages de joining by
-    knit2pdf(
-      input = file.path("template", template),
-      output = output,
-      compiler = "pdflatex",
-      # quiet = TRUE,
-      envir = db
+    if (length(ending_year) > 1) {
+      stop("Correction du classeur administrateur nécessaire : il y a 2 années identiques renseignées dans la feuille Cycles")
+    }
+
+    # output_dir <- file.path("out", disp, "carnet")
+
+    # -- création du dossier de sortie
+    figures_dir <- file.path("out", "figures")
+
+    dir.create(figures_dir, showWarnings = F, recursive = T)
+    
+    
+    # -- définition des arguments nécessaires au knit
+    # repPdf <- file.path(repPSDRF, output_dir)
+    # repLogos <- file.path(repPSDRF, "data/images/logos/")
+    # repFigures <- file.path(repPdf, "figures")
+
+    repFigures <- file.path(repPSDRF, figures_dir)
+    repLogos <- file.path(repPSDRF, "data/images/logos/")
+    repOut <- file.path(repPSDRF, "out/")
+
+    
+    # -- superassignements
+    # répertoire de sauvegarde pour les tables spécifiques du dispositif
+    # repSav <<- dirname(repPdf)
+    repSav <<- dirname(file.path(repPSDRF, "tables/"))
+
+    # nom de la sortie en .tex
+    output_filename <- paste0(
+      "carnet_", clean_names(disp_name), 
+      "_", ending_year, ".tex"
     )
-    #clean_after_knit(output)
-    # TODO : éviter de recharger les tables (voir filtre des tables dans le .Rnw)
-    load(arch1, db)
-    load(arch2, db)
-    
-  #   # -- MAJ de la barre de progression
-  #   info <- round(match(disp, disp_list) / length(disp_list) * 100)
-  #   pb_label <- paste0(
-  #     "Edition des carnets d'analyse PSDRF : ", 
-  #     info, "\u0025 done - dispositif ", 
-  #     disp_name, 
-  #     " \u00E9dit\u00E9."
-  #   )
-    
-  #   pb_title <- paste0(
-  #     "Edition (",
-  #     info,
-  #     " \u0025)"
-  #   )
-    
-  #   setTkProgressBar(pb, info, pb_title, pb_label)
-  }
-  
-  # # -- close barre de progression
-  # close(pb)
+    output <<- file.path(repOut, output_filename)
+
+    # -- building tables needed for edition
+    build_tables(
+      results_by_plot_to_get, dispId, last_cycle, 
+      donneesBrutesObj, psdrfTablesBrutes, disp,
+      Placettes, repPSDRF, repSav
+    )
+  })
+  ##### /\ #####
+
+
+  ##### 3/ Edition du/des carnets PSDRF #####
+  # TODO : supprimer les messages de joining by
+  knit2pdf(
+    input = file.path("template", template),
+    output = output,
+    compiler = "pdflatex",
+    # quiet = TRUE,
+    envir = db
+  )
   # ##### / \ #####
-  
-  # # -- message de fin
-  # msg <- tk_messageBox(
-  #   type = "ok", 
-  #   message = "Edition du/des rapport(s) d'analyse termin\u00E9e", 
-  #   icon = "info"
-  # )
+  ending_year <- with(CyclesCodes, DateFin[NumDisp == dispId & Cycle == last_cycle])
+
+
+  output_filenamePDF <- paste0(
+      "carnet_", clean_names(dispName), 
+      "_", ending_year, ".pdf"
+    )
+
+  output_filenamePDF
 }
 ##### /\ #####
 
@@ -584,27 +572,19 @@ psdrf_EditCarnet <- function(
 
 ##### fonction pour construire les tables nécessaires à l'édition du carnet #####
 build_tables <- function(
-  repPSDRF = NULL, repSav = NULL, tables_list = NULL,
-  plot_table = NULL,
-  disp = NULL, last_cycle = NULL
+  results_by_plot_to_get, dispId, last_cycle, 
+  donneesBrutesObj, 
+  psdrfTablesBrutes, disp, plot_table = NULL,
+  repPSDRF = NULL, repSav = NULL
 ) {
-  # -- results : tree scale
-  # Réalisation de l'étape de calcul des variables par arbre
-  psdrf_Calculs(repPSDRF, repSav, disp, last_cycle)
   
-  # -- results : plot scale
-  # setup (get "tables_list" via load("tables/psdrf_tables_livret.Rdata"))
-  
-  # construction de la table de combinaison des résultats
-  results_by_plot_to_get <- build_combination_table(tables_list)
-
   # psdrf_AgregArbres call
   # (pour le dispositif en cours d'analyse uniquement)
-  psdrf_AgregArbres(
-    repPSDRF, 
-    results_by_plot_to_get, 
-    repSav, 
-    disp_list = disp, last_cycle
+  TabPla = psdrf_AgregArbres(
+    repPSDRF, dispId, last_cycle,
+    donneesBrutesObj, 
+    psdrfTablesBrutes,
+    results_by_plot_to_get
     )
   
   # -- results : group scale
@@ -614,7 +594,7 @@ build_tables <- function(
   # ) TODO : à revoir pour éviter superassignements (assign ?)
   
   # build results_by_group_to_get & chosen_group_combination
-  build_results_by_group(plot_table, disp, last_cycle)
+  build_results_by_group(donneesBrutesObj, plot_table, disp, last_cycle, repPSDRF, repSav, TabPla)
   
   # -- retour de la fonction build_tables -> cf dossier ../"disp_name"/tables
 }
@@ -636,7 +616,7 @@ build_tables <- function(
 
 ##### fonction pour choisir et construire results_by_groups_to_get ####
 build_results_by_group <- function(
-  plot_table = NULL, disp = NULL, last_cycle = NULL
+  donneesBrutesObj, plot_table = NULL, disp = NULL, last_cycle = NULL, repPSDRF=NULL, repSav=NULL, TabPla
   ) {
 
   # -- initialisation
@@ -667,6 +647,7 @@ build_results_by_group <- function(
     distinct()
   # group_list <- unique(group_combination$variable)
   ui_title <- "Choix des agr\u00E9gations par ensembles :"
+  
 
   # # -- choice to make
   # answ <- 
@@ -779,9 +760,9 @@ if (answ == "yes") { # TODO : à terminer
       group_list <<- unique(chosen_group_combination$variable)
       # psdrf_AgregPlacettes call
       psdrf_AgregPlacettes(
-        repPSDRF, 
+        repPSDRF, donneesBrutesObj,
         results_by_group_to_get, 
-        repSav, disp, last_cycle
+        repSav, disp, last_cycle, TabPla
       )
       
       # -- retour de la fonction build_results_by_group_to_get
@@ -807,11 +788,12 @@ if (answ == "yes") { # TODO : à terminer
     )
   group_list <<- "Disp"
   
+
   # psdrf_AgregPlacettes call
   psdrf_AgregPlacettes(
-    repPSDRF, 
+    repPSDRF, donneesBrutesObj,
     results_by_group_to_get, 
-    repSav, disp, last_cycle #Arguments dispo plus haut dans le script
+    repSav, disp, last_cycle, TabPla #Arguments dispo plus haut dans le script
   )
   # -- retour de la fonction build_results_by_group_to_get
   # return(list(results_by_group_to_get, chosen_group_combination))

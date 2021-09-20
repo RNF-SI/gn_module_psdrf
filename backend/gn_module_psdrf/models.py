@@ -86,6 +86,7 @@ class TReperes (DB.Model):
     azimut = DB.Column('azimut', DB.Float)
     distance = DB.Column('distance', DB.Float)
     diametre = DB.Column('diametre', DB.Float)
+    repere = DB.Column('repere', DB.String)
     observation = DB.deferred(DB.Column('observation', DB.Text))
 
     placette = DB.relationship('TPlacettes', foreign_keys=id_placette)
@@ -128,6 +129,7 @@ class CorCyclesPlacettes (DB.Model):
     id_placette = DB.Column('id_placette', DB.Integer, DB.ForeignKey('pr_psdrf.t_placettes.id_placette', ondelete='CASCADE'))
     date_releve = DB.Column('date_releve', DB.Date)
     date_intervention = DB.Column('date_intervention', DB.String)
+    annee = DB.Column('annee', DB.Integer)
     nature_intervention = DB.Column('nature_intervention', DB.String)
     gestion_placette = DB.Column('gestion_placette', DB.String)
     id_nomenclature_castor = DB.Column('id_nomenclature_castor', DB.Integer)
@@ -281,6 +283,7 @@ class TTransects (DB.Model):
     __table_args__ = {'schema': SCHEMA}
     id_transect = DB.Column('id_transect', DB.Integer, primary_key = True)
     id_cycle_placette = DB.Column('id_cycle_placette', DB.Integer, DB.ForeignKey('pr_psdrf.cor_cycles_placettes.id_cycle_placette', ondelete='CASCADE'))
+    id_transect_orig = DB.Column('id_transect_orig', DB.Integer)
     code_essence = DB.Column('code_essence', DB.String)
     ref_transect = DB.Column('ref_transect', DB.String)
     distance = DB.Column('distance', DB.Float)

@@ -60,9 +60,6 @@ Palette_Cycles <- c("forestgreen", "dodgerblue3")
 names(Palette_Cycles) <- c(cycle_num - 1, cycle_num)
 @
 
-<<debug = TRUE>>=
-print("papa")
-@
 
 <<ClasseEvol{{x}}, size = 'footnotesize', fig.height = 3.5, fig.cap =  "R\u00E9partition du volume et du nombre de tiges par classes de diam\u00E8tre (arbres vivants).">>= 
 tab <- 
@@ -467,25 +464,7 @@ for (i in 1:(dim(t4)[1] - 1)) {
 # )
 @
 
-<<debug = TRUE>>=
-a <- 5
-foo <- "bar"
-@
 
-
-<<debug = TRUE>>=
-print("aa")
-@
-
-<<debug = TRUE>>=
-print(Sep_Cycles)
-@
-
-<<debug = TRUE>>=
-a <- 5
-foo <- "bar"
-b <- Sep_Cycles
-@
 \FloatBarrier
 
 La figure \ref{fig:EvolCat{{x}}} permet de comparer l'\u00E9volution (en volume et en densit\u00E9 de tiges) des diff\u00E9rentes classes de diam\u00E8tre.\\
