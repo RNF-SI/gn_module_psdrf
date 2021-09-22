@@ -65,6 +65,7 @@ CREATE TABLE t_reperes (
   azimut real,
   distance real,
   diametre real,
+  repere character varying,
   observation text
 );
 
@@ -186,6 +187,7 @@ CREATE TABLE t_bm_sup_30_mesures (
 CREATE TABLE t_transects (
   id_transect serial NOT NULL,
   id_cycle_placette integer NOT NULL,
+  id_transect_orig integer,
   code_essence character varying(4),
   ref_transect character varying(2),
   distance real,
@@ -224,6 +226,7 @@ CREATE TABLE cor_cycles_placettes (
     id_placette integer NOT NULL,
     date_releve date,
     date_intervention character varying,
+    annee integer,
     nature_intervention character varying,
     gestion_placette character varying,
     id_nomenclature_castor integer,
