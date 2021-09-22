@@ -137,10 +137,7 @@ data/CodeTypoArbres
 .vscode/launch.json
 
 # Rdata
-backend/gn_module_psdrf/Rscripts/data
-backend/gn_module_psdrf/Rscripts/tables
 backend/gn_module_psdrf/Rscripts/rpackages_in_3.6.0.txt
-backend/gn_module_psdrf/Rscripts/out
 backend/gn_module_psdrf/Rscripts/.RData
 backend/gn_module_psdrf/Rscripts/.Rhistory
 backend/gn_module_psdrf/Rscripts/template/psdrf_Carnet_V3.tex
