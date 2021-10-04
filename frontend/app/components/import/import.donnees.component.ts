@@ -74,6 +74,7 @@ export class ImportDonneesComponent {
   errorElementArr: PsdrfErrorCoordinates[] = []; //Tableau de toutes les erreurs
   modifiedElementArr: PsdrfErrorCoordinates[] = []; //Tableau des erreurs qui ont été modifiées
   selectedErrorElementArr: PsdrfErrorCoordinates; //Erreur qui est actuellement sélectionnée
+  deletedElementArr: PsdrfErrorCoordinates[] = [];//Tableau des erreurs supprimées
   totallyModifiedMainStepperArr: number[] = []; //Tableau des indexs des mainstep qui ont été complètement modifiés
   totalErrorNumber: number = 0; //Correspond au nombre de rowButton total. Sert à la barre de progression
   progressBarValue: number = 0;
@@ -247,32 +248,52 @@ export class ImportDonneesComponent {
       if(mainError.isFatalError){
         this.isFileContainingFatalError=true;
       }
-
-      this.mainStepNameArr.push(mainError.errorName);
-      this.mainStepTextArr.push(mainError.errorText);
       let errorListTemp = [];
-      mainError.errorList.forEach((error) => {
-        errorListTemp.push(
-          new PsdrfError(
-            error.message,
-            error.table,
-            error.column,
-            error.row,
-            JSON.parse(error.value)
-          )
-        );
-        this.errorElementArr.push(
-          new PsdrfErrorCoordinates(error.table, error.column, error.row)
-        );
-        error.row.forEach((idx) => {
-          this.totalErrorNumber++;
+      if(mainError.errorType == "PsdrfError"){
+        this.mainStepNameArr.push(mainError.errorName);
+        this.mainStepTextArr.push(mainError.errorText);
+        mainError.errorList.forEach((error) => {
+          errorListTemp.push(
+            new PsdrfError(
+              error.message,
+              error.table,
+              error.column,
+              error.row,
+              JSON.parse(error.value)
+            )
+          );
+          this.errorElementArr.push(
+            new PsdrfErrorCoordinates(error.table, error.column, error.row)
+          );
+          error.row.forEach((idx) => {
+            this.totalErrorNumber++;
+          });
         });
-      });
-      this.errorsPsdrfList.push({
-        errorList: errorListTemp,
-        errorType: "PsdrfError",
-        isFatalError: mainError.isFatalError,
-      });
+        this.errorsPsdrfList.push({
+          errorList: errorListTemp,
+          errorType: "PsdrfError",
+          isFatalError: mainError.isFatalError,
+        });
+      } else {
+        this.mainStepNameArr.push(mainError.errorName);
+        this.mainStepTextArr.push(mainError.errorText);
+        mainError.errorList.forEach((error) => {
+          errorListTemp.push(
+            new PsdrfError(
+              error.message,
+              null,
+              null,
+              null,
+              null
+            )
+          );
+        });
+        this.errorsPsdrfList.push({
+          errorList: errorListTemp,
+          errorType: "PsdrfErrorColonnes",
+          isFatalError: mainError.isFatalError,
+        });
+      }
     });
   }
 
@@ -345,6 +366,25 @@ export class ImportDonneesComponent {
         (obj) =>
           obj.table == table &&
           obj.column.includes(column) &&
+          obj.row.includes(row)
+      );
+    } else {
+      return false;
+    }
+  }
+
+    /**
+   *  In parameter takes the coordinates of a case in the mat-table
+   *  Return true if this case as been deleted
+   * @param table Name of the current table
+   * @param i Index of the line inside the page
+   */
+  checkDeletedErrorCell(table: string, i: number): boolean{
+    if (this.isVerificationObjLoaded) {
+      let row = this.getRowIndexFromPaginatorProperties(table, i);
+      return this.deletedElementArr.some(
+        (obj) =>
+          obj.table == table &&
           obj.row.includes(row)
       );
     } else {
@@ -433,22 +473,24 @@ export class ImportDonneesComponent {
    * @param errorCoordinates PsdrfErrorCoordinates of the error we want to display
    */
   displayErrorOnMatTab(errorCoordinates: PsdrfErrorCoordinates): void {
-    this.selectedErrorElementArr = errorCoordinates;
-    this.indexMatTabGroup = this.indexLabelMatTabGroup.indexOf(
-      errorCoordinates.table
-    );
-    let tablePaginator =
-      this.tableDataSourceArray[this.indexMatTabGroup].paginator;
-    let pageNumber = Math.trunc(
-      errorCoordinates.row[0] / tablePaginator.pageSize
-    );
-
-    (tablePaginator.pageIndex = pageNumber), // number of the page you want to jump.
-      tablePaginator.page.next({
-        pageIndex: pageNumber,
-        pageSize: tablePaginator.pageSize,
-        length: tablePaginator.length,
-      });
+    if(errorCoordinates.table != null){
+      this.selectedErrorElementArr = errorCoordinates;
+      this.indexMatTabGroup = this.indexLabelMatTabGroup.indexOf(
+        errorCoordinates.table
+      );
+      let tablePaginator =
+        this.tableDataSourceArray[this.indexMatTabGroup].paginator;
+      let pageNumber = Math.trunc(
+        errorCoordinates.row[0] / tablePaginator.pageSize
+      );
+  
+      (tablePaginator.pageIndex = pageNumber), // number of the page you want to jump.
+        tablePaginator.page.next({
+          pageIndex: pageNumber,
+          pageSize: tablePaginator.pageSize,
+          length: tablePaginator.length,
+        });
+    }
   }
 
   /**
@@ -485,6 +527,51 @@ export class ImportDonneesComponent {
     });
     this.progressBarValue =
       (this.modifiedElementArr.length * 100) / this.totalErrorNumber;
+  }
+
+  
+    /**
+   * Triggered when deletion button has been clicked in a substep:
+   * - put the values red in the mat-table
+   * - update deletedElementArr (list of the modified elements)
+   * @param modificationErrorObj contains 1 attributes:
+   * -errorCoordinates
+   */
+    deleteErrorValue(deletionErrorObj: {
+      errorCoordinates: PsdrfErrorCoordinates;
+    }): void {
+      let indexTable = this.indexLabelMatTabGroup.indexOf(
+      deletionErrorObj.errorCoordinates.table
+      );
+      deletionErrorObj.errorCoordinates.row.forEach((idx, i) => {
+        // deletionErrorObj.errorCoordinates.column.forEach((colName) => {
+          if (
+              !this.elementIsInDeletionList(deletionErrorObj.errorCoordinates.table, deletionErrorObj.errorCoordinates.column, idx)
+              ) {
+                this.deletedElementArr.push(deletionErrorObj.errorCoordinates);
+          }else {
+            let indexEle = this.deletedElementArr.findIndex(delEle => (
+              delEle.table == deletionErrorObj.errorCoordinates.table &&
+              delEle.column == deletionErrorObj.errorCoordinates.column &&
+              delEle.row.includes(idx)
+            ))
+            this.deletedElementArr.splice(indexEle, 1);
+          }
+        // });
+      });
+      console.log(this.deletedElementArr)
+
+      this.progressBarValue =
+        (this.modifiedElementArr.length * 100) / this.totalErrorNumber;
+    }
+    
+  elementIsInDeletionList(table, columns, idx){
+    return this.deletedElementArr.some(
+      (obj) =>
+        obj.table == table &&
+        obj.column == columns &&
+        obj.row.includes(idx)
+    )
   }
 
   /**
@@ -529,6 +616,7 @@ export class ImportDonneesComponent {
     this.mainStepNameArr = [];
     this.errorElementArr = [];
     this.modifiedElementArr = [];
+    this.deletedElementArr = [];
     this.totalErrorNumber = 0;
     this.progressBarValue = 0;
     this.mainStepTextArr = [];
@@ -663,7 +751,7 @@ export class ImportDonneesComponent {
     headers.forEach((h, index) => {
       if (index >= this.minStepAllowed && index <= this.maxStepAllowed) {
         h.style.display = "flex";
-        h.style.padding = "24px 1px";
+        h.style.padding = "12px 1px";
       } else {
         h.style.display = "none";
       }
@@ -737,6 +825,33 @@ export class ImportDonneesComponent {
    *
    */
   dataVerifModifiedFile(): void {
+    //Supprimer les éléments au dernier moment
+    if(this.deletedElementArr.length > 0){
+      let deleteObject = {}
+      //Remplir l'objet avec les indexs
+      this.deletedElementArr.forEach(element => {
+        if (!deleteObject.hasOwnProperty(element.table)){
+          deleteObject[element.table] = []
+        }
+        element.row.forEach(i => {
+          if(deleteObject[element.table].indexOf(i) === -1 ){
+            deleteObject[element.table].push(i)
+          }
+        })
+      })
+      for (const property in deleteObject){
+        //classer les index dans l'ordre décroissant
+        deleteObject[property].sort((a, b) => b - a )
+        let indexTable = this.indexLabelMatTabGroup.indexOf(
+          property
+        );
+        console.log(deleteObject)
+        // Supprimer les index un par un
+        deleteObject[property].forEach(i => {
+          this.psdrfArray[indexTable].splice(i, 1)
+        })
+      }
+    }
     this.reInitializeCorrection();
     this.dataSrv
       .psdrf_data_verification(
@@ -753,7 +868,6 @@ export class ImportDonneesComponent {
         this.totalErrorNumber = 0;
 
         this.jsonObjectToPsdrfObject(errorsPsdrfListTemp);
-
         this.isVerificationObjLoaded = true;
 
         this.totalSteps = errorsPsdrfListTemp.length;

@@ -11,15 +11,14 @@ export class ErrorCorrectionService {
   ) {}
 
   numberErrorList: string[] = ['NumDisp', 'NumPlac', 'Cycle', 'Strate', 'PoidsPlacette', 'Pente',
-   'Exposition', 'Date_Intervention', 'PrecisionGPS', 'Cheminement', 'Coeff', 'DiamLim', 'Année', 'NumArbre', 'Azimut', 'Dist',
-    'Diam1', 'Diam2', 'Haut', 'SsPlac', 'Recouv', 'Class1', 'Class2', 'Class3','Id', 'Transect', 'Dist', 'Angle', 'Azimut',
-   'DiamIni', 'DiamMed', 'DiamFin', 'Longueur'];
+   'Exposition', 'Date_Intervention', 'PrecisionGPS', 'Cheminement', 'Coeff', 'DiamLim', 'Année', 'NumArbre',
+   'SsPlac', 'Recouv', 'Class1', 'Class2', 'Class3','Id', 'Transect', 'Angle', 'Azimut'];
 
   selectionErrorList: string[] = ['Essence', 'Type', 'StadeD', 'StadeE','Ref_CodeEcolo',];
 
   booleanErrorList: string[] = ['Taillis', 'Limite', 'CorrectionPente', 'Contact', 'Chablis' ];
 
-  stringErrorList: string[] = ['Ref_Habitat', 'Nature_Intervention', 'Gestion', 'Date', 'CodeEcolo'];
+  stringErrorList: string[] = ['Ref_Habitat', 'Nature_Intervention', 'Gestion', 'Date', 'CodeEcolo', 'Dist', 'Longueur', 'Diam1', 'Diam2', 'DiamIni', 'DiamMed', 'DiamFin', 'Haut'];
 
   /**
   *  Return type  of an error when a column name is given 

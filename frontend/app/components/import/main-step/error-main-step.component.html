@@ -1,6 +1,6 @@
 <div>
-    <h3 *ngIf="!step.isFatalError">Erreur non Bloquante:</h3>
-    <h3>{{mainStepText}}</h3>
+    <div class="blocking-error-class" *ngIf="!step.isFatalError">Erreur non Bloquante:</div>
+    <h4>{{mainStepText}}</h4>
 </div>
 <div class="solution" #subStepperContainer>
     <div class="arrow-icons">
@@ -15,8 +15,8 @@
             </ng-template>
 
             <mat-step *ngFor="let error of step.errorList; index as subStepIndex" [completed]="checkSubStepCompleted(subStepIndex)">
-                <error-sub-step *ngIf="subStepper.selectedIndex == subStepIndex" (indexButtonClicked)="onIndexButtonClicked($event)" (modificationValidated)="modifValidation($event)" (allRowsModified)="onAllRowsModified($event)" [psdrfError]="error" [subStepIndex]="subStepIndex"
-                    [mainStepIndex]="mainStepIndex" [errorType]="step.errorType">
+                <error-sub-step *ngIf="subStepper.selectedIndex == subStepIndex" (indexButtonClicked)="onIndexButtonClicked($event)" (modificationValidated)="modifValidation($event)" (deletionValidated)="deleteValidation($event)" (allRowsModified)="onAllRowsModified($event)"
+                    [psdrfError]="error" [subStepIndex]="subStepIndex" [mainStepIndex]="mainStepIndex" [errorType]="step.errorType">
                 </error-sub-step>
             </mat-step>
         </mat-horizontal-stepper>
@@ -29,9 +29,9 @@
 </div>
 <div class="action-buttons">
     <button *ngIf="stepIndex > 0" class="m-1 float-left" mat-raised-button matTooltip="Cas Précédent" (click)="goBack()">
-    <mat-icon> arrow_back </mat-icon>
-  </button>
+        <mat-icon> arrow_back </mat-icon>
+    </button>
     <button *ngIf="stepIndex < totalSteps - 1" class="m-1 float-left" mat-raised-button matTooltip="Cas Suivant" (click)="goForward()">
-      <mat-icon> arrow_forward </mat-icon>
-  </button>
+        <mat-icon> arrow_forward </mat-icon>
+    </button>
 </div>

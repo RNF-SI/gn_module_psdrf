@@ -29,12 +29,9 @@
 }
 
 .single-file {
-    display: flex;
     padding: 2px;
-    justify-content: space-between;
     align-items: center;
     border: dashed 1px #979797;
-    width: 500px;
     img.delete {
         margin-left: 0.5rem;
         cursor: pointer;
@@ -53,9 +50,11 @@
         margin: 0;
         margin-bottom: 0.25rem;
     }
-    .info {
-        width: 100%
-    }
+    .info {}
+}
+
+.action-button-class {
+    margin: 4px 8px;
 }
 
 table {
@@ -86,7 +85,7 @@ table {
 
 .example-loading-shade {
     position: absolute;
-    top: 65px;
+    top: 50px;
     left: 0;
     bottom: 0px;
     right: 0;
@@ -108,6 +107,11 @@ table {
 
 .isModifiedError {
     background-color: $corrified-color;
+}
+
+.isDeletedError {
+    text-decoration: line-through;
+    background-color: #D3D3D3;
 }
 
 ::ng-deep .mat-progress-bar-fill::after {

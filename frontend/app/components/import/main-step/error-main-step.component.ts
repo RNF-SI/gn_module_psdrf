@@ -22,6 +22,8 @@ export class ErrorMainStepComponent implements OnInit, AfterViewInit {
   @Output() subStepSelectionChange= new EventEmitter<{mainStepIndex: number, subStepIndex: number}>();
   @Output() indexButtonClicked=new EventEmitter<any>();
   @Output() modificationValidated=new EventEmitter<{errorCoordinates: {table: string, column: string[], row: number[]}, newErrorValue: any}>();
+  @Output() deletionValidated=new EventEmitter<{errorCoordinates: {table: string, column: string[], row: number[]}}>();
+  
   @Output() allSubStepModified=new EventEmitter<number>();
 
 
@@ -70,6 +72,8 @@ export class ErrorMainStepComponent implements OnInit, AfterViewInit {
   * @param stepChangeEvent StepperSelectionEvent
   */
    onSubStepClicked(stepChangeEvent: StepperSelectionEvent): void{
+    this.stepIndex = stepChangeEvent.selectedIndex;
+
     //Enregistrer dans l'historique à quelle étape nous en étions sur le dernier step
     this.historyService.rememberSubStep(this.step.errorList[stepChangeEvent.selectedIndex].toPsdrfErrorCoordinates(), this.mainStepIndex, stepChangeEvent.selectedIndex);
     this.subStepSelectionChange.next({mainStepIndex: this.mainStepIndex, subStepIndex: stepChangeEvent.selectedIndex});
@@ -93,6 +97,16 @@ export class ErrorMainStepComponent implements OnInit, AfterViewInit {
   modifValidation(modificationErrorObj: {errorCoordinates: PsdrfErrorCoordinates, newErrorValue: any}): void{
     this.modificationValidated.next(modificationErrorObj);
   }
+
+  /**
+  * Triggered when a Deletion is launched:
+  * - Throw an event to display the removed line (in import component)
+  * @param deletionErrorObj: errorCoordinates of the deleted value; newErrorValue : new value
+  */
+   deleteValidation(deletionErrorObj: {errorCoordinates: PsdrfErrorCoordinates}): void{
+    this.deletionValidated.next(deletionErrorObj);
+  }
+
 
   /** 
   * Triggered when all rows of a substep has changed :

@@ -14,6 +14,7 @@ import {PsdrfError, PsdrfErrorCoordinates} from '../../../../models/psdrfObject.
     value: string; //Valeur Corrigée par l'utilisateur
     selectedButtonIndex: number=0; //IndexButton Sélectionné
     modifiedIndexes: number[] = []; //liste des indexs des boutons modifiés 
+    deletedIndexes: number[] = []; //liste des indexs des boutons supprimés
     listCorrection: any={};
 
     @Input() mainStepIndex: number; //Index du main step auquel le subStep appartient
@@ -24,6 +25,8 @@ import {PsdrfError, PsdrfErrorCoordinates} from '../../../../models/psdrfObject.
     @Output() indexButtonClicked=new EventEmitter<PsdrfErrorCoordinates>();
     @Output() modificationValidated=new EventEmitter<{errorCoordinates: PsdrfErrorCoordinates, newErrorValue: any}>();
     @Output() allRowsModified=new EventEmitter<number>();
+    @Output() deletionValidated=new EventEmitter<{errorCoordinates: PsdrfErrorCoordinates}>();
+    @Output() allRowsDeleted=new EventEmitter<number>();
     datasource: MatTableDataSource<any>;
 
     // form: FormGroup;
@@ -35,12 +38,14 @@ import {PsdrfError, PsdrfErrorCoordinates} from '../../../../models/psdrfObject.
     }
 
     ngOnInit(){
-      this.psdrfError.column.forEach(colName => {
-        if(this.checkErrorType(colName) =="selectionError" ){
-          this.listCorrection[colName]=this.correctionService.getColListCorrection(colName)
-        }
-      })
-      this.datasource = new MatTableDataSource(this.psdrfError.value);
+      if(this.psdrfError.column){
+        this.psdrfError.column.forEach(colName => {
+          if(this.checkErrorType(colName) =="selectionError" ){
+            this.listCorrection[colName]=this.correctionService.getColListCorrection(colName)
+          }
+        })
+        this.datasource = new MatTableDataSource(this.psdrfError.value);
+      }
     }
 
 
@@ -73,6 +78,13 @@ import {PsdrfError, PsdrfErrorCoordinates} from '../../../../models/psdrfObject.
       } else {
         this.selectedButtonIndex = this.selectedButtonIndex + 1; 
       }
+    }
+
+    deleteLine(buttonIndex: number): void{
+      if(this.deletedIndexes.indexOf(buttonIndex) === -1){
+        this.deletedIndexes.push(buttonIndex);
+      }    
+      this.deletionValidated.next({errorCoordinates: new PsdrfErrorCoordinates(this.psdrfError.table, this.psdrfError.column, [this.psdrfError.row[buttonIndex]])});
     }
 
     // TODO: Deletion of a line
@@ -111,6 +123,14 @@ import {PsdrfError, PsdrfErrorCoordinates} from '../../../../models/psdrfObject.
     */
     checkModified(rowIndex: number): boolean{
       return this.modifiedIndexes.includes(rowIndex);
+    }
+
+    /**
+    *  Return true if a line has been deleted or no 
+    * @param rowIndex Index of a deletion button
+    */
+     checkDeleted(rowIndex: number): boolean{
+      return this.deletedIndexes.includes(rowIndex);
     }
 
   /**

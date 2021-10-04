@@ -1,59 +1,61 @@
 <div class="h6">{{psdrfError.message}}</div>
 <div [ngSwitch]="errorType">
-  <div *ngSwitchCase="'PsdrfError'">
-    <div class="row">
-      <div class="col-1 button-top-margin">
-        <div class="btn-group-vertical button-spacing" role="group" aria-label="Basic example" *ngFor="let row of psdrfError.row; let rowIndex = index" >
-          <button class="btn btn-secondary" type="button" (click)="onIndexButtonClicked(rowIndex, row)" [ngClass]="{'isError': !checkModified(rowIndex), 'wasModified':checkModified(rowIndex), 'isSelected': checkSelected(rowIndex)}">{{row}}</button>
+    <div *ngSwitchCase="'PsdrfError'">
+        <div class="row">
+            <div class="col-1 button-top-margin">
+                <div class="btn-group-vertical button-spacing" role="group" aria-label="Basic example" *ngFor="let row of psdrfError.row; let rowIndex = index">
+                    <button class="btn btn-secondary" type="button" (click)="onIndexButtonClicked(rowIndex, row)" [ngClass]="{'isError': !checkModified(rowIndex), 'wasModified':checkModified(rowIndex), 'wasDeleted': checkDeleted(rowIndex), 'isSelected': checkSelected(rowIndex)}">{{row}}</button>
+                </div>
+            </div>
+            <div class="col-auto">
+                <table mat-table [dataSource]="datasource" class="mat-elevation-z8">
+
+                    <!--- Note that these columns can be defined in any order.
+            The actual rendered columns are set as a property on the row definition" -->
+                    <ng-container *ngFor="let psdrfCol of psdrfError.column;" [matColumnDef]="psdrfCol">
+                        <th mat-header-cell *matHeaderCellDef> {{psdrfCol}} </th>
+                        <td mat-cell *matCellDef="let element;" [ngSwitch]="checkErrorType(psdrfCol)">
+
+
+                            <mat-form-field floatLabel="never" *ngSwitchCase="'numberError'" [style.width.px]=90>
+                                <input matInput type="number" [value]="element[psdrfCol]" [(ngModel)]="element[psdrfCol]">
+                            </mat-form-field>
+
+                            <mat-form-field appearance="fill" *ngSwitchCase="'selectionError'" [style.width.px]=90>
+                                <mat-select [(ngModel)]="element[psdrfCol]" name="errorSelect">
+                                    <mat-option *ngFor="let correction of listCorrection[psdrfCol]" [value]="correction">
+                                        {{correction}}
+                                    </mat-option>
+                                </mat-select>
+                            </mat-form-field>
+
+                            <mat-form-field floatLabel="never" *ngSwitchDefault [style.width.px]=90>
+                                <input matInput [value]="element[psdrfCol]" [(ngModel)]="element[psdrfCol]">
+                            </mat-form-field>
+
+
+                        </td>
+
+
+                    </ng-container>
+                    <tr mat-header-row *matHeaderRowDef="psdrfError.column"></tr>
+                    <tr mat-row *matRowDef="let row; columns: psdrfError.column;"></tr>
+                </table>
+            </div>
+            <div class="col-3 button-top-margin">
+                <div class="btn-group-horizontal" role="group" aria-label="Basic example" *ngFor="let row of psdrfError.row; let rowIndex = index">
+
+                    <button class="mx-1" mat-raised-button matTooltip="Valider les modifications" (click)="modifLineValidation(rowIndex)">
+                        <mat-icon> done </mat-icon>
+                    </button>
+                    <button class="mx-1" mat-raised-button matTooltip="Supprimer la ligne" (click)="deleteLine(rowIndex)">
+                        <mat-icon> delete </mat-icon>
+                    </button>
+                </div>
+            </div>
         </div>
-      </div>
-      <div class="col-auto">
-        <table mat-table [dataSource]="datasource" class="mat-elevation-z8">
-          
-          <!--- Note that these columns can be defined in any order.
-            The actual rendered columns are set as a property on the row definition" -->     
-            <ng-container *ngFor="let psdrfCol of psdrfError.column;" [matColumnDef]="psdrfCol">
-              <th mat-header-cell *matHeaderCellDef> {{psdrfCol}} </th>
-              <td mat-cell *matCellDef="let element;" [ngSwitch]="checkErrorType(psdrfCol)">
-
-
-                <mat-form-field floatLabel="never" *ngSwitchCase="'numberError'">
-                  <input matInput type="number" [value]="element[psdrfCol]" [(ngModel)]="element[psdrfCol]">
-                </mat-form-field>
-                            
-                <mat-form-field appearance="fill" *ngSwitchCase="'selectionError'">
-                  <mat-select [(ngModel)]="element[psdrfCol]" name="errorSelect">
-                    <mat-option *ngFor="let correction of listCorrection[psdrfCol]" [value]="correction">
-                      {{correction}}
-                    </mat-option>
-                  </mat-select>
-                </mat-form-field>
-             
-                <mat-form-field floatLabel="never" *ngSwitchDefault>
-                  <input matInput [value]="element[psdrfCol]" [(ngModel)]="element[psdrfCol]">
-                </mat-form-field>
-
-
-              </td>
-
-
-            </ng-container>          
-          <tr mat-header-row *matHeaderRowDef="psdrfError.column"></tr>
-          <tr mat-row *matRowDef="let row; columns: psdrfError.column;"></tr>
-        </table>
-      </div>
-      <div class="col-1 button-top-margin">
-        <div class="btn-group-vertical button-spacing" role="group" aria-label="Basic example" *ngFor="let row of psdrfError.row; let rowIndex = index" >
-          
-          <button
-          mat-raised-button
-          matTooltip="Valider les modifications"     
-          (click)="modifLineValidation(rowIndex)"             
-          >
-          <mat-icon> done </mat-icon>
-          </button>
-        </div>
-      </div>
     </div>
-  </div>
+
+    <div *ngSwitchCase="'PsdrfErrorColonnes'">
+    </div>
 </div>

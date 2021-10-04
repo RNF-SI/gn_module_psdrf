@@ -3,11 +3,11 @@
         <div class="card-body p-2">
 
             <button class="m-1 float-left" mat-raised-button matTooltip="Arrêter l'import de données" (click)="returnToPreviousPage()">
-          <mat-icon> arrow_back </mat-icon>
-          <span class="user-name">
-            {{ currentUser?.user_login }}
-          </span>
-      </button>
+                <mat-icon> arrow_back </mat-icon>
+                <span class="user-name">
+                    {{ currentUser?.user_login }}
+                </span>
+            </button>
 
             <div class="container " appDnd (fileDropped)="onFileDropped($event)" *ngIf="!isDataCharging">
                 <div class="importzone d-flex align-items-center justify-content-center">
@@ -23,49 +23,61 @@
                 </div>
             </div>
 
-            <div class="d-flex justify-content-center " *ngIf="isDataCharging">
-                <div class="single-file text-center ">
-                    <img src="external_assets/psdrf/ms-excel.svg" width="45px" alt="file">
-                    <div class="info">
-                        <h4 class="name">
-                            {{ excelFile?.name }}
-                        </h4>
-                        <p class="size">
-                            {{ formatBytes(excelFile?.size) }}
-                        </p>
+            <div *ngIf="isDataCharging">
+                <div class="d-flex justify-content-center">
+                    <div class="d-flex justify-content-between single-file">
+                        <img src="external_assets/psdrf/ms-excel.svg" width="30px" alt="file">
+                        <div class="info ml-3">
+                            <h4 class="name">
+                                {{ excelFile?.name }}
+                            </h4>
+                        </div>
+                        <!-- <button class="m-1 float-right" mat-raised-button matTooltip="Relancer la vérification du fichier excel non modifié" (click)="dataVerifOriginalFile()">
+                            <mat-icon> published_with_changes </mat-icon>
+                        </button> -->
                     </div>
-                    <button class="m-1 float-right" mat-raised-button matTooltip="Relancer la vérification du fichier excel non modifié" (click)="dataVerifOriginalFile()">
-                        <mat-icon> published_with_changes </mat-icon>
-                    </button>
-                    <button *ngIf="isExcelLoaded" class="m-1" mat-raised-button matTooltip="Sauvegarder la table modifiée dans un fichier Excel" (click)="exportTableToExcel()">
-                        <mat-icon> file_download </mat-icon>
-                    </button>
-                    <button class="m-1 float-right" mat-raised-button matTooltip="Supprimer" (click)="deleteFile()">
-                        <mat-icon> delete </mat-icon>
-                    </button>
                 </div>
 
-                <button type='file' class="ml-5 float-right" *ngIf="!isShapeCharged" mat-raised-button matTooltip="Importer un fichier shape" (click)="shapeUploader.click()">
-                    <mat-icon> map </mat-icon>
-                </button>
-                <input hidden type="file" #shapeUploader (change)="importShape($event)" accept=".shp" />
-
-                <div class="single-file text-center ml-5" *ngIf="isShapeCharged">
-
-                    <div class="info">
-                        <h4 class="name">
-                            {{ shapeFile?.name }}
-                        </h4>
-                        <p class="size">
-                            {{ formatBytes(shapeFile?.size) }}
-                        </p>
-                    </div>
-                    <button class="m-1 float-right" mat-raised-button matTooltip="Relancer la vérification avec le fichier shape" (click)="dataVerifWithShape()">
-                        <mat-icon> published_with_changes </mat-icon>
+                <div class="mt-1 d-flex justify-content-center">
+                    <button *ngIf="isExcelLoaded" class="action-button-class" mat-raised-button matTooltip="Sauvegarder la table modifiée dans un fichier Excel" (click)="exportTableToExcel()">
+                        <mat-icon> file_download </mat-icon>
                     </button>
-                    <button class="m-1 float-right" mat-raised-button matTooltip="Supprimer le fichier shape" (click)="deleteShapeFile()">
+                    <button class="action-button-class" mat-raised-button matTooltip="Supprimer" (click)="deleteFile()">
                         <mat-icon> delete </mat-icon>
                     </button>
+                    <button class="action-button-class" mat-raised-button matTooltip="Relancer la vérification avec les modifications" (click)="dataVerifModifiedFile()">
+                        <mat-icon> published_with_changes </mat-icon>
+                    </button>
+                    <div *ngIf="!isFileContainingFatalError">
+                        <button *ngIf="!integrationLoading" class="action-button-class" mat-raised-button matTooltip="Intégrer les données à la base de données" (click)="integrationToDatabase()">
+                            <mat-icon > cloud_upload </mat-icon>
+                        </button>
+                        <button *ngIf="integrationLoading" class="action-button-class spinner-button" mat-raised-button matTooltip="Intégration des données en cours" disabled>
+                            <mat-spinner diameter="22" color="primary"></mat-spinner>
+                        </button>
+                    </div>
+                    <!-- <button class="action-button-class" type='file' *ngIf="!isShapeCharged" mat-raised-button matTooltip="Importer un fichier shape" (click)="shapeUploader.click()">
+                        <mat-icon> map </mat-icon>
+                    </button>
+                    <input hidden type="file" #shapeUploader (change)="importShape($event)" accept=".shp" /> -->
+
+                    <div class="single-file text-center ml-5" *ngIf="isShapeCharged">
+
+                        <div class="info">
+                            <h4 class="name">
+                                {{ shapeFile?.name }}
+                            </h4>
+                            <p class="size">
+                                {{ formatBytes(shapeFile?.size) }}
+                            </p>
+                        </div>
+                        <button class="m-1 float-right" mat-raised-button matTooltip="Relancer la vérification avec le fichier shape" (click)="dataVerifWithShape()">
+                            <mat-icon> published_with_changes </mat-icon>
+                        </button>
+                        <button class="m-1 float-right" mat-raised-button matTooltip="Supprimer le fichier shape" (click)="deleteShapeFile()">
+                            <mat-icon> delete </mat-icon>
+                        </button>
+                    </div>
                 </div>
 
 
@@ -82,7 +94,7 @@
                         <table mat-table [dataSource]="tableDataSourceArray[0]">
                             <ng-container *ngFor="let columnName of tableColumnsArray[0]" [matColumnDef]="columnName">
                                 <th mat-header-cell *matHeaderCellDef> {{columnName}} </th>
-                                <td mat-cell *matCellDef="let element, let i = index" [ngClass]="{'isError': checkErrorCell('Placettes', columnName, i ), 'isModifiedError': checkModifiedErrorCell('Placettes', columnName, i ), 'isSelectedError': checkSelectedErrorCell('Placettes', columnName, i)}">
+                                <td mat-cell *matCellDef="let element, let i = index" [ngClass]="{'isError': checkErrorCell('Placettes', columnName, i ), 'isModifiedError': checkModifiedErrorCell('Placettes', columnName, i ), 'isDeletedError':  checkDeletedErrorCell('Placettes', i), 'isSelectedError': checkSelectedErrorCell('Placettes', columnName, i)}">
                                     {{element[columnName]}} </td>
                             </ng-container>
                             <tr mat-header-row *matHeaderRowDef="tableColumnsArray[0]"></tr>
@@ -97,11 +109,11 @@
                         <table mat-table [dataSource]="tableDataSourceArray[1]">
                             <ng-container *ngFor="let columnName of tableColumnsArray[1]" [matColumnDef]="columnName">
                                 <th mat-header-cell *matHeaderCellDef> {{columnName}} </th>
-                                <td mat-cell *matCellDef="let element, let i = index" [ngClass]="{'isError': checkErrorCell('Cycles', columnName, i ), 'isModifiedError':  checkModifiedErrorCell('Cycles', columnName, i ), 'isSelectedError':  checkSelectedErrorCell('Cycles', columnName, i)}">
+                                <td mat-cell *matCellDef="let element, let i = index" [ngClass]="{'isError': checkErrorCell('Cycles', columnName, i ), 'isModifiedError':  checkModifiedErrorCell('Cycles', columnName, i ), 'isDeletedError':  checkDeletedErrorCell('Cycles', i), 'isSelectedError':  checkSelectedErrorCell('Cycles', columnName, i)}">
                                     {{element[columnName]}} </td>
                             </ng-container>
                             <tr mat-header-row *matHeaderRowDef="tableColumnsArray[1]"></tr>
-                            <tr mat-row *matRowDef="let row; columns: tableColumnsArray[1];"></tr>
+                            <tr mat-row *matRowDef="let row; columns: tableColumnsArray[1];" class="table-row"></tr>
                         </table>
                         <mat-paginator #cyclePaginator [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons></mat-paginator>
                     </div>
@@ -112,7 +124,7 @@
                         <table mat-table [dataSource]="tableDataSourceArray[2]">
                             <ng-container *ngFor="let columnName of tableColumnsArray[2]" [matColumnDef]="columnName">
                                 <th mat-header-cell *matHeaderCellDef> {{columnName}} </th>
-                                <td mat-cell *matCellDef="let element, let i = index" [ngClass]="{'isError': checkErrorCell('Arbres', columnName, i ), 'isModifiedError':  checkModifiedErrorCell('Arbres', columnName, i ), 'isSelectedError':  checkSelectedErrorCell('Arbres', columnName, i)}">
+                                <td mat-cell *matCellDef="let element, let i = index" [ngClass]="{'isError': checkErrorCell('Arbres', columnName, i ), 'isModifiedError':  checkModifiedErrorCell('Arbres', columnName, i ), 'isDeletedError':  checkDeletedErrorCell('Arbres', i), 'isSelectedError':  checkSelectedErrorCell('Arbres', columnName, i)}">
                                     {{element[columnName]}} </td>
                             </ng-container>
                             <tr mat-header-row *matHeaderRowDef="tableColumnsArray[2]"></tr>
@@ -127,7 +139,7 @@
                         <table mat-table [dataSource]="tableDataSourceArray[3]">
                             <ng-container *ngFor="let columnName of tableColumnsArray[3]" [matColumnDef]="columnName">
                                 <th mat-header-cell *matHeaderCellDef> {{columnName}} </th>
-                                <td mat-cell *matCellDef="let element, let i = index" [ngClass]="{'isError': checkErrorCell('Regeneration', columnName, i ), 'isModifiedError':  checkModifiedErrorCell('Regeneration', columnName, i ), 'isSelectedError':  checkSelectedErrorCell('Regeneration', columnName, i)}">
+                                <td mat-cell *matCellDef="let element, let i = index" [ngClass]="{'isError': checkErrorCell('Regeneration', columnName, i ), 'isModifiedError':  checkModifiedErrorCell('Regeneration', columnName, i ), 'isDeletedError':  checkDeletedErrorCell('Regeneration', i), 'isSelectedError':  checkSelectedErrorCell('Regeneration', columnName, i)}">
                                     {{element[columnName]}} </td>
                             </ng-container>
                             <tr mat-header-row *matHeaderRowDef="tableColumnsArray[3]"></tr>
@@ -143,7 +155,7 @@
                         <table mat-table [dataSource]="tableDataSourceArray[4]">
                             <ng-container *ngFor="let columnName of tableColumnsArray[4]" [matColumnDef]="columnName">
                                 <th mat-header-cell *matHeaderCellDef> {{columnName}} </th>
-                                <td mat-cell *matCellDef="let element, let i = index" [ngClass]="{'isError': checkErrorCell('Transect', columnName, i ), 'isModifiedError':  checkModifiedErrorCell('Transect', columnName, i ), 'isSelectedError':  checkSelectedErrorCell('Transect', columnName, i)}">
+                                <td mat-cell *matCellDef="let element, let i = index" [ngClass]="{'isError': checkErrorCell('Transect', columnName, i ), 'isModifiedError':  checkModifiedErrorCell('Transect', columnName, i ), 'isDeletedError':  checkDeletedErrorCell('Transect', i), 'isSelectedError':  checkSelectedErrorCell('Transect', columnName, i)}">
                                     {{element[columnName]}} </td>
                             </ng-container>
                             <tr mat-header-row *matHeaderRowDef="tableColumnsArray[4]"></tr>
@@ -158,7 +170,7 @@
                         <table mat-table [dataSource]="tableDataSourceArray[5]">
                             <ng-container *ngFor="let columnName of tableColumnsArray[5]" [matColumnDef]="columnName">
                                 <th mat-header-cell *matHeaderCellDef> {{columnName}} </th>
-                                <td mat-cell *matCellDef="let element, let i = index" [ngClass]="{'isError': checkErrorCell('BMSsup30', columnName, i ), 'isModifiedError':  checkModifiedErrorCell('BMSsup30', columnName, i ), 'isSelectedError':  checkSelectedErrorCell('BMSsup30', columnName, i)}">
+                                <td mat-cell *matCellDef="let element, let i = index" [ngClass]="{'isError': checkErrorCell('BMSsup30', columnName, i ), 'isModifiedError':  checkModifiedErrorCell('BMSsup30', columnName, i ), 'isDeletedError':  checkDeletedErrorCell('BMSsup30', i), 'isSelectedError':  checkSelectedErrorCell('BMSsup30', columnName, i)}">
                                     {{element[columnName]}} </td>
                             </ng-container>
                             <tr mat-header-row *matHeaderRowDef="tableColumnsArray[5]"></tr>
@@ -173,7 +185,7 @@
                         <table mat-table [dataSource]="tableDataSourceArray[6]">
                             <ng-container *ngFor="let columnName of tableColumnsArray[6]" [matColumnDef]="columnName">
                                 <th mat-header-cell *matHeaderCellDef> {{columnName}} </th>
-                                <td mat-cell *matCellDef="let element, let i = index" [ngClass]="{'isError': checkErrorCell('Reperes', columnName, i ), 'isModifiedError':  checkModifiedErrorCell('Reperes', columnName, i ), 'isSelectedError':  checkSelectedErrorCell('Reperes', columnName, i)}">
+                                <td mat-cell *matCellDef="let element, let i = index" [ngClass]="{'isError': checkErrorCell('Reperes', columnName, i ), 'isModifiedError':  checkModifiedErrorCell('Reperes', columnName, i ), 'isDeletedError':  checkDeletedErrorCell('Reperes', i), 'isSelectedError':  checkSelectedErrorCell('Reperes', columnName, i)}">
                                     {{element[columnName]}} </td>
                             </ng-container>
                             <tr mat-header-row *matHeaderRowDef="tableColumnsArray[6]"></tr>
@@ -200,8 +212,8 @@
                                 <ng-template matStepLabel>
                                     <div>{{mainStepNameArr[mainStepIndex]}}</div>
                                 </ng-template>
-                                <error-main-step *ngIf="mainStepper.selectedIndex == mainStepIndex" (subStepSelectionChange)="displayOnSubStepClick($event)" (indexButtonClicked)="displayErrorOnMatTab($event)" (modificationValidated)="modifyErrorValue($event)" (allSubStepModified)="modifyMainStepperAppearance($event)"
-                                    [step]="error" [mainStepIndex]="mainStepIndex" [mainStepText]="mainStepTextArr[mainStepIndex]">
+                                <error-main-step *ngIf="mainStepper.selectedIndex == mainStepIndex" (subStepSelectionChange)="displayOnSubStepClick($event)" (indexButtonClicked)="displayErrorOnMatTab($event)" (modificationValidated)="modifyErrorValue($event)" (deletionValidated)="deleteErrorValue($event)"
+                                    (allSubStepModified)="modifyMainStepperAppearance($event)" [step]="error" [mainStepIndex]="mainStepIndex" [mainStepText]="mainStepTextArr[mainStepIndex]">
                                 </error-main-step>
                             </mat-step>
                         </mat-horizontal-stepper>
@@ -222,17 +234,6 @@
                     <button class="m-1 float-left" mat-raised-button matTooltip="Afficher les labels" (click)="showStepLabels()">
                         <mat-icon class="extensionIcon-rotation"> {{extensionIcon}} </mat-icon>
                     </button>
-                    <button class="m-1 float-left" mat-raised-button matTooltip="Relancer la vérification avec les modifications" (click)="dataVerifModifiedFile()">
-                        <mat-icon> published_with_changes </mat-icon>
-                    </button>
-                    <div *ngIf="!isFileContainingFatalError">
-                        <button *ngIf="!integrationLoading" class="m-1 float-left" mat-raised-button matTooltip="Intégrer les données à la base de données" (click)="integrationToDatabase()">
-                            <mat-icon > cloud_upload </mat-icon>
-                        </button>
-                        <button *ngIf="integrationLoading" class="m-1 float-left spinner-button" mat-raised-button matTooltip="Intégration des données en cours" disabled>
-                            <mat-spinner diameter="22" color="primary"></mat-spinner>
-                        </button>
-                    </div>
                 </div>
                 <mat-progress-bar class="example-margin" [color]="color" mode="determinate" [value]="progressBarValue">
                 </mat-progress-bar>
