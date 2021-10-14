@@ -257,6 +257,11 @@ CREATE TABLE cor_cycles_roles (
   id_role integer NOT NULL
 );
 
+-- Lien vers la table roles (utilisateurs)
+CREATE TABLE cor_dispositifs_roles (
+  id_dispositif integer NOT NULL,
+  id_role integer NOT NULL
+);
 
 ---------------
 --PRIMARY KEY--
@@ -315,6 +320,9 @@ ADD CONSTRAINT pk_cor_dispositifs_area PRIMARY KEY (id_dispositif, id_area);
 
 ALTER TABLE ONLY cor_dispositif_municipality
 ADD CONSTRAINT pk_cor_dispositifs_municipality PRIMARY KEY (id_dispositif, id_municipality);
+
+ALTER TABLE ONLY cor_dispositifs_roles
+ADD CONSTRAINT pk_cor_dispositifs_roles PRIMARY KEY (id_dispositif, id_role);
 
 
 ---------------
@@ -425,6 +433,28 @@ ALTER TABLE ONLY cor_cycles_roles
   ADD CONSTRAINT fk_cor_cycles_roles_t_roles
   FOREIGN KEY (id_role) REFERENCES utilisateurs.t_roles (id_role)
   ON UPDATE CASCADE;
+
+-- -- A enlever après 
+-- ALTER TABLE ONLY cor_dispositifs_roles
+-- ADD CONSTRAINT pk_cor_dispositifs_roles PRIMARY KEY (id_dispositif, id_role);
+
+--   id_dispositif integer NOT NULL,
+--   id_role integer NOT NULL
+
+
+ALTER TABLE ONLY cor_dispositifs_roles
+  ADD CONSTRAINT fk_cor_dispositifs_roles_t_dispositifs
+  FOREIGN KEY (id_dispositif) REFERENCES t_dispositifs (id_dispositif)
+  ON UPDATE CASCADE
+  ON DELETE CASCADE;
+
+
+ALTER TABLE ONLY cor_dispositifs_roles
+  ADD CONSTRAINT fk_cor_dispositifs_roles_t_roles
+  FOREIGN KEY (id_role) REFERENCES utilisateurs.t_roles (id_role)
+  ON UPDATE CASCADE;
+
+
 
 ALTER TABLE ONLY t_arbres
   ADD CONSTRAINT fk_t_arbres_t_placettes

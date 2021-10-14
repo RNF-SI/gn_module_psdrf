@@ -61,7 +61,7 @@ def data_verification(data):
   check_code_Error_List = check_colonnes("Regeneration", columns, Regeneration)
   if len(check_code_Error_List) >0:
     verificationList.append({'errorName': 'Il manque une colonne dans la table Regeneration', 'errorText': 'Il manque une colonne dans la table Regeneration', 'errorList': check_code_Error_List, 'errorType': 'PsdrfErrorColonnes', 'isFatalError': True, 'isFatalError': True})
-
+  
   # Transect
   columns = ['Id', 'Cycle', 'Transect', 'Dist', 'Diam', 'Angle', 'StadeD', 'StadeE', 'Contact', 'Chablis']
   check_code_Error_List = check_colonnes("Transect", columns, Transect)

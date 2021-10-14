@@ -4,9 +4,6 @@
 
             <button class="m-1 float-left" mat-raised-button matTooltip="Arrêter l'import de données" (click)="returnToPreviousPage()">
                 <mat-icon> arrow_back </mat-icon>
-                <span class="user-name">
-                    {{ currentUser?.user_login }}
-                </span>
             </button>
 
             <div class="container " appDnd (fileDropped)="onFileDropped($event)" *ngIf="!isDataCharging">
@@ -83,7 +80,7 @@
 
             </div>
 
-            <div class="example-loading-shade" *ngIf="(isDataCharging && !isExcelLoaded) || (isExcelLoaded && !isVerificationObjLoaded)">
+            <div class="example-loading-shade" *ngIf="(isDataCharging && !isExcelLoaded) || (isExcelLoaded && !isVerificationObjLoaded) || (!isDataCharging && isExcelLoaded && !isVerificationObjLoaded)">
                 <mat-spinner></mat-spinner>
             </div>
 

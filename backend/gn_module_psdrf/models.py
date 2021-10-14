@@ -153,6 +153,14 @@ class CorCyclesRoles (DB.Model):
 
     cycle = DB.relationship('TCycles', foreign_keys=id_cycle)
 
+class CorDispositifsRoles (DB.Model):
+    __tablename__ = "cor_dispositifs_roles"
+    __table_args__ = {'schema': SCHEMA}
+    id_dispositif = DB.Column('id_dispositif', DB.Integer, DB.ForeignKey('pr_psdrf.t_dispositifs.id_dispositif', ondelete='CASCADE'), primary_key = True)
+    id_role = DB.Column('id_role', DB.Integer, primary_key = True)
+
+    dispositif = DB.relationship('TDispositifs', foreign_keys=id_dispositif)
+
 
 @serializable
 class TArbres (DB.Model):

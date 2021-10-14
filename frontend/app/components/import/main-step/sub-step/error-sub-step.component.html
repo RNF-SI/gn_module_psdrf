@@ -3,7 +3,7 @@
     <div *ngSwitchCase="'PsdrfError'">
         <div class="row">
             <div class="col-1 button-top-margin">
-                <div class="btn-group-vertical button-spacing" role="group" aria-label="Basic example" *ngFor="let row of psdrfError.row; let rowIndex = index">
+                <div class="mb-2 ml-3" role="group" aria-label="Basic example" *ngFor="let row of psdrfError.row; let rowIndex = index">
                     <button class="btn btn-secondary" type="button" (click)="onIndexButtonClicked(rowIndex, row)" [ngClass]="{'isError': !checkModified(rowIndex), 'wasModified':checkModified(rowIndex), 'wasDeleted': checkDeleted(rowIndex), 'isSelected': checkSelected(rowIndex)}">{{row}}</button>
                 </div>
             </div>
@@ -43,7 +43,7 @@
                 </table>
             </div>
             <div class="col-3 button-top-margin">
-                <div class="btn-group-horizontal" role="group" aria-label="Basic example" *ngFor="let row of psdrfError.row; let rowIndex = index">
+                <div class="btn-group-horizontal mb-2 ml-3" role="group" aria-label="Basic example" *ngFor="let row of psdrfError.row; let rowIndex = index">
 
                     <button class="mx-1" mat-raised-button matTooltip="Valider les modifications" (click)="modifLineValidation(rowIndex)">
                         <mat-icon> done </mat-icon>

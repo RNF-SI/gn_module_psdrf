@@ -9,7 +9,6 @@ import {
 } from "@angular/core";
 import { MatPaginator } from "@angular/material/paginator";
 import { MatTableDataSource } from "@angular/material/table";
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { HttpClient } from "@angular/common/http";
 import { Router } from "@angular/router";
 import * as _ from "lodash";
@@ -17,26 +16,30 @@ import { ExcelImportService } from "../../services/excel.import.service";
 import { PsdrfDataService } from "../../services/route.service";
 import { ErrorHistoryService } from "../../services/error.history.service";
 import { ErrorCorrectionService } from "../../services/error.correction.service";
-import { Placette } from "../../models/placette.model";
-import { Arbre } from "../../models/arbre.model";
-import { Rege } from "../../models/rege.model";
-import { Transect } from "../../models/transect.model";
-import { BMSsup30 } from "../../models/bmssup30.model";
-import { Repere } from "../../models/repere.model";
-import { Cycle } from "../../models/cycle.model";
+import { SharedService } from "../../services/shared.service";
 import {
   PsdrfError,
   PsdrfErrorCoordinates,
 } from "../../models/psdrfObject.model";
 import { StepperSelectionEvent } from "@angular/cdk/stepper";
 import { MatStepper } from "@angular/material/stepper";
+import { AuthService } from '@geonature/components/auth/auth.service';
+import { CommonService } from '@geonature/GN2CommonModule/service/common.service';
+import { ToastrService } from 'ngx-toastr';
+
+
+
 
 @Component({
   selector: "rnf-psdrf-import-donnees",
   templateUrl: "import.donnees.component.html",
   styleUrls: ["import.donnees.component.scss"],
 })
-export class ImportDonneesComponent {
+export class ImportDonneesComponent  implements OnInit{
+  userDisps: number[] = [];
+  currentUser: any; 
+  isPSDRFadmin: boolean;
+
   //Tableau qui contient au départ les données du fichier excel. Il est actualisé au fur et à mesure que les erreurs sont corrigées
   psdrfArray: any[][] = [];
 
@@ -84,7 +87,7 @@ export class ImportDonneesComponent {
 
   // Main Paginator
   // Max number of steps to show at a time in view, Change this to fit your need
-  MAX_STEP = 6;
+  MAX_STEP = 5;
   // Total steps included in mat-stepper in template, Change this to fit your need
   totalSteps = 0;
   // Current page from paginator
@@ -115,8 +118,42 @@ export class ImportDonneesComponent {
     private _router: Router,
     private changeDetector: ChangeDetectorRef,
     private elementRef: ElementRef,
-    private _snackBar: MatSnackBar
+    private _authService: AuthService,
+    private _commonService: CommonService,
+    private sharedSrv: SharedService,
+    private _toasterService: ToastrService
   ) {}
+
+  ngOnInit(){
+    this.currentUser = this._authService.getCurrentUser()
+    this.getUserDisps(this.currentUser.id_role);
+    if (this.sharedSrv.getPsdrfAdmin() == null) {
+      this.sharedSrv.setPsdrfAdmin()
+        .subscribe(
+          isPSDRFadmin  => {
+            this.isPSDRFadmin = isPSDRFadmin;
+          },
+          error => {
+            this._toasterService.error(error.message, "Vérification des droits PSDRF");
+          }
+          )
+    } else {
+      this.isPSDRFadmin = this.sharedSrv.getPsdrfAdmin();
+    }
+  }
+
+  getUserDisps(userId): void{
+    this.dataSrv
+      .getUserDisps(userId)
+      .subscribe(
+        dispsList => {
+          this.userDisps = dispsList;
+        },
+        error =>{
+          this._toasterService.error(error.message, "Recherche des dispositif de l'utilisateur courant");
+        }
+      )
+  }
 
   /**
    * Triggered function on D&D event
@@ -159,83 +196,98 @@ export class ImportDonneesComponent {
   onFileLoad(target: DataTransfer): void {
     let excelData;
     const reader: FileReader = new FileReader();
-    this.isDataCharging = true;
     this.excelFileName = target.files[0].name;
+    
+    let numDisp = this.excelFileName.split("-")[0];
+    if (this.userDisps.includes(parseInt(numDisp)) || this.isPSDRFadmin){
+      this.isDataCharging = true;
 
-    //Chargement des données du fichier excel dans la variable psdrfArray
-    reader.onload = (e: any) => {
-      const bstr: string = e.target.result;
-      excelData = this.excelSrv.importFromExcelFile(bstr);
-      for (let i = 0; i < excelData.length; i++) {
-        // const header: string[] = this.tableColumnsArray[i];
-        let columnNames = excelData[i].slice(0, 1)[0];
-        this.tableColumnsArray[i] = columnNames;
-        const header: string[] = columnNames;
-        const importedData = excelData[i].slice(1);
-        this.psdrfArray.push(
-          importedData.map((arr) => {
-            const obj = {};
-            for (let j = 0; j < header.length; j++) {
-              const k = header[j];
-              obj[k] = arr[j];
-            }
-            return obj;
-          })
-        );
-      }
 
-      //Création du binding entre les MatTable datasources et les données affichée dans la tableau
-      //Remarque: Tout changement dans psdrfArray s'applique automatiquement au tableau
-      for (let i = 0; i < this.psdrfArray.length; i++) {
-        this.tableDataSourceArray.push(
-          new MatTableDataSource(this.psdrfArray[i])
-        );
-        this.tableDataSourceArray[i].paginator = this.paginator.toArray()[i];
-      }
+      //Chargement des données du fichier excel dans la variable psdrfArray
+      reader.onload = (e: any) => {
+        const bstr: string = e.target.result;
+        excelData = this.excelSrv.importFromExcelFile(bstr);
+        for (let i = 0; i < excelData.length; i++) {
+          // const header: string[] = this.tableColumnsArray[i];
+          let columnNames = excelData[i].slice(0, 1)[0];
+          this.tableColumnsArray[i] = columnNames;
+          const header: string[] = columnNames;
+          const importedData = excelData[i].slice(1);
+          this.psdrfArray.push(
+            importedData.map((arr) => {
+              const obj = {};
+              for (let j = 0; j < header.length; j++) {
+                const k = header[j];
+                obj[k] = arr[j];
+              }
+              return obj;
+            })
+          );
+        }
 
-      this.isExcelLoaded = true;
-    };
-    reader.readAsBinaryString(target.files[0]);
-    //Lancement de la requête psdrf_data_verification avec les données Excel chargée
-    reader.onloadend = (e) => {
-      this.dataSrv
-        .psdrf_data_verification(
-          JSON.stringify(this.psdrfArray, (k, v) =>
-            v === undefined ? null : v
+        //Création du binding entre les MatTable datasources et les données affichée dans la tableau
+        //Remarque: Tout changement dans psdrfArray s'applique automatiquement au tableau
+        for (let i = 0; i < this.psdrfArray.length; i++) {
+          this.tableDataSourceArray.push(
+            new MatTableDataSource(this.psdrfArray[i])
+          );
+          this.tableDataSourceArray[i].paginator = this.paginator.toArray()[i];
+        }
+
+        this.isExcelLoaded = true;
+      };
+      reader.readAsBinaryString(target.files[0]);
+      //Lancement de la requête psdrf_data_verification avec les données Excel chargée
+      reader.onloadend = (e) => {
+        this.dataSrv
+          .psdrf_data_verification(
+            JSON.stringify(this.psdrfArray, (k, v) =>
+              v === undefined ? null : v
+            )
           )
-        )
-        .subscribe((verificationJson) => {
-          let verificationObj = JSON.parse(verificationJson);
+          .subscribe(
+            verificationJson => {
+              let verificationObj = JSON.parse(verificationJson);
 
-          //Récupération de toutes les corrections possibles pour les champs prédéfinis objet de correction 
-          this.correctionService.setSelectionErrorObj(
-            verificationObj["correctionList"]
+              //Récupération de toutes les corrections possibles pour les champs prédéfinis objet de correction 
+              this.correctionService.setSelectionErrorObj(
+                verificationObj["correctionList"]
+              );
+
+              let errorsPsdrfListTemp = verificationObj["verificationObj"];
+              this.mainStepNameArr = [];
+              this.totalErrorNumber = 0;
+              
+              this.jsonObjectToPsdrfObject(errorsPsdrfListTemp);
+              this.totalSteps = errorsPsdrfListTemp.length;
+              this.totalPages = Math.ceil(this.totalSteps / this.MAX_STEP);
+
+              this.isVerificationObjLoaded = true;
+
+              let fistSelected = new PsdrfErrorCoordinates(
+                this.errorsPsdrfList[0].errorList[0].table,
+                this.errorsPsdrfList[0].errorList[0].column,
+                this.errorsPsdrfList[0].errorList[0].row
+              );
+              this.selectedErrorElementArr = fistSelected;
+              //Using setTimeout to be sure that the ngIf stepperPart has taken effect
+              setTimeout(() => {
+                this.rerender();
+                //Affichage de la toute première erreur de errorsPsdrfList dans le MatTab
+                this.displayErrorOnMatTab(fistSelected);
+              }, 0);
+            },
+            error => {
+              this._toasterService.error(error.message, "Vérification des données PSDRF");
+              this.isDataCharging = false;
+              this.isExcelLoaded = false;
+              this.isVerificationObjLoaded = false;
+            }
           );
-
-          let errorsPsdrfListTemp = verificationObj["verificationObj"];
-          this.mainStepNameArr = [];
-          this.totalErrorNumber = 0;
-          
-          this.jsonObjectToPsdrfObject(errorsPsdrfListTemp);
-          this.totalSteps = errorsPsdrfListTemp.length;
-          this.totalPages = Math.ceil(this.totalSteps / this.MAX_STEP);
-
-          this.isVerificationObjLoaded = true;
-
-          let fistSelected = new PsdrfErrorCoordinates(
-            this.errorsPsdrfList[0].errorList[0].table,
-            this.errorsPsdrfList[0].errorList[0].column,
-            this.errorsPsdrfList[0].errorList[0].row
-          );
-          this.selectedErrorElementArr = fistSelected;
-          //Using setTimeout to be sure that the ngIf stepperPart has taken effect
-          setTimeout(() => {
-            this.rerender();
-            //Affichage de la toute première erreur de errorsPsdrfList dans le MatTab
-            this.displayErrorOnMatTab(fistSelected);
-          }, 0);
-        });
-    };
+      };
+    } else {
+      this._commonService.regularToaster('error', "Vous n'avez pas les droits d'édition sur le Dispositif "+ this.excelFileName)
+    }
   }
 
   /**
@@ -302,13 +354,10 @@ export class ImportDonneesComponent {
    */
   exportTableToExcel() {
     let excelData = [];
-    let tableDataTemp = [];
     this.psdrfArray.forEach((table, i) => {
       excelData.push([table, { header: this.tableColumnsArray[i] }]);
     });
-    console.log(this.psdrfArray)
-    console.log(excelData)
-    this.excelSrv.exportToExcelFile(excelData, this.excelFileName);
+    this.excelSrv.exportToExcelFile(excelData, this.excelFileName, true);
   }
 
   /**
@@ -621,7 +670,7 @@ export class ImportDonneesComponent {
     this.progressBarValue = 0;
     this.mainStepTextArr = [];
     this.isLabelVisible = true;
-    this.MAX_STEP = 6;
+    this.MAX_STEP = 5;
     this.totalSteps = 0;
     this.page = 0;
     this.step = 0;
@@ -797,7 +846,7 @@ export class ImportDonneesComponent {
     this.isLabelVisible = !this.isLabelVisible;
     if (this.isLabelVisible) {
       this.extensionIcon = "unfold_more";
-      this.MAX_STEP = 6;
+      this.MAX_STEP = 5;
     } else {
       this.extensionIcon = "unfold_less";
       this.MAX_STEP = 60;
@@ -857,35 +906,40 @@ export class ImportDonneesComponent {
       .psdrf_data_verification(
         JSON.stringify(this.psdrfArray, (k, v) => (v === undefined ? null : v))
       )
-      .subscribe((verificationJson) => {
-        let verificationObj = JSON.parse(verificationJson);
-        this.correctionService.setSelectionErrorObj(
-          verificationObj["correctionList"]
-        );
-        let errorsPsdrfListTemp = verificationObj["verificationObj"];
+      .subscribe(
+        verificationJson => {
+          let verificationObj = JSON.parse(verificationJson);
+          this.correctionService.setSelectionErrorObj(
+            verificationObj["correctionList"]
+          );
+          let errorsPsdrfListTemp = verificationObj["verificationObj"];
 
-        this.mainStepNameArr = [];
-        this.totalErrorNumber = 0;
+          this.mainStepNameArr = [];
+          this.totalErrorNumber = 0;
 
-        this.jsonObjectToPsdrfObject(errorsPsdrfListTemp);
-        this.isVerificationObjLoaded = true;
+          this.jsonObjectToPsdrfObject(errorsPsdrfListTemp);
+          this.isVerificationObjLoaded = true;
 
-        this.totalSteps = errorsPsdrfListTemp.length;
-        this.totalPages = Math.ceil(this.totalSteps / this.MAX_STEP);
+          this.totalSteps = errorsPsdrfListTemp.length;
+          this.totalPages = Math.ceil(this.totalSteps / this.MAX_STEP);
 
-        let fistSelected = new PsdrfErrorCoordinates(
-          this.errorsPsdrfList[0].errorList[0].table,
-          this.errorsPsdrfList[0].errorList[0].column,
-          this.errorsPsdrfList[0].errorList[0].row
-        );
-        this.selectedErrorElementArr = fistSelected;
-        //Using setTimeout to be sure that the ngIf stepperPart has taken effect
-        setTimeout(() => {
-          this.rerender();
-          //Affichage de la toute première erreur de errorsPsdrfList dans le MatTab
-          this.displayErrorOnMatTab(fistSelected);
-        }, 0);
-      });
+          let fistSelected = new PsdrfErrorCoordinates(
+            this.errorsPsdrfList[0].errorList[0].table,
+            this.errorsPsdrfList[0].errorList[0].column,
+            this.errorsPsdrfList[0].errorList[0].row
+          );
+          this.selectedErrorElementArr = fistSelected;
+          //Using setTimeout to be sure that the ngIf stepperPart has taken effect
+          setTimeout(() => {
+            this.rerender();
+            //Affichage de la toute première erreur de errorsPsdrfList dans le MatTab
+            this.displayErrorOnMatTab(fistSelected);
+          }, 0);
+        },
+        error => {
+          this._toasterService.error(error.message, "Vérification des données PSDRF");
+        }
+      );
   }
 
   importShape($event): void {
@@ -938,19 +992,18 @@ export class ImportDonneesComponent {
       this.integrationLoading = true;   
       this.dataSrv
       .psdrfIntegrationToDatabase(idAndData)
-      .subscribe((integrationJson) => {
+      .subscribe(
+        integrationJson => {
           let integrationObj = JSON.parse(integrationJson);
           this.integrationLoading = false;
           if(integrationObj.success){
-            this.openSnackBar("Les données ont bien été ajoutées à la BDD", "Ok");
+            this._toasterService.error("Les données ont bien été ajoutées à la BDD", "");
           }
+        }, 
+        error => {
+          this._toasterService.error(error.message, "Intégration des données en BDD");
         });
 
     }
   }
-
-  openSnackBar(message: string, action: string) {
-    this._snackBar.open(message, action);
-  }
-
 }

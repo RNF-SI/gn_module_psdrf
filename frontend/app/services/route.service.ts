@@ -57,4 +57,43 @@ export class PsdrfDataService {
     
   }
 
+  getDispositifList(){
+    return this._http.get<any>(
+      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/dispositifsList`
+    );
+  }
+
+  getUtilisateurList(){
+    return this._http.get<any>(
+      `${AppConfig.API_ENDPOINT}/users/roles`
+
+      );
+  }
+
+  getUserGroups(userId: number){
+    return this._http.get<any>(
+      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/groupList/`+ userId
+
+      );
+  }
+
+  addCorDispRole(data){
+    return this._http.post<any>(
+      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/corDispositifRole`,
+      data
+    );
+  }
+
+  getUserDisps(userId: number){
+    return this._http.get<any>(
+      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/userDisps/`+ userId
+      );
+  }
+
+  getExcelData(dispId: number){
+    return this._http.get<any>(
+      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/excelData/`+ dispId
+      );
+  }
+
 }

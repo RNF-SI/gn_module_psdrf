@@ -26,21 +26,80 @@ import * as XLSX from 'xlsx';
       return data;
     }
 
-    public exportToExcelFile(jsonSheets, excelFileName) {
-      
+    public exportToExcelFile(jsonSheets, excelFileName, isDateNameWanted, sheetNames?) {
+      let wsname;
+      if(sheetNames){
+        wsname = sheetNames
+      } else {
+        wsname = this.wsname
+      }
       let dataWsTemp = {};
-      for(let i = 0; i< this.wsname.length; i++){
+      for(let i = 0; i< wsname.length; i++){
         const ws: XLSX.WorkSheet =XLSX.utils.json_to_sheet(jsonSheets[i][0],jsonSheets[i][1]);
-        dataWsTemp[this.wsname[i]] = ws;
+        dataWsTemp[wsname[i]] = ws;
         
       }
       
-      let wb: XLSX.WorkBook = {Sheets: dataWsTemp, SheetNames: this.wsname};
-      const fileExtension = excelFileName.split('.').pop()
-      const fileName = excelFileName.split('.')[0]
+      let wb: XLSX.WorkBook = {Sheets: dataWsTemp, SheetNames: wsname};
+      let finalFileName
+      if(isDateNameWanted){
+        finalFileName = this.excelNameWithDate(excelFileName)
+      } else {
+        finalFileName = excelFileName + ".xlsx"
+      }
+      XLSX.writeFile(wb, finalFileName);
+    }
+
+    public excelNameWithDate(entireExcelFileName){
+      let nameWithDate;
+      const fileExtension = entireExcelFileName.split('.').pop()
+      const fileNameTemp = entireExcelFileName.split('.')[0]
+      const fileName = fileNameTemp.split('_')[0]
       let date = new Date()
       const dateString: string = date.getHours()+'-'+date.getMinutes()+'_'+date.getDate()+'-'+(date.getMonth()+1)+'-'+date.getUTCFullYear()
-      XLSX.writeFile(wb, fileName+'_'+dateString+'.'+fileExtension);
+      nameWithDate = fileName+'_'+dateString+'.'+fileExtension;
+      return nameWithDate
+    }
+
+    public getColumnNames(){
+      return { 
+        "Placettes": [
+          "NumDisp", "NumPlac", "Cycle", "Strate", "PoidsPlacette", "Pente", "CorrectionPenteboolean", 
+          "Exposition", "Habitat", "Station", "Typologie", "Groupe", "Groupe1", 
+          "Groupe2", "Ref_Habitat", "Precision_Habitat", "Ref_Station", 
+          "Ref_Typologie", "Descriptif_Groupe", "Descriptif_Groupe1", 
+          "Descriptif_Groupe2", "Date_Intervention", "Nature_Intervention", 
+          "Gestion", "PrecisionGPS", "Cheminement"
+        ], 
+        "Cycles": [
+          "NumDisp", "NumPlac", "Cycle", "Coeff", "Date", "DiamLim", "Année"
+        ],
+        "Arbres": [  
+          "NumDisp", "NumPlac", "Cycle", "NumArbre", "Essence", "Azimut", "Dist", "Diam1", "Diam2", 
+          "Type", "Haut", "StadeD", "StadeE", "Taillis", "Coupe", "Limite", "CodeEcolo", 
+          "Ref_CodeEcolo", "NumPlac", "Observation"
+        ], 
+        "Rege": [
+          "NumDisp", "NumPlac", "SsPlac", 
+          "Cycle", "Essence", "Recouv", "Class1", "Class2", 
+          "Class3", " Taillis", "Abroutis", "Observation"
+        ], 
+        "Transect": [  
+          "NumDisp", "NumPlac", "Id", "Cycle", "Transect", 
+          "Essence", "Dist", "Diam", "Angle", "Contact", 
+          "Chablis", "StadeD", "StadeE", "Observation"
+        ], 
+        "BMSsup30": [
+          "NumDisp", "NumPlac", "Id", "NumArbre", 
+          "Cycle", "Essence", "Azimut", "Dist", "DiamIni", 
+          "DiamMed", "DiamFin", "Longueur", "Contact", 
+          "Chablis", "StadeD", "StadeE", "Observation"
+        ], 
+        "Reperes": [
+          "NumDisp", "NumPlac", "Azimut", 
+          "Dist", "Diam", "Repere", "Observation"
+        ]
+      }
     }
 
   }

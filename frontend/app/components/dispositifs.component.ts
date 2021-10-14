@@ -4,8 +4,9 @@ import { Router } from "@angular/router";
 import { FormControl, FormGroup } from "@angular/forms";
 import { MapService } from "@geonature_common/map/map.service";
 import { AppConfig } from '@geonature_config/app.config';
-
+import { SharedService } from "../services/shared.service";
 import { PsdrfDataService } from "../services/route.service";
+import { ToastrService } from 'ngx-toastr';
 
 
 
@@ -15,6 +16,8 @@ import { PsdrfDataService } from "../services/route.service";
     styleUrls: ["dispositifs.component.scss"]
   })
   export class DispositifsComponent implements OnInit {
+    public currentUser: any; 
+    public isPSDRFadmin: boolean = false;
     public dispositifs: Array<any>;
     public apiEndPoint: string = 'psdrf/dispositifs';
     public statEndPoint: string = 'psdrf/global_stats';
@@ -58,21 +61,34 @@ import { PsdrfDataService } from "../services/route.service";
       private _api: HttpClient, 
       private _router: Router, 
       private mapservice: MapService,
-      private dataSrv: PsdrfDataService
+      private dataSrv: PsdrfDataService, 
+      private sharedSrv: SharedService,
+      private _toasterService: ToastrService
       ) { }
 
     ngOnInit() {
-        // Chargement des statistiques
-        this._api.get<any>(`${AppConfig.API_ENDPOINT}/${this.statEndPoint}`)
-          .subscribe(data => {this.stats = data});
+      this.sharedSrv
+        .setPsdrfAdmin()
+        .subscribe(
+          isPSDRFadmin  => {
+            this.isPSDRFadmin = isPSDRFadmin;
+          },
+          error => {
+            this._toasterService.error(error.message, "Vérification des droits PSDRF");
+          }
+        )
+
+      // Chargement des statistiques
+      this._api.get<any>(`${AppConfig.API_ENDPOINT}/${this.statEndPoint}`)
+        .subscribe(data => {this.stats = data});
 
 
-        this.tableColumns = [{name: "Nom du dispositif", prop: "name"}];
+      this.tableColumns = [{name: "Nom du dispositif", prop: "name"}];
 
-        this._api.get<any>(`${AppConfig.API_ENDPOINT}/psdrf/status_types`)
-          .subscribe(data => {this.statusList = data});
+      this._api.get<any>(`${AppConfig.API_ENDPOINT}/psdrf/status_types`)
+        .subscribe(data => {this.statusList = data});
 
-        this.loadData();
+      this.loadData();
     }
 
     loadData(): void {
@@ -124,13 +140,15 @@ import { PsdrfDataService } from "../services/route.service";
       this._router.navigate(["psdrf/importdonnees"])
     }
 
+    openPSDRFAdminPage(): void{
+      this._router.navigate(["psdrf/adminPage"])
+    }
+
     launchAnalysis(dispositifId: number): void{
-
-
       this.dataSrv
         .psdrf_data_analysis(dispositifId)
         .subscribe(
-          (data: any) => {
+          data => {
             var file = new Blob([data.pdf], { type: 'application/pdf' })
             var fileURL = URL.createObjectURL(file);
   
@@ -146,7 +164,7 @@ import { PsdrfDataService } from "../services/route.service";
             a.click();
           },
           (error) => {
-            console.log('getPDF error: ',error);
+            this._toasterService.error(error.message, "Génération du rapport PSDRF");
           }
         );
     }

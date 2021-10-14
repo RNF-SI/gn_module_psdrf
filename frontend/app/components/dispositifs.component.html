@@ -8,12 +8,18 @@
                 <p>Ceci est un texte d'introduction.</p>
             </div>
 
-            <button class="m-1" mat-raised-button matTooltip="Importer des données" (click)="openImportPage()">
-                <mat-icon> upload </mat-icon>
-                <span class="user-name">
-                {{ currentUser?.user_login }}
-                </span>
-            </button>
+            <div class="btn-group-horizontal">
+                <button class="m-1" mat-raised-button matTooltip="Importer des données" (click)="openImportPage()">
+                    <mat-icon> upload </mat-icon>
+                    <span class="user-name">
+                        {{ currentUser?.user_login }}
+                    </span>
+                </button>
+
+                <button class="m-1" *ngIf="isPSDRFadmin" mat-raised-button matTooltip="Accès page admin PSDRF" (click)="openPSDRFAdminPage()">
+                    <mat-icon> person_add </mat-icon>
+                </button>
+            </div>
 
             <div class="dispositifs-nbre" *ngIf="stats">
                 <p><strong>{{stats.nb_dispositifs | formatnum}} dispositifs sur {{stats.nb_cycles}} cycles de mesures.</strong></p>

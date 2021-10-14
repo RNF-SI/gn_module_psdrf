@@ -1,6 +1,8 @@
 from flask import Blueprint, request, make_response, send_from_directory
 from sqlalchemy.orm import subqueryload, joinedload
 from sqlalchemy.sql import func, distinct
+from sqlalchemy.exc import SQLAlchemyError
+
 from geoalchemy2.shape import to_shape, from_shape
 from shapely.geometry import MultiPoint, Point
 import json
@@ -8,20 +10,20 @@ import json
 from geonature.utils.env import DB
 # from geonature.utils.utilssqlalchemy import json_resp, get_geojson_feature
 
+from geonature.core.users.models import VUserslistForallMenu, CorRole
 from geonature.core.ref_geo.models import LiMunicipalities, LAreas, BibAreasTypes
 from .models import TDispositifs, TPlacettes, TArbres, TCycles, \
-    CorCyclesPlacettes, TArbresMesures
+    CorCyclesPlacettes, TArbresMesures, CorDispositifsRoles
 from .data_verification import data_verification
 from .data_integration import data_integration
 from .data_analysis import data_analysis
+from .bddToExcel import bddToExcel
 
 
 from utils_flask_sqla.response import json_resp
 from utils_flask_sqla_geo.generic import get_geojson_feature
 
-
 blueprint = Blueprint('psdrf', __name__)
-
 
 @blueprint.route('/test', methods=['GET', 'POST'])
 def test():
@@ -257,3 +259,63 @@ def psdrf_data_analysis(id_dispositif):
         return response
     except FileNotFoundError:
         abort(404)
+
+@blueprint.route('/dispositifsList', methods=['GET'])
+@json_resp
+def get_disp_list():
+    """
+        Retourne tous les dispositifs avec id et nom
+    """
+    query = DB.session.query(TDispositifs.id_dispositif, TDispositifs.name) 
+    data = [{'id':disp.id_dispositif, 'name': disp.name} for disp in query]
+    return data
+
+@blueprint.route('/groupList/<int:userId>', methods=['GET'])
+@json_resp
+def getUserGroups(userId):
+    """
+        Retourne tous les groupes pour un utilisateur ID
+    """     
+    query = DB.session.query(
+        CorRole      
+    ).filter(
+        CorRole.id_role_utilisateur == userId
+    ).all()
+    data = [group.id_role_groupe for group in query]
+    return data
+
+
+@blueprint.route('/corDispositifRole', methods=['POST'])
+@json_resp
+def add_cor_disp_role():
+    print(request)
+    data = request.get_json()
+    print(data)
+    print(data["dispositif"])
+    new_cor_disp_role = CorDispositifsRoles(
+        id_dispositif = data["dispositif"],
+        id_role= data["utilisateur"],
+    )
+    try:
+        DB.session.add(new_cor_disp_role)
+        DB.session.commit()
+        return {"success": "Ajout validé"}
+    except SQLAlchemyError as e:
+        print(e)
+        error = str(e.__dict__['orig'])
+        return error
+
+@blueprint.route('/userDisps/<int:userId>', methods=['GET'])
+@json_resp
+def get_user_disps(userId):
+    query = DB.session.query(CorDispositifsRoles).filter(
+            CorDispositifsRoles.id_role == userId
+        ).all()
+    data = [disp.id_dispositif for disp in query]
+    return data
+
+@blueprint.route('/excelData/<int:dispId>', methods=['GET'])
+@json_resp
+def get_excel_data(dispId):
+    data = bddToExcel(dispId)
+    return data
