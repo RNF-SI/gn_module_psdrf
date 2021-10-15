@@ -67,6 +67,10 @@ import { ToastrService } from 'ngx-toastr';
       ) { }
 
     ngOnInit() {
+      // Chargement des statistiques
+      this._api.get<any>(`${AppConfig.API_ENDPOINT}/${this.statEndPoint}`)
+        .subscribe(data => {this.stats = data});
+        
       this.sharedSrv
         .setPsdrfAdmin()
         .subscribe(
@@ -78,9 +82,6 @@ import { ToastrService } from 'ngx-toastr';
           }
         )
 
-      // Chargement des statistiques
-      this._api.get<any>(`${AppConfig.API_ENDPOINT}/${this.statEndPoint}`)
-        .subscribe(data => {this.stats = data});
 
 
       this.tableColumns = [{name: "Nom du dispositif", prop: "name"}];

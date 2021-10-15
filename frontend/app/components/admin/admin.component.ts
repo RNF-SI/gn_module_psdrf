@@ -22,9 +22,11 @@ import { AuthService } from '@geonature/components/auth/auth.service';
     form: FormGroup;
     dynamicFormGroup: FormGroup;
 
+    userDispForm: FormGroup;
+    dynamicUserDispFormGroup: FormGroup;
+
     dispForm: FormGroup;
     dynamicDispFormGroup: FormGroup;
-
 
     public disableSubmit = false;
     public disableSubmitDisp = false;
@@ -33,6 +35,7 @@ import { AuthService } from '@geonature/components/auth/auth.service';
 
     constructor(
         private fb: FormBuilder,
+        private fbUserDisp: FormBuilder,
         private fbDisp: FormBuilder,
         private _authService: AuthService,
         private _router: Router,
@@ -45,7 +48,7 @@ import { AuthService } from '@geonature/components/auth/auth.service';
         this.getUtilisateurList();
         this.getDispositifList();
         this.createForm();
-        this.createDispForm();
+        this.createUserDispForm();
     }
 
     /**
@@ -70,14 +73,21 @@ import { AuthService } from '@geonature/components/auth/auth.service';
         this.dynamicFormGroup = this.fb.group({});
       }
 
-      createDispForm() {
-        this.dispForm = this.fbDisp.group({
+      createUserDispForm() {
+        this.userDispForm = this.fbUserDisp.group({
           utilisateur: ['', Validators.required],
           dispositif: ['', Validators.required]
         });
-        this.dynamicDispFormGroup = this.fbDisp.group({});
+        this.dynamicUserDispFormGroup = this.fbUserDisp.group({});
       }
 
+      createDispForm() {
+        this.dispForm = this.fbDisp.group({
+          // utilisateur: ['', Validators.required],
+          // dispositif: ['', Validators.required]
+        });
+        this.dynamicDispFormGroup = this.fbDisp.group({});
+      }
 
     getDispositifList(): void{
         this.dataSrv
@@ -127,16 +137,38 @@ import { AuthService } from '@geonature/components/auth/auth.service';
       }
 
       addRoleDisp() {
-        console.log(this.dispForm)
-        if (this.dispForm.valid) {
+        if (this.userDispForm.valid) {
           this.disableSubmitDisp = true;
-          const finalForm = Object.assign({}, this.dispForm.value);
-
+          const finalForm = Object.assign({}, this.userDispForm.value);
+          console.log(finalForm)
           this.dataSrv
             .addCorDispRole(finalForm)
             .subscribe(
               res => {          
                 this._toasterService.success("Le dispositif "+ finalForm.dispositif +" a bien été ajouté à la liste des dispositifs modifiables par le rôle "+ finalForm.utilisateur, '');
+              },
+              // error callback
+              error => {
+                console.log(error)
+                this._toasterService.error(error.error.msg, '');
+              }
+            )
+            .add(() => {
+              this.disableSubmitDisp = false;
+            });
+        }
+      }
+
+      addDisp() {
+        if (this.dispForm.valid) {
+          this.disableSubmitDisp = true;
+          const finalForm = Object.assign({}, this.dispForm.value);
+          console.log(finalForm)
+          this.dataSrv
+            .addDispositif(finalForm)
+            .subscribe(
+              res => {          
+                this._toasterService.success("Le dispositif "+ finalForm.dispositif +" a bien été ajouté", '');
               },
               // error callback
               error => {

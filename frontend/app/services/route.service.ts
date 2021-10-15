@@ -96,4 +96,11 @@ export class PsdrfDataService {
       );
   }
 
+  addDispositif(data){
+    return this._http.post<any>(
+      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/dispositif`,
+      data
+    );
+  }
+
 }
