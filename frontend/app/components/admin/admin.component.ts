@@ -19,16 +19,23 @@ import { AuthService } from '@geonature/components/auth/auth.service';
     utilisateurList : string[] = [];
     utilisateurs = new FormControl();
 
+    organismeList: string[]= [];
+
     form: FormGroup;
     dynamicFormGroup: FormGroup;
 
     userDispForm: FormGroup;
     dynamicUserDispFormGroup: FormGroup;
 
+    organismeForm: FormGroup;
+    dynamicOrganismeFormGroup: FormGroup;
+
     dispForm: FormGroup;
     dynamicDispFormGroup: FormGroup;
 
     public disableSubmit = false;
+    public disableSubmitUserDisp = false;
+    public disableSubmitOrganisme = false;
     public disableSubmitDisp = false;
     public formControlBuilded = false;
     public FORM_CONFIG = AppConfig.ACCOUNT_MANAGEMENT.ACCOUNT_FORM;
@@ -37,6 +44,7 @@ import { AuthService } from '@geonature/components/auth/auth.service';
         private fb: FormBuilder,
         private fbUserDisp: FormBuilder,
         private fbDisp: FormBuilder,
+        private fbOrganisme: FormBuilder,
         private _authService: AuthService,
         private _router: Router,
         private _toasterService: ToastrService,
@@ -47,8 +55,11 @@ import { AuthService } from '@geonature/components/auth/auth.service';
     ngOnInit(){
         this.getUtilisateurList();
         this.getDispositifList();
+        this.getOrganismeList();
         this.createForm();
         this.createUserDispForm();
+        this.createDispForm();
+        this.createOrganismeForm();
     }
 
     /**
@@ -73,21 +84,35 @@ import { AuthService } from '@geonature/components/auth/auth.service';
         this.dynamicFormGroup = this.fb.group({});
       }
 
-      createUserDispForm() {
-        this.userDispForm = this.fbUserDisp.group({
-          utilisateur: ['', Validators.required],
-          dispositif: ['', Validators.required]
-        });
-        this.dynamicUserDispFormGroup = this.fbUserDisp.group({});
-      }
+    createUserDispForm() {
+      this.userDispForm = this.fbUserDisp.group({
+        utilisateur: ['', Validators.required],
+        dispositif: ['', Validators.required]
+      });
+      this.dynamicUserDispFormGroup = this.fbUserDisp.group({});
+    }
 
-      createDispForm() {
-        this.dispForm = this.fbDisp.group({
-          // utilisateur: ['', Validators.required],
-          // dispositif: ['', Validators.required]
-        });
-        this.dynamicDispFormGroup = this.fbDisp.group({});
-      }
+    createDispForm() {
+      this.dispForm = this.fbDisp.group({
+        newDispositif: ['', Validators.required],
+        dispOrganisme: ['', Validators.required],
+        alluvial: [false, null]
+
+      });
+      this.dynamicDispFormGroup = this.fbDisp.group({});
+    }
+
+    createOrganismeForm(){
+      this.organismeForm = this.fbOrganisme.group({
+        newOrganisme: ['', Validators.required],
+        adresseOrga: ['', null],
+        cpOrga: ['', null],
+        villeOrga: ['', null],
+        telOrga: ['', null],
+        mailOrga: ['', null]
+      });
+      this.dynamicOrganismeFormGroup = this.fbOrganisme.group({});
+    }
 
     getDispositifList(): void{
         this.dataSrv
@@ -105,6 +130,17 @@ import { AuthService } from '@geonature/components/auth/auth.service';
           .subscribe(
           (data: any) => {
             this.utilisateurList = data
+        }
+      );
+    }
+
+    getOrganismeList(): void{
+      this.dataSrv
+          .getOrganismeList()
+          .subscribe(
+          (data: any) => {
+            console.log(data)
+            this.organismeList = data
         }
       );
     }
@@ -136,50 +172,73 @@ import { AuthService } from '@geonature/components/auth/auth.service';
         }
       }
 
-      addRoleDisp() {
-        if (this.userDispForm.valid) {
-          this.disableSubmitDisp = true;
-          const finalForm = Object.assign({}, this.userDispForm.value);
-          console.log(finalForm)
-          this.dataSrv
-            .addCorDispRole(finalForm)
-            .subscribe(
-              res => {          
-                this._toasterService.success("Le dispositif "+ finalForm.dispositif +" a bien été ajouté à la liste des dispositifs modifiables par le rôle "+ finalForm.utilisateur, '');
-              },
-              // error callback
-              error => {
-                console.log(error)
-                this._toasterService.error(error.error.msg, '');
-              }
-            )
-            .add(() => {
-              this.disableSubmitDisp = false;
-            });
-        }
+    addRoleDisp() {
+      if (this.userDispForm.valid) {
+        this.disableSubmitUserDisp = true;
+        const finalForm = Object.assign({}, this.userDispForm.value);
+        console.log(finalForm)
+        this.dataSrv
+          .addCorDispRole(finalForm)
+          .subscribe(
+            res => {          
+              this._toasterService.success("Le dispositif "+ finalForm.dispositif +" a bien été ajouté à la liste des dispositifs modifiables par le rôle "+ finalForm.utilisateur, '');
+            },
+            // error callback
+            error => {
+              console.log(error)
+              this._toasterService.error(error.error.msg, '');
+            }
+          )
+          .add(() => {
+            this.disableSubmitUserDisp = false;
+          });
       }
+    }
 
-      addDisp() {
-        if (this.dispForm.valid) {
-          this.disableSubmitDisp = true;
-          const finalForm = Object.assign({}, this.dispForm.value);
-          console.log(finalForm)
-          this.dataSrv
-            .addDispositif(finalForm)
-            .subscribe(
-              res => {          
-                this._toasterService.success("Le dispositif "+ finalForm.dispositif +" a bien été ajouté", '');
-              },
-              // error callback
-              error => {
-                console.log(error)
-                this._toasterService.error(error.error.msg, '');
-              }
-            )
-            .add(() => {
-              this.disableSubmitDisp = false;
-            });
-        }
+    addOrganisme() {
+      if (this.organismeForm.valid) {
+        this.disableSubmitOrganisme = true;
+        const finalForm = Object.assign({}, this.organismeForm.value);
+        console.log(finalForm)
+        this.dataSrv
+          .addOrganisme(finalForm)
+          .subscribe(
+            res => {          
+              this._toasterService.success("Le organisme "+ finalForm.newOrganisme +" a bien été ajouté", '');
+            },
+            // error callback
+            error => {
+              console.log(error)
+              this._toasterService.error(error.error.msg, '');
+            }
+          )
+          .add(() => {
+            this.disableSubmitOrganisme = false;
+          });
       }
+    }
+
+    addDisp() {
+      if (this.dispForm.valid) {
+        this.disableSubmitDisp = true;
+        const finalForm = Object.assign({}, this.dispForm.value);
+        console.log(finalForm)
+        this.dataSrv
+          .addDispositif(finalForm)
+          .subscribe(
+            res => {          
+              this._toasterService.success("Le dispositif "+ finalForm.newDispositif +" a bien été ajouté", '');
+            },
+            // error callback
+            error => {
+              console.log(error)
+              this._toasterService.error(error.error.msg, '');
+            }
+          )
+          .add(() => {
+            this.disableSubmitDisp = false;
+          });
+      }
+    }
 
   }

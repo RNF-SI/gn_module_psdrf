@@ -107,7 +107,7 @@
 
 <div class="container-fluid p-2">
     <mat-card>
-        <mat-card-title>Ajouter des dispositifs à un utilisateur</mat-card-title>
+        <mat-card-title>Ajouter un dispositif à un utilisateur</mat-card-title>
 
         <div class="panel-body ">
             <form [formGroup]="userDispForm">
@@ -138,7 +138,7 @@
                 </pnx-dynamic-form-generator>
 
                 <div class="text-center">
-                    <button type="button" class="btn btn-success" [disabled]="!userDispForm.valid || !dynamicUserDispFormGroup.valid || disableSubmitDisp" (click)="addRoleDisp()">
+                    <button type="button" class="btn btn-success" [disabled]="!userDispForm.valid || !dynamicUserDispFormGroup.valid || disableSubmitUserDisp" (click)="addRoleDisp()">
                         Ajouter
                         </button>
                 </div>
@@ -157,28 +157,32 @@
             <form [formGroup]="dispForm">
 
                 <div class="form-group row">
-                    <label for="dispositif" class="col-md-3 col-form-label text-md-right">
+                    <label for="newDispositif" class="col-md-3 col-form-label text-md-right">
                         Nom du Dispositif 
                         </label>
                     <div class="col-md-9 col-lg-7">
-                        <input type="text" id="dispositif" class="form-control" placeholder="Nom du Dispositif" formControlName="dispositif"></input>
+                        <input type="text" id="newDispositif" class="form-control" placeholder="Nom du Dispositif" formControlName="newDispositif">
                     </div>
                 </div>
 
                 <div class="form-group row">
-                    <label for="organisme" class="col-md-3 col-form-label text-md-right">
+                    <label for="dispOrganisme" class="col-md-3 col-form-label text-md-right">
                         Organisme
-                        </label>
+                    </label>
                     <div class="col-md-9 col-lg-7">
-                        <input type="text" class="form-control" id="organisme" placeholder="Organisme" formControlName="organisme">
+                        <mat-select formControlName="dispOrganisme" placeholder="Organisme">
+                            <mat-option *ngFor="let dispOrganisme of organismeList" [value]="dispOrganisme.id">{{dispOrganisme.name}}</mat-option>
+                        </mat-select>
                     </div>
                 </div>
+
+
                 <div class="form-group row">
                     <label for="alluvial" class="col-md-3 col-form-label text-md-right">
                         Alluvial
                         </label>
                     <div class="col-md-9 col-lg-7">
-                        <input type="checkbox" class="form-control" id="alluvial" placeholder="Alluvial" formControlName="alluvial">
+                        <input type="checkbox" class="align-bottom" id="alluvial" placeholder="Alluvial" formControlName="alluvial">
                     </div>
                 </div>
 
@@ -187,6 +191,83 @@
 
                 <div class="text-center">
                     <button type="button" class="btn btn-success" [disabled]="!dispForm.valid || !dynamicDispFormGroup.valid || disableSubmitDisp" (click)="addDisp()">
+                        Ajouter
+                    </button>
+                </div>
+            </form>
+        </div>
+
+    </mat-card>
+
+</div>
+
+
+<div class="container-fluid p-2">
+    <mat-card>
+        <mat-card-title>Ajouter un organisme</mat-card-title>
+
+        <div class="panel-body ">
+            <form [formGroup]="organismeForm">
+
+                <div class="form-group row">
+                    <label for="newOrganisme" class="col-md-3 col-form-label text-md-right">
+                        Nom de l'organisme
+                        </label>
+                    <div class="col-md-9 col-lg-7">
+                        <input type="text" id="newOrganisme" class="form-control" placeholder="Nom de l'organisme" formControlName="newOrganisme">
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label for="adresseOrga" class="col-md-3 col-form-label text-md-right">
+                        Adresse
+                        </label>
+                    <div class="col-md-9 col-lg-7">
+                        <input type="text" id="adresseOrga" class="form-control" placeholder="Adresse" formControlName="adresseOrga">
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label for="cpOrga" class="col-md-3 col-form-label text-md-right">
+                        Code Postal
+                        </label>
+                    <div class="col-md-9 col-lg-7">
+                        <input type="text" id="cpOrga" class="form-control" placeholder="Code Postal" formControlName="cpOrga">
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label for="villeOrga" class="col-md-3 col-form-label text-md-right">
+                        Ville
+                        </label>
+                    <div class="col-md-9 col-lg-7">
+                        <input type="text" id="villeOrga" class="form-control" placeholder="Ville" formControlName="villeOrga">
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label for="telOrga" class="col-md-3 col-form-label text-md-right">
+                        Téléphone
+                        </label>
+                    <div class="col-md-9 col-lg-7">
+                        <input type="text" id="telOrga" class="form-control" placeholder="Téléphone" formControlName="telOrga">
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label for="mailOrga" class="col-md-3 col-form-label text-md-right">
+                        Email
+                        </label>
+                    <div class="col-md-9 col-lg-7">
+                        <input type="text" id="mailOrga" class="form-control" placeholder="Email" formControlName="mailOrga">
+                    </div>
+                </div>
+
+                <pnx-dynamic-form-generator [autoGenerated]="true" [myFormGroup]="dynamicOrganismeFormGroup" [formsDefinition]="FORM_CONFIG">
+                </pnx-dynamic-form-generator>
+
+                <div class="text-center">
+                    <button type="button" class="btn btn-success" [disabled]="!organismeForm.valid || !dynamicOrganismeFormGroup.valid || disableSubmitOrganisme" (click)="addOrganisme()">
                         Ajouter
                     </button>
                 </div>

@@ -11,6 +11,7 @@ from geonature.utils.env import DB
 # from geonature.utils.utilssqlalchemy import json_resp, get_geojson_feature
 
 from geonature.core.users.models import VUserslistForallMenu, CorRole
+from pypnusershub.db.models import Organisme as BibOrganismes
 from geonature.core.ref_geo.models import LiMunicipalities, LAreas, BibAreasTypes
 from .models import TDispositifs, TPlacettes, TArbres, TCycles, \
     CorCyclesPlacettes, TArbresMesures, CorDispositifsRoles
@@ -319,3 +320,47 @@ def get_user_disps(userId):
 def get_excel_data(dispId):
     data = bddToExcel(dispId)
     return data
+
+@blueprint.route('/organisme', methods=['Post'])
+@json_resp
+def postOrganisme():
+    data = request.get_json()
+    new_organisme = BibOrganismes(
+        nom_organisme = data["newOrganisme"],
+        adresse_organisme = data["adresseOrga"],
+        cp_organisme = data["cpOrga"],
+        ville_organisme = data["villeOrga"],
+        tel_organisme = data["telOrga"],
+        email_organisme = data["mailOrga"]
+    )
+    try:
+        DB.session.add(new_organisme)
+        DB.session.commit()
+        return {"success": "Ajout validé"}
+    except SQLAlchemyError as e:
+        error = str(e.__dict__['orig'])
+        return error
+
+@blueprint.route('/listOrganism', methods=['GET'])
+@json_resp
+def get_list_organism():
+    query = DB.session.query(BibOrganismes.id_organisme, BibOrganismes.nom_organisme).all()
+    data = [{'id':organisme.id_organisme, 'name': organisme.nom_organisme} for organisme in query]
+    return data
+
+@blueprint.route('/dispositif', methods=['Post'])
+@json_resp
+def postDispositif():
+    data = request.get_json()
+    new_dispositif = TDispositifs(
+        name = data["newDispositif"],
+        id_organisme = data["dispOrganisme"],
+        alluvial = data["alluvial"]
+    )
+    try:
+        DB.session.add(new_dispositif)
+        DB.session.commit()
+        return {"success": "Ajout validé"}
+    except SQLAlchemyError as e:
+        error = str(e.__dict__['orig'])
+        return error

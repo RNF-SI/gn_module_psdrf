@@ -70,6 +70,13 @@ export class PsdrfDataService {
       );
   }
 
+  getOrganismeList(){
+    return this._http.get<any>(
+      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/listOrganism`
+
+      );
+  }
+
   getUserGroups(userId: number){
     return this._http.get<any>(
       `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/groupList/`+ userId
@@ -94,6 +101,13 @@ export class PsdrfDataService {
     return this._http.get<any>(
       `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/excelData/`+ dispId
       );
+  }
+
+  addOrganisme(data){
+    return this._http.post<any>(
+      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/organisme`,
+      data
+    );
   }
 
   addDispositif(data){
