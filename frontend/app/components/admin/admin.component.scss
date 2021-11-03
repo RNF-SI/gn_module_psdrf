@@ -1,3 +1,24 @@
+@import '../../../styles/styles.scss';
 ::ng-deep .mat-select {
     background-color: #DCDCDC;
+}
+
+.mat-drawer-inner-container {
+    width: 800px;
+}
+
+::ng-deep .mat-sidenav {
+    width: 800px;
+}
+
+::ng-deep .mat-drawer-inner-container {
+    width: 800px;
+}
+
+::ng-deep .mat-sidenav {
+    width: 800px;
+}
+
+.request-sidenav {
+    width: 1000px;
 }

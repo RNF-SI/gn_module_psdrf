@@ -6,274 +6,316 @@
 </button>
 <div class="container-fluid p-2">
     <mat-card>
-        <mat-card-title>Ajouter un utilisateur du module PSDRF</mat-card-title>
+        <mat-card-title>Table des Utilisateurs</mat-card-title>
+        <mat-drawer-container class="p-5" autosize>
+            <mat-drawer #userDrawer class="request-sidenav" mode="side" position="end">
 
-        <div class="panel-body ">
-            <form [formGroup]="form">
-                <h5>Utilisateur</h5>
+                <div class="panel-body ">
+                    <form [formGroup]="userForm">
+                        <h5>Utilisateur</h5>
 
-                <div class="form-group row">
-                    <label for="prenom_role" class="col-md-3 col-form-label text-md-right">
-                        Prénom
-                        </label>
-                    <div class="col-md-9 col-lg-7">
-                        <input type="text" class="form-control" id="prenom_role" placeholder="Prénom" formControlName="prenom_role">
-                        <small *ngIf="
-                            form.get('prenom_role').hasError('required') &&
-                            form.get('prenom_role').touched
-                            ">
-                            Ce champ est nécessaire
-                        </small>
-                    </div>
+                        <div class="form-group row">
+                            <label for="prenom_role" class="col-md-3 col-form-label text-md-right">
+                                Prénom
+                                </label>
+                            <div class="col-md-9 col-lg-7">
+                                <input type="text" class="form-control" id="prenom_role" placeholder="Prénom" formControlName="prenom_role">
+                                <small *ngIf="
+                                    userForm.get('prenom_role').hasError('required') &&
+                                    userForm.get('prenom_role').touched
+                                    ">
+                                    Ce champ est nécessaire
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label for="nom_role" class="col-md-3 col-form-label text-md-right">
+                                Nom
+                                </label>
+                            <div class="col-md-9 col-lg-7">
+                                <input type="text" class="form-control" id="nom_role" placeholder="Nom" formControlName="nom_role">
+                                <small *ngIf="
+                                    userForm.get('nom_role').hasError('required') && userForm.get('nom_role').touched
+                                    ">
+                                    Ce champ est nécessaire
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label for="email" class="col-md-3 col-form-label text-md-right">
+                                Adresse email
+                                </label>
+                            <div class="col-md-9 col-lg-7">
+                                <input type="text" [ngClass]="userForm.disabled ? 'form-control-plaintext' : 'form-control'" id="email" placeholder="Email" formControlName="email">
+                            </div>
+                        </div>
+
+                        <h5>Compte</h5>
+
+                        <div class="form-group row">
+                            <label for="identifiant" class="col-md-3 col-form-label text-md-right">
+                                Identifiant
+                                </label>
+                            <div class="col-md-9 col-lg-7">
+                                <input type="text" class="form-control" id="identifiant" placeholder="Identifiant" formControlName="identifiant" matTooltipPosition="above" matTooltip="Cet identifiant vous sera demandé pour vous authentifier dans GeoNature." />
+                                <small *ngIf="
+                                    userForm.get('identifiant').hasError('required') &&
+                                    userForm.get('identifiant').touched
+                                    ">
+                                    Ce champ est nécessaire
+                                </small>
+                            </div>
+                        </div>
+
+                        <h5>Informations complémentaires</h5>
+
+                        <div class="form-group row">
+                            <label for="organisme" class="col-md-3 col-form-label text-md-right">
+                                Organisme
+                                </label>
+                            <div class="col-md-9 col-lg-7">
+                                <input type="text" class="form-control" id="organisme" placeholder="Organisme" formControlName="organisme">
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label for="remarques" class="col-md-3 col-form-label text-md-right">
+                                Remarques
+                                </label>
+                            <div class="col-md-9 col-lg-7">
+                                <textarea id="remarques" class="form-control" placeholder="Précisions diverses..." formControlName="remarques"></textarea>
+                            </div>
+                        </div>
+
+                        <pnx-dynamic-form-generator [autoGenerated]="true" [myFormGroup]="dynamicUserFormGroup" [formsDefinition]="FORM_CONFIG">
+                        </pnx-dynamic-form-generator>
+
+                        <div class="text-center">
+                            <button type="button" class="btn btn-success" [disabled]="!userForm.valid || !dynamicUserFormGroup.valid || disableSubmit" (click)="save()">
+                                Inscrire
+                                </button>
+                        </div>
+                    </form>
                 </div>
 
-                <div class="form-group row">
-                    <label for="nom_role" class="col-md-3 col-form-label text-md-right">
-                        Nom
-                        </label>
-                    <div class="col-md-9 col-lg-7">
-                        <input type="text" class="form-control" id="nom_role" placeholder="Nom" formControlName="nom_role">
-                        <small *ngIf="
-                            form.get('nom_role').hasError('required') && form.get('nom_role').touched
-                            ">
-                            Ce champ est nécessaire
-                        </small>
-                    </div>
-                </div>
+            </mat-drawer>
+            <div class="example-sidenav-content">
+                <admin-table [displayedColumns]="displayedColumns['User']" [data]="utilisateurList">
+                </admin-table>
 
-                <div class="form-group row">
-                    <label for="email" class="col-md-3 col-form-label text-md-right">
-                        Adresse email
-                        </label>
-                    <div class="col-md-9 col-lg-7">
-                        <input type="text" [ngClass]="form.disabled ? 'form-control-plaintext' : 'form-control'" id="email" placeholder="Email" formControlName="email">
-                    </div>
-                </div>
-
-                <mat-divider></mat-divider>
-
-                <h5>Compte</h5>
-
-                <div class="form-group row">
-                    <label for="identifiant" class="col-md-3 col-form-label text-md-right">
-                        Identifiant
-                        </label>
-                    <div class="col-md-9 col-lg-7">
-                        <input type="text" class="form-control" id="identifiant" placeholder="Identifiant" formControlName="identifiant" matTooltipPosition="above" matTooltip="Cet identifiant vous sera demandé pour vous authentifier dans GeoNature." />
-                        <small *ngIf="
-                            form.get('identifiant').hasError('required') &&
-                            form.get('identifiant').touched
-                            ">
-                            Ce champ est nécessaire
-                        </small>
-                    </div>
-                </div>
-
-                <mat-divider></mat-divider>
-
-                <h5>Informations complémentaires</h5>
-
-                <div class="form-group row">
-                    <label for="organisme" class="col-md-3 col-form-label text-md-right">
-                        Organisme
-                        </label>
-                    <div class="col-md-9 col-lg-7">
-                        <input type="text" class="form-control" id="organisme" placeholder="Organisme" formControlName="organisme">
-                    </div>
-                </div>
-
-                <div class="form-group row">
-                    <label for="remarques" class="col-md-3 col-form-label text-md-right">
-                        Remarques
-                        </label>
-                    <div class="col-md-9 col-lg-7">
-                        <textarea id="remarques" class="form-control" placeholder="Précisions diverses..." formControlName="remarques"></textarea>
-                    </div>
-                </div>
-
-                <pnx-dynamic-form-generator [autoGenerated]="true" [myFormGroup]="dynamicFormGroup" [formsDefinition]="FORM_CONFIG">
-                </pnx-dynamic-form-generator>
-
-                <div class="text-center">
-                    <button type="button" class="btn btn-success" [disabled]="!form.valid || !dynamicFormGroup.valid || disableSubmit" (click)="save()">
-                        Inscrire
-                        </button>
-                </div>
-            </form>
-        </div>
-
+                <button type="button" class="btn btn-success ml-4 mt-4" (click)="userDrawer.toggle()">
+                Montrer le formulaire
+              </button>
+            </div>
+        </mat-drawer-container>
     </mat-card>
 </div>
 
 <div class="container-fluid p-2">
     <mat-card>
-        <mat-card-title>Ajouter un dispositif à un utilisateur</mat-card-title>
+        <mat-card-title>Table des dispositifs et des utilisateurs</mat-card-title>
+        <mat-drawer-container class="p-5" autosize>
+            <mat-drawer #userDispDrawer class="request-sidenav" mode="side" position="end">
 
-        <div class="panel-body ">
-            <form [formGroup]="userDispForm">
+                <div class="panel-body ">
+                    <form [formGroup]="userDispForm">
 
-                <div class="form-group row">
-                    <label for="utilisateur" class="col-md-3 col-form-label text-md-right">
-                        Utilisateur
-                    </label>
-                    <div class="col-md-9 col-lg-7">
-                        <mat-select formControlName="utilisateur" placeholder="Utilisateur">
-                            <mat-option *ngFor="let utilisateur of utilisateurList" [value]="utilisateur.id_role">{{utilisateur.nom_role}} {{utilisateur.prenom_role}}</mat-option>
-                        </mat-select>
-                    </div>
+                        <div class="form-group row">
+                            <label for="utilisateur" class="col-md-3 col-form-label text-md-right">
+                                Utilisateur
+                            </label>
+                            <div class="col-md-9 col-lg-7">
+                                <mat-select formControlName="utilisateur" placeholder="Utilisateur">
+                                    <mat-option *ngFor="let utilisateur of utilisateurList" [value]="utilisateur.id_utilisateur">{{utilisateur.nom_utilisateur}} {{utilisateur.prenom_utilisateur}}</mat-option>
+                                </mat-select>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label for="dispositif" class="col-md-3 col-form-label text-md-right">
+                                Dispositif
+                            </label>
+                            <div class="col-md-9 col-lg-7">
+                                <mat-select formControlName="dispositif" placeholder="Dispositif">
+                                    <mat-option *ngFor="let dispositif of dispositifList" [value]="dispositif.id_dispositif">{{dispositif.nom_dispositif}}</mat-option>
+                                </mat-select>
+                            </div>
+                        </div>
+
+                        <pnx-dynamic-form-generator [autoGenerated]="true" [myFormGroup]="dynamicUserDispFormGroup" [formsDefinition]="FORM_CONFIG">
+                        </pnx-dynamic-form-generator>
+
+                        <div class="text-center m-4">
+                            <button type="button" class="btn btn-success" [disabled]="!userDispForm.valid || !dynamicUserDispFormGroup.valid || disableSubmitUserDisp" (click)="addRoleDisp()">
+                                Ajouter
+                                </button>
+                        </div>
+                    </form>
                 </div>
 
-                <div class="form-group row">
-                    <label for="dispositif" class="col-md-3 col-form-label text-md-right">
-                        Dispositif
-                    </label>
-                    <div class="col-md-9 col-lg-7">
-                        <mat-select formControlName="dispositif" placeholder="Dispositif">
-                            <mat-option *ngFor="let dispositif of dispositifList" [value]="dispositif.id">{{dispositif.name}}</mat-option>
-                        </mat-select>
-                    </div>
-                </div>
+            </mat-drawer>
+            <div class="example-sidenav-content">
+                <admin-table [displayedColumns]="displayedColumns['UserDisp']" [data]="userDispList">
+                </admin-table>
 
-                <pnx-dynamic-form-generator [autoGenerated]="true" [myFormGroup]="dynamicUserDispFormGroup" [formsDefinition]="FORM_CONFIG">
-                </pnx-dynamic-form-generator>
-
-                <div class="text-center">
-                    <button type="button" class="btn btn-success" [disabled]="!userDispForm.valid || !dynamicUserDispFormGroup.valid || disableSubmitUserDisp" (click)="addRoleDisp()">
-                        Ajouter
-                        </button>
-                </div>
-            </form>
-        </div>
-
+                <button type="button" class="btn btn-success ml-4 mt-4" (click)="userDispDrawer.toggle()">
+                Montrer le formulaire
+              </button>
+            </div>
+        </mat-drawer-container>
     </mat-card>
-
-</div>
-
-<div class="container-fluid p-2">
-    <mat-card>
-        <mat-card-title>Ajouter un dispositifs</mat-card-title>
-
-        <div class="panel-body ">
-            <form [formGroup]="dispForm">
-
-                <div class="form-group row">
-                    <label for="newDispositif" class="col-md-3 col-form-label text-md-right">
-                        Nom du Dispositif 
-                        </label>
-                    <div class="col-md-9 col-lg-7">
-                        <input type="text" id="newDispositif" class="form-control" placeholder="Nom du Dispositif" formControlName="newDispositif">
-                    </div>
-                </div>
-
-                <div class="form-group row">
-                    <label for="dispOrganisme" class="col-md-3 col-form-label text-md-right">
-                        Organisme
-                    </label>
-                    <div class="col-md-9 col-lg-7">
-                        <mat-select formControlName="dispOrganisme" placeholder="Organisme">
-                            <mat-option *ngFor="let dispOrganisme of organismeList" [value]="dispOrganisme.id">{{dispOrganisme.name}}</mat-option>
-                        </mat-select>
-                    </div>
-                </div>
-
-
-                <div class="form-group row">
-                    <label for="alluvial" class="col-md-3 col-form-label text-md-right">
-                        Alluvial
-                        </label>
-                    <div class="col-md-9 col-lg-7">
-                        <input type="checkbox" class="align-bottom" id="alluvial" placeholder="Alluvial" formControlName="alluvial">
-                    </div>
-                </div>
-
-                <pnx-dynamic-form-generator [autoGenerated]="true" [myFormGroup]="dynamicDispFormGroup" [formsDefinition]="FORM_CONFIG">
-                </pnx-dynamic-form-generator>
-
-                <div class="text-center">
-                    <button type="button" class="btn btn-success" [disabled]="!dispForm.valid || !dynamicDispFormGroup.valid || disableSubmitDisp" (click)="addDisp()">
-                        Ajouter
-                    </button>
-                </div>
-            </form>
-        </div>
-
-    </mat-card>
-
 </div>
 
 
 <div class="container-fluid p-2">
     <mat-card>
-        <mat-card-title>Ajouter un organisme</mat-card-title>
+        <mat-card-title>Table des dispositifs</mat-card-title>
+        <mat-drawer-container class="p-5" autosize>
+            <mat-drawer #DispDrawer class="request-sidenav" mode="side" position="end">
 
-        <div class="panel-body ">
-            <form [formGroup]="organismeForm">
+                <div class="panel-body ">
+                    <form [formGroup]="dispForm">
 
-                <div class="form-group row">
-                    <label for="newOrganisme" class="col-md-3 col-form-label text-md-right">
-                        Nom de l'organisme
-                        </label>
-                    <div class="col-md-9 col-lg-7">
-                        <input type="text" id="newOrganisme" class="form-control" placeholder="Nom de l'organisme" formControlName="newOrganisme">
-                    </div>
+                        <div class="form-group row">
+                            <label for="newDispositif" class="col-md-3 col-form-label text-md-right">
+                                Nom du Dispositif 
+                                </label>
+                            <div class="col-md-9 col-lg-7">
+                                <input type="text" id="newDispositif" class="form-control" placeholder="Nom du Dispositif" formControlName="newDispositif">
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label for="dispOrganisme" class="col-md-3 col-form-label text-md-right">
+                                Organisme
+                            </label>
+                            <div class="col-md-9 col-lg-7">
+                                <mat-select formControlName="dispOrganisme" placeholder="Organisme">
+                                    <mat-option *ngFor="let dispOrganisme of organismeList" [value]="dispOrganisme.id">{{dispOrganisme.nom_organisme}}</mat-option>
+                                </mat-select>
+                            </div>
+                        </div>
+
+
+                        <div class="form-group row">
+                            <label for="alluvial" class="col-md-3 col-form-label text-md-right">
+                                Alluvial
+                                </label>
+                            <div class="col-md-9 col-lg-7">
+                                <input type="checkbox" class="align-bottom" id="alluvial" placeholder="Alluvial" formControlName="alluvial">
+                            </div>
+                        </div>
+
+                        <pnx-dynamic-form-generator [autoGenerated]="true" [myFormGroup]="dynamicDispFormGroup" [formsDefinition]="FORM_CONFIG">
+                        </pnx-dynamic-form-generator>
+
+                        <div class="text-center">
+                            <button type="button" class="btn btn-success" [disabled]="!dispForm.valid || !dynamicDispFormGroup.valid || disableSubmitDisp" (click)="addDisp()">
+                                Ajouter
+                            </button>
+                        </div>
+                    </form>
                 </div>
 
-                <div class="form-group row">
-                    <label for="adresseOrga" class="col-md-3 col-form-label text-md-right">
-                        Adresse
-                        </label>
-                    <div class="col-md-9 col-lg-7">
-                        <input type="text" id="adresseOrga" class="form-control" placeholder="Adresse" formControlName="adresseOrga">
-                    </div>
-                </div>
+            </mat-drawer>
+            <div class="example-sidenav-content">
+                <admin-table [displayedColumns]="displayedColumns['Disp']" [data]="dispositifList">
+                </admin-table>
 
-                <div class="form-group row">
-                    <label for="cpOrga" class="col-md-3 col-form-label text-md-right">
-                        Code Postal
-                        </label>
-                    <div class="col-md-9 col-lg-7">
-                        <input type="text" id="cpOrga" class="form-control" placeholder="Code Postal" formControlName="cpOrga">
-                    </div>
-                </div>
-
-                <div class="form-group row">
-                    <label for="villeOrga" class="col-md-3 col-form-label text-md-right">
-                        Ville
-                        </label>
-                    <div class="col-md-9 col-lg-7">
-                        <input type="text" id="villeOrga" class="form-control" placeholder="Ville" formControlName="villeOrga">
-                    </div>
-                </div>
-
-                <div class="form-group row">
-                    <label for="telOrga" class="col-md-3 col-form-label text-md-right">
-                        Téléphone
-                        </label>
-                    <div class="col-md-9 col-lg-7">
-                        <input type="text" id="telOrga" class="form-control" placeholder="Téléphone" formControlName="telOrga">
-                    </div>
-                </div>
-
-                <div class="form-group row">
-                    <label for="mailOrga" class="col-md-3 col-form-label text-md-right">
-                        Email
-                        </label>
-                    <div class="col-md-9 col-lg-7">
-                        <input type="text" id="mailOrga" class="form-control" placeholder="Email" formControlName="mailOrga">
-                    </div>
-                </div>
-
-                <pnx-dynamic-form-generator [autoGenerated]="true" [myFormGroup]="dynamicOrganismeFormGroup" [formsDefinition]="FORM_CONFIG">
-                </pnx-dynamic-form-generator>
-
-                <div class="text-center">
-                    <button type="button" class="btn btn-success" [disabled]="!organismeForm.valid || !dynamicOrganismeFormGroup.valid || disableSubmitOrganisme" (click)="addOrganisme()">
-                        Ajouter
-                    </button>
-                </div>
-            </form>
-        </div>
-
+                <button type="button" class="btn btn-success ml-4 mt-4" (click)="DispDrawer.toggle()">
+                Montrer le formulaire
+              </button>
+            </div>
+        </mat-drawer-container>
     </mat-card>
+</div>
 
+
+<div class="container-fluid p-2">
+    <mat-card>
+        <mat-card-title>Table des Organismes</mat-card-title>
+        <mat-drawer-container class="p-5" autosize>
+            <mat-drawer #OrganismeDrawer class="request-sidenav" mode="side" position="end">
+
+                <div class="panel-body ">
+                    <form [formGroup]="organismeForm">
+
+                        <div class="form-group row">
+                            <label for="newOrganisme" class="col-md-3 col-form-label text-md-right">
+                                Nom de l'organisme
+                                </label>
+                            <div class="col-md-9 col-lg-7">
+                                <input type="text" id="newOrganisme" class="form-control" placeholder="Nom de l'organisme" formControlName="newOrganisme">
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label for="adresseOrga" class="col-md-3 col-form-label text-md-right">
+                                Adresse
+                                </label>
+                            <div class="col-md-9 col-lg-7">
+                                <input type="text" id="adresseOrga" class="form-control" placeholder="Adresse" formControlName="adresseOrga">
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label for="cpOrga" class="col-md-3 col-form-label text-md-right">
+                                Code Postal
+                                </label>
+                            <div class="col-md-9 col-lg-7">
+                                <input type="text" id="cpOrga" class="form-control" placeholder="Code Postal" formControlName="cpOrga">
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label for="villeOrga" class="col-md-3 col-form-label text-md-right">
+                                Ville
+                                </label>
+                            <div class="col-md-9 col-lg-7">
+                                <input type="text" id="villeOrga" class="form-control" placeholder="Ville" formControlName="villeOrga">
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label for="telOrga" class="col-md-3 col-form-label text-md-right">
+                                Téléphone
+                                </label>
+                            <div class="col-md-9 col-lg-7">
+                                <input type="text" id="telOrga" class="form-control" placeholder="Téléphone" formControlName="telOrga">
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label for="mailOrga" class="col-md-3 col-form-label text-md-right">
+                                Email
+                                </label>
+                            <div class="col-md-9 col-lg-7">
+                                <input type="text" id="mailOrga" class="form-control" placeholder="Email" formControlName="mailOrga">
+                            </div>
+                        </div>
+
+                        <pnx-dynamic-form-generator [autoGenerated]="true" [myFormGroup]="dynamicOrganismeFormGroup" [formsDefinition]="FORM_CONFIG">
+                        </pnx-dynamic-form-generator>
+
+                        <div class="text-center">
+                            <button type="button" class="btn btn-success" [disabled]="!organismeForm.valid || !dynamicOrganismeFormGroup.valid || disableSubmitOrganisme" (click)="addOrganisme()">
+                                Ajouter
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+            </mat-drawer>
+            <div class="example-sidenav-content">
+                <admin-table [displayedColumns]="displayedColumns['Orga']" [data]="organismeList">
+                </admin-table>
+
+                <button type="button" class="btn btn-success ml-4 mt-4" (click)="OrganismeDrawer.toggle()">
+                Montrer le formulaire
+              </button>
+            </div>
+        </mat-drawer-container>
+    </mat-card>
 </div>

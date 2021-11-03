@@ -2,6 +2,7 @@ from flask import Blueprint, request, make_response, send_from_directory
 from sqlalchemy.orm import subqueryload, joinedload
 from sqlalchemy.sql import func, distinct
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.sql.expression import false
 
 from geoalchemy2.shape import to_shape, from_shape
 from shapely.geometry import MultiPoint, Point
@@ -10,8 +11,9 @@ import json
 from geonature.utils.env import DB
 # from geonature.utils.utilssqlalchemy import json_resp, get_geojson_feature
 
-from geonature.core.users.models import VUserslistForallMenu, CorRole
+from geonature.core.users.models import CorRole
 from pypnusershub.db.models import Organisme as BibOrganismes
+from pypnusershub.db.models import User
 from geonature.core.ref_geo.models import LiMunicipalities, LAreas, BibAreasTypes
 from .models import TDispositifs, TPlacettes, TArbres, TCycles, \
     CorCyclesPlacettes, TArbresMesures, CorDispositifsRoles
@@ -267,8 +269,12 @@ def get_disp_list():
     """
         Retourne tous les dispositifs avec id et nom
     """
-    query = DB.session.query(TDispositifs.id_dispositif, TDispositifs.name) 
-    data = [{'id':disp.id_dispositif, 'name': disp.name} for disp in query]
+    query = DB.session.query(
+        TDispositifs.id_dispositif, TDispositifs.name, TDispositifs.id_organisme, TDispositifs.alluvial, BibOrganismes.nom_organisme
+        ).outerjoin(
+            BibOrganismes, BibOrganismes.id_organisme == TDispositifs.id_organisme
+        ).all() 
+    data = [{'id_dispositif':disp.id_dispositif, 'alluvial': disp.alluvial, 'nom_dispositif': disp.name, "id_organisme": disp.id_organisme, "nom_organisme": disp.nom_organisme} for disp in query]
     return data
 
 @blueprint.route('/groupList/<int:userId>', methods=['GET'])
@@ -289,10 +295,7 @@ def getUserGroups(userId):
 @blueprint.route('/corDispositifRole', methods=['POST'])
 @json_resp
 def add_cor_disp_role():
-    print(request)
     data = request.get_json()
-    print(data)
-    print(data["dispositif"])
     new_cor_disp_role = CorDispositifsRoles(
         id_dispositif = data["dispositif"],
         id_role= data["utilisateur"],
@@ -302,7 +305,6 @@ def add_cor_disp_role():
         DB.session.commit()
         return {"success": "Ajout validé"}
     except SQLAlchemyError as e:
-        print(e)
         error = str(e.__dict__['orig'])
         return error
 
@@ -344,8 +346,8 @@ def postOrganisme():
 @blueprint.route('/listOrganism', methods=['GET'])
 @json_resp
 def get_list_organism():
-    query = DB.session.query(BibOrganismes.id_organisme, BibOrganismes.nom_organisme).all()
-    data = [{'id':organisme.id_organisme, 'name': organisme.nom_organisme} for organisme in query]
+    query = DB.session.query(BibOrganismes.id_organisme, BibOrganismes.nom_organisme, BibOrganismes.adresse_organisme, BibOrganismes.ville_organisme, BibOrganismes.cp_organisme, BibOrganismes.tel_organisme, BibOrganismes.email_organisme).all()
+    data = [{'id':organisme.id_organisme, 'nom_organisme': organisme.nom_organisme, 'adresse_organisme': organisme.adresse_organisme, 'ville_organisme': organisme.ville_organisme, 'cp_organisme': organisme.cp_organisme, "telephone_organisme": organisme.tel_organisme, "email_organisme": organisme.email_organisme} for organisme in query]
     return data
 
 @blueprint.route('/dispositif', methods=['Post'])
@@ -364,3 +366,32 @@ def postDispositif():
     except SQLAlchemyError as e:
         error = str(e.__dict__['orig'])
         return error
+
+@blueprint.route('/corDispositifRole', methods=['GET'])
+@json_resp
+def get_corDispositifRole():
+    query = DB.session.query(
+        CorDispositifsRoles.id_dispositif, CorDispositifsRoles.id_role, TDispositifs.name, User.prenom_role, User.nom_role
+    ).join(
+        TDispositifs, TDispositifs.id_dispositif == CorDispositifsRoles.id_dispositif
+    ).join(
+        User, User.id_role == CorDispositifsRoles.id_role
+    ).all()
+    data = [{'nom_utilisateur':userDisp.nom_role, 'prenom_utilisateur': userDisp.prenom_role, 'nom_dispositif': userDisp.name} for userDisp in query]
+    return data
+
+@blueprint.route('/users', methods=['GET'])
+@json_resp
+def get_Users():
+    """
+        Retourne tous les utilisateurs (sans les groupes)
+    """     
+    query = DB.session.query(
+        User.id_role, User.groupe, User.id_organisme, User.prenom_role, User.nom_role, User.email, User.identifiant, User.remarques, BibOrganismes.nom_organisme,BibOrganismes.id_organisme
+    ).filter(
+        User.groupe == False
+    ).outerjoin(
+        BibOrganismes, BibOrganismes.id_organisme == User.id_organisme
+    ).all()
+    data = [{'id_utilisateur': user.id_role, 'nom_utilisateur':user.nom_role, 'prenom_utilisateur': user.prenom_role, 'email_utilisateur': user.email, 'identifiant_utilisateur': user.identifiant, 'nom_organisme': user.nom_organisme, 'remarques_utilisateur': user.remarques} for user in query]
+    return data

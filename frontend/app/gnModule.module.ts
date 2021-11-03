@@ -9,6 +9,7 @@ import { FormDispositifComponent } from "./components/form.dispositif.component"
 import { ImportDonneesComponent } from "./components/import/import.donnees.component";
 import { ErrorMainStepComponent } from "./components/import/main-step/error-main-step.component";
 import { ErrorSubStepComponent } from "./components/import/main-step/sub-step/error-sub-step.component";
+import { AdminTableComponent } from "./reusable-components/admin-table/admin-table.component";
 import { AdminComponent } from "./components/admin/admin.component";
 import { ExcelImportService } from "./services/excel.import.service";
 import { PsdrfDataService } from "./services/route.service";
@@ -40,7 +41,8 @@ const routes: Routes = [
     FormatNum,
     DndDirective,
     ErrorMainStepComponent,
-    ErrorSubStepComponent
+    ErrorSubStepComponent,
+    AdminTableComponent
   ],
   imports: [
     GN2CommonModule,

@@ -6,6 +6,36 @@ import { AppConfig } from '@geonature_config/app.config';
 import { ToastrService } from 'ngx-toastr';
 import { AuthService } from '@geonature/components/auth/auth.service';
 
+export interface UserDisp {
+  nom_utilisateur: string;
+  prenom_utilisateur: string;
+  nom_dispositif: string;
+}
+
+export interface User {
+  nom_utilisateur: string;
+  prenom_utilisateur: string;
+  email_utilisateur: string;
+  identifiant_utilisateur: string;
+  nom_organisme: string;
+  remarque_utilisateur: string;
+}
+
+export interface Disp {
+  nom_dispositif: string;
+  nom_organisme: string;
+  alluvial: boolean;
+}
+
+export interface Orga {
+  nom_organisme: string;
+  adresse_organisme: string;
+  cp_organisme: string;
+  ville_organisme: string;
+  telephone_organisme: string;
+  email_organisme: string;
+}
+
 
 @Component({
     selector: "rnf-psdrf-admin",
@@ -13,19 +43,29 @@ import { AuthService } from '@geonature/components/auth/auth.service';
     styleUrls: ["./admin.component.scss"],
   })
   export class AdminComponent implements OnInit{
-    dispositifList : string[] = [];
+
+    displayedColumns : any= {
+      "UserDisp": ["nom_utilisateur", "prenom_utilisateur", "nom_dispositif"],
+      "User": ["nom_utilisateur", 'prenom_utilisateur', 'email_utilisateur', 'identifiant_utilisateur', 'nom_organisme', 'remarque_utilisateur'],
+      "Disp": ["nom_dispositif", 'nom_organisme', 'alluvial'],
+      "Orga": ["nom_organisme", "adresse_organisme", "cp_organisme", "ville_organisme", "telephone_organisme", "email_organisme"]
+    }
+
+    dispositifList : Disp[] = [];
     dispositifs = new FormControl();
 
-    utilisateurList : string[] = [];
+    utilisateurList : User[] = [];
     utilisateurs = new FormControl();
 
-    organismeList: string[]= [];
+    organismeList: Orga[]= [];
 
-    form: FormGroup;
-    dynamicFormGroup: FormGroup;
+    userForm: FormGroup;
+    dynamicUserFormGroup: FormGroup;
+
 
     userDispForm: FormGroup;
     dynamicUserDispFormGroup: FormGroup;
+    userDispList: UserDisp[];
 
     organismeForm: FormGroup;
     dynamicOrganismeFormGroup: FormGroup;
@@ -56,6 +96,8 @@ import { AuthService } from '@geonature/components/auth/auth.service';
         this.getUtilisateurList();
         this.getDispositifList();
         this.getOrganismeList();
+        this.getUserDisps();
+
         this.createForm();
         this.createUserDispForm();
         this.createDispForm();
@@ -70,7 +112,7 @@ import { AuthService } from '@geonature/components/auth/auth.service';
     }
 
     createForm() {
-        this.form = this.fb.group({
+        this.userForm = this.fb.group({
           nom_role: ['', Validators.required],
           prenom_role: ['', Validators.required],
           identifiant: ['', Validators.required],
@@ -81,7 +123,7 @@ import { AuthService } from '@geonature/components/auth/auth.service';
           remarques: ['', null],
           organisme: ['', null]
         });
-        this.dynamicFormGroup = this.fb.group({});
+        this.dynamicUserFormGroup = this.fb.group({});
       }
 
     createUserDispForm() {
@@ -144,22 +186,35 @@ import { AuthService } from '@geonature/components/auth/auth.service';
         }
       );
     }
+    
+    getUserDisps(): void{
+      this.dataSrv
+          .getCorDispositifRole()
+          .subscribe(
+          (data: any) => {
+            console.log(data)
+            this.userDispList = data
+        }
+      );
+    }
+    
 
     save() {
-        if (this.form.valid) {
+        if (this.userForm.valid) {
           this.disableSubmit = true;
-          this.form.value.password = "psdrf_mdp";
-          this.form.value.password_confirmation = "psdrf_mdp";
-          const finalForm = Object.assign({}, this.form.value);
+          this.userForm.value.password = "psdrf_mdp";
+          this.userForm.value.password_confirmation = "psdrf_mdp";
+          const finalForm = Object.assign({}, this.userForm.value);
           // concatenate two forms
           if (AppConfig.ACCOUNT_MANAGEMENT.ACCOUNT_FORM.length > 0) {
-            finalForm['champs_addi'] = this.dynamicFormGroup.value;
+            finalForm['champs_addi'] = this.dynamicUserFormGroup.value;
           }
           this._authService
             .signupUser(finalForm)
             .subscribe(
               res => {
                 this._toasterService.success("L'utilisateur a bien été ajouté", '');
+                this.getUtilisateurList();
               },
               // error callback
               error => {
@@ -182,6 +237,7 @@ import { AuthService } from '@geonature/components/auth/auth.service';
           .subscribe(
             res => {          
               this._toasterService.success("Le dispositif "+ finalForm.dispositif +" a bien été ajouté à la liste des dispositifs modifiables par le rôle "+ finalForm.utilisateur, '');
+              this.getUserDisps();
             },
             // error callback
             error => {
@@ -204,7 +260,8 @@ import { AuthService } from '@geonature/components/auth/auth.service';
           .addOrganisme(finalForm)
           .subscribe(
             res => {          
-              this._toasterService.success("Le organisme "+ finalForm.newOrganisme +" a bien été ajouté", '');
+              this._toasterService.success("L'organisme "+ finalForm.newOrganisme +" a bien été ajouté", '');
+              this.getOrganismeList();
             },
             // error callback
             error => {
@@ -217,17 +274,18 @@ import { AuthService } from '@geonature/components/auth/auth.service';
           });
       }
     }
-
+    
     addDisp() {
       if (this.dispForm.valid) {
         this.disableSubmitDisp = true;
         const finalForm = Object.assign({}, this.dispForm.value);
         console.log(finalForm)
         this.dataSrv
-          .addDispositif(finalForm)
-          .subscribe(
-            res => {          
-              this._toasterService.success("Le dispositif "+ finalForm.newDispositif +" a bien été ajouté", '');
+        .addDispositif(finalForm)
+        .subscribe(
+          res => {          
+            this._toasterService.success("Le dispositif "+ finalForm.newDispositif +" a bien été ajouté", '');
+            this.getDispositifList();
             },
             // error callback
             error => {

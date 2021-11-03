@@ -9,3 +9,7 @@ tr.mat-header-row {
 ::ng-deep .mat-horizontal-content-container {
     padding: 10px !important;
 }
+
+::ng-deep .mat-sidenav {
+    width: 800px;
+}

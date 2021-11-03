@@ -63,10 +63,16 @@ export class PsdrfDataService {
     );
   }
 
-  getUtilisateurList(){
+  getUtilisateurAndGroupsList(){
     return this._http.get<any>(
       `${AppConfig.API_ENDPOINT}/users/roles`
 
+      );
+  }
+
+  getUtilisateurList(){
+    return this._http.get<any>(
+      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/users`
       );
   }
 
@@ -115,6 +121,12 @@ export class PsdrfDataService {
       `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/dispositif`,
       data
     );
+  }
+
+  getCorDispositifRole(){
+    return this._http.get<any>(
+      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/corDispositifRole`
+      );
   }
 
 }
