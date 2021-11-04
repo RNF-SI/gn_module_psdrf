@@ -22,7 +22,6 @@ import * as XLSX from 'xlsx';
         /* save data */
         data.push(<XLSX.AOA2SheetOpts>(XLSX.utils.sheet_to_json(ws, { header: 1, raw:false})));
       }
-      console.log(data)
       return data;
     }
 

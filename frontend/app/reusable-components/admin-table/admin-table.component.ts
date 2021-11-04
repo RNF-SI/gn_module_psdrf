@@ -21,12 +21,9 @@ export class AdminTableComponent implements OnChanges {
 
 
     ngOnChanges(changes: SimpleChanges){
-        console.log(changes)
         this.data = changes.data.currentValue;
         this.datasource = new MatTableDataSource<any>(this.data);
         this.changeDetectorRefs.detectChanges();
-        console.log(this.datasource);
-        console.log(this.displayedColumns)
     }
 
 

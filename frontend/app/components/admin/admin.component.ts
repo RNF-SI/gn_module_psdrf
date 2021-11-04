@@ -181,7 +181,6 @@ export interface Orga {
           .getOrganismeList()
           .subscribe(
           (data: any) => {
-            console.log(data)
             this.organismeList = data
         }
       );
@@ -192,7 +191,6 @@ export interface Orga {
           .getCorDispositifRole()
           .subscribe(
           (data: any) => {
-            console.log(data)
             this.userDispList = data
         }
       );
@@ -231,7 +229,6 @@ export interface Orga {
       if (this.userDispForm.valid) {
         this.disableSubmitUserDisp = true;
         const finalForm = Object.assign({}, this.userDispForm.value);
-        console.log(finalForm)
         this.dataSrv
           .addCorDispRole(finalForm)
           .subscribe(
@@ -241,7 +238,6 @@ export interface Orga {
             },
             // error callback
             error => {
-              console.log(error)
               this._toasterService.error(error.error.msg, '');
             }
           )
@@ -255,7 +251,6 @@ export interface Orga {
       if (this.organismeForm.valid) {
         this.disableSubmitOrganisme = true;
         const finalForm = Object.assign({}, this.organismeForm.value);
-        console.log(finalForm)
         this.dataSrv
           .addOrganisme(finalForm)
           .subscribe(
@@ -265,7 +260,6 @@ export interface Orga {
             },
             // error callback
             error => {
-              console.log(error)
               this._toasterService.error(error.error.msg, '');
             }
           )
@@ -279,7 +273,6 @@ export interface Orga {
       if (this.dispForm.valid) {
         this.disableSubmitDisp = true;
         const finalForm = Object.assign({}, this.dispForm.value);
-        console.log(finalForm)
         this.dataSrv
         .addDispositif(finalForm)
         .subscribe(
@@ -289,7 +282,6 @@ export interface Orga {
             },
             // error callback
             error => {
-              console.log(error)
               this._toasterService.error(error.error.msg, '');
             }
           )

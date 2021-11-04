@@ -395,3 +395,19 @@ def get_Users():
     ).all()
     data = [{'id_utilisateur': user.id_role, 'nom_utilisateur':user.nom_role, 'prenom_utilisateur': user.prenom_role, 'email_utilisateur': user.email, 'identifiant_utilisateur': user.identifiant, 'nom_organisme': user.nom_organisme, 'remarques_utilisateur': user.remarques} for user in query]
     return data
+
+
+@blueprint.route('/groups', methods=['GET'])
+@json_resp
+def get_Groups():
+    """
+        Retourne tous les utilisateurs (sans les groupes)
+    """     
+    query = DB.session.query(
+        User.id_role, User.groupe, User.prenom_role, User.nom_role, User.identifiant
+    ).filter(
+        User.groupe == True
+    ).all()
+    data = [{'id_utilisateur': user.id_role, 'nom_utilisateur':user.nom_role, 'prenom_utilisateur': user.prenom_role, 'identifiant_utilisateur': user.identifiant} for user in query]
+    return data
+    

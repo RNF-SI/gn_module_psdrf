@@ -19,17 +19,17 @@ export class SharedService {
         var subject = new Subject<boolean>();
 
         forkJoin(
-            [this.dataSrv.getUtilisateurList(), this.dataSrv.getUserGroups(currentUser.id_role)]
+            [this.dataSrv.getGroupeList(), this.dataSrv.getUserGroups(currentUser.id_role)]
         ).subscribe((res) =>{
-            let userList = res[0]
-            let groups = res [1]
+            let groupList = res[0]
+            let userGroups = res [1]
             let id_PSDRF_Group: number; 
-            userList.forEach((user) => {
-              if(user.nom_role == "PSDRF"){
-                id_PSDRF_Group = user.id_role; 
+            groupList.forEach((group) => {
+              if(group.nom_utilisateur == "PSDRF"){
+                id_PSDRF_Group = group.id_utilisateur; 
               }
             })
-            if (groups.includes(id_PSDRF_Group)){
+            if (userGroups.includes(id_PSDRF_Group)){
                 this.isPsdrfAdmin = true; 
             } else {
                 this.isPsdrfAdmin = false;

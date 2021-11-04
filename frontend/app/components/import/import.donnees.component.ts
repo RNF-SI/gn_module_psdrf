@@ -608,7 +608,6 @@ export class ImportDonneesComponent  implements OnInit{
           }
         // });
       });
-      console.log(this.deletedElementArr)
 
       this.progressBarValue =
         (this.modifiedElementArr.length * 100) / this.totalErrorNumber;
@@ -894,7 +893,6 @@ export class ImportDonneesComponent  implements OnInit{
         let indexTable = this.indexLabelMatTabGroup.indexOf(
           property
         );
-        console.log(deleteObject)
         // Supprimer les index un par un
         deleteObject[property].forEach(i => {
           this.psdrfArray[indexTable].splice(i, 1)

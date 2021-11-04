@@ -115,7 +115,6 @@ export class InfoDispositifComponent implements OnInit {
       .subscribe(
         data => {
           let psdrfArrayObj = JSON.parse(data)
-          console.log(psdrfArrayObj)
           this.exportTableToExcel(psdrfArrayObj.data)
         }, 
         (error) => {
@@ -133,7 +132,6 @@ export class InfoDispositifComponent implements OnInit {
       let excelFileName = this.dispositif.id.toString() + "-"+ this.dispositif.name;
       let columns = this.excelSrv.getColumnNames()
       let currentSheet;
-      console.log(this.dispositif)
       psdrfArray.forEach((table, i) => {
         currentSheet= tableColumnsArray[i];
         excelData.push([table, { header: columns[currentSheet] }]);

@@ -153,8 +153,6 @@ import { ToastrService } from 'ngx-toastr';
             var file = new Blob([data.pdf], { type: 'application/pdf' })
             var fileURL = URL.createObjectURL(file);
   
-            console.log(data)
-
             // if you want to open PDF in new tab
             // window.open(fileURL); 
             var a         = document.createElement('a');

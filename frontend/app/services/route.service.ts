@@ -76,6 +76,12 @@ export class PsdrfDataService {
       );
   }
 
+  getGroupeList(){
+    return this._http.get<any>(
+      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/groups`
+      );
+  }
+
   getOrganismeList(){
     return this._http.get<any>(
       `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/listOrganism`
