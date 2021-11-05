@@ -81,6 +81,7 @@ def data_verification(data):
     Arbres["Dist"]=Arbres["Dist"].str.replace(',','.')
     Arbres["Haut"]=Arbres["Haut"].str.replace(',','.')
     BMSsup30["Dist"]=BMSsup30["Dist"].str.replace(',','.')
+    BMSsup30["Longueur"]= BMSsup30["Longueur"].astype(str)
     BMSsup30["Longueur"]=BMSsup30["Longueur"].str.replace(',','.')
     Transect["Dist"]=Transect["Dist"].str.replace(',','.')
     Reperes["Dist"]=Reperes["Dist"].str.replace(',','.')
@@ -395,7 +396,7 @@ def data_verification(data):
                 "value": tValues.to_json(orient='records'),
               }
             error_List_Temp.append(err)
-          verificationList.append({'errorName': "Incohérence dans Arbres", 'errorText': "Arbre: Incohérence(s) relevée(s) sur les valeurs d'Essence, Azimut et Dist entre les différents inventaires", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True})
+          verificationList.append({'errorName': "Incohérence dans Arbres", 'errorText': "Arbre: Incohérence(s) relevée(s) sur les valeurs d'Essence, Azimut et Dist entre les différents inventaires. Conseil: Modifier les valeurs des cycles précédents si vous êtes sûrs de vous.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True})
 
 
 
@@ -500,7 +501,7 @@ def data_verification(data):
         pos = []
         for i in range(1, last_cycle) :
           t["temp"] = abs(t.iloc[:, i + 4] - t.iloc[: , i +3])
-          error_trees = t[t["temp"] > 15]
+          error_trees = t[t["temp"] > 20]
         if error_trees.shape[0] > 0 :
           error_List_Temp = []
           for index, row in error_trees.iterrows():
@@ -513,7 +514,7 @@ def data_verification(data):
                 "value": tValues.to_json(orient='records'),
               }
             error_List_Temp.append(err)
-          verificationList.append({'errorName': "Accroissement anormal dans Arbres", 'errorText': "Valeur(s) d'accroissement en diamètre trop importante(s) détectée(s) (seuil à 15 cm entre les 2 inventaires", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': False})
+          verificationList.append({'errorName': "Accroissement anormal dans Arbres", 'errorText': "Valeur(s) d'accroissement en diamètre trop importante(s) détectée(s) (seuil à 20 cm entre les 2 inventaires)", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': False})
 
       # ##### 6/ Incohérence type de Bois Mort sur Pied et de Taillis #####
       # -- contrôle des types de bois mort sur pied :
@@ -612,7 +613,7 @@ def data_verification(data):
               "value": temp.loc[[index],:].to_json(orient='records'),
             }
           error_List_Temp.append(err)
-        verificationList.append({'errorName': "Diamètre incohérent dans Arbres", 'errorText': "La valeur du diamètre est supérieur à 80.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': False})
+        verificationList.append({'errorName': "Diamètre très élevé dans Arbres", 'errorText': "La valeur du diamètre est supérieure à 80. Vérifiez qu'elle correspond bien à ce que vous vouliez saisir.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': False})
 
       # Valeurs extrêmes inf Diam1
       temp = Arbres[Arbres["Diam1"] < 7]
@@ -628,7 +629,7 @@ def data_verification(data):
               "value": temp.loc[[index],:].to_json(orient='records'),
             }
           error_List_Temp.append(err)
-        verificationList.append({'errorName': "Diamètre incohérent dans Arbres", 'errorText': "La valeur du diamètre est inférieur à 7.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': False})
+        verificationList.append({'errorName': "Diamètre incohérent dans Arbres", 'errorText': "La valeur du diamètre est inférieure à 7.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': False})
 
       # Valeurs extrêmes distance
       temp = Arbres[Arbres["Dist"] > 40]
@@ -644,7 +645,7 @@ def data_verification(data):
               "value": temp.loc[[index],:].to_json(orient='records'),
             }
           error_List_Temp.append(err)
-        verificationList.append({'errorName': "Distance incohérente dans Arbres", 'errorText': "La valeur de la distance est supérieure à 40.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': False})
+        verificationList.append({'errorName': "Distance trés élevée dans Arbres", 'errorText': "La valeur de la distance est supérieure à 40. Vérifiez qu'elle correspond bien à ce que vous vouliez saisir.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': False})
 
 
       # Incohérences sur les données Type - Haut - StadeD - StadeE des BMP 
@@ -732,9 +733,8 @@ def data_verification(data):
               "value": Table_temp.loc[[index],:].to_json(orient='records'),
             }
           error_List_Temp.append(err)
-        verificationList.append({'errorName': "DMH sans référence de codification", 'errorText': "Il y a des arbres portant des DMH sans référence de codification renseignée (Ref_CodeEcolo vide pour CodeEcolo non vide)", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True})
+        verificationList.append({'errorName': "DMH sans référence de codification", 'errorText': "Il y a des arbres portant des DMH sans référence de codification renseignée (Ref_CodeEcolo vide pour CodeEcolo non vide). <a href='https://docs.google.com/spreadsheets/d/1b6cfcJwKSZxODuJSbyE_UGCJFt985az-ZMNlxEeavVE/edit#gid=0'>Code Ecolo</a>", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True})
 
-      print(Arbres[Arbres["Ref_CodeEcolo"].isna()])
       # ----- CodeEcolo non reconnus
       df_Codes = Arbres[~Arbres["Ref_CodeEcolo"].isna()]
 
@@ -783,7 +783,7 @@ def data_verification(data):
                   "value": posProSilva_temp.loc[[index],:].to_json(orient='records'),
                 }
               error_List_Temp.append(err)
-            verificationList.append({'errorName': 'Code(s) DMH Prosilva non reconnu(s)', 'errorText': "Il y a des codes DMH référencés ProSilva qui ne sont pas reconnus", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True})
+            verificationList.append({'errorName': 'Code(s) DMH Prosilva non reconnu(s)', 'errorText': "Il y a des codes DMH référencés ProSilva qui ne sont pas reconnus. Attention, les codes doivent être séparés par des tirets. Ex: CV2-CV3. <a href='https://docs.google.com/spreadsheets/d/1b6cfcJwKSZxODuJSbyE_UGCJFt985az-ZMNlxEeavVE/edit#gid=0'>Code Ecolo</a>", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True})
 
         # --- Codification EFI
         if not posEFI.empty:
@@ -803,7 +803,7 @@ def data_verification(data):
                   "value": posEFI_temp.loc[[index],:].to_json(orient='records'),
                 }
               error_List_Temp.append(err)
-            verificationList.append({'errorName': 'Code(s) DMH EFI non reconnu(s)', 'errorText': "Il y a des codes DMH référencés EFI qui ne sont pas reconnus", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True})
+            verificationList.append({'errorName': 'Code(s) DMH EFI non reconnu(s)', 'errorText': "Il y a des codes DMH référencés EFI qui ne sont pas reconnus. Attention, les codes doivent être séparés par des tirets. Ex: CV2-CV3. <a href='https://docs.google.com/spreadsheets/d/1b6cfcJwKSZxODuJSbyE_UGCJFt985az-ZMNlxEeavVE/edit#gid=0'>Code Ecolo</a>", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True})
 
 
         # --- Codification IRSTEA
@@ -824,7 +824,7 @@ def data_verification(data):
                   "value": posIRSTEA_temp.loc[[index],:].to_json(orient='records'),
                 }
               error_List_Temp.append(err)
-            verificationList.append({'errorName': 'Code(s) DMH IRSTEA non reconnu(s)', 'errorText': "Il y a des codes DMH référencés IRSTEA qui ne sont pas reconnus", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True})
+            verificationList.append({'errorName': 'Code(s) DMH IRSTEA non reconnu(s)', 'errorText': "Il y a des codes DMH référencés IRSTEA qui ne sont pas reconnus. Attention, les codes doivent être séparés par des tirets. Ex: CV2-CV3. <a href='https://docs.google.com/spreadsheets/d/1b6cfcJwKSZxODuJSbyE_UGCJFt985az-ZMNlxEeavVE/edit#gid=0'>Code Ecolo</a>", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True})
 
         # --- Codification non reconnue
         if not posUnknown.empty:
@@ -964,54 +964,6 @@ def data_verification(data):
           error_List_Temp.append(err)
         verificationList.append({'errorName': "Diamètre incohérent dans BMSsup30", 'errorText': "La valeur du diamètre est supérieur à 150.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': False})
 
-      # Valeurs extrêmes inf DiamFin
-      temp = BMSsup30[BMSsup30["DiamFin"] < 30]
-      temp = temp[["NumPlac", "Id", "DiamFin"]]
-      if not temp.empty:
-        error_List_Temp=[]
-        for index, row in temp.iterrows():
-          err = {
-              "message": "Le bms "+ str(int(row["Id"])) +" de la placette "+ str(row["NumPlac"]) + " a un diamètre de " + str(int(row["DiamFin"])) +" inférieur à 30.",
-              "table": "BMSsup30",
-              "column": [ "Id", "DiamFin"],
-              "row": [index], 
-              "value": temp.loc[[index],:].to_json(orient='records'),
-            }
-          error_List_Temp.append(err)
-        verificationList.append({'errorName': "Diamètre incohérent dans BMSsup30", 'errorText': "La valeur du diamètre est inférieure à 30.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True})
-
-      # Valeurs extrêmes inf DiamIni
-      temp = BMSsup30[BMSsup30["DiamIni"] < 30]
-      temp = temp[["NumPlac", "Id", "DiamIni"]]
-      if not temp.empty:
-        error_List_Temp=[]
-        for index, row in temp.iterrows():
-          err = {
-              "message": "Le bms "+ str(int(row["Id"])) +" de la placette "+ str(row["NumPlac"]) + " a un diamètre de " + str(int(row["DiamIni"])) +" inférieur à 30.",
-              "table": "BMSsup30",
-              "column": [ "Id", "DiamIni"],
-              "row": [index], 
-              "value": temp.loc[[index],:].to_json(orient='records'),
-            }
-          error_List_Temp.append(err)
-        verificationList.append({'errorName': "Diamètre incohérent dans BMSsup30", 'errorText': "La valeur du diamètre est inférieure à 30.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True})
-
-      # Valeurs extrêmes inf DiamMed
-      temp = BMSsup30[BMSsup30["DiamMed"] < 30]
-      temp = temp[["NumPlac", "Id", "DiamMed"]]
-      if not temp.empty:
-        error_List_Temp=[]
-        for index, row in temp.iterrows():
-          err = {
-              "message": "Le bms "+ str(int(row["Id"])) +" de la placette "+ str(row["NumPlac"]) + " a un diamètre de " + str(int(row["DiamMed"])) +" inférieur à 30.",
-              "table": "BMSsup30",
-              "column": [ "Id", "DiamMed"],
-              "row": [index], 
-              "value": temp.loc[[index],:].to_json(orient='records'),
-            }
-          error_List_Temp.append(err)
-        verificationList.append({'errorName': "Diamètre incohérent dans BMSsup30", 'errorText': "La valeur du diamètre est inférieure à 30.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True})
-
       # Valeurs extrêmes de longueur de billon inf
       temp = BMSsup30[BMSsup30["Longueur"] < 0]
       temp = temp[["NumPlac", "Id", "Longueur"]]
@@ -1110,14 +1062,14 @@ def data_verification(data):
       # Contrôle des diamètres
       # ----- Contrôle DiamFin > 30 : 
       temp = BMSsup30[((BMSsup30["DiamFin"] < 30) & (BMSsup30["DiamFin"] != 0)) | ((BMSsup30["DiamMed"] < 30) & (BMSsup30["DiamMed"] != 0)) | ((BMSsup30["DiamIni"] < 30) & (BMSsup30["DiamIni"] != 0))]
-      temp = temp[["NumPlac", "Id", "DiamFin", "DiamMed", "DiamIni"]]
+      temp = temp[["NumPlac", "Id", "DiamFin", "DiamMed", "DiamIni", "Longueur"]]
       if not temp.empty:
         error_List_Temp=[]
         for index, row in temp.iterrows():
           err = {
               "message": "Le billon  "+ str(int(row["Id"])) +" de la placette "+ str(row["NumPlac"]) + " mesure moins de 30cm.",
               "table": "BMSsup30",
-              "column": ["NumPlac", "Id", "DiamFin", "DiamMed", "DiamIni"],
+              "column": ["NumPlac", "Id", "DiamFin", "DiamMed", "DiamIni", "Longueur"],
               "row": [index], 
               "value": temp.loc[[index],:].to_json(orient='records'),
             }
@@ -1154,7 +1106,7 @@ def data_verification(data):
               "value": temp.loc[[index],:].to_json(orient='records'),
             }
           error_List_Temp.append(err)
-        verificationList.append({'errorName': "Diamètre(s) non necessaire(s) dans BMSsup30", 'errorText': "Billons de moins 5m de longueur pour lesquels des valeurs de 'DiamIni' et/ou de 'DiamFin' sont renseignées (impossible dans le PSDRF)", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True})
+        verificationList.append({'errorName': "Diamètre(s) non necessaire(s) dans BMSsup30", 'errorText': "Billons de moins 5m de longueur pour lesquels des valeurs de 'DiamIni' et/ou de 'DiamFin' sont renseignées (impossible dans le PSDRF)", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': False})
 
 
       # ----- Contrôle DiamIni > DiamMed > DiamFin pour les billons < 5m :
@@ -1215,7 +1167,7 @@ def data_verification(data):
                   "value": tValues.to_json(orient='records'),
                 }
               error_List_Temp.append(err)
-            verificationList.append({'errorName': "Incohérence(s) dans BMSsup30", 'errorText':  "BMSsup30: Incohérence(s) relevée(s) sur les valeurs d'Essence, Azimut et Dist entre les différents inventaires", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True})
+            verificationList.append({'errorName': "Incohérence(s) dans BMSsup30", 'errorText':  "BMSsup30: Incohérence(s) relevée(s) sur les valeurs d'Essence, Azimut et Dist entre les différents inventaires. Conseil: Modifier les valeurs des cycles précédents si vous êtes sûrs de vous.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True})
 
         # ----- Contrôle Accroissement en diamètre
         if df_Dupl.empty:
@@ -1305,16 +1257,15 @@ def data_verification(data):
           error_List_Temp.append(err)
         verificationList.append({'errorName': "Informations manquantes dans Regeneration", 'errorText': "Il manque des informations à une/des colonne(s) dans la table Regeneration", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': False})
 
-
       # Contrôle des valeurs dupliquées
       error = []
-      df_Dupl_temp= Regeneration[["NumDisp", "NumPlac", "Cycle", "SsPlac", "Essence"]].sort_values(by=["NumDisp", "NumPlac", "Cycle", "SsPlac", "Essence"])
-      Regeneration= Regeneration.sort_values(by=["NumDisp", "NumPlac", "Cycle", "SsPlac", "Essence"])
+      df_Dupl_temp= Regeneration[["NumDisp", "NumPlac", "Cycle", "SsPlac", "Essence", "Taillis", 'Class1', 'Class2', 'Class3', 'Recouv', 'Abroutis']].sort_values(by=["NumDisp", "NumPlac", "Cycle", "SsPlac", "Essence", "Taillis"])
+      Regeneration= Regeneration.sort_values(by=["NumDisp", "NumPlac", "Cycle", "SsPlac", "Essence", "Taillis"])
 
-      df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated()]
+      df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated(subset=["NumDisp", "NumPlac", "Cycle", "SsPlac", "Essence", "Taillis"])]
       df_Dupl = df_Dupl.drop_duplicates()
       if not df_Dupl.empty:
-        entire_df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated(keep=False)]
+        entire_df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated(subset=["NumDisp", "NumPlac", "Cycle", "SsPlac", "Essence", "Taillis"], keep=False)]
         listDupl = entire_df_Dupl.groupby(list(df_Dupl_temp)).apply(lambda x: list(x.index)).tolist()
         i = 0
         error_List_Temp = []
@@ -1323,7 +1274,7 @@ def data_verification(data):
           err = {
               "message": "L'essence" + str(row["Essence"])+ "de la sous placette "+ str(row["SsPlac"])+" de la placette "+ str(row["NumPlac"]) +" au cycle "+ str(row["Cycle"]) +" apparaît plusieurs fois dans la table Regeneration",
               "table": "Regeneration",
-              "column": ["NumDisp", "NumPlac", "SsPlac", "Cycle", "Essence"],
+              "column": ["NumDisp", "NumPlac", "SsPlac", "Cycle", "Essence", "Taillis", 'Class1', 'Class2', 'Class3', 'Recouv', 'Abroutis'],
               "row": listDupl[i], 
               "value": valuesDupl.to_json(orient='records'),
             }
@@ -1445,7 +1396,7 @@ def data_verification(data):
             }
           i = i + 1
           error_List_Temp.append(err)
-        verificationList.append({'errorName': "Duplication dans Transect", 'errorText': 'Lignes dupliquées dans la table Transect', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True})
+        verificationList.append({'errorName': "Duplication dans Transect", 'errorText': 'Lignes dupliquées dans la table Transect. Conseil: vérifiez l\'id.', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True})
 
 
 
@@ -1517,7 +1468,7 @@ def data_verification(data):
                   "value": list2.loc[[index],:].to_json(orient='records'),
                 }
               error_List_Temp.append(err)
-            verificationList.append({'errorName': "Information incohérente entre la table Placette et la table" +tablename, 'errorText': "Information incohérente entre la table Placette et la table" +tablename, 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': blockingError})
+            verificationList.append({'errorName': "Information incohérente entre la table Placette et la table " +tablename, 'errorText': "Information incohérente entre la table Placette et la table " +tablename, 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': blockingError})
 
           if len(list1) >0:
             error_List_Temp=[]
@@ -1530,7 +1481,7 @@ def data_verification(data):
                   "value": list1.loc[[index],:].to_json(orient='records'),
                 }
               error_List_Temp.append(err)
-            verificationList.append({'errorName': "Information incohérente entre la table Placette et la table" +tablename, 'errorText': "Information incohérente entre la table Placette et la table" +tablename, 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': blockingError})
+            verificationList.append({'errorName': "Information incohérente entre la table Placette et la table " +tablename, 'errorText': "Information incohérente entre la table Placette et la table " +tablename, 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': blockingError})
 
       miss2(Arbres, Placettes, "Arbres", True)
       miss2(BMSsup30, Placettes, "BMSsup30", False)

@@ -355,6 +355,7 @@ def get_list_organism():
 def postDispositif():
     data = request.get_json()
     new_dispositif = TDispositifs(
+        id_dispositif = data["idDispositif"],
         name = data["newDispositif"],
         id_organisme = data["dispOrganisme"],
         alluvial = data["alluvial"]

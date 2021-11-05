@@ -27,6 +27,8 @@ import { AuthService } from '@geonature/components/auth/auth.service';
 import { CommonService } from '@geonature/GN2CommonModule/service/common.service';
 import { ToastrService } from 'ngx-toastr';
 
+import { MatDialog } from "@angular/material";
+import { ConfirmationDialog } from "@geonature_common/others/modal-confirmation/confirmation.dialog";
 
 
 
@@ -121,7 +123,8 @@ export class ImportDonneesComponent  implements OnInit{
     private _authService: AuthService,
     private _commonService: CommonService,
     private sharedSrv: SharedService,
-    private _toasterService: ToastrService
+    private _toasterService: ToastrService,
+    public dialog: MatDialog
   ) {}
 
   ngOnInit(){
@@ -636,12 +639,25 @@ export class ImportDonneesComponent  implements OnInit{
    * Delete the loaded Excel file
    */
   deleteFile(): void {
-    this.isExcelLoaded = false;
-    this.excelFile = null;
-    this.isDataCharging = false;
-    this.psdrfArray = [];
-    this.reInitializeCorrection();
-    this.reInitializeValues();
+
+    const message = `Etes vous sûr de vouloir supprimer vos modifications? `;
+    const dialogRef = this.dialog.open(ConfirmationDialog, {
+      width: "350px",
+      position: { top: "5%" },
+      data: { message: message },
+    });
+
+    
+    dialogRef.afterClosed().subscribe((confirmed: boolean) => {
+      if(confirmed){
+        this.isExcelLoaded = false;
+        this.excelFile = null;
+        this.isDataCharging = false;
+        this.psdrfArray = [];
+        this.reInitializeCorrection();
+        this.reInitializeValues();  
+      }      
+    })
   }
 
   /**
@@ -684,7 +700,18 @@ export class ImportDonneesComponent  implements OnInit{
    * Quit import page
    */
   returnToPreviousPage(): void {
-    this._router.navigate(["psdrf"]);
+    const message = `Etes vous sûr de vouloir supprimer vos modifications? `;
+    const dialogRef = this.dialog.open(ConfirmationDialog, {
+      width: "350px",
+      position: { top: "5%" },
+      data: { message: message },
+    });
+    
+    dialogRef.afterClosed().subscribe((confirmed: boolean) => {
+      if(confirmed){
+        this._router.navigate(["psdrf"]);
+      }      
+    })
   }
 
   /**

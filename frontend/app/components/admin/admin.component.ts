@@ -22,6 +22,7 @@ export interface User {
 }
 
 export interface Disp {
+  id_dispositif: number;
   nom_dispositif: string;
   nom_organisme: string;
   alluvial: boolean;
@@ -47,7 +48,7 @@ export interface Orga {
     displayedColumns : any= {
       "UserDisp": ["nom_utilisateur", "prenom_utilisateur", "nom_dispositif"],
       "User": ["nom_utilisateur", 'prenom_utilisateur', 'email_utilisateur', 'identifiant_utilisateur', 'nom_organisme', 'remarque_utilisateur'],
-      "Disp": ["nom_dispositif", 'nom_organisme', 'alluvial'],
+      "Disp": ["id_dispositif", "nom_dispositif", 'nom_organisme', 'alluvial'],
       "Orga": ["nom_organisme", "adresse_organisme", "cp_organisme", "ville_organisme", "telephone_organisme", "email_organisme"]
     }
 
@@ -136,6 +137,7 @@ export interface Orga {
 
     createDispForm() {
       this.dispForm = this.fbDisp.group({
+        idDispositif: ['', Validators.required],
         newDispositif: ['', Validators.required],
         dispOrganisme: ['', Validators.required],
         alluvial: [false, null]
