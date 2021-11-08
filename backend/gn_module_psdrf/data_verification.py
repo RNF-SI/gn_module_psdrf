@@ -733,7 +733,7 @@ def data_verification(data):
               "value": Table_temp.loc[[index],:].to_json(orient='records'),
             }
           error_List_Temp.append(err)
-        verificationList.append({'errorName': "DMH sans référence de codification", 'errorText': "Il y a des arbres portant des DMH sans référence de codification renseignée (Ref_CodeEcolo vide pour CodeEcolo non vide). <a href='https://docs.google.com/spreadsheets/d/1b6cfcJwKSZxODuJSbyE_UGCJFt985az-ZMNlxEeavVE/edit#gid=0'>Code Ecolo</a>", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True})
+        verificationList.append({'errorName': "DMH sans référence de codification", 'errorText': "Il y a des arbres portant des DMH sans référence de codification renseignée (Ref_CodeEcolo vide pour CodeEcolo non vide). <a  target='_blank' rel='noopener noreferrer' href='https://docs.google.com/spreadsheets/d/1b6cfcJwKSZxODuJSbyE_UGCJFt985az-ZMNlxEeavVE/edit#gid=0'>Code Ecolo</a>", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True})
 
       # ----- CodeEcolo non reconnus
       df_Codes = Arbres[~Arbres["Ref_CodeEcolo"].isna()]
@@ -783,7 +783,7 @@ def data_verification(data):
                   "value": posProSilva_temp.loc[[index],:].to_json(orient='records'),
                 }
               error_List_Temp.append(err)
-            verificationList.append({'errorName': 'Code(s) DMH Prosilva non reconnu(s)', 'errorText': "Il y a des codes DMH référencés ProSilva qui ne sont pas reconnus. Attention, les codes doivent être séparés par des tirets. Ex: CV2-CV3. <a href='https://docs.google.com/spreadsheets/d/1b6cfcJwKSZxODuJSbyE_UGCJFt985az-ZMNlxEeavVE/edit#gid=0'>Code Ecolo</a>", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True})
+            verificationList.append({'errorName': 'Code(s) DMH Prosilva non reconnu(s)', 'errorText': "Il y a des codes DMH référencés ProSilva qui ne sont pas reconnus. Attention, les codes doivent être séparés par des tirets. Ex: CV2-CV3. <a target='_blank' rel='noopener noreferrer' href='https://docs.google.com/spreadsheets/d/1b6cfcJwKSZxODuJSbyE_UGCJFt985az-ZMNlxEeavVE/edit#gid=0'>Code Ecolo</a>", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True})
 
         # --- Codification EFI
         if not posEFI.empty:
@@ -803,7 +803,7 @@ def data_verification(data):
                   "value": posEFI_temp.loc[[index],:].to_json(orient='records'),
                 }
               error_List_Temp.append(err)
-            verificationList.append({'errorName': 'Code(s) DMH EFI non reconnu(s)', 'errorText': "Il y a des codes DMH référencés EFI qui ne sont pas reconnus. Attention, les codes doivent être séparés par des tirets. Ex: CV2-CV3. <a href='https://docs.google.com/spreadsheets/d/1b6cfcJwKSZxODuJSbyE_UGCJFt985az-ZMNlxEeavVE/edit#gid=0'>Code Ecolo</a>", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True})
+            verificationList.append({'errorName': 'Code(s) DMH EFI non reconnu(s)', 'errorText': "Il y a des codes DMH référencés EFI qui ne sont pas reconnus. Attention, les codes doivent être séparés par des tirets. Ex: CV2-CV3. <a target='_blank' rel='noopener noreferrer' href='https://docs.google.com/spreadsheets/d/1b6cfcJwKSZxODuJSbyE_UGCJFt985az-ZMNlxEeavVE/edit#gid=0'>Code Ecolo</a>", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True})
 
 
         # --- Codification IRSTEA
@@ -824,7 +824,7 @@ def data_verification(data):
                   "value": posIRSTEA_temp.loc[[index],:].to_json(orient='records'),
                 }
               error_List_Temp.append(err)
-            verificationList.append({'errorName': 'Code(s) DMH IRSTEA non reconnu(s)', 'errorText': "Il y a des codes DMH référencés IRSTEA qui ne sont pas reconnus. Attention, les codes doivent être séparés par des tirets. Ex: CV2-CV3. <a href='https://docs.google.com/spreadsheets/d/1b6cfcJwKSZxODuJSbyE_UGCJFt985az-ZMNlxEeavVE/edit#gid=0'>Code Ecolo</a>", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True})
+            verificationList.append({'errorName': 'Code(s) DMH IRSTEA non reconnu(s)', 'errorText': "Il y a des codes DMH référencés IRSTEA qui ne sont pas reconnus. Attention, les codes doivent être séparés par des tirets. Ex: CV2-CV3. <a target='_blank' rel='noopener noreferrer' href='https://docs.google.com/spreadsheets/d/1b6cfcJwKSZxODuJSbyE_UGCJFt985az-ZMNlxEeavVE/edit#gid=0'>Code Ecolo</a>", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True})
 
         # --- Codification non reconnue
         if not posUnknown.empty:
@@ -1262,11 +1262,12 @@ def data_verification(data):
       df_Dupl_temp= Regeneration[["NumDisp", "NumPlac", "Cycle", "SsPlac", "Essence", "Taillis", 'Class1', 'Class2', 'Class3', 'Recouv', 'Abroutis']].sort_values(by=["NumDisp", "NumPlac", "Cycle", "SsPlac", "Essence", "Taillis"])
       Regeneration= Regeneration.sort_values(by=["NumDisp", "NumPlac", "Cycle", "SsPlac", "Essence", "Taillis"])
 
-      df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated(subset=["NumDisp", "NumPlac", "Cycle", "SsPlac", "Essence", "Taillis"])]
-      df_Dupl = df_Dupl.drop_duplicates()
+      df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated(subset=["NumDisp", "NumPlac", "Cycle", "SsPlac", "Essence", "Taillis"], keep=False)]
+      df_Dupl = df_Dupl.drop_duplicates(subset=["NumDisp", "NumPlac", "Cycle", "SsPlac", "Essence", "Taillis"])
       if not df_Dupl.empty:
         entire_df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated(subset=["NumDisp", "NumPlac", "Cycle", "SsPlac", "Essence", "Taillis"], keep=False)]
-        listDupl = entire_df_Dupl.groupby(list(df_Dupl_temp)).apply(lambda x: list(x.index)).tolist()
+        listDupl = entire_df_Dupl.groupby(["NumDisp", "NumPlac", "Cycle", "SsPlac", "Essence", "Taillis"]).apply(lambda x: list(x.index)).tolist()
+
         i = 0
         error_List_Temp = []
         for index, row in df_Dupl.iterrows():
@@ -1281,7 +1282,7 @@ def data_verification(data):
             #possibilité de supression d'un des 2 ou de modification
           i = i + 1
           error_List_Temp.append(err)
-        verificationList.append({'errorName': "Duplication dans Regeneration", 'errorText': 'Lignes dupliquées dans la table Regeneration', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True})
+        verificationList.append({'errorName': "Duplication dans Regeneration", 'errorText': 'Lignes dupliquées dans la table Regeneration. (Comparaison sur les colonnes "NumDisp", "NumPlac", "SsPlac", "Cycle", "Essence", "Taillis")', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True})
 
 
 
