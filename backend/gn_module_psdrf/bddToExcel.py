@@ -4,9 +4,13 @@ import numpy as np
 from .models import TDispositifs, TPlacettes, TArbres, TCycles, \
     CorCyclesPlacettes, TArbresMesures, TReperes, BibEssences, TRegenerations,\
     TBmSup30,TBmSup30Mesures, TTransects, dispositifs_area_assoc
+from .geonature_PSDRF_function import get_id_type_from_mnemonique, get_cd_nomenclature_from_id_type_and_id_nomenclature
 
 
 def bddToExcel(dispId):
+
+    id_type_durete = get_id_type_from_mnemonique("PSDRF_DURETE")
+    id_type_ecorce = get_id_type_from_mnemonique("PSDRF_ECORCE")
 
     placettesQuery = DB.session.query(
         TPlacettes.id_dispositif, TPlacettes.id_placette_orig, TCycles.num_cycle, TPlacettes.strate, TPlacettes.poids_placette,
@@ -28,7 +32,7 @@ def bddToExcel(dispId):
 
     cyclesQuery = DB.session.query(
         TPlacettes.id_dispositif, TPlacettes.id_placette_orig, TCycles.num_cycle,
-        TCycles.coeff, TCycles.diam_lim, CorCyclesPlacettes.date_releve, CorCyclesPlacettes.annee
+        TCycles.coeff, CorCyclesPlacettes.date_releve, TCycles.diam_lim, CorCyclesPlacettes.annee
         ).filter(
             (TPlacettes.id_dispositif == dispId)
         ).join(
@@ -38,13 +42,15 @@ def bddToExcel(dispId):
         )
     Cycles = [cycle for cycle in cyclesQuery]
 
+
     arbresQuery = DB.session.query(
         TPlacettes.id_dispositif, TPlacettes.id_placette_orig, 
-        TArbres.id_arbre_orig, TCycles.num_cycle, TArbres.code_essence, TArbres.azimut,
+        TCycles.num_cycle, TArbres.id_arbre_orig, TArbres.code_essence, TArbres.azimut,
         TArbres.distance, TArbresMesures.diametre1, TArbresMesures.diametre2, 
         TArbresMesures.type, TArbresMesures.hauteur_totale, 
-        TArbresMesures.stade_durete, TArbresMesures.stade_ecorce, TArbres.taillis, 
-        TArbresMesures.coupe, TArbresMesures.limite, 
+        TArbresMesures.stade_durete, 
+        TArbresMesures.stade_ecorce,
+        TArbres.taillis, TArbresMesures.coupe, TArbresMesures.limite, 
         TArbresMesures.code_ecolo, TArbresMesures.ref_code_ecolo, 
         TArbresMesures.observation
         ).filter(
@@ -57,6 +63,7 @@ def bddToExcel(dispId):
             TCycles, TCycles.id_cycle == TArbresMesures.id_cycle
         )
     Arbres = [arbre for arbre in arbresQuery]
+    Arbres = [cdNomemclatureEdition(arbre, 11, 12, id_type_durete, id_type_ecorce) for arbre in Arbres]
 
     regesQuery = DB.session.query(
         TPlacettes.id_dispositif, TPlacettes.id_placette_orig, TRegenerations.sous_placette,
@@ -76,9 +83,11 @@ def bddToExcel(dispId):
 
     transectsQuery = DB.session.query(
         TPlacettes.id_dispositif, TPlacettes.id_placette_orig, TTransects.id_transect_orig,
-        TCycles.num_cycle, TTransects.code_essence, TTransects.ref_transect, TTransects.distance,
-        TTransects.diametre, TTransects.contact, TTransects.angle, TTransects.chablis, 
-        TTransects.stade_durete, TTransects.stade_ecorce, TTransects.observation
+        TCycles.num_cycle, TTransects.ref_transect, TTransects.code_essence, TTransects.distance,
+        TTransects.diametre, TTransects.angle, TTransects.contact,  TTransects.chablis, 
+        TTransects.stade_durete, 
+        TTransects.stade_ecorce,
+        TTransects.observation
         ).filter(
             (TPlacettes.id_dispositif == dispId)
         ).join(
@@ -89,13 +98,16 @@ def bddToExcel(dispId):
             TTransects, TTransects.id_cycle_placette == CorCyclesPlacettes.id_cycle_placette
         )
     Transects = [transect for transect in transectsQuery]
+    Transects = [cdNomemclatureEdition(transect, 11, 12, id_type_durete, id_type_ecorce) for transect in Transects]
 
     bmsQuery = DB.session.query(
         TPlacettes.id_dispositif, TPlacettes.id_placette_orig, TBmSup30.id_bm_sup_30_orig,
         TBmSup30.id_arbre, TCycles.num_cycle, TBmSup30.code_essence, TBmSup30.azimut,
         TBmSup30.distance, TBmSup30Mesures.diametre_ini, TBmSup30Mesures.diametre_med,
         TBmSup30Mesures.diametre_fin, TBmSup30Mesures.longueur, TBmSup30Mesures.contact,
-        TBmSup30Mesures.chablis, TBmSup30Mesures.stade_durete, TBmSup30Mesures.stade_ecorce,
+        TBmSup30Mesures.chablis, 
+        TBmSup30Mesures.stade_durete,
+        TBmSup30Mesures.stade_ecorce,
         TBmSup30Mesures.observation
         ).filter(
             (TPlacettes.id_dispositif == dispId)
@@ -107,6 +119,8 @@ def bddToExcel(dispId):
             TCycles, TCycles.id_cycle == TBmSup30Mesures.id_cycle
         )
     BMSsup30 = [bms for bms in bmsQuery]
+    BMSsup30 = [cdNomemclatureEdition(bms, 14, 15, id_type_durete, id_type_ecorce) for bms in BMSsup30]
+
 
     reperesQuery = DB.session.query(
         TPlacettes.id_dispositif, TPlacettes.id_placette_orig, TReperes.azimut,
@@ -134,62 +148,109 @@ def bddToExcel(dispId):
 
 def convertToJsonObject(sheetName, tuples):
     finalObj = []
-    columnNames = getColumnObject(sheetName)
-    print("")
-    print(sheetName)
+    columnNamesObj = getColumnObject(sheetName)
+    columnNames = columnNamesObj["Columns"]
+    booleanColumnNames = columnNamesObj["BooleanColumn"]
     for tuple in tuples:
         listObj = list(tuple)
         obj = {}
-        print("/n")
-        print("/n")
         for i in range(len(listObj)):
-            print(columnNames[i])
-            print(listObj[i])
-            obj[columnNames[i]]= listObj[i]
+            if columnNames[i] in booleanColumnNames: 
+                if listObj[i] == True:
+                    obj[columnNames[i]] = "t"
+                else:
+                    obj[columnNames[i]] = "f"
+            else:
+                obj[columnNames[i]]= listObj[i]
         finalObj.append(obj)
     return finalObj
 
 
 def getColumnObject(sheetName):
     allColumnObject = { 
-        "Placettes": [
-          "NumDisp", "NumPlac", "Cycle", "Strate", "PoidsPlacette", "Pente", "CorrectionPenteboolean", 
-          "Exposition", "Habitat", "Station", "Typologie", "Groupe", "Groupe1", 
-          "Groupe2", "Ref_Habitat", "Precision_Habitat", "Ref_Station", 
-          "Ref_Typologie", "Descriptif_Groupe", "Descriptif_Groupe1", 
-          "Descriptif_Groupe2", "Date_Intervention", "Nature_Intervention", 
-          "Gestion", "PrecisionGPS", "Cheminement"
-        ], 
-        "Cycles": [
-          "NumDisp", "NumPlac", "Cycle", "Coeff", "Date", "DiamLim", "Année"
-        ],
-        "Arbres": [  
-          "NumDisp", "NumPlac", "Cycle", "NumArbre", "Essence", "Azimut", "Dist", "Diam1", "Diam2", 
-          "Type", "Haut", "StadeD", "StadeE", "Taillis", "Coupe", "Limite", "CodeEcolo", 
-          "Ref_CodeEcolo", "NumPlacObservation"
-        ], 
-        "Rege": [
-          "NumDisp", "NumPlac", "SsPlac", 
-          "Cycle", "Essence", "Recouv", "Class1", "Class2", 
-          "Class3", " Taillis", "Abroutis", "Observation"
-        ], 
-        "Transects": [  
-          "NumDisp", "NumPlac", "Id", "Cycle", "Transect", 
-          "Essence", "Dist", "Diam", "Angle", "Contact", 
-          "Chablis", "StadeD", "StadeE", "Observation"
-        ], 
-        "BMSsup30": [
-          "NumDisp", "NumPlac", "Id", "NumArbre", 
-          "Cycle", "Essence", "Azimut", "Dist", "DiamIni", 
-          "DiamMed", "DiamFin", "Longueur", "Contact", 
-          "Chablis", "StadeD", "StadeE", "Observation"
-        ], 
-        "Reperes": [
-          "NumDisp", "NumPlac", "Azimut", 
-          "Dist", "Diam", "Repere", "Observation"
-        ]
+        "Placettes": {
+            "Columns": [
+                "NumDisp", "NumPlac", "Cycle", "Strate", "PoidsPlacette", "Pente", "CorrectionPente", 
+                "Exposition", "Habitat", "Station", "Typologie", "Groupe", "Groupe1", 
+                "Groupe2", "Ref_Habitat", "Precision_Habitat", "Ref_Station", 
+                "Ref_Typologie", "Descriptif_Groupe", "Descriptif_Groupe1", 
+                "Descriptif_Groupe2", "Date_Intervention", "Nature_Intervention", 
+                "Gestion", "PrecisionGPS", "Cheminement"
+                ], 
+            "BooleanColumn": [
+                "CorrectionPente"    
+            ]
+        },
+        "Cycles": {
+            "Columns": [
+                "NumDisp", "NumPlac", "Cycle", "Coeff", "Date", "DiamLim", "Année"
+                ],
+            "BooleanColumn": [  
+            ]
+        }, 
+        "Arbres": {
+            "Columns":[  
+                "NumDisp", "NumPlac", "Cycle", "NumArbre", "Essence", "Azimut", "Dist", "Diam1", "Diam2", 
+                "Type", "Haut", "StadeD", "StadeE", "Taillis", "Coupe", "Limite", "CodeEcolo", 
+                "Ref_CodeEcolo", "Observation"
+            ], 
+            "BooleanColumn": [  
+                "Taillis", "Limite"
+            ]
+        },
+        "Rege": {
+            "Columns":[
+                "NumDisp", "NumPlac", "SsPlac", 
+                "Cycle", "Essence", "Recouv", "Class1", "Class2", 
+                "Class3", "Taillis", "Abroutis", "Observation"
+            ],
+            "BooleanColumn": [  
+                "Taillis", "Abroutis"
+            ]
+        },
+        "Transects":{
+            "Columns":[  
+                "NumDisp", "NumPlac", "Id", "Cycle", "Transect", 
+                "Essence", "Dist", "Diam", "Angle", "Contact", 
+                "Chablis", "StadeD", "StadeE", "Observation"
+            ], 
+            "BooleanColumn": [  
+                "Contact", "Chablis"
+            ]
+        },
+        "BMSsup30":{
+            "Columns":[
+                "NumDisp", "NumPlac", "Id", "NumArbre", 
+                "Cycle", "Essence", "Azimut", "Dist", "DiamIni", 
+                "DiamMed", "DiamFin", "Longueur", "Contact", 
+                "Chablis", "StadeD", "StadeE", "Observation"
+            ], 
+            "BooleanColumn": [  
+                "Chablis"
+            ]
+        },
+        "Reperes": {
+            "Columns": [
+                "NumDisp", "NumPlac", "Azimut", 
+                "Dist", "Diam", "Repere", "Observation"
+            ],
+            "BooleanColumn": [  
+            ]
+        }
       }
     return allColumnObject[sheetName]
+
+def cdNomemclatureEdition(obj, stadeDIdx, stadeEIdx, id_type_durete, id_type_ecorce):
+    finalObjtemp = list(obj)
+    if (finalObjtemp[stadeDIdx] != None):
+        finalObjtemp[stadeDIdx] = get_cd_nomenclature_from_id_type_and_id_nomenclature(id_type_durete, finalObjtemp[stadeDIdx])
+    
+    if(finalObjtemp[stadeEIdx] != None):
+        finalObjtemp[stadeEIdx] = get_cd_nomenclature_from_id_type_and_id_nomenclature(id_type_ecorce, finalObjtemp[stadeEIdx])
+    
+    finalObj = tuple(finalObjtemp)
+
+    return finalObj
 
 # Fonction d'encodage en Json
 class NumpyEncoder(json.JSONEncoder):

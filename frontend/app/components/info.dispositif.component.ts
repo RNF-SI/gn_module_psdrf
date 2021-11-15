@@ -20,7 +20,12 @@ export class InfoDispositifComponent implements OnInit {
   public id: number;
   public apiEndPoint: string;
   public placettesEndPoint: string;
-  public editing: boolean = false;
+
+  //Boolean du lancement de la génération du rapport d'un dispositif (vrai si requête en cours)
+  analysisLoading = false; 
+
+  //Boolean du lancement de la génération du fichier excel (vrai si requête en cours)
+  excelLoading = false; 
 
   constructor(
     private _api: HttpClient,
@@ -59,19 +64,11 @@ export class InfoDispositifComponent implements OnInit {
     })
   }
 
-  onEditDispositif(): void {
-    this.editing = ! this.editing;
-  }
-
-  onDispositifSaved(saved: boolean) {
-    // Masque le formulaire après enregistrement
-    this.editing = !saved;
-    // Rechargement des données
-    if (saved) this.ngOnInit();
-  }
-
-  onDispositifFormCanceled(canceled: boolean) {
-    if (canceled) this.editing = false;
+  /**
+   * Quit info page
+   */
+  returnToPreviousPage(): void {
+    this._router.navigate(["psdrf"]);
   }
 
   onRowSelect(row): void {
@@ -87,40 +84,51 @@ export class InfoDispositifComponent implements OnInit {
   }
 
   launchAnalysis(): void{
-    this.dataSrv
-      .psdrf_data_analysis(this.id)
-      .subscribe(
-        data => {
-          var file = new Blob([data.pdf], { type: 'application/pdf' })
-          var fileURL = URL.createObjectURL(file);
-
-          // if you want to open PDF in new tab
-          // window.open(fileURL); 
-          var a         = document.createElement('a');
-          a.href        = fileURL; 
-          a.target      = '_blank';
-          a.download    = data.filename;
-          document.body.appendChild(a);
-          a.click();
-        },
-        (error) => {
-          this._toasterService.error(error.message, "Génération du rapport PSDRF");
-        }
-      );
+    if(!this.analysisLoading){
+      this.analysisLoading = true;
+      this._toasterService.info("La génération du rapport peut prendre plusieurs minutes", "Information");
+      this.dataSrv
+        .psdrf_data_analysis(this.id)
+        .subscribe(
+          data => {
+            this.analysisLoading = false;
+            var file = new Blob([data.pdf], { type: 'application/pdf' })
+            var fileURL = URL.createObjectURL(file);
+  
+            // if you want to open PDF in new tab
+            // window.open(fileURL); 
+            var a         = document.createElement('a');
+            a.href        = fileURL; 
+            a.target      = '_blank';
+            a.download    = data.filename;
+            document.body.appendChild(a);
+            a.click();
+          },
+          (error) => {
+            this._toasterService.error(error.message, "Génération du rapport PSDRF");
+            this.analysisLoading = false;
+          }
+        );
+    }
   }
 
   importExcel(): void{
-    this.dataSrv
-      .getExcelData(this.id)
-      .subscribe(
-        data => {
-          let psdrfArrayObj = JSON.parse(data)
-          this.exportTableToExcel(psdrfArrayObj.data)
-        }, 
-        (error) => {
-          this._toasterService.error(error.message, "Génération du rapport PSDRF");
-        }
+    if(!this.excelLoading){
+      this.excelLoading = true;
+      this.dataSrv
+        .getExcelData(this.id)
+        .subscribe(
+          data => {
+            let psdrfArrayObj = JSON.parse(data)
+            this.exportTableToExcel(psdrfArrayObj.data)
+            this.excelLoading = false;
+          }, 
+          (error) => {
+            this._toasterService.error(error.message, "Génération du fichier excel");
+            this.excelLoading = false;
+          }
         ) 
+    }
   }
 
   /**

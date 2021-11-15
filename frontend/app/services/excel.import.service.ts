@@ -63,7 +63,7 @@ import * as XLSX from 'xlsx';
     public getColumnNames(){
       return { 
         "Placettes": [
-          "NumDisp", "NumPlac", "Cycle", "Strate", "PoidsPlacette", "Pente", "CorrectionPenteboolean", 
+          "NumDisp", "NumPlac", "Cycle", "Strate", "PoidsPlacette", "Pente", "CorrectionPente", 
           "Exposition", "Habitat", "Station", "Typologie", "Groupe", "Groupe1", 
           "Groupe2", "Ref_Habitat", "Precision_Habitat", "Ref_Station", 
           "Ref_Typologie", "Descriptif_Groupe", "Descriptif_Groupe1", 
@@ -76,7 +76,7 @@ import * as XLSX from 'xlsx';
         "Arbres": [  
           "NumDisp", "NumPlac", "Cycle", "NumArbre", "Essence", "Azimut", "Dist", "Diam1", "Diam2", 
           "Type", "Haut", "StadeD", "StadeE", "Taillis", "Coupe", "Limite", "CodeEcolo", 
-          "Ref_CodeEcolo", "NumPlac", "Observation"
+          "Ref_CodeEcolo", "Observation"
         ], 
         "Rege": [
           "NumDisp", "NumPlac", "SsPlac", 

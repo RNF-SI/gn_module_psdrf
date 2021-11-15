@@ -1,11 +1,11 @@
+<button class="m-1 float-left" mat-raised-button matTooltip="Revenir à la page d'accueil du module" (click)="returnToPreviousPage()">
+    <mat-icon> arrow_back </mat-icon>
+</button>
 <div class="container-fluid">
-    <div *ngIf="!editing">
-        <h2>Dispositif : {{dispositif.name}} <a (click)="onEditDispositif()"><span class="fa fa-edit"> </span></a></h2>
+
+    <div>
+        <h2>Dispositif : {{dispositif.name}} </h2>
         <p>Organisme : {{ dispositif.organisme ? dispositif.organisme.nom_organisme : "&lt;inconnu&gt;" }}</p>
-    </div>
-    <div class="row description" *ngIf="editing">
-        <rnf-psdrf-form-dispositif [dispositif]="dispositif" (saved)="onDispositifSaved($event)" (canceled)="onDispositifFormCanceled($event)">
-        </rnf-psdrf-form-dispositif>
     </div>
     <div class="row" id="map-list-placettes">
         <div class="col-sm-7">
@@ -15,19 +15,19 @@
 
         <div class="col-sm-5">
 
-            <div class="btn-group-horizontal ">
-                <button class="m-1" mat-raised-button matTooltip="Générer le carnet d'analyse" (click)="launchAnalysis()">
-                <mat-icon>bar_chart</mat-icon>
-              </button>
-                <button class="m-1" mat-raised-button matTooltip="Téléchargement des données sur Excel" (click)="importExcel()">
-                <mat-icon>view_comfy</mat-icon>
-              </button>
-                <!-- <button class="m-1" mat-raised-button matTooltip="Téléchargement des tableurs de résultat" (click)="importTableur()">
-                <mat-icon>view_comfy</mat-icon>
-              </button>
-                <button class="m-1" mat-raised-button matTooltip="Téléchargement des SIG" (click)="importSIG()">
-                <mat-icon>view_comfy</mat-icon>
-              </button> -->
+            <div class="mt-1 d-flex justify-content-center">
+                <button *ngIf="!analysisLoading" class="action-button-class" mat-raised-button matTooltip="Générer le carnet d'analyse" (click)="launchAnalysis()">
+                    <mat-icon>bar_chart</mat-icon>
+                </button>
+                <button *ngIf="analysisLoading" class="action-button-class spinner-button" mat-raised-button matTooltip="Intégration des données en cours" disabled>
+                    <mat-spinner diameter="22" color="primary"></mat-spinner>
+                </button>
+                <button *ngIf="!excelLoading" class="action-button-class" mat-raised-button matTooltip="Téléchargement des données sur Excel" (click)="importExcel()">
+                    <mat-icon>view_comfy</mat-icon>
+                </button>
+                <button *ngIf="excelLoading" class="action-button-class spinner-button" mat-raised-button matTooltip="Intégration des données en cours" disabled>
+                    <mat-spinner diameter="22" color="primary"></mat-spinner>
+                </button>
             </div>
 
             <h3>Placettes</h3>
@@ -37,7 +37,7 @@
                 [rowClass]="mapListService.getRowClass" [messages]="" (page)="mapListService.setTablePage($event, placettesEndPoint)" (select)="onRowSelect($event)">
 
                 <!-- ACTION COLUMNS -->
-                <ngx-datatable-column maxWidth="10">
+                <!-- <ngx-datatable-column maxWidth="10">
                     <ng-template ngx-datatable-header-template>
                         <i (click)="openModalCol($event, modalCol)" class="fa fa-cog clickable" aria-hidden="true" matTooltip="{{'List.Columns' | translate}}" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></i>
                     </ng-template>
@@ -47,7 +47,7 @@
                       class="fa fa-pencil-square-o" aria-hidden="true"></i>
                   </button>
                     </ng-template>
-                </ngx-datatable-column>
+                </ngx-datatable-column> -->
 
                 <ngx-datatable-column maxWidth="10">
                     <ng-template let-row="row" ngx-datatable-cell-template>
@@ -58,14 +58,14 @@
                     </ng-template>
                 </ngx-datatable-column>
 
-                <ngx-datatable-column maxWidth="10">
+                <!-- <ngx-datatable-column maxWidth="10">
                     <ng-template let-row="row" ngx-datatable-cell-template>
                         <button class="btn btn-outline-shadow btn-no-padding btn-ghost" [disabled]="!row.rights.D" (click)="openDeleteModal($event, modalConfirm, iElement, row)">
                     <i [ngClass]="{'disabled' : !row.rights.D}" #iElement matTooltip="{{ 'Placette.Delete' | translate }} {{row[mapListService.idName]}}"
                       class="fa fa-trash-o" aria-hidden="true"></i>
                   </button>
                     </ng-template>
-                </ngx-datatable-column>
+                </ngx-datatable-column> -->
 
 
                 <!-- DATA COLUMNS -->

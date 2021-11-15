@@ -357,7 +357,36 @@ export class ImportDonneesComponent  implements OnInit{
    */
   exportTableToExcel() {
     let excelData = [];
-    this.psdrfArray.forEach((table, i) => {
+    let psdrfArrayTemp = this.psdrfArray
+
+    //Supprimer les éléments au dernier moment
+    if(this.deletedElementArr.length > 0){
+      let deleteObject = {}
+      //Remplir l'objet avec les indexs
+      this.deletedElementArr.forEach(element => {
+        if (!deleteObject.hasOwnProperty(element.table)){
+          deleteObject[element.table] = []
+        }
+        element.row.forEach(i => {
+          if(deleteObject[element.table].indexOf(i) === -1 ){
+            deleteObject[element.table].push(i)
+          }
+        })
+      })
+      for (const property in deleteObject){
+        //classer les index dans l'ordre décroissant
+        deleteObject[property].sort((a, b) => b - a )
+        let indexTable = this.indexLabelMatTabGroup.indexOf(
+          property
+        );
+        // Supprimer les index un par un
+        deleteObject[property].forEach(i => {
+          psdrfArrayTemp[indexTable].splice(i, 1)
+        })
+      }
+    }
+
+    psdrfArrayTemp.forEach((table, i) => {
       excelData.push([table, { header: this.tableColumnsArray[i] }]);
     });
     this.excelSrv.exportToExcelFile(excelData, this.excelFileName, true);
@@ -1022,11 +1051,12 @@ export class ImportDonneesComponent  implements OnInit{
           let integrationObj = JSON.parse(integrationJson);
           this.integrationLoading = false;
           if(integrationObj.success){
-            this._toasterService.error("Les données ont bien été ajoutées à la BDD", "");
+            this._toasterService.success("Les données ont bien été ajoutées à la BDD", "");
           }
         }, 
         error => {
-          this._toasterService.error(error.message, "Intégration des données en BDD");
+          this._toasterService.error(error.error, "Intégration des données en BDD");
+          this.integrationLoading = false;
         });
 
     }

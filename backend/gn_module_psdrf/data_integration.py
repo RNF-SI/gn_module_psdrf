@@ -19,17 +19,12 @@ def data_integration(dispId, dispName, data):
 
     id_dispositif = int(dispId)
     if( DB.session.query(TDispositifs.id_dispositif).filter_by(id_dispositif=id_dispositif).first() is not None):
-        delete_obj = TDispositifs.query.filter_by(id_dispositif=id_dispositif).one()
-        DB.session.delete(delete_obj)
+        TPlacettes.query.filter_by(id_dispositif=id_dispositif).delete()
+        TCycles.query.filter_by(id_dispositif=id_dispositif).delete()
         DB.session.commit()
+    else : 
+        return (json.dumps({'success': False, "message":"Le dispositif n'a pas ete prealablement ajoute a la table des dispositif. Veuillez contacter un administrateur."}), 500, {'ContentType':'application/json'})
 
-    new_disp= TDispositifs( 
-        id_dispositif = id_dispositif,
-        name = dispName,
-        alluvial = False
-    )
-    DB.session.add(new_disp)
-    DB.session.flush()
 
     # Placettes 
     newPlacettesList = []

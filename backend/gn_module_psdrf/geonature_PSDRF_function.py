@@ -44,3 +44,19 @@ def get_id_nomenclature_from_id_type_and_cd_nomenclature(id_type, cd_nomenclatur
         return id_nomenclature
     except Exception:
         raise
+
+def get_cd_nomenclature_from_id_type_and_id_nomenclature(id_type, id_nomenclature):
+    # set 'IMPORT' as variable initialized in configuration parameter ?
+    try:
+        cd_nomenclature = DB.session.execute("""
+            SELECT cd_nomenclature
+            FROM ref_nomenclatures.t_nomenclatures
+            WHERE id_type = '{id_type}'
+            AND id_nomenclature = '{id_nomenclature}';
+            """.format(
+                id_type=id_type,
+                id_nomenclature=id_nomenclature
+            )).fetchone()[0]
+        return cd_nomenclature
+    except Exception:
+        raise

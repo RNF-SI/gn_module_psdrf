@@ -1,7 +1,7 @@
 import pandas as pd
 import json
 import numpy as np
-import datetime
+from datetime import datetime
 import re
 
 from pathlib import Path
@@ -70,9 +70,13 @@ def data_verification(data):
 
   # Reperes
   columns = ['Azimut', 'Dist', 'Diam']
-  check_code_Error_List = check_colonnes("Reperes", columns, Reperes)
-  if len(check_code_Error_List) >0:
-    verificationList.append({'errorName': 'Il manque une colonne dans la table Reperes', 'errorText': 'Il manque une colonne dans la table Reperes', 'errorList': check_code_Error_List, 'errorType': 'PsdrfErrorColonnes', 'isFatalError': True, 'isFatalError': True})
+  if not Reperes.empty:
+    check_code_Error_List = check_colonnes("Reperes", columns, Reperes)
+    if len(check_code_Error_List) >0:
+      verificationList.append({'errorName': 'Il manque une colonne dans la table Reperes', 'errorText': 'Il manque une colonne dans la table Reperes', 'errorList': check_code_Error_List, 'errorType': 'PsdrfErrorColonnes', 'isFatalError': True, 'isFatalError': True})
+  else: 
+    Reperes = pd.json_normalize([{'NumDisp': None, 'NumPlac': None, 'Azimut': None, 'Dist': None, 'Diam': None, 'Repere': None, 'Observation': None}])
+
 
 
   if not verificationList: 
@@ -87,13 +91,13 @@ def data_verification(data):
     Reperes["Dist"]=Reperes["Dist"].str.replace(',','.')
 
     # Conversion des "0" en "f" pour les valeurs booléennes
-    Arbres["Taillis"]=Arbres["Taillis"].str.replace('0','f')
-    BMSsup30["Chablis"]=BMSsup30["Chablis"].str.replace('0','f')
-    Placettes["Dist"]=Placettes["CorrectionPente"].str.replace('0','f')
-    Regeneration["Taillis"]=Regeneration["Taillis"].str.replace('0','f')
-    Regeneration["Abroutis"]=Regeneration["Abroutis"].str.replace('0','f')
-    Transect["Contact"]=Transect["Contact"].str.replace('0','f')
-    Transect["Chablis"]=Transect["Chablis"].str.replace('0','f')
+    # Arbres["Taillis"]=Arbres["Taillis"].str.replace('0','f')
+    # BMSsup30["Chablis"]=BMSsup30["Chablis"].str.replace('0','f')
+    # Placettes["Dist"]=Placettes["CorrectionPente"].str.replace('0','f')
+    # Regeneration["Taillis"]=Regeneration["Taillis"].str.replace('0','f')
+    # Regeneration["Abroutis"]=Regeneration["Abroutis"].str.replace('0','f')
+    # Transect["Contact"]=Transect["Contact"].str.replace('0','f')
+    # Transect["Chablis"]=Transect["Chablis"].str.replace('0','f')
 
 
     # Convertion de types
@@ -121,7 +125,7 @@ def data_verification(data):
 
     check_code_Error_List = check_boolean("Arbres", boolNames, Arbres)
     if len(check_code_Error_List) >0:
-      verificationList.append({'errorName': 'Controle type dans la colonne Taillis de la table Arbres (f, t ou rien attendues)', 'errorText': 'Controle type dans la colonne Taillis de la table Arbres', 'errorList': check_code_Error_List, 'errorType': 'PsdrfError', 'isFatalError': True, 'isFatalError': True})
+      verificationList.append({'errorName': 'Controle type dans la colonne Taillis de la table Arbres', 'errorText': 'Controle type booléen dans une colonne de la table Arbres (f, t ou rien attendues)', 'errorList': check_code_Error_List, 'errorType': 'PsdrfError', 'isFatalError': True, 'isFatalError': True})
 
     # Types table BMSsup30
     intNames = ['Id', 'Cycle', 'NumArbre']
@@ -137,7 +141,7 @@ def data_verification(data):
 
     check_code_Error_List = check_boolean("BMSsup30", boolNames, BMSsup30)
     if len(check_code_Error_List) >0:
-      verificationList.append({'errorName': 'Controle type dans la table BMSsup30 (f, t ou rien attendues)', 'errorText': 'Controle type dans la table BMSsup30', 'errorList': check_code_Error_List, 'errorType': 'PsdrfError', 'isFatalError': True, 'isFatalError': True})
+      verificationList.append({'errorName': 'Controle type dans la table BMSsup30', 'errorText': 'Controle type booléen dans une colonne de la table BMSsup30 (f, t ou rien attendues)', 'errorList': check_code_Error_List, 'errorType': 'PsdrfError', 'isFatalError': True, 'isFatalError': True})
 
     # Types table Placettes
     intNames = ['Cycle', "Strate"]
@@ -153,12 +157,13 @@ def data_verification(data):
 
     check_code_Error_List = check_boolean("Placettes", boolNames, Placettes)
     if len(check_code_Error_List) >0:
-      verificationList.append({'errorName': 'Controle type dans la table Placettes (f, t ou rien attendues)', 'errorText': 'Controle type dans la table Placettes', 'errorList': check_code_Error_List, 'errorType': 'PsdrfError', 'isFatalError': True, 'isFatalError': True})
+      verificationList.append({'errorName': 'Controle type dans la table Placettes', 'errorText': 'Controle type booléen dans une colonne de la table Placettes (f, t ou rien attendues)', 'errorList': check_code_Error_List, 'errorType': 'PsdrfError', 'isFatalError': True, 'isFatalError': True})
 
 
     # Types table Cycles
     intNames = ['Cycle']
     floatNames = ['Coeff']
+    dateNames = ['Date']
     check_code_Error_List = check_int("Cycles", intNames, Cycles)
     if len(check_code_Error_List) >0:
       verificationList.append({'errorName': 'Controle type dans la table Cycles (entier attendu)', 'errorText': 'Controle type dans la table Cycles', 'errorList': check_code_Error_List, 'errorType': 'PsdrfError', 'isFatalError': True, 'isFatalError': True})
@@ -167,6 +172,9 @@ def data_verification(data):
     if len(check_code_Error_List) >0:
       verificationList.append({'errorName': 'Controle type dans la table Cycles (decimal attendu)', 'errorText': 'Controle type dans la table Cycles', 'errorList': check_code_Error_List, 'errorType': 'PsdrfError', 'isFatalError': True, 'isFatalError': True})
 
+    check_code_Error_List = check_date("Cycles", dateNames, Cycles)
+    if len(check_code_Error_List) >0:
+      verificationList.append({'errorName': 'Controle type dans la table Cycles', 'errorText': 'Controle type dans la table Cycles (date attendu sous la forme dd/mm/aaaa)', 'errorList': check_code_Error_List, 'errorType': 'PsdrfError', 'isFatalError': True, 'isFatalError': True})
 
     # Types table Regeneration
     intNames = ['SsPlac', 'Cycle', 'Class1', 'Class2', 'Class3']
@@ -182,7 +190,7 @@ def data_verification(data):
 
     check_code_Error_List = check_boolean("Regeneration", boolNames, Regeneration)
     if len(check_code_Error_List) >0:
-      verificationList.append({'errorName': 'Controle type dans la table Regeneration (f, t ou rien attendues)', 'errorText': 'Controle type dans la colonne Taillis de la table Regeneration', 'errorList': check_code_Error_List, 'errorType': 'PsdrfError', 'isFatalError': True, 'isFatalError': True})
+      verificationList.append({'errorName': 'Controle type dans la table Regeneration', 'errorText': 'Controle type booléen dans une colonne de la table Regeneration (f, t ou rien attendues)', 'errorList': check_code_Error_List, 'errorType': 'PsdrfError', 'isFatalError': True, 'isFatalError': True})
 
 
   # Types table Transect
@@ -191,15 +199,15 @@ def data_verification(data):
     boolNames = ['Contact', 'Chablis']
     check_code_Error_List = check_int("Transect", intNames, Transect)
     if len(check_code_Error_List) >0:
-      verificationList.append({'errorName': 'Controle type dans la table Transect (entier attendu)', 'errorText': 'Controle type dans la table Transect', 'errorList': check_code_Error_List, 'errorType': 'PsdrfError', 'isFatalError': True, 'isFatalError': True})
+      verificationList.append({'errorName': 'Controle type dans la table Transect (entier attendu)', 'errorText': 'Controle type dans la table Transect', 'errorList': check_code_Error_List, 'errorType': 'PsdrfError', 'isFatalError': True})
 
     check_code_Error_List = check_int_or_float("Transect", floatNames, Transect)
     if len(check_code_Error_List) >0:
-      verificationList.append({'errorName': 'Controle type dans la table Transect (decimal attendu)', 'errorText': 'Controle type dans la colonne NumDisp de la table Transect', 'errorList': check_code_Error_List, 'errorType': 'PsdrfError', 'isFatalError': True, 'isFatalError': True})
+      verificationList.append({'errorName': 'Controle type dans la table Transect (decimal attendu)', 'errorText': 'Controle type dans la colonne NumDisp de la table Transect', 'errorList': check_code_Error_List, 'errorType': 'PsdrfError', 'isFatalError': True})
 
     check_code_Error_List = check_boolean("Transect", boolNames, Transect)
     if len(check_code_Error_List) >0:
-      verificationList.append({'errorName': 'Controle type dans la table Transect (f, t ou rien attendues)', 'errorText': 'Controle type dans la colonne Taillis de la table Transect', 'errorList': check_code_Error_List, 'errorType': 'PsdrfError', 'isFatalError': True, 'isFatalError': True})
+      verificationList.append({'errorName': 'Controle type dans la table Transect', 'errorText': 'Controle type booléen dans une colonne de la table Transect (f, t ou rien attendues)', 'errorList': check_code_Error_List, 'errorType': 'PsdrfError', 'isFatalError': True})
 
 
   # Types table Reperes
@@ -228,7 +236,7 @@ def data_verification(data):
       Referents = pd.read_pickle(DATA_DIR_PSDRF / 'Referents')
       Tarifs = pd.read_pickle(DATA_DIR_PSDRF / 'Tarifs')
 
-      An = datetime.datetime.now().year
+      An = datetime.now().year
 
       correctionList['StadeD'] = CodeDurete['Code'].tolist()
       correctionList['StadeD'].insert(0, None)
@@ -768,8 +776,13 @@ def data_verification(data):
         if not posProSilva.empty:
           posProSilva_temp = posProSilva
           posProSilva = posProSilva.assign(CodeEcolo = posProSilva["CodeEcolo"].astype(str).str.split("-"))
+
+          posProSilva["CodeEcolo"]= posProSilva["CodeEcolo"].apply(stringIntConvertion)
+          print(posProSilva["CodeEcolo"])
           posProSilva["CodeEcolo"]= posProSilva["CodeEcolo"].apply(set)
           Prosilva_codes = (set(CodeEcologie[CodeEcologie["Codification"]=="prosilva"]["Code"].apply(str)))
+          print(Prosilva_codes)
+          print(posProSilva["CodeEcolo"])
           #On utilise des set afin de pouvoir utiliser "<=" qui est l'équivalent de "issubset"
           temp = posProSilva[[(not (x <= Prosilva_codes)) for x in posProSilva["CodeEcolo"]]]
           if not temp.empty:
@@ -783,7 +796,7 @@ def data_verification(data):
                   "value": posProSilva_temp.loc[[index],:].to_json(orient='records'),
                 }
               error_List_Temp.append(err)
-            verificationList.append({'errorName': 'Code(s) DMH Prosilva non reconnu(s)', 'errorText': "Il y a des codes DMH référencés ProSilva qui ne sont pas reconnus. Attention, les codes doivent être séparés par des tirets. Ex: CV2-CV3. <a target='_blank' rel='noopener noreferrer' href='https://docs.google.com/spreadsheets/d/1b6cfcJwKSZxODuJSbyE_UGCJFt985az-ZMNlxEeavVE/edit#gid=0'>Code Ecolo</a>", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True})
+            verificationList.append({'errorName': 'Code(s) DMH Prosilva non reconnu(s)', 'errorText': "Il y a des codes DMH référencés ProSilva qui ne sont pas reconnus dans la table Arbres. Attention, les codes doivent être séparés par des tirets. Ex: CV2-CV3. <a target='_blank' rel='noopener noreferrer' href='https://docs.google.com/spreadsheets/d/1b6cfcJwKSZxODuJSbyE_UGCJFt985az-ZMNlxEeavVE/edit#gid=0'>Code Ecolo</a>", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True})
 
         # --- Codification EFI
         if not posEFI.empty:
@@ -803,7 +816,7 @@ def data_verification(data):
                   "value": posEFI_temp.loc[[index],:].to_json(orient='records'),
                 }
               error_List_Temp.append(err)
-            verificationList.append({'errorName': 'Code(s) DMH EFI non reconnu(s)', 'errorText': "Il y a des codes DMH référencés EFI qui ne sont pas reconnus. Attention, les codes doivent être séparés par des tirets. Ex: CV2-CV3. <a target='_blank' rel='noopener noreferrer' href='https://docs.google.com/spreadsheets/d/1b6cfcJwKSZxODuJSbyE_UGCJFt985az-ZMNlxEeavVE/edit#gid=0'>Code Ecolo</a>", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True})
+            verificationList.append({'errorName': 'Code(s) DMH EFI non reconnu(s)', 'errorText': "Il y a des codes DMH référencés EFI qui ne sont pas reconnus dans la table Arbres. Attention, les codes doivent être séparés par des tirets. Ex: CV2-CV3. <a target='_blank' rel='noopener noreferrer' href='https://docs.google.com/spreadsheets/d/1b6cfcJwKSZxODuJSbyE_UGCJFt985az-ZMNlxEeavVE/edit#gid=0'>Code Ecolo</a>", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True})
 
 
         # --- Codification IRSTEA
@@ -824,7 +837,7 @@ def data_verification(data):
                   "value": posIRSTEA_temp.loc[[index],:].to_json(orient='records'),
                 }
               error_List_Temp.append(err)
-            verificationList.append({'errorName': 'Code(s) DMH IRSTEA non reconnu(s)', 'errorText': "Il y a des codes DMH référencés IRSTEA qui ne sont pas reconnus. Attention, les codes doivent être séparés par des tirets. Ex: CV2-CV3. <a target='_blank' rel='noopener noreferrer' href='https://docs.google.com/spreadsheets/d/1b6cfcJwKSZxODuJSbyE_UGCJFt985az-ZMNlxEeavVE/edit#gid=0'>Code Ecolo</a>", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True})
+            verificationList.append({'errorName': 'Code(s) DMH IRSTEA non reconnu(s)', 'errorText': "Il y a des codes DMH référencés IRSTEA qui ne sont pas reconnus dans la table Arbres. Attention, les codes doivent être séparés par des tirets. Ex: CV2-CV3. <a target='_blank' rel='noopener noreferrer' href='https://docs.google.com/spreadsheets/d/1b6cfcJwKSZxODuJSbyE_UGCJFt985az-ZMNlxEeavVE/edit#gid=0'>Code Ecolo</a>", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True})
 
         # --- Codification non reconnue
         if not posUnknown.empty:
@@ -838,7 +851,7 @@ def data_verification(data):
                 "value": posUnknown.loc[[index],:].to_json(orient='records'),
               }
             error_List_Temp.append(err)
-          verificationList.append({'errorName': 'Code(s) écologiques non reconnu(s)', 'errorText': "Il y a des références à des codifications de codes écologiques non reconnues. Rappel : les seules codifications reconnues sont celles de ProSilva, de l'IRSTEA et de l'EFI.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True})
+          verificationList.append({'errorName': 'Code(s) écologiques non reconnu(s)', 'errorText': "Il y a des références à des codifications de codes écologiques non reconnues dans la table Arbres. Rappel : les seules codifications reconnues sont celles de ProSilva, de l'IRSTEA et de l'EFI.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True})
 
 
 
@@ -1266,7 +1279,7 @@ def data_verification(data):
       df_Dupl = df_Dupl.drop_duplicates(subset=["NumDisp", "NumPlac", "Cycle", "SsPlac", "Essence", "Taillis"])
       if not df_Dupl.empty:
         entire_df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated(subset=["NumDisp", "NumPlac", "Cycle", "SsPlac", "Essence", "Taillis"], keep=False)]
-        listDupl = entire_df_Dupl.groupby(["NumDisp", "NumPlac", "Cycle", "SsPlac", "Essence", "Taillis"]).apply(lambda x: list(x.index)).tolist()
+        listDupl = entire_df_Dupl.groupby(["NumDisp", "NumPlac", "Cycle", "SsPlac", "Essence", "Taillis"], dropna=False).apply(lambda x: list(x.index)).tolist()
 
         i = 0
         error_List_Temp = []
@@ -1705,7 +1718,7 @@ def check_species(table_to_test, species, status, tablename):
       status = np.where(status >= 2, status, 2)
       for index, row in species_list_temp.iterrows():
           err= {
-            "message": "L'essence "+ str(row["Essence"]) + " figure dans la table "+ tablename +"mais ne figure pas dans la table 'CodeEssence' (fichier administrateur) ",
+            "message": "L'essence "+ str(row["Essence"]) + " figure dans la table "+ tablename +" mais ne figure pas dans la table 'CodeEssence' (fichier administrateur) ",
             "table": tablename,
             "column": ['Essence'],
             "row": [index],
@@ -1804,7 +1817,7 @@ def check_boolean(tableName, colonnelist, table_to_test):
     t = table_to_test[["NumPlac", colonneName]]
     
     # détection des codes non conformes
-    temp =t[(t[colonneName].notna()) & (t[colonneName] != "t") & (t[colonneName] != "f") & (t[colonneName] != "0")]
+    temp =t[(t[colonneName].notna()) & (t[colonneName] != "t") & (t[colonneName] != "f")]
     if not temp.empty: 
       for index, row in temp.iterrows():
         err= {
@@ -1818,7 +1831,8 @@ def check_boolean(tableName, colonnelist, table_to_test):
 
   return(error)
 
-
+def stringIntConvertion(x):
+  return [y.split(".")[0] for y in x]
 
 
 def check_int(tableName, colonnelist, table_to_test):
@@ -1882,6 +1896,32 @@ def isemptystring(value):
   else:
     return False
 
+def check_date(tableName, colonnelist, table_to_test):
+  error = []
+  for colonneName in colonnelist:
+    t = table_to_test.dropna(subset=[colonneName])
+    bool_list = [((not isemptystring(x)) & (not isdate(x))) for x in t[colonneName]]
+    temp = t[bool_list]
+
+    if not temp.empty: 
+      for index, row in temp.iterrows():
+        err= {
+          "message": "Dans la table "+tableName+" la colonne "+ colonneName  +" contient la valeur \""+ str(row[colonneName])+"\"",
+          "table": tableName,
+          "column": [colonneName],
+          "row": [index],
+          "value": temp.loc[[index],:].to_json(orient='records'),
+        }
+        error.append(err)
+
+  return(error)
+
+def isdate(value):
+  try:
+    datetime.strptime(value, '%d/%m/%Y')
+    return True
+  except ValueError:
+    return False
 # table_to_test=Transect[Transect["StadeD"].notna()]
 # table_to_test
 # df1 = table_to_test[~table_to_test["StadeD"].isin( CodeDurete['Code'].values)]
