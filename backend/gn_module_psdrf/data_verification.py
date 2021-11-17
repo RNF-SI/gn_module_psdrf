@@ -4,7 +4,8 @@ import numpy as np
 from datetime import datetime
 import re
 
-from pathlib import Path
+from geonature.utils.config import config
+import os.path
 
 # Fonction principale de vérification des données du PSDRF
 def data_verification(data):
@@ -219,22 +220,23 @@ def data_verification(data):
 
     if not verificationList: 
 
+      base_dir = config["BASE_DIR"]
+
       # Trouver le chemin d'accès au dossier data, qui contient les tables nécessaires aux tests
-      ROOT_DIR_PSDRF = Path(__file__).resolve().parent.parent.parent
-      DATA_DIR_PSDRF = ROOT_DIR_PSDRF / "data"
+      DATA_DIR_PSDRF = os.path.join( base_dir, 'gn_module_psdrf', 'data')
 
       #chargement des tables nécessaires aux tests 
-      CodeEssence = pd.read_pickle(DATA_DIR_PSDRF / 'CodeEssence')
-      CyclesCodes = pd.read_pickle(DATA_DIR_PSDRF / 'CyclesCodes')
-      Dispositifs = pd.read_pickle(DATA_DIR_PSDRF / 'Dispositifs')
-      CodeDurete = pd.read_pickle(DATA_DIR_PSDRF / 'CodeDurete')
-      CodeTypoArbres = pd.read_pickle(DATA_DIR_PSDRF / 'CodeTypoArbres')
-      CodeEcologie = pd.read_pickle(DATA_DIR_PSDRF / 'CodeEcologie')
-      CodeEcorce = pd.read_pickle(DATA_DIR_PSDRF / 'CodeEcorce')
-      EssReg = pd.read_pickle(DATA_DIR_PSDRF / 'EssReg')
-      Communes = pd.read_pickle(DATA_DIR_PSDRF / 'Communes')
-      Referents = pd.read_pickle(DATA_DIR_PSDRF / 'Referents')
-      Tarifs = pd.read_pickle(DATA_DIR_PSDRF / 'Tarifs')
+      CodeEssence = pd.read_pickle(os.path.join( DATA_DIR_PSDRF, 'CodeEssence'))
+      CyclesCodes = pd.read_pickle(os.path.join( DATA_DIR_PSDRF, 'CyclesCodes'))
+      Dispositifs = pd.read_pickle(os.path.join( DATA_DIR_PSDRF, 'Dispositifs'))
+      CodeDurete = pd.read_pickle(os.path.join( DATA_DIR_PSDRF, 'CodeDurete'))
+      CodeTypoArbres = pd.read_pickle(os.path.join( DATA_DIR_PSDRF, 'CodeTypoArbres'))
+      CodeEcologie = pd.read_pickle(os.path.join( DATA_DIR_PSDRF, 'CodeEcologie'))
+      CodeEcorce = pd.read_pickle(os.path.join( DATA_DIR_PSDRF, 'CodeEcorce'))
+      EssReg = pd.read_pickle(os.path.join( DATA_DIR_PSDRF, 'EssReg'))
+      Communes = pd.read_pickle(os.path.join( DATA_DIR_PSDRF, 'Communes'))
+      Referents = pd.read_pickle(os.path.join( DATA_DIR_PSDRF, 'Referents'))
+      Tarifs = pd.read_pickle(os.path.join( DATA_DIR_PSDRF, 'Tarifs'))
 
       An = datetime.now().year
 
