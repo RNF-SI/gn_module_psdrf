@@ -220,7 +220,7 @@ def data_verification(data):
     if not verificationList: 
 
       # Trouver le chemin d'accès au dossier data, qui contient les tables nécessaires aux tests
-      ROOT_DIR_PSDRF = Path(__file__).absolute().parent.parent.parent
+      ROOT_DIR_PSDRF = Path(__file__).resolve().parent.parent.parent
       DATA_DIR_PSDRF = ROOT_DIR_PSDRF / "data"
 
       #chargement des tables nécessaires aux tests 
