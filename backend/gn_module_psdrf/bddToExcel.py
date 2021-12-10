@@ -5,6 +5,7 @@ from .models import TDispositifs, TPlacettes, TArbres, TCycles, \
     CorCyclesPlacettes, TArbresMesures, TReperes, BibEssences, TRegenerations,\
     TBmSup30,TBmSup30Mesures, TTransects, dispositifs_area_assoc
 from .geonature_PSDRF_function import get_id_type_from_mnemonique, get_cd_nomenclature_from_id_type_and_id_nomenclature
+from datetime import date, datetime
 
 
 def bddToExcel(dispId):
@@ -142,7 +143,7 @@ def bddToExcel(dispId):
     data.append(convertToJsonObject("Reperes", Reperes))
 
     excelData = {"data": data}
-    excelJson = json.dumps(excelData, cls=NumpyEncoder)
+    excelJson = json.dumps(excelData, cls=NumpyEncoder,default=json_serial)
    
     return excelJson 
 
@@ -258,3 +259,10 @@ class NumpyEncoder(json.JSONEncoder):
         if isinstance(obj, np.ndarray):
             return obj.tolist()
         return json.JSONEncoder.default(self, obj)
+
+def json_serial(obj):
+    """JSON serializer for objects not serializable by default json code"""
+
+    if isinstance(obj, (datetime, date)):
+        return obj.strftime("%d/%m/%Y")
+    raise TypeError ("Type %s not serializable" % type(obj))

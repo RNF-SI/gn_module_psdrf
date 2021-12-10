@@ -1461,11 +1461,14 @@ def data_verification(data):
           temp1= temp1.assign(Corresp1 = 1)
           temp1['index_col_temp1'] = temp1.index
           temp1["NumDisp"]= temp1["NumDisp"].astype(int)
+          temp1["NumPlac"]= temp1["NumPlac"].astype(str)
 
           temp2 = Placettes[["NumDisp", "NumPlac"]]
           temp2= temp2.assign(Corresp2 = 2)
           temp2['index_col_temp2'] = temp2.index
           temp2["NumDisp"]= temp2["NumDisp"].astype(int)
+          temp2["NumPlac"]= temp2["NumPlac"].astype(str)
+
 
           temp3 = pd.merge(temp1, temp2, how="outer", on=["NumDisp", "NumPlac"])
           temp3 = temp3[temp3["Corresp1"].isna() | temp3["Corresp2"].isna() ]      

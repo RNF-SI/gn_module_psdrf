@@ -1,9 +1,25 @@
 <table mat-table [dataSource]="datasource" class="mat-elevation-z8">
 
+
     <ng-container *ngFor="let columnName of displayedColumns" [matColumnDef]="columnName">
         <th mat-header-cell *matHeaderCellDef> {{columnName}} </th>
-        <td mat-cell *matCellDef="let element"> {{element[columnName]}} </td>
+        <td mat-cell *matCellDef="let element; let i = index">
+            <span *ngIf="((columnName!='update') && (columnName!='delete')); else particularBlock"> {{element[columnName]}} </span>
+            <ng-template #particularBlock>
+                <ng-container *ngIf="columnName=='update'; else deleteBlock ">
+                    <button mat-icon-button aria-label="Example icon button with a home icon" (click)="openUpdateForm(i, element)">
+                        <mat-icon>update</mat-icon>
+                    </button>
+                </ng-container>
+            </ng-template>
+            <ng-template #deleteBlock>
+                <button mat-icon-button aria-label="Example icon button with a home icon" (click)="deleteElement(i, element)">
+                    <mat-icon>delete</mat-icon>
+                </button>
+            </ng-template>
+        </td>
     </ng-container>
+
 
 
     <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>

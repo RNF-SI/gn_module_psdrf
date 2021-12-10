@@ -292,21 +292,46 @@ def getUserGroups(userId):
     return data
 
 
-@blueprint.route('/corDispositifRole', methods=['POST'])
+@blueprint.route('/corDispositifRole', methods=['POST', 'PUT', 'DELETE'])
 @json_resp
 def add_cor_disp_role():
     data = request.get_json()
-    new_cor_disp_role = CorDispositifsRoles(
-        id_dispositif = data["dispositif"],
-        id_role= data["utilisateur"],
-    )
-    try:
-        DB.session.add(new_cor_disp_role)
-        DB.session.commit()
-        return {"success": "Ajout validé"}
-    except SQLAlchemyError as e:
-        error = str(e.__dict__['orig'])
-        return error
+    if request.method == 'POST':
+        new_cor_disp_role = CorDispositifsRoles(
+            id_dispositif = data["dispositif"],
+            id_role= data["utilisateur"],
+        )
+        try:
+            DB.session.add(new_cor_disp_role)
+            DB.session.commit()
+            return {"success": "Ajout validé"}
+        except SQLAlchemyError as e:
+            error = str(e.__dict__['orig'])
+            return error
+    if request.method == 'PUT':
+        dispRole = CorDispositifsRoles.query.filter_by(
+            id_dispositif=data["dispositif"], 
+            id_role=data["utilisateur"]
+        ).first()
+        dispRole.id_dispositif=""
+        dispRole.id_role=""
+        try:
+            DB.session.commit()
+            return {"success": "Ajout validé"}
+        except SQLAlchemyError as e:
+            error = str(e.__dict__['orig'])
+            return error
+    if request.method == 'DELETE':
+        try:
+            CorDispositifsRoles.query.filter_by(
+                id_dispositif=data["id_dispositif"], 
+                id_role=data["id_role"]
+            ).delete()
+            DB.session.commit()
+            return {"success": "Suppression validés"}
+        except SQLAlchemyError as e:
+            error = str(e.__dict__['orig'])
+            return error
 
 @blueprint.route('/userDisps/<int:userId>', methods=['GET'])
 @json_resp
@@ -323,25 +348,53 @@ def get_excel_data(dispId):
     data = bddToExcel(dispId)
     return data
 
-@blueprint.route('/organisme', methods=['Post'])
+@blueprint.route('/organisme', methods=['POST', 'PUT', 'DELETE'])
 @json_resp
 def postOrganisme():
     data = request.get_json()
-    new_organisme = BibOrganismes(
-        nom_organisme = data["newOrganisme"],
-        adresse_organisme = data["adresseOrga"],
-        cp_organisme = data["cpOrga"],
-        ville_organisme = data["villeOrga"],
-        tel_organisme = data["telOrga"],
-        email_organisme = data["mailOrga"]
-    )
-    try:
-        DB.session.add(new_organisme)
-        DB.session.commit()
-        return {"success": "Ajout validé"}
-    except SQLAlchemyError as e:
-        error = str(e.__dict__['orig'])
-        return error
+    print(data)
+    if request.method == 'POST':
+        new_organisme = BibOrganismes(
+            nom_organisme = data["newOrganisme"],
+            adresse_organisme = data["adresseOrga"],
+            cp_organisme = data["cpOrga"],
+            ville_organisme = data["villeOrga"],
+            tel_organisme = data["telOrga"],
+            email_organisme = data["mailOrga"]
+        )
+        try:
+            DB.session.add(new_organisme)
+            DB.session.commit()
+            return {"success": "Ajout validé"}
+        except SQLAlchemyError as e:
+            error = str(e.__dict__['orig'])
+            return error
+    if request.method == 'PUT':
+        try:
+            orga = BibOrganismes.query.filter_by(
+                id_organisme = data["id_organisme"]
+            ).first()
+            orga.nom_organisme = data["newOrganisme"],
+            orga.adresse_organisme = data["adresseOrga"],
+            orga.cp_organisme = data["cpOrga"],
+            orga.ville_organisme = data["villeOrga"],
+            orga.tel_organisme = data["telOrga"],
+            orga.email_organisme = data["mailOrga"]
+            DB.session.commit()
+            return {"success": "Ajout validé"}
+        except SQLAlchemyError as e:
+            error = str(e.__dict__['orig'])
+            return error
+    if request.method == 'DELETE':
+        try:
+            BibOrganismes.query.filter_by(
+                id_organisme =data["id_organisme"]
+            ).delete()
+            DB.session.commit()
+            return {"success": "Ajout validé"}
+        except SQLAlchemyError as e:
+            error = str(e.__dict__['orig'])
+            return error
 
 @blueprint.route('/listOrganism', methods=['GET'])
 @json_resp
@@ -350,23 +403,54 @@ def get_list_organism():
     data = [{'id':organisme.id_organisme, 'nom_organisme': organisme.nom_organisme, 'adresse_organisme': organisme.adresse_organisme, 'ville_organisme': organisme.ville_organisme, 'cp_organisme': organisme.cp_organisme, "telephone_organisme": organisme.tel_organisme, "email_organisme": organisme.email_organisme} for organisme in query]
     return data
 
-@blueprint.route('/dispositif', methods=['Post'])
+@blueprint.route('/dispositif', methods=['POST', "DELETE", "PUT"])
 @json_resp
 def postDispositif():
     data = request.get_json()
-    new_dispositif = TDispositifs(
-        id_dispositif = data["idDispositif"],
-        name = data["newDispositif"],
-        id_organisme = data["dispOrganisme"],
-        alluvial = data["alluvial"]
-    )
-    try:
-        DB.session.add(new_dispositif)
-        DB.session.commit()
-        return {"success": "Ajout validé"}
-    except SQLAlchemyError as e:
-        error = str(e.__dict__['orig'])
-        return error
+    print(data)
+    if request.method == 'POST':
+        new_dispositif = TDispositifs(
+            id_dispositif = data["idDispositif"],
+            name = data["newDispositif"],
+            id_organisme = data["dispOrganisme"],
+            alluvial = data["alluvial"]
+        )
+        try:
+            DB.session.add(new_dispositif)
+            DB.session.commit()
+            return {"success": "Ajout validé"}
+        except SQLAlchemyError as e:
+            error = str(e.__dict__['orig'])
+            return error
+    if request.method == 'DELETE':
+        try:
+            TDispositifs.query.filter_by(
+                id_dispositif =data["id_dispositif"]
+            ).delete()
+            DB.session.commit()
+            return {"success": "Ajout validé"}
+        except SQLAlchemyError as e:
+            error = str(e.__dict__['orig'])
+            return error
+    if request.method == 'PUT':
+        try:
+            disp = TDispositifs.query.filter_by(
+                id_dispositif =data["id_dispositif"]
+            ).first()
+            disp.id_dispositif = data["idDispositif"],
+            disp.name = data["newDispositif"],
+            disp.id_organisme = data["dispOrganisme"],
+            disp.alluvial = data["alluvial"]
+            print(disp)
+            DB.session.commit()
+            return {"success": "Ajout validé"}
+        except SQLAlchemyError as e:
+            error = str(e.__dict__['orig'])
+            return error
+
+
+
+
 
 @blueprint.route('/corDispositifRole', methods=['GET'])
 @json_resp
@@ -378,7 +462,7 @@ def get_corDispositifRole():
     ).join(
         User, User.id_role == CorDispositifsRoles.id_role
     ).all()
-    data = [{'nom_utilisateur':userDisp.nom_role, 'prenom_utilisateur': userDisp.prenom_role, 'nom_dispositif': userDisp.name} for userDisp in query]
+    data = [{'id_utilisateur': userDisp.id_role, 'nom_utilisateur':userDisp.nom_role, 'prenom_utilisateur': userDisp.prenom_role, 'id_dispositif': userDisp.id_dispositif, 'nom_dispositif': userDisp.name} for userDisp in query]
     return data
 
 @blueprint.route('/users', methods=['GET'])
@@ -388,13 +472,14 @@ def get_Users():
         Retourne tous les utilisateurs (sans les groupes)
     """     
     query = DB.session.query(
-        User.id_role, User.groupe, User.id_organisme, User.prenom_role, User.nom_role, User.email, User.identifiant, User.remarques, BibOrganismes.nom_organisme,BibOrganismes.id_organisme
+        User.id_role, User.groupe, User.id_organisme, User.prenom_role, User.nom_role, User.email, User.identifiant, User.remarques, BibOrganismes.nom_organisme
     ).filter(
         User.groupe == False
     ).outerjoin(
         BibOrganismes, BibOrganismes.id_organisme == User.id_organisme
     ).all()
-    data = [{'id_utilisateur': user.id_role, 'nom_utilisateur':user.nom_role, 'prenom_utilisateur': user.prenom_role, 'email_utilisateur': user.email, 'identifiant_utilisateur': user.identifiant, 'nom_organisme': user.nom_organisme, 'remarques_utilisateur': user.remarques} for user in query]
+    data = [{'id_utilisateur': user.id_role, 'nom_utilisateur':user.nom_role, 'prenom_utilisateur': user.prenom_role, 'email_utilisateur': user.email, 'identifiant_utilisateur': user.identifiant, 'id_organisme': user.id_organisme, 'nom_organisme': user.nom_organisme, 'remarques_utilisateur': user.remarques} for user in query]
+    print(data)
     return data
 
 

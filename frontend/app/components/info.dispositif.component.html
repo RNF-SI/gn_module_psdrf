@@ -37,17 +37,19 @@
                 [rowClass]="mapListService.getRowClass" [messages]="" (page)="mapListService.setTablePage($event, placettesEndPoint)" (select)="onRowSelect($event)">
 
                 <!-- ACTION COLUMNS -->
-                <!-- <ngx-datatable-column maxWidth="10">
+                <!-- 
+                <ngx-datatable-column maxWidth="10">
                     <ng-template ngx-datatable-header-template>
                         <i (click)="openModalCol($event, modalCol)" class="fa fa-cog clickable" aria-hidden="true" matTooltip="{{'List.Columns' | translate}}" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></i>
                     </ng-template>
                     <ng-template let-row="row" ngx-datatable-cell-template>
                         <button class="btn btn-outline-shadow btn-no-padding btn-ghost" [disabled]="!row.rights.U" (click)="onEditPlacette(row[mapListService.id_placette])">
-                    <i [ngClass]="{'disabled' : !row.rights.U}" matTooltip="{{'Placette.Edit' | translate}} {{row[mapListService.idName]}}"
-                      class="fa fa-pencil-square-o" aria-hidden="true"></i>
-                  </button>
+                            <i [ngClass]="{'disabled' : !row.rights.U}" matTooltip="{{'Placette.Edit' | translate}} {{row[mapListService.idName]}}"
+                            class="fa fa-pencil-square-o" aria-hidden="true"></i>
+                        </button>
                     </ng-template>
-                </ngx-datatable-column> -->
+                </ngx-datatable-column> 
+                -->
 
                 <ngx-datatable-column maxWidth="10">
                     <ng-template let-row="row" ngx-datatable-cell-template>

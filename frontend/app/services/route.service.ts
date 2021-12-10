@@ -103,6 +103,30 @@ export class PsdrfDataService {
     );
   }
 
+  updateCorDispRole(data){
+    return this._http.put<any>(
+      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/corDispositifRole`,
+      data
+    );
+  }
+
+  deleteCorDispRole(data){
+     const options = {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json',
+      }),
+      body: {
+        "id_dispositif":  data.id_dispositif,
+        "id_role": data.id_utilisateur,
+      },
+    };
+
+    return this._http.delete<any>(
+      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/corDispositifRole`,
+      options
+    );
+  }
+
   getUserDisps(userId: number){
     return this._http.get<any>(
       `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/userDisps/`+ userId
@@ -122,11 +146,56 @@ export class PsdrfDataService {
     );
   }
 
+  updateOrganisme(data){
+    return this._http.put<any>(
+      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/organisme`,
+      data
+    );
+  }
+
+  deleteOrganisme(data){
+    const options = {
+     headers: new HttpHeaders({
+       'Content-Type': 'application/json',
+     }),
+     body: {
+       "id_organisme":  data.id,
+     },
+   };
+   return this._http.delete<any>(
+     `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/organisme`,
+     options
+   );
+  }
+
   addDispositif(data){
     return this._http.post<any>(
       `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/dispositif`,
       data
     );
+  }
+
+  updateDispositif(data){
+    return this._http.put<any>(
+      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/dispositif`,
+      data
+    );
+  }
+
+  deleteDisp(data){
+    const options = {
+     headers: new HttpHeaders({
+       'Content-Type': 'application/json',
+     }),
+     body: {
+       "id_dispositif":  data.id_dispositif,
+     },
+   };
+
+   return this._http.delete<any>(
+     `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/dispositif`,
+     options
+   );
   }
 
   getCorDispositifRole(){
