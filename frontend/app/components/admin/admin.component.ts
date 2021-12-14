@@ -362,6 +362,10 @@ export interface Orga {
         this.disableSubmitDisp = true;
         const finalForm = Object.assign({}, this.dispForm.value);
 
+        if(finalForm["alluvial"] == ""){
+          finalForm["alluvial"]= false;
+        }
+
         this.dataSrv
         .addDispositif(finalForm)
         .subscribe(

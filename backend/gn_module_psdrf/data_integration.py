@@ -33,7 +33,7 @@ def data_integration(dispId, dispName, data):
         if placette["NumPlac"] not in placettesIdOrigInDisp:
             newPlacettesList.append(TPlacettes(
                 id_dispositif= int(id_dispositif),
-                id_placette_orig= int(placette['NumPlac']),
+                id_placette_orig= placette['NumPlac'],
                 strate= int(placette['Strate']) if placette['Strate'] else None,
                 pente= float(placette['Pente']) if placette['Pente'] else None,
                 poids_placette= float(placette['PoidsPlacette']) if placette['PoidsPlacette'] else None,
@@ -136,7 +136,7 @@ def data_integration(dispId, dispName, data):
         ).one()
 
         for placette in Placettes:
-            if ((int(placette["NumPlac"])==int(cycle["NumPlac"])) & (int(cycle["Cycle"])==int(placette["Cycle"]))):
+            if ((str(placette["NumPlac"])==str(cycle["NumPlac"])) & (int(cycle["Cycle"])==int(placette["Cycle"]))):
                 new_cor_cycle_placette =CorCyclesPlacettes(
                     id_cycle = cycle_id,
                     id_placette = placette_id,
@@ -157,7 +157,7 @@ def data_integration(dispId, dispName, data):
     new_arbres_array = []
     list_arbres_id = []
     for arbre in Arbres:
-        if (int(arbre["NumPlac"]), int(arbre["NumArbre"]))  not in list_arbres_id:
+        if (str(arbre["NumPlac"]), int(arbre["NumArbre"]))  not in list_arbres_id:
 
             placette_id = DB.session.query(TPlacettes.id_placette).filter(
                 (TPlacettes.id_dispositif == id_dispositif) & (TPlacettes.id_placette_orig == str(arbre["NumPlac"]))
@@ -174,7 +174,7 @@ def data_integration(dispId, dispName, data):
                 observation = arbre["Observation"]
             )
             new_arbres_array.append(new_arbre)
-            list_arbres_id.append((int(arbre["NumPlac"]), int(arbre["NumArbre"])))
+            list_arbres_id.append((str(arbre["NumPlac"]), int(arbre["NumArbre"])))
     DB.session.bulk_save_objects(new_arbres_array)
     DB.session.flush()
 
@@ -210,7 +210,7 @@ def data_integration(dispId, dispName, data):
             hauteur_totale = arbre["Haut"],
             stade_durete = get_id_nomenclature_from_id_type_and_cd_nomenclature(id_type_durete, arbre["StadeD"]) if arbre["StadeD"] else None,
             stade_ecorce = get_id_nomenclature_from_id_type_and_cd_nomenclature(id_type_ecorce, arbre["StadeE"]) if arbre["StadeE"] else None,
-            coupe = arbre["Coupe"],
+            coupe = "C" if arbre["Coupe"] == "Chablis" else "E" if arbre["Coupe"] == "Exploité" else arbre["Coupe"],
             limite = True if arbre["Limite"] == "t" else False if arbre["Limite"] == "f" else arbre["Limite"],
             code_ecolo = arbre["CodeEcolo"],
             ref_code_ecolo = arbre["Ref_CodeEcolo"],
@@ -266,7 +266,7 @@ def data_integration(dispId, dispName, data):
     list_bms_id = []
     bmsSup30List = []
     for bmsSup30 in BMSsup30:
-        if (int(bmsSup30["NumPlac"]), int(bmsSup30["Id"]))  not in list_bms_id:
+        if (str(bmsSup30["NumPlac"]), int(bmsSup30["Id"]))  not in list_bms_id:
             placette_id = DB.session.query(TPlacettes.id_placette).filter(
                 (TPlacettes.id_dispositif == id_dispositif) & (TPlacettes.id_placette_orig == bmsSup30["NumPlac"])
             ).one()
@@ -291,7 +291,7 @@ def data_integration(dispId, dispName, data):
                 observation = bmsSup30["Observation"]
             )
             bmsSup30List.append(new_bmsSup30)
-            list_bms_id.append((int(bmsSup30["NumPlac"]), int(bmsSup30["Id"])))
+            list_bms_id.append((str(bmsSup30["NumPlac"]), int(bmsSup30["Id"])))
     DB.session.bulk_save_objects(bmsSup30List)
     DB.session.flush()
 
@@ -368,8 +368,8 @@ def data_integration(dispId, dispName, data):
             id_transect_orig = transect['Id'],
             code_essence = transect['Essence'],
             ref_transect = transect['Transect'],
-            distance = transect['Dist'],
-            diametre = transect['Diam'],
+            distance = float(transect['Dist']) if transect['Dist'] else None,
+            diametre = float(transect['Diam']) if transect['Diam'] else None, 
             contact = True if transect["Contact"] == "t" else False if transect["Contact"] == "f" else transect["Contact"],
             angle = transect['Angle'],
             chablis = True if transect["Chablis"] == "t" else False if transect["Chablis"] == "f" else transect["Chablis"],
