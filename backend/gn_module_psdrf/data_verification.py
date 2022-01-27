@@ -220,7 +220,7 @@ def data_verification(data):
 
     if not verificationList: 
 
-      base_dir = config["BASE_DIR"]
+      base_dir = os.path.dirname(os.path.dirname(config["BASE_DIR"]))
 
       # Trouver le chemin d'accès au dossier data, qui contient les tables nécessaires aux tests
       DATA_DIR_PSDRF = os.path.join( base_dir, 'gn_module_psdrf', 'data')
