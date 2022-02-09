@@ -459,7 +459,8 @@ ALTER TABLE ONLY cor_dispositifs_roles
 ALTER TABLE ONLY t_arbres
   ADD CONSTRAINT fk_t_arbres_t_placettes
   FOREIGN KEY (id_placette) REFERENCES t_placettes (id_placette)
-  ON UPDATE CASCADE;
+  ON UPDATE CASCADE
+  ON DELETE CASCADE;
 
 ALTER TABLE ONLY t_arbres
   ADD CONSTRAINT fk_t_arbres_bib_essences
