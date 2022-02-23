@@ -860,7 +860,7 @@ def data_verification(data):
       ###Table BMSsup30
       v = BMSsup30["Essence"].drop_duplicates()
     
-      #Contrôle des essences rencontrées dans la table Arbres
+      #Contrôle des essences rencontrées dans la table BMSsup30
       error_List_Temp = check_species(BMSsup30, CodeEssence, Test, "BMSsup30")
       if len(error_List_Temp) >0:
         verificationList.append({'errorName': 'Essence dans BMSsup30', 'errorText':"Essence dans BMSsup30", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'isFatalError': True})
@@ -1507,6 +1507,41 @@ def data_verification(data):
       miss2(Cycles, Placettes, "Cycles", True)
       miss2(Regeneration, Placettes, "Regeneration", False)
       miss2(Transect, Placettes, "Transect", False)
+
+
+      # --- Contrôler que les arbres de la table BMSsup30 sont bien présent dans la table Arbre
+      if ((Arbres.shape[0]>0) & (BMSsup30.shape[0] >0)) :
+        temp1 = BMSsup30[["NumPlac", "NumArbre"]]
+        temp1= temp1[~temp1["NumArbre"].isna()]
+        temp1 = temp1.drop_duplicates()
+        temp1= temp1.assign(Corresp1 = 1)
+        temp1['index_col_temp1'] = temp1.index
+        temp1["NumPlac"]= temp1["NumPlac"].astype(str)
+        temp1["NumArbre"]= temp1["NumArbre"].astype(int)
+
+        temp2 = Arbres[["NumPlac", "NumArbre"]]
+        temp2= temp2.assign(Corresp2 = 2)
+        temp2['index_col_temp2'] = temp2.index
+        temp2["NumPlac"]= temp2["NumPlac"].astype(str)
+        temp2["NumArbre"]= temp2["NumArbre"].astype(int)
+
+        temp3 = pd.merge(temp1, temp2, how="outer", on=["NumPlac", "NumArbre"])
+        temp3 = temp3[temp3["Corresp1"].isna() | temp3["Corresp2"].isna() ]      
+
+        list2 = temp3[temp3["Corresp2"].isna()]
+
+        if len(list2) >0:
+          error_List_Temp=[]
+          for index, row in list2.iterrows():
+            err = {
+                "message": "La Ligne au numéro de placette"+ str(row["NumPlac"]) +" et au numéro d'arbre "+ str(row["NumArbre"]) + " figure dans la table BMSsup30 mais ne figure pas dans la table Arbre",
+                "table": 'BMSsup30',
+                "column": [ "NumPlac", "NumArbre"],
+                "row": [int(row["index_col_temp1"])], 
+                "value": list2.loc[[index],:].to_json(orient='records'),
+              }
+            error_List_Temp.append(err)
+          verificationList.append({'errorName': "Information incohérente entre la table BMSsup30 et la table Arbres", 'errorText': "Information incohérente entre la table BMSsup30 et la table Arbres", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True})
 
       # ---------- Contrôle des valeurs dupliquées : ---------- #
       df_Dupl_temp= Placettes[["NumDisp", "NumPlac", "Cycle", "Strate"]].sort_values(by=["NumDisp", "NumPlac", "Cycle", "Strate"])
