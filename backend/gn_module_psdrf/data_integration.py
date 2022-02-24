@@ -270,12 +270,6 @@ def data_integration(dispId, dispName, data):
             placette_id = DB.session.query(TPlacettes.id_placette).filter(
                 (TPlacettes.id_dispositif == id_dispositif) & (TPlacettes.id_placette_orig == bmsSup30["NumPlac"])
             ).one()
-            if(bmsSup30["NumArbre"]):
-                arbre_id = DB.session.query(TArbres.id_arbre).filter(
-                    (TArbres.id_arbre_orig == bmsSup30["NumArbre"]) & (TArbres.id_placette == placette_id)
-                ).one()
-            else :
-                arbre_id = None
 
             if(bmsSup30["Azimut"]):
                 bmsSup30["Azimut"]=float(bmsSup30["Azimut"].replace(',', '.'))
@@ -284,7 +278,7 @@ def data_integration(dispId, dispName, data):
             new_bmsSup30 = TBmSup30(
                 id_bm_sup_30_orig = int(bmsSup30["Id"]),
                 id_placette = placette_id,
-                id_arbre = arbre_id,
+                id_arbre = int(bmsSup30["NumArbre"]) if bmsSup30["NumArbre"] else None,
                 code_essence = bmsSup30["Essence"],
                 azimut = bmsSup30["Azimut"],
                 distance = bmsSup30["Dist"],
