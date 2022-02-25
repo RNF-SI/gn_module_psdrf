@@ -610,20 +610,20 @@ def data_verification(data):
         verificationList.append({'errorName': "Azimut incohérent dans Arbres", 'errorText': "La valeur de l'azimut est inférieur à 0.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True})
 
       # Valeurs extrêmes sup Diam1
-      temp = Arbres[Arbres["Diam1"] > 80]
+      temp = Arbres[Arbres["Diam1"] > 100]
       temp = temp[["NumPlac", "NumArbre", "Diam1"]]
       if not temp.empty:
         error_List_Temp=[]
         for index, row in temp.iterrows():
           err = {
-              "message": "L'arbre "+ str(int(row["NumArbre"])) +" de la placette "+ str(row["NumPlac"]) + " a un diamètre de " + str(int(row["Diam1"])) +" supérieur à 80.",
+              "message": "L'arbre "+ str(int(row["NumArbre"])) +" de la placette "+ str(row["NumPlac"]) + " a un diamètre de " + str(int(row["Diam1"])) +" supérieur à 100.",
               "table": "Arbres",
               "column": [ "NumArbre", "Diam1"],
               "row": [index], 
               "value": temp.loc[[index],:].to_json(orient='records'),
             }
           error_List_Temp.append(err)
-        verificationList.append({'errorName': "Diamètre très élevé dans Arbres", 'errorText': "La valeur du diamètre est supérieure à 80. Vérifiez qu'elle correspond bien à ce que vous vouliez saisir.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': False})
+        verificationList.append({'errorName': "Diamètre très élevé dans Arbres", 'errorText': "La valeur du diamètre est supérieure à 100. Vérifiez qu'elle correspond bien à ce que vous vouliez saisir.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': False})
 
       # Valeurs extrêmes inf Diam1
       temp = Arbres[Arbres["Diam1"] < 7]
