@@ -248,7 +248,7 @@ class TBmSup30 (DB.Model):
     id_bm_sup_30 = DB.Column('id_bm_sup_30', DB.Integer, primary_key = True)
     id_bm_sup_30_orig = DB.Column('id_bm_sup_30_orig', DB.Integer)
     id_placette = DB.Column('id_placette', DB.Integer, DB.ForeignKey('pr_psdrf.t_placettes.id_placette', ondelete='CASCADE'))
-    id_arbre = DB.Column('id_arbre', DB.Integer, DB.ForeignKey('pr_psdrf.t_arbres.id_arbre'))
+    id_arbre = DB.Column('id_arbre', DB.Integer)
     code_essence = DB.Column('code_essence', DB.String, DB.ForeignKey('pr_psdrf.bib_essences.code_essence'))
     azimut = DB.Column('azimut', DB.Float)
     distance = DB.Column('distance', DB.Float)
@@ -259,7 +259,6 @@ class TBmSup30 (DB.Model):
 
     placette = DB.relationship('TPlacettes', foreign_keys=id_placette)
     essence = DB.relationship('BibEssences', foreign_keys=code_essence)
-    arbre = DB.relationship('TArbres', foreign_keys=id_arbre)
 
 
 @serializable
