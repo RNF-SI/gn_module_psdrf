@@ -20,7 +20,7 @@ import * as XLSX from 'xlsx';
         /* grab first sheet */
         const ws: XLSX.WorkSheet = wb.Sheets[wb.SheetNames[i]];  
         /* save data */
-        data.push(<XLSX.AOA2SheetOpts>(XLSX.utils.sheet_to_json(ws, { header: 1, raw:false})));
+        data.push(<XLSX.AOA2SheetOpts>(XLSX.utils.sheet_to_json(ws, { header: 1, raw:false, blankrows: false})));
       }
       return data;
     }
