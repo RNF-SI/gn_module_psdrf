@@ -209,7 +209,7 @@
                                 <ng-template matStepLabel>
                                     <div>{{mainStepNameArr[mainStepIndex]}}</div>
                                 </ng-template>
-                                <error-main-step *ngIf="mainStepper.selectedIndex == mainStepIndex" (subStepSelectionChange)="displayOnSubStepClick($event)" (indexButtonClicked)="displayErrorOnMatTab($event)" (modificationValidated)="modifyErrorValue($event)" (deletionValidated)="deleteErrorValue($event)"
+                                <error-main-step *ngIf="mainStepper.selectedIndex == mainStepIndex" (subStepSelectionChange)="displayOnSubStepClick($event)" (indexButtonClicked)="displayErrorOnMatTab($event)" (modificationValidated)="modifyErrorValue($event, error.isFatalError)" (deletionValidated)="deleteErrorValue($event, error.isFatalError)"
                                     (allSubStepModified)="modifyMainStepperAppearance($event)" [step]="error" [mainStepIndex]="mainStepIndex" [mainStepText]="mainStepTextArr[mainStepIndex]">
                                 </error-main-step>
                             </mat-step>
@@ -234,7 +234,8 @@
                 </div>
                 <mat-progress-bar class="example-margin" [color]="color" mode="determinate" [value]="progressBarValue">
                 </mat-progress-bar>
-
+                <mat-progress-bar class="example-margin" [color]="color" mode="determinate" [value]="blockingErrorProgressBarValue">
+                </mat-progress-bar>
             </div>
         </div>
     </div>

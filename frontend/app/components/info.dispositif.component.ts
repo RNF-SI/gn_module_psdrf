@@ -103,9 +103,13 @@ export class InfoDispositifComponent implements OnInit {
             a.download    = data.filename;
             document.body.appendChild(a);
             a.click();
+            this._toasterService.success("Le rapport a bien été généré.", "Génération du rapport PSDRF");
           },
           (error) => {
-            this._toasterService.error(error.message, "Génération du rapport PSDRF");
+            this._toasterService.error(error.message, "Génération du rapport PSDRF", {
+              closeButton: true,
+              disableTimeOut: true,
+            });
             this.analysisLoading = false;
           }
         );
@@ -122,9 +126,13 @@ export class InfoDispositifComponent implements OnInit {
             let psdrfArrayObj = JSON.parse(data)
             this.exportTableToExcel(psdrfArrayObj.data)
             this.excelLoading = false;
+            this._toasterService.success("Le fichier excel a bien été généré.", "Génération du fichier excel");
           }, 
           (error) => {
-            this._toasterService.error(error.message, "Génération du fichier excel");
+            this._toasterService.error(error.message, "Génération du fichier excel", {
+              closeButton: true,
+              disableTimeOut: true,
+            });
             this.excelLoading = false;
           }
         ) 

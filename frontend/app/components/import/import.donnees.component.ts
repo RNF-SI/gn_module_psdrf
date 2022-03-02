@@ -82,7 +82,11 @@ export class ImportDonneesComponent  implements OnInit{
   deletedElementArr: PsdrfErrorCoordinates[] = [];//Tableau des erreurs supprimées
   totallyModifiedMainStepperArr: number[] = []; //Tableau des indexs des mainstep qui ont été complètement modifiés
   totalErrorNumber: number = 0; //Correspond au nombre de rowButton total. Sert à la barre de progression
+  blockingErrorNumber: number = 0; //Correspond au nombre de rowButton dans les erreurs bloquantes. Sert à la barre de progression
+  corrigedBlockingErrorNumber: number = 0;
+  corrigedErrorNumber: number = 0;
   progressBarValue: number = 0;
+  blockingErrorProgressBarValue: number = 0;
   extensionIcon: string = "unfold_more";
 
   @ViewChildren(MatPaginator) paginator = new QueryList<MatPaginator>(); //liste des 8 paginators
@@ -137,13 +141,18 @@ export class ImportDonneesComponent  implements OnInit{
             this.isPSDRFadmin = isPSDRFadmin;
           },
           error => {
-            this._toasterService.error(error.message, "Vérification des droits PSDRF");
+            this._toasterService.error(error.message, "Vérification des droits PSDRF", {
+              closeButton: true,
+              disableTimeOut: true,
+            });
           }
           )
     } else {
       this.isPSDRFadmin = this.sharedSrv.getPsdrfAdmin();
     }
   }
+
+
 
   getUserDisps(userId): void{
     this.dataSrv
@@ -153,7 +162,10 @@ export class ImportDonneesComponent  implements OnInit{
           this.userDisps = dispsList;
         },
         error =>{
-          this._toasterService.error(error.message, "Recherche des dispositif de l'utilisateur courant");
+          this._toasterService.error(error.message, "Recherche des dispositif de l'utilisateur courant", {
+            closeButton: true,
+            disableTimeOut: true,
+          });
         }
       )
   }
@@ -227,6 +239,7 @@ export class ImportDonneesComponent  implements OnInit{
             })
           );
         }
+        this._toasterService.success("Les données du fichier Excel ont bien été chargées.", "Chargement des données du fichier Excel");
 
         //Création du binding entre les MatTable datasources et les données affichée dans la tableau
         //Remarque: Tout changement dans psdrfArray s'applique automatiquement au tableau
@@ -239,6 +252,13 @@ export class ImportDonneesComponent  implements OnInit{
 
         this.isExcelLoaded = true;
       };
+
+      reader.onerror = (e: any) => {
+        this._toasterService.error("Un problème a été rencontré lors du chargement du fichier Excel.", "Chargement des données du fichier Excel", {
+          closeButton: true,
+          disableTimeOut: true,
+        });
+      };
       reader.readAsBinaryString(target.files[0]);
       //Lancement de la requête psdrf_data_verification avec les données Excel chargée
       reader.onloadend = (e) => {
@@ -250,6 +270,8 @@ export class ImportDonneesComponent  implements OnInit{
           )
           .subscribe(
             verificationJson => {
+              this._toasterService.info ("La vérification des données est bien terminée.", "Vérification des données PSDRF");
+
               let verificationObj = JSON.parse(verificationJson);
 
               //Récupération de toutes les corrections possibles pour les champs prédéfinis objet de correction 
@@ -260,6 +282,9 @@ export class ImportDonneesComponent  implements OnInit{
               let errorsPsdrfListTemp = verificationObj["verificationObj"];
               this.mainStepNameArr = [];
               this.totalErrorNumber = 0;
+              this.blockingErrorNumber = 0;
+              this.corrigedBlockingErrorNumber = 0;
+              this.corrigedErrorNumber = 0;
               
               this.jsonObjectToPsdrfObject(errorsPsdrfListTemp);
               this.totalSteps = errorsPsdrfListTemp.length;
@@ -281,7 +306,10 @@ export class ImportDonneesComponent  implements OnInit{
               }, 0);
             },
             error => {
-              this._toasterService.error(error.message, "Vérification des données PSDRF");
+              this._toasterService.error(error.message, "Vérification des données PSDRF", {
+                closeButton: true,
+                disableTimeOut: true,
+              });
               this.isDataCharging = false;
               this.isExcelLoaded = false;
               this.isVerificationObjLoaded = false;
@@ -289,7 +317,10 @@ export class ImportDonneesComponent  implements OnInit{
           );
       };
     } else {
-      this._commonService.regularToaster('error', "Vous n'avez pas les droits d'édition sur le Dispositif "+ this.excelFileName)
+      this._toasterService.error("Vous n'avez pas les droits d'édition sur le Dispositif "+ this.excelFileName, "Vérification des droits", {
+        closeButton: true,
+        disableTimeOut: true,
+      })
     }
   }
 
@@ -322,6 +353,9 @@ export class ImportDonneesComponent  implements OnInit{
           );
           error.row.forEach((idx) => {
             this.totalErrorNumber++;
+            if(mainError.isFatalError){
+              this.blockingErrorNumber++;
+            }
           });
         });
         this.errorsPsdrfList.push({
@@ -585,73 +619,122 @@ export class ImportDonneesComponent  implements OnInit{
   modifyErrorValue(modificationErrorObj: {
     errorCoordinates: PsdrfErrorCoordinates;
     newErrorValue: any;
-  }): void {
+  },
+    isFatalError: boolean
+  ): void {
     let indexTable = this.indexLabelMatTabGroup.indexOf(
       modificationErrorObj.errorCoordinates.table
     );
     modificationErrorObj.errorCoordinates.row.forEach((idx, i) => {
-      modificationErrorObj.errorCoordinates.column.forEach((colName) => {
-        if (
-          !this.modifiedElementArr.some(
-            (obj) =>
-              obj.table == modificationErrorObj.errorCoordinates.table &&
-              obj.column.includes(colName) &&
-              obj.row.includes(idx)
+      if (
+        !this.elementIsInPsdrfErrorCoordinatesList(this.modifiedElementArr, modificationErrorObj.errorCoordinates.table, modificationErrorObj.errorCoordinates.column, idx)
+      ) {
+        this.modifiedElementArr.push(modificationErrorObj.errorCoordinates);
+        //Si l'élément avait été supprimé on l'enlève de la liste des suppressions
+        if(this.elementIsInPsdrfErrorCoordinatesList(this.deletedElementArr, modificationErrorObj.errorCoordinates.table, modificationErrorObj.errorCoordinates.column, idx)){
+          console.log("modif after delete");
+          this._toasterService.info("La ligne que vous avez modifiée avez préalablement été supprimée. La ligne a été rétirée des éléments supprimés.", "Correction des données");
+          this.deleteElementInPsdrfErrorCoordinatesList(
+            this.deletedElementArr,
+            modificationErrorObj.errorCoordinates.table,
+            modificationErrorObj.errorCoordinates.column,
+            idx
           )
-        ) {
-          this.modifiedElementArr.push(modificationErrorObj.errorCoordinates);
         }
-
+        // Mettre à jour le nombre d'erreurs corrigées seulement si pas déjà dans les élément supprimés
+        else {
+          this.corrigedErrorNumber ++;
+          if(isFatalError){
+            this.corrigedBlockingErrorNumber ++;
+          }
+        }
+      }
+      modificationErrorObj.errorCoordinates.column.forEach((colName) => {
         this.psdrfArray[indexTable][idx][colName] =
           modificationErrorObj.newErrorValue[i][colName];
       });
     });
     this.progressBarValue =
-      (this.modifiedElementArr.length * 100) / this.totalErrorNumber;
+      (this.corrigedErrorNumber * 100) / this.totalErrorNumber;
+    this.blockingErrorProgressBarValue =
+      (this.corrigedBlockingErrorNumber * 100) / this.blockingErrorNumber;
   }
 
   
-    /**
-   * Triggered when deletion button has been clicked in a substep:
-   * - put the values red in the mat-table
-   * - update deletedElementArr (list of the modified elements)
-   * @param modificationErrorObj contains 1 attributes:
-   * -errorCoordinates
-   */
-    deleteErrorValue(deletionErrorObj: {
-      errorCoordinates: PsdrfErrorCoordinates;
-    }): void {
-      let indexTable = this.indexLabelMatTabGroup.indexOf(
-      deletionErrorObj.errorCoordinates.table
-      );
-      deletionErrorObj.errorCoordinates.row.forEach((idx, i) => {
-        // deletionErrorObj.errorCoordinates.column.forEach((colName) => {
-          if (
-              !this.elementIsInDeletionList(deletionErrorObj.errorCoordinates.table, deletionErrorObj.errorCoordinates.column, idx)
-              ) {
-                this.deletedElementArr.push(deletionErrorObj.errorCoordinates);
-          }else {
-            let indexEle = this.deletedElementArr.findIndex(delEle => (
-              delEle.table == deletionErrorObj.errorCoordinates.table &&
-              delEle.column == deletionErrorObj.errorCoordinates.column &&
-              delEle.row.includes(idx)
-            ))
-            this.deletedElementArr.splice(indexEle, 1);
-          }
-        // });
-      });
+  /**
+  * Triggered when deletion button has been clicked in a substep:
+  * - put the values red in the mat-table
+  * - update deletedElementArr (list of the modified elements)
+  * @param deletionErrorObj contains 1 attributes:
+  * -errorCoordinates
+  */
+  deleteErrorValue(deletionErrorObj: {
+    errorCoordinates: PsdrfErrorCoordinates;
+  },
+    isFatalError: boolean
+  ): void {
+    let indexTable = this.indexLabelMatTabGroup.indexOf(
+    deletionErrorObj.errorCoordinates.table
+    );
+    deletionErrorObj.errorCoordinates.row.forEach((idx, i) => {
+      if (
+          !this.elementIsInPsdrfErrorCoordinatesList(this.deletedElementArr, deletionErrorObj.errorCoordinates.table, deletionErrorObj.errorCoordinates.column, idx)
+          ) {
+            this.deletedElementArr.push(deletionErrorObj.errorCoordinates);
 
-      this.progressBarValue =
-        (this.modifiedElementArr.length * 100) / this.totalErrorNumber;
-    }
+            //Si l'élément avait été modifié on l'enlève de la liste des modifications
+            if(this.elementIsInPsdrfErrorCoordinatesList(this.modifiedElementArr, deletionErrorObj.errorCoordinates.table, deletionErrorObj.errorCoordinates.column, idx)){
+              console.log("delete after modif");
+              this._toasterService.info("La ligne que vous avez ajoutée aux éléments à supprimer avait été préalablement modifié.", "Correction des données");
+              console.log(this.modifiedElementArr);
+            }
+            else {
+              this.corrigedErrorNumber ++;
+              if(isFatalError){
+                this.corrigedBlockingErrorNumber++;
+              }
+            }
+      }else {
+        this.deleteElementInPsdrfErrorCoordinatesList(
+          this.deletedElementArr,
+          deletionErrorObj.errorCoordinates.table,
+          deletionErrorObj.errorCoordinates.column,
+          idx
+        )
+        if(this.elementIsInPsdrfErrorCoordinatesList(this.modifiedElementArr, deletionErrorObj.errorCoordinates.table, deletionErrorObj.errorCoordinates.column, idx)){
+          this._toasterService.info("La ligne que vous avez enlevée des éléments à supprimer avait été préalablement modifié.", "Correction des données");
+        } else {
+          this.corrigedErrorNumber --;
+          if(isFatalError){
+            this.corrigedBlockingErrorNumber--;
+          }
+        }
+      }
+    });
+
+    this.progressBarValue =
+      (this.corrigedErrorNumber * 100) / this.totalErrorNumber;
+    this.blockingErrorProgressBarValue =
+      (this.corrigedBlockingErrorNumber * 100) / this.blockingErrorNumber;
+  }
     
-  elementIsInDeletionList(table, columns, idx){
-    return this.deletedElementArr.some(
+  elementIsInPsdrfErrorCoordinatesList(list, table, columns, idx){
+    return list.some(
       (obj) =>
         obj.table == table &&
         obj.column == columns &&
         obj.row.includes(idx)
     )
+  }
+
+  deleteElementInPsdrfErrorCoordinatesList(list, table, columns, idx){
+    let indexEle = list.findIndex(ele => (
+      ele.table == table &&
+      ele.column == columns &&
+      ele.row.includes(idx)
+    ))
+    console.log("test");
+    list.splice(indexEle, 1);
   }
 
   /**
@@ -711,7 +794,11 @@ export class ImportDonneesComponent  implements OnInit{
     this.modifiedElementArr = [];
     this.deletedElementArr = [];
     this.totalErrorNumber = 0;
+    this.blockingErrorNumber = 0;
+    this.corrigedBlockingErrorNumber = 0;
+    this.corrigedErrorNumber = 0;
     this.progressBarValue = 0;
+    this.blockingErrorProgressBarValue = 0;
     this.mainStepTextArr = [];
     this.isLabelVisible = true;
     this.MAX_STEP = 5;
@@ -962,6 +1049,8 @@ export class ImportDonneesComponent  implements OnInit{
       )
       .subscribe(
         verificationJson => {
+          this._toasterService.info("La vérification des données est terminée.", "Vérification des données PSDRF");
+
           let verificationObj = JSON.parse(verificationJson);
           this.correctionService.setSelectionErrorObj(
             verificationObj["correctionList"]
@@ -970,6 +1059,7 @@ export class ImportDonneesComponent  implements OnInit{
 
           this.mainStepNameArr = [];
           this.totalErrorNumber = 0;
+          this.blockingErrorNumber = 0;
 
           this.jsonObjectToPsdrfObject(errorsPsdrfListTemp);
           this.isVerificationObjLoaded = true;
@@ -991,7 +1081,10 @@ export class ImportDonneesComponent  implements OnInit{
           }, 0);
         },
         error => {
-          this._toasterService.error(error.message, "Vérification des données PSDRF");
+          this._toasterService.error(error.message, "Vérification des données PSDRF", {
+            closeButton: true,
+            disableTimeOut: true,
+          });
         }
       );
   }
@@ -1051,11 +1144,17 @@ export class ImportDonneesComponent  implements OnInit{
           let integrationObj = JSON.parse(integrationJson);
           this.integrationLoading = false;
           if(integrationObj.success){
-            this._toasterService.success("Les données ont bien été ajoutées à la BDD", "");
+            this._toasterService.success("Les données ont bien été ajoutées à la BDD", "Intégration des données en BDD", {
+              closeButton: true,
+              disableTimeOut: true,
+            });
           }
         }, 
         error => {
-          this._toasterService.error(error.error, "Intégration des données en BDD");
+          this._toasterService.error(error.error, "Intégration des données en BDD", {
+            closeButton: true,
+            disableTimeOut: true,
+          });
           this.integrationLoading = false;
         });
 

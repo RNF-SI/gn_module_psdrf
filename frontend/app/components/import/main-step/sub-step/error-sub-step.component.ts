@@ -13,8 +13,7 @@ import {PsdrfError, PsdrfErrorCoordinates} from '../../../../models/psdrfObject.
   export class ErrorSubStepComponent implements OnInit{
     value: string; //Valeur Corrigée par l'utilisateur
     selectedButtonIndex: number=0; //IndexButton Sélectionné
-    modifiedIndexes: number[] = []; //liste des indexs des boutons modifiés 
-    deletedIndexes: number[] = []; //liste des indexs des boutons supprimés
+    changedIndexes: number[] = []; //liste des indexs des boutons modifiés ou supprimés
     listCorrection: any={};
 
     @Input() mainStepIndex: number; //Index du main step auquel le subStep appartient
@@ -69,11 +68,11 @@ import {PsdrfError, PsdrfErrorCoordinates} from '../../../../models/psdrfObject.
     * @param buttonIndex Index of the validation button clicked
     */
     modifLineValidation(buttonIndex: number): void{
-      if(this.modifiedIndexes.indexOf(buttonIndex) === -1){
-        this.modifiedIndexes.push(buttonIndex);
+      if(this.changedIndexes.indexOf(buttonIndex) === -1){
+        this.changedIndexes.push(buttonIndex);
       }    
       this.modificationValidated.next({errorCoordinates: new PsdrfErrorCoordinates(this.psdrfError.table, this.psdrfError.column, [this.psdrfError.row[buttonIndex]]), newErrorValue: [this.datasource.data[buttonIndex]]});
-      if(this.modifiedIndexes.length == this.psdrfError.row.length){
+      if(this.changedIndexes.length == this.psdrfError.row.length){
         this.allRowsModified.next(this.subStepIndex);
       } else {
         this.selectedButtonIndex = this.selectedButtonIndex + 1; 
@@ -81,10 +80,15 @@ import {PsdrfError, PsdrfErrorCoordinates} from '../../../../models/psdrfObject.
     }
 
     deleteLine(buttonIndex: number): void{
-      if(this.deletedIndexes.indexOf(buttonIndex) === -1){
-        this.deletedIndexes.push(buttonIndex);
+      if(this.changedIndexes.indexOf(buttonIndex) === -1){
+        this.changedIndexes.push(buttonIndex);
       }    
       this.deletionValidated.next({errorCoordinates: new PsdrfErrorCoordinates(this.psdrfError.table, this.psdrfError.column, [this.psdrfError.row[buttonIndex]])});
+      if(this.changedIndexes.length == this.psdrfError.row.length){
+        this.allRowsModified.next(this.subStepIndex);
+      } else {
+        this.selectedButtonIndex = this.selectedButtonIndex + 1; 
+      }
     }
 
     // TODO: Deletion of a line
@@ -118,19 +122,11 @@ import {PsdrfError, PsdrfErrorCoordinates} from '../../../../models/psdrfObject.
      }
 
     /**
-    *  Return true if a line has been modified or no 
+    *  Return true if a line has been modified or deleted 
     * @param rowIndex Index of a validation button
     */
-    checkModified(rowIndex: number): boolean{
-      return this.modifiedIndexes.includes(rowIndex);
-    }
-
-    /**
-    *  Return true if a line has been deleted or no 
-    * @param rowIndex Index of a deletion button
-    */
-     checkDeleted(rowIndex: number): boolean{
-      return this.deletedIndexes.includes(rowIndex);
+    checkChanged(rowIndex: number): boolean{
+      return this.changedIndexes.includes(rowIndex);
     }
 
   /**
