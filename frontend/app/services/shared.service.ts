@@ -7,14 +7,14 @@ import { of, Observable, forkJoin, Subject } from 'rxjs';
 
 @Injectable()
 export class SharedService {
-    private isPsdrfAdmin: boolean; 
+    private isAdmin: boolean; 
 
     constructor(
         private dataSrv: PsdrfDataService,
         private _authService: AuthService, 
     ) { }
   
-    setPsdrfAdmin(): Observable<boolean>{
+    setIsAdmin(): Observable<boolean>{
         let currentUser = this._authService.getCurrentUser()
         var subject = new Subject<boolean>();
 
@@ -23,24 +23,24 @@ export class SharedService {
         ).subscribe((res) =>{
             let groupList = res[0]
             let userGroups = res [1]
-            let id_PSDRF_Group: number; 
+            let id_Admin_Group: number; 
             groupList.forEach((group) => {
-              if(group.nom_utilisateur == "PSDRF"){
-                id_PSDRF_Group = group.id_utilisateur; 
+              if(group.nom_utilisateur == "Grp_admin"){
+                id_Admin_Group = group.id_utilisateur; 
               }
             })
-            if (userGroups.includes(id_PSDRF_Group)){
-                this.isPsdrfAdmin = true; 
+            if (userGroups.includes(id_Admin_Group)){
+                this.isAdmin = true; 
             } else {
-                this.isPsdrfAdmin = false;
+                this.isAdmin = false;
             }
-            subject.next(this.isPsdrfAdmin)
+            subject.next(this.isAdmin)
         })
         return subject.asObservable();
     }
 
-    getPsdrfAdmin(): boolean{
-        return this.isPsdrfAdmin
+    getIsAdmin(): boolean{
+        return this.isAdmin
     }
 
 }

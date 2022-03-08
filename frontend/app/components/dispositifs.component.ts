@@ -17,7 +17,7 @@ import { ToastrService } from 'ngx-toastr';
   })
   export class DispositifsComponent implements OnInit {
     public currentUser: any; 
-    public isPSDRFadmin: boolean = false;
+    public isAdmin: boolean = false;
     public dispositifs: Array<any>;
     public apiEndPoint: string = 'psdrf/dispositifs';
     public statEndPoint: string = 'psdrf/global_stats';
@@ -72,10 +72,10 @@ import { ToastrService } from 'ngx-toastr';
         .subscribe(data => {this.stats = data});
         
       this.sharedSrv
-        .setPsdrfAdmin()
+        .setIsAdmin()
         .subscribe(
-          isPSDRFadmin  => {
-            this.isPSDRFadmin = isPSDRFadmin;
+          isAdmin  => {
+            this.isAdmin = isAdmin;
           },
           error => {
             this._toasterService.error(error.message, "Vérification des droits PSDRF");

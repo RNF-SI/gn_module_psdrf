@@ -487,7 +487,7 @@ def get_Users():
 @json_resp
 def get_Groups():
     """
-        Retourne tous les utilisateurs (sans les groupes)
+        Retourne tous les groupes (sans les utilisateurs)
     """     
     query = DB.session.query(
         User.id_role, User.groupe, User.prenom_role, User.nom_role, User.identifiant

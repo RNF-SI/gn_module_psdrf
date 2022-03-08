@@ -40,7 +40,7 @@ import { ConfirmationDialog } from "@geonature_common/others/modal-confirmation/
 export class ImportDonneesComponent  implements OnInit{
   userDisps: number[] = [];
   currentUser: any; 
-  isPSDRFadmin: boolean;
+  isAdmin: boolean;
 
   //Tableau qui contient au départ les données du fichier excel. Il est actualisé au fur et à mesure que les erreurs sont corrigées
   psdrfArray: any[][] = [];
@@ -134,11 +134,11 @@ export class ImportDonneesComponent  implements OnInit{
   ngOnInit(){
     this.currentUser = this._authService.getCurrentUser()
     this.getUserDisps(this.currentUser.id_role);
-    if (this.sharedSrv.getPsdrfAdmin() == null) {
-      this.sharedSrv.setPsdrfAdmin()
+    if (this.sharedSrv.getIsAdmin() == null) {
+      this.sharedSrv.setIsAdmin()
         .subscribe(
-          isPSDRFadmin  => {
-            this.isPSDRFadmin = isPSDRFadmin;
+          isAdmin  => {
+            this.isAdmin = isAdmin;
           },
           error => {
             this._toasterService.error(error.message, "Vérification des droits PSDRF", {
@@ -148,7 +148,7 @@ export class ImportDonneesComponent  implements OnInit{
           }
           )
     } else {
-      this.isPSDRFadmin = this.sharedSrv.getPsdrfAdmin();
+      this.isAdmin = this.sharedSrv.getIsAdmin();
     }
   }
 
@@ -214,7 +214,7 @@ export class ImportDonneesComponent  implements OnInit{
     this.excelFileName = target.files[0].name;
     
     let numDisp = this.excelFileName.split("-")[0];
-    if (this.userDisps.includes(parseInt(numDisp)) || this.isPSDRFadmin){
+    if (this.userDisps.includes(parseInt(numDisp)) || this.isAdmin){
       this.isDataCharging = true;
 
 
