@@ -42,7 +42,7 @@ output_dir <- file.path(repFigures, figure_path)
 # create directory
 dir.create(output_dir, showWarnings = F, recursive = T)
 # set chunck option
-opts_chunk$set(fig.path = output_dir, dev = 'jpeg')
+opts_chunk$set(fig.path = output_dir, dev = 'jpeg', dpi=500)
 
 # -- expression pour citer le sous-ensemble :
 quote_group <- with( df_Expr, quote[match(plot_group, group)] )

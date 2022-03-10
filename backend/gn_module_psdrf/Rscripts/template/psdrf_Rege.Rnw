@@ -26,7 +26,7 @@ output_dir <- file.path(repFigures, figure_path)
 # create directory
 dir.create(output_dir, showWarnings = F, recursive = T)
 # set chunck option
-opts_chunk$set(fig.path = output_dir, dev = 'jpeg')
+opts_chunk$set(fig.path = output_dir, dev = 'jpeg', dpi=500)
 
 # argument : évaluation des chuncks ?
 Eval_Rege <- ifelse(dim(grouped_results_of_Rege_by_EssReg)[1] > 0, TRUE, FALSE)
