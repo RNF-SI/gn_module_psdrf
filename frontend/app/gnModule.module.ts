@@ -21,6 +21,7 @@ import { DndDirective } from './directives/dnd.directive';
 import { MatTableModule } from '@angular/material';
 import { MatSnackBarModule } from '@angular/material'; 
 import { CdkStepperModule } from '@angular/cdk/stepper';
+import {MatCheckboxModule} from '@angular/material/checkbox'; 
 
 // my module routing
 const routes: Routes = [
@@ -52,6 +53,7 @@ const routes: Routes = [
     MatTableModule,
     MatSnackBarModule,
     CdkStepperModule,
+    MatCheckboxModule
   ],
   providers: [
     ExcelImportService,

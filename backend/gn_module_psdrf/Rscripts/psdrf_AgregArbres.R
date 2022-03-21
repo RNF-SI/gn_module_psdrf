@@ -40,8 +40,6 @@ Agreg01 <- function(df, vars, group_var) {
 psdrf_AgregArbres <- function(
   repPSDRF = NULL, 
   dispId, last_cycle,
-  donneesBrutesObj, 
-  psdrfTablesBrutes,
   results_by_plot_to_get = NULL
 ) {
   # -- Définition nulle des variables utilisées
@@ -59,28 +57,9 @@ psdrf_AgregArbres <- function(
   
   # -- chargement des données --- ####
   load("tables/psdrfCodes.Rdata")
+  load("tables/psdrfDonneesBrutes.Rdata")
+  load("tables/psdrfTablesBrutes.Rdata")
 
-  IdArbres = donneesBrutesObj$IdArbres
-  BMSsup30 = donneesBrutesObj$BMSsup30
-  Transect = donneesBrutesObj$Transect
-  Cycles = donneesBrutesObj$Cycles
-  Reges = donneesBrutesObj$Reges
-  Reperes = donneesBrutesObj$Reperes
-  PCQM = donneesBrutesObj$PCQM
-  ValArbres = donneesBrutesObj$ValArbres
-  Placettes = donneesBrutesObj$Placettes
-
-  Arbres = psdrfTablesBrutes$Arbres 
-  Perches = psdrfTablesBrutes$Perches 
-  Taillis = psdrfTablesBrutes$Taillis 
-  BMP = psdrfTablesBrutes$BMP 
-  BMSLineaires = psdrfTablesBrutes$BMSLineaires 
-  BMSsup30 = psdrfTablesBrutes$BMSsup30 
-  Reges = psdrfTablesBrutes$Reges 
-  Codes = psdrfTablesBrutes$Codes
-  acct_bv = psdrfTablesBrutes$acct_bv 
-  acct_bmp = psdrfTablesBrutes$acct_bmp 
-  acct_bms = psdrfTablesBrutes$acct_bms
 
 
   ##### 2/ Définition des populations #####

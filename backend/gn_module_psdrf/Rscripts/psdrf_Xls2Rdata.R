@@ -473,6 +473,5 @@ psdrf_Xls2Rdata <- function(repPSDRF, RPlacettes, RArbres, Rbms, Rreges, Rtranse
     file = file
   )
 
-  list("Placettes"= Placettes, "IdArbres"= IdArbres, "ValArbres"= ValArbres, "BMSsup30"= BMSsup30, "Reges" = Reges, "Transect"= Transect, "Reperes" = Reperes, "Cycles"= Cycles, "PCQM"= PCQM)
 }
 

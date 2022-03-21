@@ -1489,7 +1489,7 @@ calculs_dmh <- function(
 #' @export
 
 psdrf_Calculs <- function(
-  repPSDRF = NULL, dispId, last_cycle, donneesBrutesObj
+  repPSDRF = NULL, dispId, last_cycle
   ) {
   # -- définition nulle des variables utilisées
   objects <- c(
@@ -1517,15 +1517,7 @@ psdrf_Calculs <- function(
   
   # -- chargement des données d'inventaire et administratives
   load("tables/psdrfCodes.Rdata")
-  IdArbres = donneesBrutesObj$IdArbres
-  BMSsup30 = donneesBrutesObj$BMSsup30
-  Transect = donneesBrutesObj$Transect
-  Cycles = donneesBrutesObj$Cycles
-  Reges = donneesBrutesObj$Reges
-  Reperes = donneesBrutesObj$Reperes
-  PCQM = donneesBrutesObj$PCQM
-  ValArbres = donneesBrutesObj$ValArbres
-  Placettes = donneesBrutesObj$Placettes
+  load("tables/psdrfDonneesBrutes.Rdata")
 
   ##### 2/ Calculs sur les précomptables #####
   Arbres <- 
@@ -2159,8 +2151,4 @@ psdrf_Calculs <- function(
   )
   # ##### / \ #####
   
-  
-  list("Arbres"= Arbres, "Perches"= Perches, "Taillis"= Taillis, "BMP"= BMP, 
-  "BMSLineaires"= BMSLineaires, "BMSsup30"= BMSsup30, "Reges"= Reges, "Codes"= Codes,
-  "acct_bv"= acct_bv, "acct_bmp"= acct_bmp, "acct_bms"= acct_bms)
 }

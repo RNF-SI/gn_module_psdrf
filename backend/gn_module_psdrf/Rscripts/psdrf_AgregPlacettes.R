@@ -154,7 +154,7 @@ psdrf_AgregMoySdEr <- function(
 #' @export
 
 psdrf_AgregPlacettes <- function(
-  repPSDRF = NULL, donneesBrutesObj,
+  repPSDRF = NULL,
   results_by_group_to_get = NULL, 
   repSav = repPSDRF, 
   disp_list = NULL, last_cycle = NULL, TabPla # lorsque appel pour édition du livret
@@ -168,7 +168,6 @@ psdrf_AgregPlacettes <- function(
     "var_result", "variable"
   )
   create_null(objects)
-  
   ##### 1/ Initialisation #####
   # -- répertoire de travail
 
@@ -176,15 +175,7 @@ psdrf_AgregPlacettes <- function(
   
   # -- chargement des données d'inventaire et administratives
   load("tables/psdrfCodes.Rdata")
-  IdArbres = donneesBrutesObj$IdArbres
-  BMSsup30 = donneesBrutesObj$BMSsup30
-  Transect = donneesBrutesObj$Transect
-  Cycles = donneesBrutesObj$Cycles
-  Reges = donneesBrutesObj$Reges
-  Reperes = donneesBrutesObj$Reperes
-  PCQM = donneesBrutesObj$PCQM
-  ValArbres = donneesBrutesObj$ValArbres
-  Placettes = donneesBrutesObj$Placettes
+  load("tables/psdrfDonneesBrutes.Rdata")
   
   # -- chargement des tables élaborées par placettes
   TabPla = TabPla$TabPla

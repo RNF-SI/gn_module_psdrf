@@ -7,7 +7,12 @@ import { PsdrfDataService } from "../services/route.service";
 import { ToastrService } from 'ngx-toastr';
 import { ExcelImportService } from "../services/excel.import.service";
 
-
+export interface Document {
+  name: string;
+  toDownload: boolean;
+  // color: ThemePalette;
+  subdocuments?: Document[];
+}
 
 
 @Component({
@@ -20,12 +25,24 @@ export class InfoDispositifComponent implements OnInit {
   public id: number;
   public apiEndPoint: string;
   public placettesEndPoint: string;
+  public allToDownload: boolean = true;
 
   //Boolean du lancement de la génération du rapport d'un dispositif (vrai si requête en cours)
   analysisLoading = false; 
 
   //Boolean du lancement de la génération du fichier excel (vrai si requête en cours)
   excelLoading = false; 
+
+  documents: Document = {
+      name: 'Tout',
+      toDownload: true,
+      subdocuments: [
+        {name: 'Carnet et figures', toDownload: true},
+        {name: 'Plan des arbres et figures', toDownload: true},
+        // {name: 'Table Excel des Résultats Bruts', toDownload: false},
+        // {name: 'Plan des arbres', toDownload: false}
+      ],
+    };
 
   constructor(
     private _api: HttpClient,
@@ -84,35 +101,42 @@ export class InfoDispositifComponent implements OnInit {
   }
 
   launchAnalysis(): void{
-    if(!this.analysisLoading){
-      this.analysisLoading = true;
-      this._toasterService.info("La génération du rapport peut prendre plusieurs minutes", "Information");
-      this.dataSrv
-        .psdrf_data_analysis(this.id)
-        .subscribe(
-          data => {
-            this.analysisLoading = false;
-            var file = new Blob([data.pdf], { type: 'application/pdf' })
-            var fileURL = URL.createObjectURL(file);
-  
-            // if you want to open PDF in new tab
-            // window.open(fileURL); 
-            var a         = document.createElement('a');
-            a.href        = fileURL; 
-            a.target      = '_blank';
-            a.download    = data.filename;
-            document.body.appendChild(a);
-            a.click();
-            this._toasterService.success("Le rapport a bien été généré.", "Génération du rapport PSDRF");
-          },
-          (error) => {
-            this._toasterService.error(error.message, "Génération du rapport PSDRF", {
-              closeButton: true,
-              disableTimeOut: true,
-            });
-            this.analysisLoading = false;
-          }
-        );
+    let isCarnetToDownload= this.documents.subdocuments.find(element => element['name']=='Carnet et figures')['toDownload'];
+    let isPlanDesArbresToDownload= this.documents.subdocuments.find(element => element['name']=='Plan des arbres et figures')['toDownload'];
+
+    if(isCarnetToDownload || isPlanDesArbresToDownload){
+      if(!this.analysisLoading){
+        this.analysisLoading = true;
+        this._toasterService.info("La génération des documents peut prendre plusieurs minutes", "Information");
+
+
+        this.dataSrv
+          .psdrf_data_analysis(this.id, isCarnetToDownload, isPlanDesArbresToDownload)
+          .subscribe(
+            data => {
+              this.analysisLoading = false;
+              var file = new Blob([data.zip], { type: 'octet/stream' })
+              var fileURL = URL.createObjectURL(file);
+    
+              // if you want to open PDF in new tab
+              // window.open(fileURL); 
+              var a         = document.createElement('a');
+              a.href        = fileURL; 
+              a.target      = '_blank';
+              a.download    = data.filename;
+              document.body.appendChild(a);
+              a.click();
+              this._toasterService.success("Les documents ont bien étés générés.", "Génération des documents PSDRF");
+            },
+            (error) => {
+              this._toasterService.error(error.message, "Génération du rapport PSDRF", {
+                closeButton: true,
+                disableTimeOut: true,
+              });
+              this.analysisLoading = false;
+            }
+          );
+      }
     }
   }
 
@@ -163,4 +187,22 @@ export class InfoDispositifComponent implements OnInit {
     
   }
 
+  updateAllToDownload() {
+    this.allToDownload = this.documents.subdocuments != null && this.documents.subdocuments.every(t => t.toDownload);
+  }
+
+  someToDownload(): boolean {
+    if (this.documents.subdocuments == null) {
+      return false;
+    }
+    return this.documents.subdocuments.filter(t => t.toDownload).length > 0 && !this.allToDownload;
+  }
+
+  setAll(toDownload: boolean) {
+    this.allToDownload = toDownload;
+    if (this.documents.subdocuments == null) {
+      return;
+    }
+    this.documents.subdocuments.forEach(t => (t.toDownload = toDownload));
+  }
 }

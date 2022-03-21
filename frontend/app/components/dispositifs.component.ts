@@ -145,28 +145,5 @@ import { ToastrService } from 'ngx-toastr';
       this._router.navigate(["psdrf/adminPage"])
     }
 
-    launchAnalysis(dispositifId: number): void{
-      this.dataSrv
-        .psdrf_data_analysis(dispositifId)
-        .subscribe(
-          data => {
-            var file = new Blob([data.pdf], { type: 'application/pdf' })
-            var fileURL = URL.createObjectURL(file);
-  
-            // if you want to open PDF in new tab
-            // window.open(fileURL); 
-            var a         = document.createElement('a');
-            a.href        = fileURL; 
-            a.target      = '_blank';
-            a.download    = data.filename;
-            document.body.appendChild(a);
-            a.click();
-          },
-          (error) => {
-            this._toasterService.error(error.message, "Génération du rapport PSDRF");
-          }
-        );
-    }
-
   }
 

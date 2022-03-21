@@ -15,19 +15,58 @@
 
         <div class="col-sm-5">
 
-            <div class="mt-1 d-flex justify-content-center">
-                <button *ngIf="!analysisLoading" class="action-button-class" mat-raised-button matTooltip="Générer le carnet d'analyse" (click)="launchAnalysis()">
-                    <mat-icon>bar_chart</mat-icon>
-                </button>
-                <button *ngIf="analysisLoading" class="action-button-class spinner-button" mat-raised-button matTooltip="Intégration des données en cours" disabled>
-                    <mat-spinner diameter="22" color="primary"></mat-spinner>
-                </button>
-                <button *ngIf="!excelLoading" class="action-button-class" mat-raised-button matTooltip="Téléchargement des données sur Excel" (click)="importExcel()">
-                    <mat-icon>view_comfy</mat-icon>
-                </button>
-                <button *ngIf="excelLoading" class="action-button-class spinner-button" mat-raised-button matTooltip="Intégration des données en cours" disabled>
-                    <mat-spinner diameter="22" color="primary"></mat-spinner>
-                </button>
+            <div class="mt-1 justify-content-center">
+                <h3>Génération du carnet et des figures</h3>
+                <div class="row">
+                    <section class="col-6 checkbox-section">
+                        <span class="checkbox-list-section">
+                        <mat-checkbox class="checkbox-margin"
+                                        [checked]="allToDownload"
+                                        
+                                        [indeterminate]="someToDownload()"
+                                        (change)="setAll($event.checked)">
+                            {{documents.name}}
+                        </mat-checkbox>
+                        </span>
+                        <span class="checkbox-list-section">
+                        <ul>
+                            <li *ngFor="let subdocument of documents.subdocuments">
+                            <mat-checkbox [(ngModel)]="subdocument.toDownload"
+                                            (ngModelChange)="updateAllToDownload()">
+                                {{subdocument.name}}
+                            </mat-checkbox>
+                            </li>
+                        </ul>
+                        </span>
+                    </section>
+                    <div class="col-6 mt-1">
+                        <h5> Génération des éléments:</h5>
+                        <div class="text-center mt-4">
+                            <button *ngIf="!analysisLoading" class="action-button-class" mat-raised-button matTooltip="Générer les éléments sélectionnés" (click)="launchAnalysis()">
+                                <mat-icon>bar_chart</mat-icon>
+                            </button>
+                            <button *ngIf="analysisLoading" class="action-button-class spinner-button" mat-raised-button matTooltip="Intégration des données en cours" disabled>
+                                <mat-spinner diameter="22" color="primary"></mat-spinner>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <div class="mt-1 justify-content-center">
+                <h3>Génération du fichier excel</h3>
+                <div class="col-6">
+                    <div class="text-center mt-4">
+                        <button *ngIf="!excelLoading" class="action-button-class" mat-raised-button matTooltip="Téléchargement des données sur Excel" (click)="importExcel()">
+                            <mat-icon>view_comfy</mat-icon>
+                        </button>
+                        <button *ngIf="excelLoading" class="action-button-class spinner-button" mat-raised-button matTooltip="Intégration des données en cours" disabled>
+                            <mat-spinner diameter="22" color="primary"></mat-spinner>
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <h3>Placettes</h3>

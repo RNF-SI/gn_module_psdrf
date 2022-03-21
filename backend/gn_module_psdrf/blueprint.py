@@ -1,4 +1,4 @@
-from flask import Blueprint, request, make_response, send_from_directory
+from flask import Blueprint, request, make_response, send_file, send_from_directory
 from sqlalchemy.orm import subqueryload, joinedload
 from sqlalchemy.sql import func, distinct
 from sqlalchemy.exc import SQLAlchemyError
@@ -7,6 +7,10 @@ from sqlalchemy.sql.expression import false
 from geoalchemy2.shape import to_shape, from_shape
 from shapely.geometry import MultiPoint, Point
 import json
+import zipfile
+from io import BytesIO
+import time
+import os
 
 from geonature.utils.env import DB
 # from geonature.utils.utilssqlalchemy import json_resp, get_geojson_feature
@@ -249,14 +253,36 @@ def psdrf_data_integration():
 @blueprint.route('/analysis/<int:id_dispositif>', methods=['GET'])
 def psdrf_data_analysis(id_dispositif):
 
-    outputFilename = data_analysis(str(id_dispositif))
-    filePath = "/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/out"
+    isCarnetToDownload = request.args.get('isCarnetToDownload')
+    isPlanDesArbresToDownload = request.args.get('isPlanDesArbresToDownload')
 
-    result = send_from_directory(filePath,
-                               filename=outputFilename, as_attachment=True)
-    
+    outFilePath = "/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/out/"
+
+    data_analysis(str(id_dispositif), isCarnetToDownload, isPlanDesArbresToDownload)
+
+    memory_file = BytesIO()
+    with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zf:
+
+        for dirname, subdirs, files in os.walk(outFilePath):
+            for filename in files:
+                absname = os.path.abspath(os.path.join(dirname, filename))
+                arcname = absname[len(outFilePath) :]
+                if (arcname != '.gitignore') and (not arcname.endswith(('.log', '.tex'))):
+                    zf.write(absname, arcname)
+
+    memory_file.seek(0)
+
+    zipName = 'documents_dispositif-'+str(id_dispositif)+'.zip'
+
+    result = send_file(
+        memory_file, 
+        mimetype = 'zip',
+        attachment_filename= zipName,
+        as_attachment=True
+        )
+
     response = make_response(result)
-    response.headers["filename"]=outputFilename
+    response.headers["filename"]=zipName
     response.headers['Access-Control-Expose-Headers'] = 'filename'   
     try:
         return response

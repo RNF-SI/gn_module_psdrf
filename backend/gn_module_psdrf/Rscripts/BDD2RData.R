@@ -1,4 +1,4 @@
-bdd2Rdata <- function(dispId, lastCycle, dispName, placettes, arbres, bms, reges, transects, reperes, cycles){
+editDocuments <- function(dispId, lastCycle, dispName, placettes, arbres, bms, reges, transects, reperes, cycles, isCarnetToDownload, isPlanDesArbresToDownload){
 
     library(data.table)
     library("stringr")
@@ -41,7 +41,9 @@ bdd2Rdata <- function(dispId, lastCycle, dispName, placettes, arbres, bms, reges
         file.path("./annexes.R"), 
         encoding = 'UTF-8', echo = TRUE
     )
-    donneesBrutesObj = psdrf_Xls2Rdata(repPSDRF, placettes, arbres, bms, reges, transects, reperes, cycles)
+
+    # Remplie la table psdrfDonneesBrutes.Rdata dans le dossier table
+    psdrf_Xls2Rdata(repPSDRF, placettes, arbres, bms, reges, transects, reperes, cycles)
 
     # TODO: prendre les documents administrateurs depuis la bdd
     # Conversion des données administrateur en df Rdata
@@ -57,7 +59,8 @@ bdd2Rdata <- function(dispId, lastCycle, dispName, placettes, arbres, bms, reges
         encoding = 'UTF-8', echo = TRUE
     )    
 
-    psdrfTablesBrutes =psdrf_Calculs(repPSDRF, dispId, lastCycle, donneesBrutesObj)
+    # Remplie la table psdrfTablesBrutes.Rdata dans le dossier table
+    psdrf_Calculs(repPSDRF, dispId, lastCycle)
 
     source(
         file.path("./psdrf_AgregArbres.R"), 
@@ -104,7 +107,7 @@ bdd2Rdata <- function(dispId, lastCycle, dispName, placettes, arbres, bms, reges
     "psdrfDispPer_EssenceClasse", "psdrfDispPer_EssReg", 
     "psdrfDispPer_EssRegClasse", "psdrfDispPFutaie_", 
     "psdrfDispPFutaie_Cat", "psdrfDispPFutaie_Classe", 
-    "psdrfDispPFutaie_Essence", "psdrfDispRege_Essence", 
+    "psdrfDispPFutaie_Essence", "psdrfDispRege_Essence",
     "psdrfDispRege_EssenceRejet", "psdrfDispRege_EssReg", 
     "psdrfDispRege_EssRegPar", "psdrfDispRege_Rejet", 
     "psdrfDispTaillis_", "psdrfDispTaillis_Classe", 
@@ -131,6 +134,11 @@ bdd2Rdata <- function(dispId, lastCycle, dispName, placettes, arbres, bms, reges
     )
 
     source(
+    file.path("./psdrf_EditPlansArbres.R"), 
+    encoding = 'UTF-8', echo = TRUE
+    )
+
+    source(
     file.path("./annexes.R"), 
     encoding = 'UTF-8', echo = TRUE
     )
@@ -149,8 +157,13 @@ bdd2Rdata <- function(dispId, lastCycle, dispName, placettes, arbres, bms, reges
     file.path("./psdrf_AgregPlacettes.R"), 
     encoding = 'UTF-8', echo = TRUE
     )
-    
-    outputFilename = psdrf_EditCarnet(repPSDRF, dispId, lastCycle, dispName, donneesBrutesObj, psdrfTablesBrutes, results_by_plot_to_get)
 
-    outputFilename
+    if (isCarnetToDownload == 'true'){
+        psdrf_EditCarnet(repPSDRF, dispId, lastCycle, dispName, results_by_plot_to_get)
+    } 
+    if (isPlanDesArbresToDownload == 'true'){
+        psdrf_EditPlansArbres(repPSDRF, dispId, lastCycle, dispName, results_by_plot_to_get)
+    }
+    
+
 }
