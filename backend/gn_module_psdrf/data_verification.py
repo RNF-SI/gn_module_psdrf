@@ -113,7 +113,7 @@ def data_verification(data):
     Reperes = Reperes.apply(pd.to_numeric, errors='ignore')
 
     # Types table Arbre
-    intNames = ['NumDisp', 'Cycle', 'NumArbre']
+    intNames = ['NumDisp', 'Cycle', 'NumArbre', 'Type']
     floatNames = ['Azimut', 'Dist', 'Diam1', 'Diam2', 'Haut', 'StadeD', 'StadeE']
     boolNames = ['Taillis']
     check_code_Error_List = check_int("Arbres", intNames, Arbres)
@@ -217,39 +217,39 @@ def data_verification(data):
     if len(check_code_Error_List) >0:
       verificationList.append({'errorName': 'Controle type dans la table Reperes (decimal attendu)', 'errorText': 'Controle type dans la colonne NumDisp de la table Reperes', 'errorList': check_code_Error_List, 'errorType': 'PsdrfError', 'isFatalError': True, 'isFatalError': True})
 
+    base_dir = os.path.dirname(os.path.dirname(config["BASE_DIR"]))
+
+    # Trouver le chemin d'accès au dossier data, qui contient les tables nécessaires aux tests
+    DATA_DIR_PSDRF = os.path.join( base_dir, 'gn_module_psdrf', 'data')
+
+    #chargement des tables nécessaires aux tests 
+    CodeEssence = pd.read_pickle(os.path.join( DATA_DIR_PSDRF, 'CodeEssence'))
+    CyclesCodes = pd.read_pickle(os.path.join( DATA_DIR_PSDRF, 'CyclesCodes'))
+    Dispositifs = pd.read_pickle(os.path.join( DATA_DIR_PSDRF, 'Dispositifs'))
+    CodeDurete = pd.read_pickle(os.path.join( DATA_DIR_PSDRF, 'CodeDurete'))
+    CodeTypoArbres = pd.read_pickle(os.path.join( DATA_DIR_PSDRF, 'CodeTypoArbres'))
+    CodeEcologie = pd.read_pickle(os.path.join( DATA_DIR_PSDRF, 'CodeEcologie'))
+    CodeEcorce = pd.read_pickle(os.path.join( DATA_DIR_PSDRF, 'CodeEcorce'))
+    EssReg = pd.read_pickle(os.path.join( DATA_DIR_PSDRF, 'EssReg'))
+    Communes = pd.read_pickle(os.path.join( DATA_DIR_PSDRF, 'Communes'))
+    Referents = pd.read_pickle(os.path.join( DATA_DIR_PSDRF, 'Referents'))
+    Tarifs = pd.read_pickle(os.path.join( DATA_DIR_PSDRF, 'Tarifs'))
+    
+    correctionList['StadeD'] = CodeDurete['Code'].tolist()
+    correctionList['StadeD'].insert(0, None)
+    correctionList['Essence'] = CodeEssence['Essence'].tolist()
+    correctionList['Essence'].insert(0, None)
+    correctionList['Type'] = CodeTypoArbres['Id'].tolist()
+    correctionList['Type'].insert(0, None)
+    correctionList['StadeE'] = CodeEcorce['Code'].tolist()
+    correctionList['StadeE'].insert(0, None)
+    correctionList['Ref_CodeEcolo'] = ["prosilva", "efi", "irstea"]
+    correctionList['Ref_CodeEcolo'].insert(0, None)
 
     if not verificationList: 
 	
-      base_dir = os.path.dirname(os.path.dirname(config["BASE_DIR"]))
-
-      # Trouver le chemin d'accès au dossier data, qui contient les tables nécessaires aux tests
-      DATA_DIR_PSDRF = os.path.join( base_dir, 'gn_module_psdrf', 'data')
-
-      #chargement des tables nécessaires aux tests 
-      CodeEssence = pd.read_pickle(os.path.join( DATA_DIR_PSDRF, 'CodeEssence'))
-      CyclesCodes = pd.read_pickle(os.path.join( DATA_DIR_PSDRF, 'CyclesCodes'))
-      Dispositifs = pd.read_pickle(os.path.join( DATA_DIR_PSDRF, 'Dispositifs'))
-      CodeDurete = pd.read_pickle(os.path.join( DATA_DIR_PSDRF, 'CodeDurete'))
-      CodeTypoArbres = pd.read_pickle(os.path.join( DATA_DIR_PSDRF, 'CodeTypoArbres'))
-      CodeEcologie = pd.read_pickle(os.path.join( DATA_DIR_PSDRF, 'CodeEcologie'))
-      CodeEcorce = pd.read_pickle(os.path.join( DATA_DIR_PSDRF, 'CodeEcorce'))
-      EssReg = pd.read_pickle(os.path.join( DATA_DIR_PSDRF, 'EssReg'))
-      Communes = pd.read_pickle(os.path.join( DATA_DIR_PSDRF, 'Communes'))
-      Referents = pd.read_pickle(os.path.join( DATA_DIR_PSDRF, 'Referents'))
-      Tarifs = pd.read_pickle(os.path.join( DATA_DIR_PSDRF, 'Tarifs'))
 
       An = datetime.now().year
-
-      correctionList['StadeD'] = CodeDurete['Code'].tolist()
-      correctionList['StadeD'].insert(0, None)
-      correctionList['Essence'] = CodeEssence['Essence'].tolist()
-      correctionList['Essence'].insert(0, None)
-      correctionList['Type'] = CodeTypoArbres['Id'].tolist()
-      correctionList['Type'].insert(0, None)
-      correctionList['StadeE'] = CodeEcorce['Code'].tolist()
-      correctionList['StadeE'].insert(0, None)
-      correctionList['Ref_CodeEcolo'] = ["prosilva", "efi", "irstea"]
-      correctionList['Ref_CodeEcolo'].insert(0, None)
 
       disp_num = Placettes["NumDisp"][0]
 
@@ -1392,7 +1392,7 @@ def data_verification(data):
         verificationList.append({'errorName': "Informations manquantes dans Transect", 'errorText': "Il manque des informations à une/des colonne(s) dans la table Transect", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True})
 
 
-    # ---------- Contrôle des valeurs dupliquées : ---------- #
+      # ---------- Contrôle des valeurs dupliquées : ---------- #
       df_Dupl_temp= Transect[["NumDisp", "NumPlac", "Id", "Cycle"]].sort_values(by=["NumDisp", "NumPlac", "Id", "Cycle"])
       df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated()]
       df_Dupl = df_Dupl.drop_duplicates()
@@ -1416,7 +1416,7 @@ def data_verification(data):
 
 
 
-    # ---------- Contrôle des valeurs d'angle (≤ 50) : ---------- #
+     # ---------- Contrôle des valeurs d'angle (≤ 50) : ---------- #
       Transect = Transect.sort_values(by=["NumDisp", "NumPlac", "Id", "Cycle", "Angle"])
       temp = Transect[Transect["Angle"] > 50]
       temp = temp[["NumPlac", "Id", "Angle"]]
@@ -1645,7 +1645,7 @@ def data_verification(data):
 
 
 
-  # TODO: Travail sur colonnes Annexes (remarques)
+    # TODO: Travail sur colonnes Annexes (remarques)
 
   # #Contrôle des stades de décomposition
   # error_List_Temp = check_code(CodeDurete, Arbres, soundness_code, "Arbres")
@@ -1666,8 +1666,6 @@ def data_verification(data):
   # check_species_Error_List = check_species(BMSsup30, CodeEssence, Test, "BMSsup30")
   # if len(check_species_Error_List) >0:
   #   verificationList.append({'errorName': 'Essence dans BMSsup30', 'errorList': check_species_Error_List, 'correctionList': CodeEssence['Essence'].tolist()})
-
-
 
 
   return verifiedJson
