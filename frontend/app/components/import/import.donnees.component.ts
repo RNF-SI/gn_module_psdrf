@@ -73,6 +73,7 @@ export class ImportDonneesComponent  implements OnInit{
     errorList: PsdrfError[];
     errorType: string;
     isFatalError: boolean;
+    isGlobalModificationEnabled: boolean;
   }[] = []; //Tableau des erreurs retournées par la requête psdrf_data_verification
   mainStepNameArr: string[] = []; // Tableau des titres des main step(affichés dans les main steps)
   mainStepTextArr: string[] = []; //Tableau des textes d'erreurs pour chaque mainstep
@@ -362,6 +363,7 @@ export class ImportDonneesComponent  implements OnInit{
           errorList: errorListTemp,
           errorType: "PsdrfError",
           isFatalError: mainError.isFatalError,
+          isGlobalModificationEnabled: mainError.isGlobalModificationEnabled
         });
       } else {
         this.mainStepNameArr.push(mainError.errorName);
@@ -381,6 +383,7 @@ export class ImportDonneesComponent  implements OnInit{
           errorList: errorListTemp,
           errorType: "PsdrfErrorColonnes",
           isFatalError: mainError.isFatalError,
+          isGlobalModificationEnabled: mainError.isGlobalModificationEnabled
         });
       }
     });
@@ -632,8 +635,7 @@ export class ImportDonneesComponent  implements OnInit{
         this.modifiedElementArr.push(modificationErrorObj.errorCoordinates);
         //Si l'élément avait été supprimé on l'enlève de la liste des suppressions
         if(this.elementIsInPsdrfErrorCoordinatesList(this.deletedElementArr, modificationErrorObj.errorCoordinates.table, modificationErrorObj.errorCoordinates.column, idx)){
-          console.log("modif after delete");
-          this._toasterService.info("La ligne que vous avez modifiée avez préalablement été supprimée. La ligne a été rétirée des éléments supprimés.", "Correction des données");
+          this._toasterService.info("La ligne que vous avez modifiée avait préalablement été supprimée. La ligne a été rétirée des éléments supprimés.", "Correction des données");
           this.deleteElementInPsdrfErrorCoordinatesList(
             this.deletedElementArr,
             modificationErrorObj.errorCoordinates.table,

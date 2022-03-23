@@ -42,15 +42,21 @@
                     <tr mat-row *matRowDef="let row; columns: psdrfError.column;"></tr>
                 </table>
             </div>
-            <div class="col-3 button-top-margin">
-                <div class="btn-group-horizontal mb-2 ml-3" role="group" aria-label="Basic example" *ngFor="let row of psdrfError.row; let rowIndex = index">
-
-                    <button class="mx-1" mat-raised-button matTooltip="Valider les modifications" (click)="modifLineValidation(rowIndex)">
-                        <mat-icon> done </mat-icon>
-                    </button>
-                    <button class="mx-1" mat-raised-button matTooltip="Supprimer la ligne" (click)="deleteLine(rowIndex)">
-                        <mat-icon> delete </mat-icon>
-                    </button>
+            <div class="col-6 button-top-margin">
+                <div class="btn-group-horizontal mb-2 ml-3 row" role="group" aria-label="Basic example" *ngFor="let row of psdrfError.row; let rowIndex = index">
+                    <div class="col-6">
+                        <button class="mx-1" mat-raised-button matTooltip="Valider les modifications" (click)="modifLineValidation(rowIndex)">
+                            <mat-icon> done </mat-icon>
+                        </button>
+                        <button class="mx-1" mat-raised-button matTooltip="Supprimer la ligne" (click)="deleteLine(rowIndex)">
+                            <mat-icon> delete </mat-icon>
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <button *ngIf="isGlobalModificationEnabled" class="mx-1 " mat-raised-button matTooltip="Appliquer cette valeur à toutes les erreurs de ce type" (click)="modifAllLineValidation(rowIndex)">
+                            <mat-icon> done_outline </mat-icon>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

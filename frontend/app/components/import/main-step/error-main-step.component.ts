@@ -1,8 +1,10 @@
-import {Component, Input, Output, EventEmitter, ViewChild, ElementRef, AfterViewInit, OnInit} from '@angular/core';
+import {Component, Input, Output, EventEmitter, ViewChild, ViewChildren, QueryList, ElementRef, AfterViewInit, OnInit} from '@angular/core';
 import {StepperSelectionEvent} from '@angular/cdk/stepper';
 import {ErrorHistoryService} from '../../../services/error.history.service';
 import {PsdrfError, PsdrfErrorCoordinates} from '../../../models/psdrfObject.model';
 import { MatStepper } from "@angular/material/stepper";
+import { ErrorSubStepComponent } from '../main-step/sub-step/error-sub-step.component';
+
 
 
 @Component({
@@ -16,7 +18,7 @@ export class ErrorMainStepComponent implements OnInit, AfterViewInit {
 
   @Input() mainStepIndex: number;
   @Input() mainStepText: string;
-  @Input() step: {'errorList': PsdrfError[], 'errorType': any, 'isFatalError': boolean};
+  @Input() step: {'errorList': PsdrfError[], 'errorType': any, 'isFatalError': boolean, 'isGlobalModificationEnabled': boolean};
 
 
   @Output() subStepSelectionChange= new EventEmitter<{mainStepIndex: number, subStepIndex: number}>();
@@ -46,10 +48,12 @@ export class ErrorMainStepComponent implements OnInit, AfterViewInit {
   isLabelVisible: boolean = true;
 
 
-  @ViewChild('subStepper') private subStepper: MatStepper;
+  @ViewChild('subStepper') subStepper: MatStepper;
 
   @ViewChild('subStepperContainer') subStepperContainer: ElementRef;
     
+  // @ViewChildren(ErrorSubStepComponent) steps : QueryList<ErrorSubStepComponent>; 
+
   constructor(
     private historyService:ErrorHistoryService,
     private elementRef: ElementRef
@@ -125,6 +129,25 @@ export class ErrorMainStepComponent implements OnInit, AfterViewInit {
     if(this.totallyModifiedSubStepperArr.length == this.step.errorList.length){
       this.allSubStepModified.next(this.mainStepIndex);
     }
+  }
+
+    /** 
+  * Triggered when the "apply to all rows" button has been clicked :
+  * - Throw modifValidation event for each element to actualize data.
+  * - Push all elements in totallyModifiedSubStepperArr 
+  * - Throw allSubStepModified event in import component
+  * @param modification Modification wanted
+  */
+  onAppliedToAllRows(modification: any){
+    this.step.errorList.forEach((error, i) => {
+      error.row.forEach((row) => {
+        this.modifValidation({errorCoordinates: new PsdrfErrorCoordinates(error.table, error.column, [row]), newErrorValue: modification});
+      })
+      if(this.totallyModifiedSubStepperArr.indexOf(i) === -1){
+        this.totallyModifiedSubStepperArr.push(i);
+      }
+    })
+    this.allSubStepModified.next(this.mainStepIndex);
   }
 
   /**

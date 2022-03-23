@@ -1,4 +1,4 @@
-import {Component, Input, Output, EventEmitter, OnInit} from '@angular/core';
+import {Component, Input, Output, EventEmitter, OnInit, ElementRef} from '@angular/core';
 import {ErrorCorrectionService} from '../../../../services/error.correction.service';
 import {MatTableDataSource} from '@angular/material/table';
 import {PsdrfError, PsdrfErrorCoordinates} from '../../../../models/psdrfObject.model';
@@ -19,11 +19,13 @@ import {PsdrfError, PsdrfErrorCoordinates} from '../../../../models/psdrfObject.
     @Input() mainStepIndex: number; //Index du main step auquel le subStep appartient
     @Input() subStepIndex: number; //Index du subStep 
     @Input() psdrfError: PsdrfError;
-    
     @Input() errorType: any; 
+    @Input() isGlobalModificationEnabled: boolean; 
+
     @Output() indexButtonClicked=new EventEmitter<PsdrfErrorCoordinates>();
     @Output() modificationValidated=new EventEmitter<{errorCoordinates: PsdrfErrorCoordinates, newErrorValue: any}>();
     @Output() allRowsModified=new EventEmitter<number>();
+    @Output() applyToAllRow=new EventEmitter<any>();
     @Output() deletionValidated=new EventEmitter<{errorCoordinates: PsdrfErrorCoordinates}>();
     @Output() allRowsDeleted=new EventEmitter<number>();
     datasource: MatTableDataSource<any>;
@@ -32,6 +34,7 @@ import {PsdrfError, PsdrfErrorCoordinates} from '../../../../models/psdrfObject.
 
 
     constructor(
+      public elementRef: ElementRef,
       private correctionService: ErrorCorrectionService
     ) {
     }
@@ -67,11 +70,11 @@ import {PsdrfError, PsdrfErrorCoordinates} from '../../../../models/psdrfObject.
     *  - Throw event if all row modified
     * @param buttonIndex Index of the validation button clicked
     */
-    modifLineValidation(buttonIndex: number): void{
+    modifLineValidation(buttonIndex: number, newErrorValue=[this.datasource.data[buttonIndex]]): void{
       if(this.changedIndexes.indexOf(buttonIndex) === -1){
         this.changedIndexes.push(buttonIndex);
       }    
-      this.modificationValidated.next({errorCoordinates: new PsdrfErrorCoordinates(this.psdrfError.table, this.psdrfError.column, [this.psdrfError.row[buttonIndex]]), newErrorValue: [this.datasource.data[buttonIndex]]});
+      this.modificationValidated.next({errorCoordinates: new PsdrfErrorCoordinates(this.psdrfError.table, this.psdrfError.column, [this.psdrfError.row[buttonIndex]]), newErrorValue: newErrorValue});
       if(this.changedIndexes.length == this.psdrfError.row.length){
         this.allRowsModified.next(this.subStepIndex);
       } else {
@@ -102,16 +105,13 @@ import {PsdrfError, PsdrfErrorCoordinates} from '../../../../models/psdrfObject.
      * Fonction appelé modifie toutes les valeurs dans le subStep sélectionné
      * TODO: add in the new version
     */
-    // modifValidationAll(): void{
-    //   this.modifiedIndexes= Array.from(Array(this.psdrfError.row.length).keys());
-    //   let psdrfErrorCoorArray: PsdrfErrorCoordinates[]=[];
-    //   this.psdrfError.row.forEach(row => {
-    //     psdrfErrorCoorArray.push(new PsdrfErrorCoordinates(this.psdrfError.table, this.psdrfError.column, row));
-    //   })
-    //   this.modificationValidated.next({errorCoordinates: psdrfErrorCoorArray, newErrorValue: this.value});
-    //   this.allRowsModified.next(this.subStepIndex);
-    // }
-  
+    modifAllLineValidation(buttonIndex: number): void{
+      this.applyToAllRow.next([this.datasource.data[buttonIndex]])
+    }
+
+    modifAllLines(correction): void{
+      this.applyToAllRow.next(correction)
+    }
 
     /**
     *  Return true if the index correspond to the selected element or not 
