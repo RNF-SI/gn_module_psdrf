@@ -51,7 +51,7 @@ library(gridExtra)
 library(stringr)
 @
 
-<<Import>>= 
+<<Import, echo=FALSE>>= 
 repPSDRF <- "/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts"
 # --- Chargement des données administrateurs
 load(file.path(repPSDRF, "tables/psdrfCodes.Rdata"))
@@ -217,6 +217,7 @@ names(Palette) <- CodeCouleurs$Essence
 
   # TODO: Supprimé fait buguer le tout 
   # suppressWarnings(print(pl))
+  print(pl)
   }
   info <- round(match(plac,ListPlac)/length(ListPlac)*100)
 #   setTkProgressBar(pb, info, paste0("Edition (",info," %)"),
