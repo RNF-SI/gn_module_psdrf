@@ -131,17 +131,25 @@ export class ErrorMainStepComponent implements OnInit, AfterViewInit {
     }
   }
 
-    /** 
-  * Triggered when the "apply to all rows" button has been clicked :
-  * - Throw modifValidation event for each element to actualize data.
-  * - Push all elements in totallyModifiedSubStepperArr 
-  * - Throw allSubStepModified event in import component
-  * @param modification Modification wanted
-  */
-  onAppliedToAllRows(modification: any){
+  
+  /** 
+   * Triggered when the "apply to all rows" button or "replace in all row" button has been clicked :
+   * - Throw modifValidation event for each element to actualize data.
+   * - Push all elements in totallyModifiedSubStepperArr 
+   * - Throw allSubStepModified event in import component
+   * @param modification Modification wanted
+   */  
+  onAppliedToAllRows(modification: {isReplacementWanted: boolean, replacingText: string, textToReplace?: string}){
     this.step.errorList.forEach((error, i) => {
-      error.row.forEach((row) => {
-        this.modifValidation({errorCoordinates: new PsdrfErrorCoordinates(error.table, error.column, [row]), newErrorValue: modification});
+      error.row.forEach((row, rowIdx) => {
+        error.column.forEach(col =>{
+          if(modification.isReplacementWanted){
+            error.value[rowIdx][col] = error.value[rowIdx][col].replace(modification.textToReplace, modification.replacingText);
+          } else {
+            error.value[rowIdx][col] = modification.replacingText;
+          }
+        })
+        this.modifValidation({errorCoordinates: new PsdrfErrorCoordinates(error.table, error.column, [row]), newErrorValue: error.value});
       })
       if(this.totallyModifiedSubStepperArr.indexOf(i) === -1){
         this.totallyModifiedSubStepperArr.push(i);

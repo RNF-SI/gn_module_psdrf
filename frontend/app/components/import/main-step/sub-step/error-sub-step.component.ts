@@ -15,6 +15,7 @@ import {PsdrfError, PsdrfErrorCoordinates} from '../../../../models/psdrfObject.
     selectedButtonIndex: number=0; //IndexButton Sélectionné
     changedIndexes: number[] = []; //liste des indexs des boutons modifiés ou supprimés
     listCorrection: any={};
+    isOptionCardDisplayed: boolean= false;
 
     @Input() mainStepIndex: number; //Index du main step auquel le subStep appartient
     @Input() subStepIndex: number; //Index du subStep 
@@ -25,13 +26,15 @@ import {PsdrfError, PsdrfErrorCoordinates} from '../../../../models/psdrfObject.
     @Output() indexButtonClicked=new EventEmitter<PsdrfErrorCoordinates>();
     @Output() modificationValidated=new EventEmitter<{errorCoordinates: PsdrfErrorCoordinates, newErrorValue: any}>();
     @Output() allRowsModified=new EventEmitter<number>();
-    @Output() applyToAllRow=new EventEmitter<any>();
+    @Output() applyToAllRow=new EventEmitter<{isReplacementWanted: boolean, replacingText: string, textToReplace?: string}>();
     @Output() deletionValidated=new EventEmitter<{errorCoordinates: PsdrfErrorCoordinates}>();
     @Output() allRowsDeleted=new EventEmitter<number>();
     datasource: MatTableDataSource<any>;
 
     // form: FormGroup;
-
+    textToApply: string='';
+    textToReplace: string='';
+    replacingText: string='';
 
     constructor(
       public elementRef: ElementRef,
@@ -94,23 +97,20 @@ import {PsdrfError, PsdrfErrorCoordinates} from '../../../../models/psdrfObject.
       }
     }
 
-    // TODO: Deletion of a line
-    // deleteRow(rowIndex): void{
-    //   this.psdrfError.row.splice(rowIndex, 1);
-    //   this.datasource.data.splice(rowIndex, 1);
-    //   this.datasource._updateChangeSubscription();
-    // }
+    displayOptions(): void{
+      this.isOptionCardDisplayed = !this.isOptionCardDisplayed;
+    }
 
     /** 
      * Fonction appelé modifie toutes les valeurs dans le subStep sélectionné
      * TODO: add in the new version
     */
     modifAllLineValidation(buttonIndex: number): void{
-      this.applyToAllRow.next([this.datasource.data[buttonIndex]])
+      this.applyToAllRow.next({isReplacementWanted: false, replacingText: this.textToApply})
     }
 
-    modifAllLines(correction): void{
-      this.applyToAllRow.next(correction)
+    replaceAllLineValidation(): void{
+      this.applyToAllRow.next({isReplacementWanted: true, replacingText: this.replacingText, textToReplace: this.textToReplace})
     }
 
     /**

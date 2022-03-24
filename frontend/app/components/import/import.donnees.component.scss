@@ -177,3 +177,7 @@ table {
     justify-content: center;
     height: 35px;
 }
+
+::ng-deep.mat-menu-panel {
+    max-width: none !important;
+  }
