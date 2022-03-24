@@ -144,4 +144,5 @@ backend/gn_module_psdrf/Rscripts/template/psdrf_Carnet_V3.tex
 backend/gn_module_psdrf/Rscripts/template/psdrf_PlanArbres-concordance.tex
 backend/gn_module_psdrf/Rscripts/template/psdrf_PlanArbres.tex
 
-
+# Compare files in R scripts
+backend/gn_module_psdrf/Rscripts/template/compare

@@ -199,5 +199,9 @@ def formatBdd2RData(r, dispId, lastCycle, dispName, isCarnetToDownload, isPlanDe
         string = f.read()
     BDD2Rdata = STAP(string, "BDD2Rdata")
     print(carnetToDownloadParameters)
-    BDD2Rdata.editDocuments(dispId, lastCycle, dispName, r_placettes, r_arbres, r_bmss, r_reges, r_transects, r_reperes, r_cycles, isCarnetToDownload, isPlanDesArbresToDownload, carnetToDownloadParameters['Answer_Radar'])
+    if carnetToDownloadParameters['Answer_Radar'] == None:
+        Answer_Radar = ro.NULL
+    else:
+        Answer_Radar = carnetToDownloadParameters['Answer_Radar']
+    BDD2Rdata.editDocuments(dispId, lastCycle, dispName, r_placettes, r_arbres, r_bmss, r_reges, r_transects, r_reperes, r_cycles, isCarnetToDownload, isPlanDesArbresToDownload, Answer_Radar)
 
