@@ -15,10 +15,9 @@
 
         <div class="col-sm-5">
 
-            <div class="mt-1 justify-content-center">
+            <div class="m-3 justify-content-center">
                 <h3>Génération du carnet et des figures</h3>
-                <div class="row">
-                    <section class="col-6 checkbox-section">
+                    <section class="checkbox-section">
                         <span class="checkbox-list-section">
                         <mat-checkbox class="checkbox-margin"
                                         [checked]="allToDownload"
@@ -31,26 +30,29 @@
                         <span class="checkbox-list-section">
                         <ul>
                             <li *ngFor="let subdocument of documents.subdocuments">
-                            <mat-checkbox [(ngModel)]="subdocument.toDownload"
-                                            (ngModelChange)="updateAllToDownload()">
-                                {{subdocument.name}}
-                            </mat-checkbox>
+                                <mat-checkbox [(ngModel)]="subdocument.toDownload"
+                                    (ngModelChange)="updateAllToDownload()">
+                                    {{subdocument.name}}
+                                </mat-checkbox>
+                                <ul *ngIf="subdocument.toDownload">
+                                    <li *ngFor="let parameter of subdocument.documentParameters">
+                                        <mat-checkbox [(ngModel)]="parameter.value">
+                                            {{parameter.text}}
+                                        </mat-checkbox>
+                                    </li>
+                                </ul>
                             </li>
                         </ul>
                         </span>
                     </section>
-                    <div class="col-6 mt-1">
-                        <h5> Génération des éléments:</h5>
-                        <div class="text-center mt-4">
-                            <button *ngIf="!analysisLoading" class="action-button-class" mat-raised-button matTooltip="Générer les éléments sélectionnés" (click)="launchAnalysis()">
-                                <mat-icon>bar_chart</mat-icon>
-                            </button>
-                            <button *ngIf="analysisLoading" class="action-button-class spinner-button" mat-raised-button matTooltip="Intégration des données en cours" disabled>
-                                <mat-spinner diameter="22" color="primary"></mat-spinner>
-                            </button>
-                        </div>
+                    <div class="text-center">
+                        <button *ngIf="!analysisLoading" class="action-button-class" mat-raised-button matTooltip="Générer les éléments sélectionnés" (click)="launchAnalysis()">
+                            <mat-icon>bar_chart</mat-icon>
+                        </button>
+                        <button *ngIf="analysisLoading" class="action-button-class spinner-button" mat-raised-button matTooltip="Intégration des données en cours" disabled>
+                            <mat-spinner diameter="22" color="primary"></mat-spinner>
+                        </button>
                     </div>
-                </div>
             </div>
 
 

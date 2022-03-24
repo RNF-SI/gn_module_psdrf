@@ -417,8 +417,9 @@ create_group <- function(
 
 ##### fonction pour éditer le livret d'analyse #####
 psdrf_EditCarnet <- function(
-  repPSDRF = NULL, dispId, last_cycle, dispName, results_by_plot_to_get, continue = T, 
-  template = "psdrf_Carnet_V3.Rnw"
+  repPSDRF = NULL, dispId, last_cycle, dispName, 
+  results_by_plot_to_get, Answer_Radar,
+  continue = T, template = "psdrf_Carnet_V3.Rnw"
 ) {
   # -- définition nulle des variables utilisées
   objects <- c(
@@ -482,7 +483,7 @@ psdrf_EditCarnet <- function(
 
 
   ##### 3/ Edition du/des carnets PSDRF #####
-  # TODO : supprimer les messages de joining by
+  # # TODO : supprimer les messages de joining by
   knit2pdf(
     input = file.path("template", template),
     output = output,

@@ -987,13 +987,8 @@ DetailTypo <- ifelse("gfTypologieClasseEssRegDen" %in% ls(), 1, 0)
 # DetailBM <- ifelse(dim(gfBMP)[1]+ dim(gfBMS)[1]>0, 1, 0)
 DetailCarto <- 1
 
-# Answer_Radar <- tk_messageBox(
-#   type = "yesno", 
-#   message = "R\u00E9aliser l'analyse de l'\u00E9tat de conservation du dispositif ?", 
-#   caption = "Etat de conservation"
-# )
-Answer_Radar = "yes"
-if (Answer_Radar == "yes") {
+
+if (Answer_Radar == "true") {
   EvalRadar <- T
   EvalRadar2 <- 1
 } else {
@@ -2139,7 +2134,6 @@ tab <-
       as.numeric(factor(NumTarif))
     )
   )
-message("1")
 # --- Multirow NumTarif
 pos <- which(duplicated(tab[, "Id"]))
 

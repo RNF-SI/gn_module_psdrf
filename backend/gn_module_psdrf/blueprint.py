@@ -254,11 +254,17 @@ def psdrf_data_integration():
 def psdrf_data_analysis(id_dispositif):
 
     isCarnetToDownload = request.args.get('isCarnetToDownload')
+    carnetToDownloadParameters = {}
+    if isCarnetToDownload:
+        carnetToDownloadParameters['Answer_Radar']= request.args.get('Answer_Radar')
+    else:
+        carnetToDownloadParameters['Answer_Radar']=None
+
     isPlanDesArbresToDownload = request.args.get('isPlanDesArbresToDownload')
 
     outFilePath = "/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/out/"
 
-    data_analysis(str(id_dispositif), isCarnetToDownload, isPlanDesArbresToDownload)
+    data_analysis(str(id_dispositif), isCarnetToDownload, isPlanDesArbresToDownload, carnetToDownloadParameters)
 
     memory_file = BytesIO()
     with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zf:

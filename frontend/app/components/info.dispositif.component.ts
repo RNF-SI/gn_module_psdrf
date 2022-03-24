@@ -12,6 +12,7 @@ export interface Document {
   toDownload: boolean;
   // color: ThemePalette;
   subdocuments?: Document[];
+  documentParameters?: {name: string, text: string, value: boolean}[];
 }
 
 
@@ -37,8 +38,14 @@ export class InfoDispositifComponent implements OnInit {
       name: 'Tout',
       toDownload: true,
       subdocuments: [
-        {name: 'Carnet et figures', toDownload: true},
-        {name: 'Plan des arbres et figures', toDownload: true},
+        {name: 'Carnet et figures', toDownload: true, 
+          documentParameters: [{
+          name: 'Answer_Radar', 
+          text: "Réaliser l'analyse de l'état de conservation du dispositif ?",
+          value: true}
+        ]},
+        {name: 'Plan des arbres et figures', toDownload: true, 
+          documentParameters:[]},
         // {name: 'Table Excel des Résultats Bruts', toDownload: false},
         // {name: 'Plan des arbres', toDownload: false}
       ],
@@ -104,6 +111,16 @@ export class InfoDispositifComponent implements OnInit {
     let isCarnetToDownload= this.documents.subdocuments.find(element => element['name']=='Carnet et figures')['toDownload'];
     let isPlanDesArbresToDownload= this.documents.subdocuments.find(element => element['name']=='Plan des arbres et figures')['toDownload'];
 
+    // Création de l'objet contenant tous les paramètres
+    let parameters = []
+    this.documents.subdocuments.forEach(subdoc => {
+      if (subdoc.toDownload){
+        subdoc.documentParameters.forEach(param => {
+          parameters.push(param);
+        });
+      }
+    })
+
     if(isCarnetToDownload || isPlanDesArbresToDownload){
       if(!this.analysisLoading){
         this.analysisLoading = true;
@@ -111,7 +128,7 @@ export class InfoDispositifComponent implements OnInit {
 
 
         this.dataSrv
-          .psdrf_data_analysis(this.id, isCarnetToDownload, isPlanDesArbresToDownload)
+          .psdrf_data_analysis(this.id, isCarnetToDownload, isPlanDesArbresToDownload, parameters)
           .subscribe(
             data => {
               this.analysisLoading = false;

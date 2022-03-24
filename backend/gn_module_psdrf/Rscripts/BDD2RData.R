@@ -1,4 +1,4 @@
-editDocuments <- function(dispId, lastCycle, dispName, placettes, arbres, bms, reges, transects, reperes, cycles, isCarnetToDownload, isPlanDesArbresToDownload){
+editDocuments <- function(dispId, lastCycle, dispName, placettes, arbres, bms, reges, transects, reperes, cycles, isCarnetToDownload, isPlanDesArbresToDownload, Answer_Radar){
 
     library(data.table)
     library("stringr")
@@ -159,7 +159,7 @@ editDocuments <- function(dispId, lastCycle, dispName, placettes, arbres, bms, r
     )
 
     if (isCarnetToDownload == 'true'){
-        psdrf_EditCarnet(repPSDRF, dispId, lastCycle, dispName, results_by_plot_to_get)
+        psdrf_EditCarnet(repPSDRF, dispId, lastCycle, dispName, results_by_plot_to_get, Answer_Radar)
     } 
     if (isPlanDesArbresToDownload == 'true'){
         psdrf_EditPlansArbres(repPSDRF, dispId, lastCycle, dispName, results_by_plot_to_get)

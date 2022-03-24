@@ -16,7 +16,7 @@ from .models import TDispositifs, TPlacettes, TArbres, TCycles, \
     CorCyclesPlacettes, TArbresMesures, TReperes, BibEssences, TRegenerations,\
     TBmSup30,TBmSup30Mesures, TTransects, dispositifs_area_assoc
 
-def data_analysis(dispId, isCarnetToDownload, isPlanDesArbresToDownload):
+def data_analysis(dispId, isCarnetToDownload, isPlanDesArbresToDownload, carnetToDownloadParameters):
 
     # Suppression des fichiers de sortie 
     folder = '/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/out'
@@ -52,9 +52,9 @@ def data_analysis(dispId, isCarnetToDownload, isPlanDesArbresToDownload):
     with localconverter(ro.default_converter + pandas2ri.converter):
         r_lastCycle = ro.conversion.py2rpy(lastCycledf)
 
-    formatBdd2RData(r, dispId, r_lastCycle, dispName, isCarnetToDownload, isPlanDesArbresToDownload)
+    formatBdd2RData(r, dispId, r_lastCycle, dispName, isCarnetToDownload, isPlanDesArbresToDownload, carnetToDownloadParameters)
 
-def formatBdd2RData(r, dispId, lastCycle, dispName, isCarnetToDownload, isPlanDesArbresToDownload):
+def formatBdd2RData(r, dispId, lastCycle, dispName, isCarnetToDownload, isPlanDesArbresToDownload, carnetToDownloadParameters):
     #### 1/ Rechercher les données dans la base de données
     # ---- Création des Requêtes pour les données des réserves
     arbresQuery = DB.session.query(
@@ -198,6 +198,6 @@ def formatBdd2RData(r, dispId, lastCycle, dispName, isCarnetToDownload, isPlanDe
     with open('/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/BDD2RData.R', 'r') as f:
         string = f.read()
     BDD2Rdata = STAP(string, "BDD2Rdata")
-
-    BDD2Rdata.editDocuments(dispId, lastCycle, dispName, r_placettes, r_arbres, r_bmss, r_reges, r_transects, r_reperes, r_cycles, isCarnetToDownload, isPlanDesArbresToDownload)
+    print(carnetToDownloadParameters)
+    BDD2Rdata.editDocuments(dispId, lastCycle, dispName, r_placettes, r_arbres, r_bmss, r_reges, r_transects, r_reperes, r_cycles, isCarnetToDownload, isPlanDesArbresToDownload, carnetToDownloadParameters['Answer_Radar'])
 

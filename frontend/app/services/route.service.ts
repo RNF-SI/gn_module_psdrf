@@ -36,11 +36,16 @@ export class PsdrfDataService {
     ); 
   }
 
-  psdrf_data_analysis(id: number, isCarnetToDownload: boolean, isPlanDesArbresToDownload: boolean ) {
+  psdrf_data_analysis(id: number, isCarnetToDownload: boolean, isPlanDesArbresToDownload: boolean, parameters: {name: string, text: string, value: any}[] ) {
     const headers = new HttpHeaders({ 'Content-Type': 'application/json', responseType : 'blob'});
 
     let url = `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/analysis/`+ id
     let params = new HttpParams().set("isCarnetToDownload",isCarnetToDownload.toString()).set("isPlanDesArbresToDownload",isPlanDesArbresToDownload.toString())
+    //Ajouter les paramètres relatifs à la génération des documents
+    parameters.forEach(param => {
+      params= params.append(param.name, param.value.toString());
+    })
+
     return this._http.get(
       url, 
       { observe: "response", headers : headers, params: params, responseType : 'blob' }
