@@ -60,7 +60,6 @@ Palette_Cycles <- c("forestgreen", "dodgerblue3")
 names(Palette_Cycles) <- c(cycle_num - 1, cycle_num)
 @
 
-
 <<ClasseEvol{{x}}, size = 'footnotesize', fig.height = 3.5, fig.cap =  "R\u00E9partition du volume et du nombre de tiges par classes de diam\u00E8tre (arbres vivants).">>= 
 tab <- 
   grouped_results_of_Fpied_by_Classe %>% 
@@ -75,10 +74,12 @@ if (dim(tab2)[1] > 0) {
   tab2$Population <-"Tiges de\ntaillis"
 }
 
+tab <- as.data.frame(tab)
+tab2 <- as.data.frame(tab2)
 tab <- 
   tab %>% 
   rbind(tab2) %>%
-  mutate(Titre = paste0("Cycle ", as.numeric(Cycle)))
+  mutate(Titre = paste0("Cycle ", Cycle))
 
 tab3 <- 
   tab %>% 
@@ -184,7 +185,7 @@ tab <-
 ListEss <- tab[order(tab$Nom), -1]
 @
 
-<<DendroBis_3Evol{{x}}>>= 
+<<DendroBis_Evol{{x}}>>= 
 # ----- plusieurs cycles :
 # --- préparation tables
 # perches
@@ -388,19 +389,20 @@ if (length(pos) > 0) {
   pos2 <- which(t3b$Count > 1 & !is.na(t3b$Count))
   pos3 <- which(!is.na(t3b$Count))
   
-  t3b[pos2, "Cycle"] <- as.numeric(paste0(
+
+  t3b <- as.data.frame(t3b)
+
+  t3b[pos2, "Cycle"] <- paste0(
     "\\multirow{", t3b$Count[pos2], 
     "}{*}{\\parbox{0.7cm}{\\centering ", 
     t3b$Cycle[pos2], "}}"
-  )
-  )
 
-
-  t3b[pos2, "NbrePlacettes"] <- as.numeric(paste0(
+  )
+  t3b[pos2, "NbrePlacettes"] <- paste0(
     "\\multirow{", t3b$Count[pos2], 
     "}{*}{\\parbox{1.2cm}{\\centering ", 
     t3b$NbrePlacettes[pos2], "}}"
-  ))
+  )
   t3b$Count <- NULL
   
 } else {
@@ -423,48 +425,44 @@ t4 <-
   )
 
 Sep_Cycles <- which(!is.na(t4$Cycle)) - 1
-message("zozozoz")
-
-
 ListPos <- list()
 for (i in 1:(dim(t4)[1] - 1)) {
   ListPos[i] <- i
 }
-# print(
-#   xtable(
-#     t4, 
-#     caption = "Principales caract\u00E9ristiques dendrom\u00E9triques pour les arbres vivants\\\\\\footnotesize{N = densit\u00E9 de tiges (/ha)\\\\G = surface terri\u00E8re (m\\up{2}/ha)\\\\V = volume (m\\up{3}/ha)\\\\Acct G = accroissement en surface terri\u00E8re (m\\up{2}/ha/an)\\\\Acct V = accroissement en volume (m\\up{3}/ha/an)}", 
-#     caption.placement = "top", 
-#     digits = c(rep(0, 4), rep(1, Rep), 0), 
-#     align = c(
-#       "|M{0.5cm}|", "M{0.7cm}|", "M{1.8cm}|", "M{2.9cm}|", 
-#       rep("M{1.3cm}|", 3), rep("M{1.2cm}|", 2), "M{1.2cm}"
-#     ), 
-#     label = "DendroBis_4Evol{{x}}"
-#   ), 
-#   include.rownames = FALSE, 
-#   sanitize.text.function = function(x) {return(x)}, 
-#   hline.after = c(-1, Sep_Cycles, dim(t4)[1]), 
-#   add.to.row = list(
-#     pos = ListPos, 
-#     command = c(
-#       rep(
-#         c(rep("\\cline{3-8}", 3), "\\cmidrule[0.8pt]{2-8}"), 
-#         max(Sep_Cycles) / 4 - 1
-#       ), 
-#       c(rep("\\cline{3-8}", 3), ""), 
-#       rep(
-#         c(rep("\\cline{3-8}", 3), "\\cmidrule[0.8pt]{2-8}"), 
-#         (dim(t4)[1] - max(Sep_Cycles)) / 4 - 1
-#       ), 
-#       rep("\\cline{3-8}", 3)
-#     )
-#   ), 
-#   size = "\\footnotesize"
-# )
+print(
+  xtable(
+    t4, 
+    caption = "Principales caract\u00E9ristiques dendrom\u00E9triques pour les arbres vivants\\\\\\footnotesize{N = densit\u00E9 de tiges (/ha)\\\\G = surface terri\u00E8re (m\\up{2}/ha)\\\\V = volume (m\\up{3}/ha)\\\\Acct G = accroissement en surface terri\u00E8re (m\\up{2}/ha/an)\\\\Acct V = accroissement en volume (m\\up{3}/ha/an)}", 
+    caption.placement = "top", 
+    digits = c(rep(0, 4), rep(1, Rep), 0), 
+    align = c(
+      "|M{0.5cm}|", "M{0.7cm}|", "M{1.8cm}|", "M{2.9cm}|", 
+      rep("M{1.3cm}|", 3), rep("M{1.2cm}|", 2), "M{1.2cm}"
+    ), 
+    label = "DendroBis_Evol{{x}}"
+  ), 
+  include.rownames = FALSE, 
+  sanitize.text.function = function(x) {return(x)}, 
+  hline.after = c(-1, Sep_Cycles, dim(t4)[1]), 
+  add.to.row = list(
+    pos = ListPos, 
+    command = c(
+      rep(
+        c(rep("\\cline{3-8}", 3), "\\cmidrule[0.8pt]{2-8}"), 
+        max(Sep_Cycles) / 4 - 1
+      ), 
+      c(rep("\\cline{3-8}", 3), ""), 
+      rep(
+        c(rep("\\cline{3-8}", 3), "\\cmidrule[0.8pt]{2-8}"), 
+        (dim(t4)[1] - max(Sep_Cycles)) / 4 - 1
+      ), 
+      rep("\\cline{3-8}", 3)
+    )
+  ), 
+  size = "\\footnotesize"
+)
+
 @
-
-
 \FloatBarrier
 
 La figure \ref{fig:EvolCat{{x}}} permet de comparer l'\u00E9volution (en volume et en densit\u00E9 de tiges) des diff\u00E9rentes classes de diam\u00E8tre.\\
@@ -892,16 +890,18 @@ if (length(pos) > 0) {
   pos2 <- which(t3b$Count > 1 & !is.na(t3b$Count))
   pos3 <- which(!is.na(t3b$Count))
   
-  t3b[pos2, "Cycle"] <- as.numeric(paste0(
+  t3b <- as.data.frame(t3b)
+
+  t3b[pos2, "Cycle"] <- paste0(
     "\\multirow{", t3b$Count[pos2], 
     "}{*}{\\parbox{0.7cm}{\\centering ", 
     t3b$Cycle[pos2], "}}"
-  ))
-  t3b[pos2, "NbrePlacettes"] <- as.numeric(paste0(
+  )
+  t3b[pos2, "NbrePlacettes"] <- paste0(
     "\\multirow{", t3b$Count[pos2], 
     "}{*}{\\parbox{1.2cm}{\\centering ", 
     t3b$NbrePlacettes[pos2], "}}"
-  ))
+  )
   t3b$Count <- NULL
   
 } else {
@@ -1259,7 +1259,7 @@ t <-
     Tot = sum(value, na.rm = T), 
     Ratio = value / Tot, 
     RatioCum = cumsum(value / Tot), 
-    Titre = paste0("Cycle ", as.numeric(Cycle)), 
+    Titre = paste0("Cycle ", Cycle), 
     EssReg = factor(EssReg, Niveaux_EssReg2)
   ) %>%
   ungroup() %>%
@@ -1319,6 +1319,7 @@ p1 <-
     ), 
     strip.background = element_rect(fill = NA, colour = NA)
   )
+
 
 
 
@@ -1483,7 +1484,7 @@ p4 <-
     strip.text = element_blank(), 
     strip.background = element_rect(fill = NA, colour = NA)
   )
-  message("aa")
+
 mylegend <- g_legend(p3)
 
 # P2 <- grid.arrange(
@@ -1525,7 +1526,7 @@ temp2 <-
     CV_Nha, CV_Gha, CV_Vha, CV_AcctGper, CV_AcctVper, 
     Er_Nha, Er_Gha, Er_Vha, Er_AcctGper, Er_AcctVper, NbrePlacettes
   )
-message("11")
+
 # --- Synthèse
 t2 <- 
   temp2 %>% 
@@ -1605,7 +1606,7 @@ t2 <-
   ) %>%
   arrange(Cycle, EssReg, variable, stat) %>%
   dcast(NumDisp + Cycle + Disp + EssReg + NbrePlacettes + stat ~ variable)
-message("22")
+
 t3 <- 
   t2 %>% 
   select(
@@ -1675,29 +1676,31 @@ if (length(pos) > 0) {
   # Repere des lignes à mettre en multirow
   pos2 <- which(t3b$Count > 1 & !is.na(t3b$Count))
   pos3 <- which(!is.na(t3b$Count))
+
+  t3b <- as.data.frame(t3b)
   
-  t3b[pos2, "Cycle"] <- as.numeric(paste0(
+  t3b[pos2, "Cycle"] <- paste0(
     "\\multirow{", 
     t3b$Count[pos2], 
     "}{*}{\\parbox{0.7cm}{\\centering ", 
     t3b$Cycle[pos2], 
     "}}"
-  ))
+  )
   
-  t3b[pos2, "NbrePlacettes"] <- as.numeric(paste0(
+  t3b[pos2, "NbrePlacettes"] <- paste0(
     "\\multirow{", 
     t3b$Count[pos2], 
     "}{*}{\\parbox{1.2cm}{\\centering ", 
     t3b$NbrePlacettes[pos2], 
     "}}"
-  ))
+  )
   t3b$Count <- NULL
   
 } else {
   t3b <- t3b
   pos3 <- c()
 }
-message("33")
+
 t4 <- 
   t3b %>% 
   mutate(Id = NULL) %>% 
@@ -1718,42 +1721,42 @@ for (i in 1:(dim(t4)[1] - 1)) {
   ListPos[i] <- i
 }
 
-# print(
-#   xtable(
-#     t4, 
-#     caption = "Principales caract\u00E9ristiques dendrom\u00E9triques pour les arbres vivants\\\\\\footnotesize{N = densit\u00E9 de tiges (/ha)\\\\G = surface terri\u00E8re (m\\up{2}/ha)\\\\V = volume (m\\up{3}/ha)\\\\Acct G = accroissement en surface terri\u00E8re (m\\up{2}/ha/an)\\\\Acct V = accroissement en volume (m\\up{3}/ha/an)}", 
-#     caption.placement = "top", 
-#     digits = c(rep(0, 4), rep(1, Rep), 0), 
-#     align = c(
-#       "|M{0.5cm}|", "M{0.7cm}|", "M{1.8cm}|", "M{2.9cm}|", 
-#       rep("M{1.3cm}|", 3), rep("M{1.2cm}|", 2), "M{1.2cm}"
-#     ), 
-#     label = "DendroBis_Evol5{{x}}"
-#   ), 
-#   include.rownames = FALSE, 
-#   sanitize.text.function = function(x){return(x)}, 
-#   hline.after = c(-1, Sep_Cycles, dim(t4)[1]), 
-#   add.to.row = list(
-#     pos = ListPos, 
-#     command = c(
-#       #1
-#       rep(
-#         c( rep("\\cline{3-8}", 3), "\\cmidrule[0.8pt]{2-8}" ), 
-#         max(Sep_Cycles) / 4 - 1
-#       ), 
-#       #2
-#       c(rep("\\cline{3-8}", 3), ""), 
-#       #3
-#       rep(
-#         c(rep("\\cline{3-8}", 3), "\\cmidrule[0.8pt]{2-8}"), 
-#         (dim(t4)[1] - max(Sep_Cycles)) / 4 - 1
-#       ),
-#       #4
-#       rep("\\cline{3-8}", 3)
-#     )
-#   ), 
-#   size = "\\scriptsize"
-# )
+print(
+  xtable(
+    t4, 
+    caption = "Principales caract\u00E9ristiques dendrom\u00E9triques pour les arbres vivants\\\\\\footnotesize{N = densit\u00E9 de tiges (/ha)\\\\G = surface terri\u00E8re (m\\up{2}/ha)\\\\V = volume (m\\up{3}/ha)\\\\Acct G = accroissement en surface terri\u00E8re (m\\up{2}/ha/an)\\\\Acct V = accroissement en volume (m\\up{3}/ha/an)}", 
+    caption.placement = "top", 
+    digits = c(rep(0, 4), rep(1, Rep), 0), 
+    align = c(
+      "|M{0.5cm}|", "M{0.7cm}|", "M{1.8cm}|", "M{2.9cm}|", 
+      rep("M{1.3cm}|", 3), rep("M{1.2cm}|", 2), "M{1.2cm}"
+    ), 
+    label = "DendroBis_Evol{{x}}"
+  ), 
+  include.rownames = FALSE, 
+  sanitize.text.function = function(x){return(x)}, 
+  hline.after = c(-1, Sep_Cycles, dim(t4)[1]), 
+  add.to.row = list(
+    pos = ListPos, 
+    command = c(
+      #1
+      rep(
+        c( rep("\\cline{3-8}", 3), "\\cmidrule[0.8pt]{2-8}" ), 
+        max(Sep_Cycles) / 4 - 1
+      ), 
+      #2
+      c(rep("\\cline{3-8}", 3), ""), 
+      #3
+      rep(
+        c(rep("\\cline{3-8}", 3), "\\cmidrule[0.8pt]{2-8}"), 
+        (dim(t4)[1] - max(Sep_Cycles)) / 4 - 1
+      ),
+      #4
+      rep("\\cline{3-8}", 3)
+    )
+  ), 
+  size = "\\scriptsize"
+)
 
 @
 \FloatBarrier
@@ -1795,7 +1798,7 @@ p1 <-
     mapping = aes(
       x = Cycle, 
       y = 0.5, 
-      label = paste0("Cycle ", as.numeric(Cycle))
+      label = paste0("Cycle ", Cycle)
     ), 
     label.padding = unit(0.15, "lines"), 
     label.r = unit(0, "lines"), 
@@ -1846,7 +1849,7 @@ df2 <-
   group_by(Cycle, Essence, CodeSanit) %>% 
   summarize(Nha = sum(Nha)) %>% 
   ungroup() %>% 
-  mutate(Cycle = paste0("Cycle ", as.numeric(Cycle)))
+  mutate(Cycle = paste0("Cycle ", Cycle))
 
 p2 <- 
   ggplot() +
