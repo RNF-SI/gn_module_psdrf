@@ -2151,17 +2151,19 @@ if (length(pos) > 0) {
   pos2 <- which(tab3$Count > 1 & !is.na(tab3$Count))
   pos3 <- which(!is.na(tab3$Count))
   
+  tab3 <- as.data.frame(tab3)
+
   tab3[pos2, "TypeTarif"] <- paste0(
     "\\multirow{", tab3$Count[pos2], 
     "}{*}{\\parbox{1.5cm}{\\centering  ", 
     tab3$TypeTarif[pos2], "}}"
   )
   
-  tab3[pos2, "NumTarif"] <- as.numeric(paste0(
+  tab3[pos2, "NumTarif"] <- paste0(
     "\\multirow{", tab3$Count[pos2], 
     "}{*}{\\parbox{1.5cm}{\\centering  ", 
     tab3$NumTarif[pos2], "}}"
-  ))
+  )
   
   tab3$Count <- NULL
 } else {
