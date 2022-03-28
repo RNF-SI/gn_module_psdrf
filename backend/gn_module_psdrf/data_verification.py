@@ -37,44 +37,44 @@ def data_verification(data):
   columns = ['NumDisp', 'Cycle', 'NumArbre', 'Azimut', 'Dist', 'Diam1', 'Diam2', 'Haut', 'StadeD', 'StadeE', 'Taillis']
   check_code_Error_List = check_colonnes("Arbres", columns, Arbres)
   if len(check_code_Error_List) >0:
-    verificationList.append({'errorName': 'Il manque une colonne dans la table Arbres', 'errorText': 'Il manque une colonne dans la table Arbres', 'errorList': check_code_Error_List, 'errorType': 'PsdrfErrorColonnes', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+    verificationList.append({'errorName': 'Il manque une colonne dans la table Arbres', 'errorText': 'Il manque une colonne dans la table Arbres', 'errorList': check_code_Error_List, 'errorType': 'PsdrfErrorColonnes', 'isFatalError': True, })
 
   # BMSsup30
   columns = ['Id', 'Cycle', 'NumArbre', 'Azimut', 'Dist', 'DiamIni', 'DiamMed', 'DiamFin', 'Longueur', 'StadeD', 'StadeE', 'Contact', 'Chablis']
   check_code_Error_List = check_colonnes("BMSsup30", columns, BMSsup30)
   if len(check_code_Error_List) >0:
-    verificationList.append({'errorName': 'Il manque une colonne dans la table BMSsup30', 'errorText': 'Il manque une colonne dans la table BMSsup30', 'errorList': check_code_Error_List, 'errorType': 'PsdrfErrorColonnes', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+    verificationList.append({'errorName': 'Il manque une colonne dans la table BMSsup30', 'errorText': 'Il manque une colonne dans la table BMSsup30', 'errorList': check_code_Error_List, 'errorType': 'PsdrfErrorColonnes', 'isFatalError': True, })
 
   # Placettes
   columns = ['Cycle', "Strate", "PoidsPlacette", 'Pente', 'Exposition', 'CorrectionPente']
   check_code_Error_List = check_colonnes("Placettes", columns, Placettes)
   if len(check_code_Error_List) >0:
-    verificationList.append({'errorName': 'Il manque une colonne dans la table Placettes', 'errorText': 'Il manque une colonne dans la table Placettes', 'errorList': check_code_Error_List, 'errorType': 'PsdrfErrorColonnes', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+    verificationList.append({'errorName': 'Il manque une colonne dans la table Placettes', 'errorText': 'Il manque une colonne dans la table Placettes', 'errorList': check_code_Error_List, 'errorType': 'PsdrfErrorColonnes', 'isFatalError': True, })
 
   # Cycles
   columns = ['Cycle', 'Coeff']
   check_code_Error_List = check_colonnes("Cycles", columns, Cycles)
   if len(check_code_Error_List) >0:
-    verificationList.append({'errorName': 'Il manque une colonne dans la table Cycles', 'errorText': 'Il manque une colonne dans la table Cycles', 'errorList': check_code_Error_List, 'errorType': 'PsdrfErrorColonnes', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+    verificationList.append({'errorName': 'Il manque une colonne dans la table Cycles', 'errorText': 'Il manque une colonne dans la table Cycles', 'errorList': check_code_Error_List, 'errorType': 'PsdrfErrorColonnes', 'isFatalError': True, })
 
   # Regeneration
   columns = ['SsPlac', 'Cycle', 'Class1', 'Class2', 'Class3', 'Recouv', 'Taillis', 'Abroutis']
   check_code_Error_List = check_colonnes("Regeneration", columns, Regeneration)
   if len(check_code_Error_List) >0:
-    verificationList.append({'errorName': 'Il manque une colonne dans la table Regeneration', 'errorText': 'Il manque une colonne dans la table Regeneration', 'errorList': check_code_Error_List, 'errorType': 'PsdrfErrorColonnes', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+    verificationList.append({'errorName': 'Il manque une colonne dans la table Regeneration', 'errorText': 'Il manque une colonne dans la table Regeneration', 'errorList': check_code_Error_List, 'errorType': 'PsdrfErrorColonnes', 'isFatalError': True, })
   
   # Transect
   columns = ['Id', 'Cycle', 'Transect', 'Dist', 'Diam', 'Angle', 'StadeD', 'StadeE', 'Contact', 'Chablis']
   check_code_Error_List = check_colonnes("Transect", columns, Transect)
   if len(check_code_Error_List) >0:
-    verificationList.append({'errorName': 'Il manque une colonne dans la table Transect', 'errorText': 'Il manque une colonne dans la table Transect', 'errorList': check_code_Error_List, 'errorType': 'PsdrfErrorColonnes', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+    verificationList.append({'errorName': 'Il manque une colonne dans la table Transect', 'errorText': 'Il manque une colonne dans la table Transect', 'errorList': check_code_Error_List, 'errorType': 'PsdrfErrorColonnes', 'isFatalError': True, })
 
   # Reperes
   columns = ['Azimut', 'Dist', 'Diam']
   if not Reperes.empty:
     check_code_Error_List = check_colonnes("Reperes", columns, Reperes)
     if len(check_code_Error_List) >0:
-      verificationList.append({'errorName': 'Il manque une colonne dans la table Reperes', 'errorText': 'Il manque une colonne dans la table Reperes', 'errorList': check_code_Error_List, 'errorType': 'PsdrfErrorColonnes', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+      verificationList.append({'errorName': 'Il manque une colonne dans la table Reperes', 'errorText': 'Il manque une colonne dans la table Reperes', 'errorList': check_code_Error_List, 'errorType': 'PsdrfErrorColonnes', 'isFatalError': True, })
   else: 
     Reperes = pd.json_normalize([{'NumDisp': None, 'NumPlac': None, 'Azimut': None, 'Dist': None, 'Diam': None, 'Repere': None, 'Observation': None}])
 
@@ -83,13 +83,13 @@ def data_verification(data):
   if not verificationList: 
 
     # Conversion des virgules en points pour les colonnes concernées
-    Arbres["Dist"]=Arbres["Dist"].str.replace(',','.')
-    Arbres["Haut"]=Arbres["Haut"].str.replace(',','.')
-    BMSsup30["Dist"]=BMSsup30["Dist"].str.replace(',','.')
-    BMSsup30["Longueur"]= BMSsup30["Longueur"].astype(str)
-    BMSsup30["Longueur"]=BMSsup30["Longueur"].str.replace(',','.')
-    Transect["Dist"]=Transect["Dist"].str.replace(',','.')
-    Reperes["Dist"]=Reperes["Dist"].str.replace(',','.')
+    # Arbres["Dist"]=Arbres["Dist"].str.replace(',','.')
+    # Arbres["Haut"]=Arbres["Haut"].str.replace(',','.')
+    # BMSsup30["Dist"]=BMSsup30["Dist"].str.replace(',','.')
+    # BMSsup30["Longueur"]= BMSsup30["Longueur"].astype(str)
+    # BMSsup30["Longueur"]=BMSsup30["Longueur"].str.replace(',','.')
+    # Transect["Dist"]=Transect["Dist"].str.replace(',','.')
+    # Reperes["Dist"]=Reperes["Dist"].str.replace(',','.')
 
     # Conversion des "0" en "f" pour les valeurs booléennes
     # Arbres["Taillis"]=Arbres["Taillis"].str.replace('0','f')
@@ -120,7 +120,8 @@ def data_verification(data):
         'intNames' : ['NumDisp', 'Cycle', 'NumArbre', 'Type', 'NumPlac'],
         'floatNames' : ['Azimut', 'Dist', 'Diam1', 'Diam2', 'Haut', 'StadeD', 'StadeE'],
         'boolNames' : [],
-        'dateNames' : []
+        'dateNames' : [],
+        'notNullNames': ['NumDisp', 'NumPlac', 'NumArbre', 'Cycle']
       },
       {
         'arrayName': 'BMSsup30',
@@ -128,7 +129,8 @@ def data_verification(data):
         'intNames' : ['Id', 'Cycle', 'NumArbre'],
         'floatNames' : ['Azimut', 'Dist', 'DiamIni', 'DiamMed', 'DiamFin', 'Longueur', 'StadeD', 'StadeE', 'Contact'],
         'boolNames' : ['Chablis'],
-        'dateNames' : []
+        'dateNames' : [],
+        'notNullNames': ['NumDisp', 'NumPlac']
       },
       {
         'arrayName': 'Placettes',
@@ -137,6 +139,7 @@ def data_verification(data):
         'floatNames' : ["PoidsPlacette", 'Pente', 'Exposition'],
         'boolNames' : ['CorrectionPente'],
         'dateNames' : [],
+        'notNullNames': ['NumDisp', 'NumPlac', 'Cycle']
       },
       {
         'arrayName': 'Cycles',
@@ -144,7 +147,8 @@ def data_verification(data):
         'intNames' : ['Cycle'],
         'floatNames' : ['Coeff'],
         'dateNames' : ['Date'],
-        'boolNames' : []
+        'boolNames' : [],
+        'notNullNames': ['NumDisp', 'NumPlac', 'Cycle']
       },
       {
         'arrayName': 'Regeneration',
@@ -152,7 +156,8 @@ def data_verification(data):
         'intNames' : ['SsPlac', 'Cycle', 'Class1', 'Class2', 'Class3'],
         'floatNames' : ['Recouv'],
         'boolNames' : ['Taillis', 'Abroutis'],
-        'dateNames' : []
+        'dateNames' : [],
+        'notNullNames': ['NumDisp', 'NumPlac']
       },
       {
         'arrayName': 'Transect',
@@ -160,7 +165,8 @@ def data_verification(data):
         'intNames' : ['Id', 'Cycle', 'Transect'],
         'floatNames' : ['Dist', 'Diam', 'Angle', 'StadeD', 'StadeE'],
         'boolNames' : ['Contact', 'Chablis'],
-        'dateNames' : []
+        'dateNames' : [],
+        'notNullNames': ['NumDisp', 'NumPlac']
       },
       {
         'arrayName': 'Reperes',
@@ -168,16 +174,17 @@ def data_verification(data):
         'floatNames': ['Azimut', 'Dist', 'Diam'],
         'boolNames' : [],
         'dateNames' : [],
-        'intNames' : []
+        'intNames' : [],
+        'notNullNames': ['NumDisp', 'NumPlac']
       }
     ]
 
     for typeObj in typeColumnObj:
-      for check in [{'colnames': typeObj.get('intNames'), 'checktypefunction': check_int, 'type_text': '(entiers attendus)'}, {'colnames': typeObj.get('floatNames'), 'checktypefunction': check_int_or_float, 'type_text': '(decimal entendus)'}, {'colnames': typeObj.get('boolNames'), 'checktypefunction': check_boolean, 'type_text': '(f, t ou rien attendus)'}, {'colnames': typeObj.get('dateNames'), 'checktypefunction': check_date, 'type_text': '(dates attendues sous la forme dd/mm/aaaa)'}]:
+      for check in [{'colnames': typeObj.get('notNullNames'), 'checktypefunction': check_notNULL, 'type_text': '(valeur attendue)'}, {'colnames': typeObj.get('intNames'), 'checktypefunction': check_int, 'type_text': '(entiers attendus)'}, {'colnames': typeObj.get('floatNames'), 'checktypefunction': check_int_or_float, 'type_text': '(decimal entendus)'}, {'colnames': typeObj.get('boolNames'), 'checktypefunction': check_boolean, 'type_text': '(f, t ou rien attendus)'}, {'colnames': typeObj.get('dateNames'), 'checktypefunction': check_date, 'type_text': '(dates attendues sous la forme dd/mm/aaaa)'}]:
         for col in check.get('colnames'):
           check_code_Error_List = check.get('checktypefunction')(typeObj.get('arrayName'), col, typeObj.get('array'))
           if len(check_code_Error_List) >0:
-            verificationList.append({'errorName': 'Controle '+ col +' dans la table ' + typeObj.get('arrayName') + ' '+ check.get('type_text'), 'errorText': 'Controle '+ col + ' dans la table ' + typeObj.get('arrayName') + ' '+check.get('type_text'), 'errorList': check_code_Error_List, 'errorType': 'PsdrfError', 'isFatalError': True, 'isGlobalModificationEnabled': True})
+            verificationList.append({'errorName': 'Controle '+ col +' dans la table ' + typeObj.get('arrayName') + ' '+ check.get('type_text'), 'errorText': 'Controle '+ col + ' dans la table ' + typeObj.get('arrayName') + ' '+check.get('type_text'), 'errorList': check_code_Error_List, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
 
     base_dir = os.path.dirname(os.path.dirname(config["BASE_DIR"]))
@@ -257,14 +264,14 @@ def data_verification(data):
       bark_code = "écorce"
       check_code_Error_List = check_code(CodeDurete, Arbres, soundness_code, "Arbres")
       if len(check_code_Error_List) >0:
-        verificationList.append({'errorName': 'Contrôle Stade dans Arbres', 'errorText': 'Contrôle Stade dans Arbres', 'errorList': check_code_Error_List, 'errorType': 'PsdrfError', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+        verificationList.append({'errorName': 'Contrôle Stade dans Arbres', 'errorText': 'Contrôle Stade dans Arbres', 'errorList': check_code_Error_List, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
       #Appel des fonctions de test
       ###Table Arbres
       #Contrôle des essences rencontrées dans la table Arbres
       error_List_Temp = check_species(Arbres, CodeEssence, Test, "Arbres")
       if len(error_List_Temp) >0:
-        verificationList.append({'errorName': 'Essence dans Arbres', 'errorText':"Essence dans Arbres", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+        verificationList.append({'errorName': 'Essence dans Arbres', 'errorText':"Essence dans Arbres", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
 
       #Contrôle des sauts de cycles: Contrôle qu'il n'y ait pas de cycles qui sautent
@@ -283,7 +290,7 @@ def data_verification(data):
               }
               error.append(err)
       if len(error) >0:
-        verificationList.append({'errorName': 'Cycles dans Arbres', 'errorText': 'Cycles dans Arbres', 'errorList': error, 'errorType': 'PsdrfErrorColonnes', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+        verificationList.append({'errorName': 'Cycles dans Arbres', 'errorText': 'Cycles dans Arbres', 'errorList': error, 'errorType': 'PsdrfErrorColonnes', 'isFatalError': True, })
 
       #Contrôle des valeurs dupliquées
       error = []
@@ -307,7 +314,7 @@ def data_verification(data):
             }
           i = i + 1
           error_List_Temp.append(err)
-        verificationList.append({'errorName': 'Duplication dans Arbres', 'errorText':'Lignes dupliquées dans la table Arbres', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+        verificationList.append({'errorName': 'Duplication dans Arbres', 'errorText':'Lignes dupliquées dans la table Arbres', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
 
       # 5/ Contrôle du suivi des arbres entre les différents inventaires
@@ -368,7 +375,7 @@ def data_verification(data):
                 "value": tValues.to_json(orient='records'),
               }
             error_List_Temp.append(err)
-          verificationList.append({'errorName': "Incohérence dans Arbres", 'errorText': "Arbre: Incohérence(s) relevée(s) sur les valeurs d'Essence, Azimut et Dist entre les différents inventaires. Conseil: Modifier les valeurs des cycles précédents si vous êtes sûrs de vous.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+          verificationList.append({'errorName': "Incohérence dans Arbres", 'errorText': "Arbre: Incohérence(s) relevée(s) sur les valeurs d'Essence, Azimut et Dist entre les différents inventaires. Conseil: Modifier les valeurs des cycles précédents si vous êtes sûrs de vous.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
 
 
@@ -504,7 +511,7 @@ def data_verification(data):
             "value": temp.loc[[index],:].to_json(orient='records'),
           }
           error_List_Temp.append(err)
-        verificationList.append({'errorName': 'Types dans Arbres', 'errorText': 'Types dans Arbres','errorList': error_List_Temp,  'errorType': 'PsdrfError', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+        verificationList.append({'errorName': 'Types dans Arbres', 'errorText': 'Types dans Arbres','errorList': error_List_Temp,  'errorType': 'PsdrfError', 'isFatalError': True, })
 
       # Souches de plus de 1.30m
       temp = Arbres[(Arbres["Haut"] > 1.30) & (Arbres["Type"]==3)]
@@ -520,7 +527,7 @@ def data_verification(data):
               "value": temp.loc[[index],:].to_json(orient='records'),
             }
           error_List_Temp.append(err)
-        verificationList.append({'errorName': "Souche(s) incohérente(s) dans Arbres", 'errorText': "BMP classé(s) en Type 3 (souche) et faisant strictement plus d'1,30m. Impossible dans le PSDRF.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+        verificationList.append({'errorName': "Souche(s) incohérente(s) dans Arbres", 'errorText': "BMP classé(s) en Type 3 (souche) et faisant strictement plus d'1,30m. Impossible dans le PSDRF.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
 
       #Arbres ou chandelles < 1.30m
@@ -537,7 +544,7 @@ def data_verification(data):
               "value": temp.loc[[index],:].to_json(orient='records'),
             }
           error_List_Temp.append(err)
-        verificationList.append({'errorName': "Arbre(s) incohérent(s) dans Arbres", 'errorText': "Il y a des BMP classés en 'Arbre' ou en 'Chandelle' et faisant moins d'1,30m. Impossible dans le PSDRF", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+        verificationList.append({'errorName': "Arbre(s) incohérent(s) dans Arbres", 'errorText': "Il y a des BMP classés en 'Arbre' ou en 'Chandelle' et faisant moins d'1,30m. Impossible dans le PSDRF", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
       # Valeurs extrêmes sup Azimuts
       temp = Arbres[Arbres["Azimut"] > 399]
@@ -553,7 +560,7 @@ def data_verification(data):
               "value": temp.loc[[index],:].to_json(orient='records'),
             }
           error_List_Temp.append(err)
-        verificationList.append({'errorName': "Azimut incohérent dans Arbres", 'errorText': "La valeur de l'azimut est supérieur à 399.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+        verificationList.append({'errorName': "Azimut incohérent dans Arbres", 'errorText': "La valeur de l'azimut est supérieur à 399.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
       # Valeurs extrêmes inf Azimuts
       temp = Arbres[Arbres["Azimut"] < 0]
@@ -569,7 +576,7 @@ def data_verification(data):
               "value": temp.loc[[index],:].to_json(orient='records'),
             }
           error_List_Temp.append(err)
-        verificationList.append({'errorName': "Azimut incohérent dans Arbres", 'errorText': "La valeur de l'azimut est inférieur à 0.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+        verificationList.append({'errorName': "Azimut incohérent dans Arbres", 'errorText': "La valeur de l'azimut est inférieur à 0.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
       # Valeurs extrêmes sup Diam1
       temp = Arbres[Arbres["Diam1"] > 100]
@@ -636,7 +643,7 @@ def data_verification(data):
               "value": BMP_Temp.loc[[index],:].to_json(orient='records'),
             }
           error_List_Temp.append(err)
-        verificationList.append({'errorName': "Information(s) manquante(s) dans Arbres", 'errorText': "Information(s) manquante(s) pour les BMP", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+        verificationList.append({'errorName': "Information(s) manquante(s) dans Arbres", 'errorText': "Information(s) manquante(s) pour les BMP", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
       # Incohérences sur les données de Taillis 
       Taillis_Temp = Arbres[[ "NumPlac", "NumArbre", "Taillis"]]
@@ -653,7 +660,7 @@ def data_verification(data):
               "value": Taillis_Temp.loc[[index],:].to_json(orient='records'),
             }
           error_List_Temp.append(err)
-        verificationList.append({'errorName': "Taillis incorrect(s) dans Arbres", 'errorText': "Il y a des informations incorrectes dans la colonne Taillis. Rappel : seules notations acceptées (hormis valeurs vides) = 't' ou 'f'", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+        verificationList.append({'errorName': "Taillis incorrect(s) dans Arbres", 'errorText': "Il y a des informations incorrectes dans la colonne Taillis. Rappel : seules notations acceptées (hormis valeurs vides) = 't' ou 'f'", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
 
       ##### 7/ Contrôle des valeurs absentes #####
@@ -671,7 +678,7 @@ def data_verification(data):
               "value": Empty_temp.loc[[index],:].to_json(orient='records'),
             }
           error_List_Temp.append(err)
-        verificationList.append({'errorName': "Diam2 non renseigné", "errorText": "Diam2 vides pour des arbres vivants de Diam1 > 30 cm", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+        verificationList.append({'errorName': "Diam2 non renseigné", "errorText": "Diam2 vides pour des arbres vivants de Diam1 > 30 cm", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
 
       # -- autres variables
@@ -689,7 +696,7 @@ def data_verification(data):
               "value": Vital.loc[[index],:].to_json(orient='records'),
             }
           error_List_Temp.append(err)
-        verificationList.append({'errorName': "Informations manquantes dans Arbres", 'errorText': "Il manque des informations à des colonne(s) dans la table Arbre", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+        verificationList.append({'errorName': "Informations manquantes dans Arbres", 'errorText': "Il manque des informations à des colonne(s) dans la table Arbre", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
       # ---------- Contrôle des codes écologiques : ---------- #
       Table_temp = Arbres[~Arbres["CodeEcolo"].isna() & Arbres["Ref_CodeEcolo"].isna()]
@@ -705,7 +712,7 @@ def data_verification(data):
               "value": Table_temp.loc[[index],:].to_json(orient='records'),
             }
           error_List_Temp.append(err)
-        verificationList.append({'errorName': "DMH sans référence de codification", 'errorText': "Il y a des arbres portant des DMH sans référence de codification renseignée (Ref_CodeEcolo vide pour CodeEcolo non vide). <a  target='_blank' rel='noopener noreferrer' href='https://docs.google.com/spreadsheets/d/1b6cfcJwKSZxODuJSbyE_UGCJFt985az-ZMNlxEeavVE/edit#gid=0'>Code Ecolo</a>", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+        verificationList.append({'errorName': "DMH sans référence de codification", 'errorText': "Il y a des arbres portant des DMH sans référence de codification renseignée (Ref_CodeEcolo vide pour CodeEcolo non vide). <a  target='_blank' rel='noopener noreferrer' href='https://docs.google.com/spreadsheets/d/1b6cfcJwKSZxODuJSbyE_UGCJFt985az-ZMNlxEeavVE/edit#gid=0'>Code Ecolo</a>", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
       # ----- CodeEcolo non reconnus
       df_Codes = Arbres[~Arbres["Ref_CodeEcolo"].isna()]
@@ -757,7 +764,7 @@ def data_verification(data):
                   "value": posProSilva_temp.loc[[index],:].to_json(orient='records'),
                 }
               error_List_Temp.append(err)
-            verificationList.append({'errorName': 'Code(s) DMH Prosilva non reconnu(s)', 'errorText': "Il y a des codes DMH référencés ProSilva qui ne sont pas reconnus dans la table Arbres. Attention, les codes doivent être séparés par des tirets. Ex: CV2-CV3. <a target='_blank' rel='noopener noreferrer' href='https://docs.google.com/spreadsheets/d/1b6cfcJwKSZxODuJSbyE_UGCJFt985az-ZMNlxEeavVE/edit#gid=0'>Code Ecolo</a>", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+            verificationList.append({'errorName': 'Code(s) DMH Prosilva non reconnu(s)', 'errorText': "Il y a des codes DMH référencés ProSilva qui ne sont pas reconnus dans la table Arbres. Attention, les codes doivent être séparés par des tirets. Ex: CV2-CV3. <a target='_blank' rel='noopener noreferrer' href='https://docs.google.com/spreadsheets/d/1b6cfcJwKSZxODuJSbyE_UGCJFt985az-ZMNlxEeavVE/edit#gid=0'>Code Ecolo</a>", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
         # --- Codification EFI
         if not posEFI.empty:
@@ -777,7 +784,7 @@ def data_verification(data):
                   "value": posEFI_temp.loc[[index],:].to_json(orient='records'),
                 }
               error_List_Temp.append(err)
-            verificationList.append({'errorName': 'Code(s) DMH EFI non reconnu(s)', 'errorText': "Il y a des codes DMH référencés EFI qui ne sont pas reconnus dans la table Arbres. Attention, les codes doivent être séparés par des tirets. Ex: CV2-CV3. <a target='_blank' rel='noopener noreferrer' href='https://docs.google.com/spreadsheets/d/1b6cfcJwKSZxODuJSbyE_UGCJFt985az-ZMNlxEeavVE/edit#gid=0'>Code Ecolo</a>", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+            verificationList.append({'errorName': 'Code(s) DMH EFI non reconnu(s)', 'errorText': "Il y a des codes DMH référencés EFI qui ne sont pas reconnus dans la table Arbres. Attention, les codes doivent être séparés par des tirets. Ex: CV2-CV3. <a target='_blank' rel='noopener noreferrer' href='https://docs.google.com/spreadsheets/d/1b6cfcJwKSZxODuJSbyE_UGCJFt985az-ZMNlxEeavVE/edit#gid=0'>Code Ecolo</a>", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
 
         # --- Codification IRSTEA
@@ -798,7 +805,7 @@ def data_verification(data):
                   "value": posIRSTEA_temp.loc[[index],:].to_json(orient='records'),
                 }
               error_List_Temp.append(err)
-            verificationList.append({'errorName': 'Code(s) DMH IRSTEA non reconnu(s)', 'errorText': "Il y a des codes DMH référencés IRSTEA qui ne sont pas reconnus dans la table Arbres. Attention, les codes doivent être séparés par des tirets. Ex: CV2-CV3. <a target='_blank' rel='noopener noreferrer' href='https://docs.google.com/spreadsheets/d/1b6cfcJwKSZxODuJSbyE_UGCJFt985az-ZMNlxEeavVE/edit#gid=0'>Code Ecolo</a>", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+            verificationList.append({'errorName': 'Code(s) DMH IRSTEA non reconnu(s)', 'errorText': "Il y a des codes DMH référencés IRSTEA qui ne sont pas reconnus dans la table Arbres. Attention, les codes doivent être séparés par des tirets. Ex: CV2-CV3. <a target='_blank' rel='noopener noreferrer' href='https://docs.google.com/spreadsheets/d/1b6cfcJwKSZxODuJSbyE_UGCJFt985az-ZMNlxEeavVE/edit#gid=0'>Code Ecolo</a>", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
         # --- Codification non reconnue
         if not posUnknown.empty:
@@ -812,7 +819,7 @@ def data_verification(data):
                 "value": posUnknown.loc[[index],:].to_json(orient='records'),
               }
             error_List_Temp.append(err)
-          verificationList.append({'errorName': 'Code(s) écologiques non reconnu(s)', 'errorText': "Il y a des références à des codifications de codes écologiques non reconnues dans la table Arbres. Rappel : les seules codifications reconnues sont celles de ProSilva, de l'IRSTEA et de l'EFI.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+          verificationList.append({'errorName': 'Code(s) écologiques non reconnu(s)', 'errorText': "Il y a des références à des codifications de codes écologiques non reconnues dans la table Arbres. Rappel : les seules codifications reconnues sont celles de ProSilva, de l'IRSTEA et de l'EFI.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
 
 
@@ -822,7 +829,7 @@ def data_verification(data):
       #Contrôle des essences rencontrées dans la table BMSsup30
       error_List_Temp = check_species(BMSsup30, CodeEssence, Test, "BMSsup30")
       if len(error_List_Temp) >0:
-        verificationList.append({'errorName': 'Essence dans BMSsup30', 'errorText':"Essence dans BMSsup30", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+        verificationList.append({'errorName': 'Essence dans BMSsup30', 'errorText':"Essence dans BMSsup30", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
 
       # Valeurs extrêmes sup Azimuts
@@ -839,7 +846,7 @@ def data_verification(data):
               "value": temp.loc[[index],:].to_json(orient='records'),
             }
           error_List_Temp.append(err)
-        verificationList.append({'errorName': "Azimut incohérent dans BMSsup30", 'errorText': "La valeur de l'azimut est supérieur à 399.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+        verificationList.append({'errorName': "Azimut incohérent dans BMSsup30", 'errorText': "La valeur de l'azimut est supérieur à 399.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
       # Valeurs extrêmes inf Azimuts
       temp = BMSsup30[BMSsup30["Azimut"] < 0]
@@ -855,7 +862,7 @@ def data_verification(data):
               "value": temp.loc[[index],:].to_json(orient='records'),
             }
           error_List_Temp.append(err)
-        verificationList.append({'errorName': "Azimut incohérent dans BMSsup30", 'errorText': "La valeur de l'azimut est inférieur à 0.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+        verificationList.append({'errorName': "Azimut incohérent dans BMSsup30", 'errorText': "La valeur de l'azimut est inférieur à 0.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
       # Valeurs extrêmes distance sup
       temp = BMSsup30[BMSsup30["Dist"] >20 ]
@@ -871,7 +878,7 @@ def data_verification(data):
               "value": temp.loc[[index],:].to_json(orient='records'),
             }
           error_List_Temp.append(err)
-        verificationList.append({'errorName': "Distance incohérente dans BMSsup30", 'errorText': "La valeur de la distance est supérieure à 20.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+        verificationList.append({'errorName': "Distance incohérente dans BMSsup30", 'errorText': "La valeur de la distance est supérieure à 20.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
       # Valeurs extrêmes distance inf
       temp = BMSsup30[BMSsup30["Dist"] <0 ]
@@ -887,7 +894,7 @@ def data_verification(data):
               "value": temp.loc[[index],:].to_json(orient='records'),
             }
           error_List_Temp.append(err)
-        verificationList.append({'errorName': "Distance incohérente dans BMSsup30", 'errorText': "La valeur de la distance est inférieure à 0.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+        verificationList.append({'errorName': "Distance incohérente dans BMSsup30", 'errorText': "La valeur de la distance est inférieure à 0.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
 
       # Valeurs extrêmes sup DiamMed
@@ -952,7 +959,7 @@ def data_verification(data):
               "value": temp.loc[[index],:].to_json(orient='records'),
             }
           error_List_Temp.append(err)
-        verificationList.append({'errorName': "Longueur de billon incohérent dans BMSsup30", 'errorText': "La valeur du diamètre est inférieure à 0.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+        verificationList.append({'errorName': "Longueur de billon incohérent dans BMSsup30", 'errorText': "La valeur du diamètre est inférieure à 0.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
       # Valeurs extrêmes de longueur de billon sup
       temp = BMSsup30[BMSsup30["Longueur"] > 40]
@@ -968,20 +975,20 @@ def data_verification(data):
               "value": temp.loc[[index],:].to_json(orient='records'),
             }
           error_List_Temp.append(err)
-        verificationList.append({'errorName': "Longueur de billon incohérent dans BMSsup30", 'errorText': "La valeur du diamètre est supérieure à 40.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+        verificationList.append({'errorName': "Longueur de billon incohérent dans BMSsup30", 'errorText': "La valeur du diamètre est supérieure à 40.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
       # Contrôle des stades de décomposition
       soundness_code = "de décomposition"
       error_List_Temp = check_code(CodeDurete, BMSsup30, soundness_code, "BMSsup30")
       if len(error_List_Temp) >0:
-        verificationList.append({'errorName': 'Contrôle Stade de décomposition non reconnu(s)', 'errorText': 'Contrôle Stade de décomposition dans BMSsup30', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+        verificationList.append({'errorName': 'Contrôle Stade de décomposition non reconnu(s)', 'errorText': 'Contrôle Stade de décomposition dans BMSsup30', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
 
       # Contrôle des stades de d'écorce'
       bark_code = "écorce"
       error_List_Temp = check_code(CodeEcorce, BMSsup30, bark_code, "BMSsup30")
       if len(error_List_Temp) >0:
-        verificationList.append({'errorName': "Contrôle Stade d'écorce non reconnu", 'errorText':  "Contrôle Stade d'écorce dans BMSsup30", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+        verificationList.append({'errorName': "Contrôle Stade d'écorce non reconnu", 'errorText':  "Contrôle Stade d'écorce dans BMSsup30", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
 
       # Contrôle des numéros d'inventaire
@@ -1005,7 +1012,7 @@ def data_verification(data):
               "value": Vital.loc[[index],:].to_json(orient='records'),
             }
           error_List_Temp.append(err)
-        verificationList.append({'errorName': "Informations manquantes dans BMSsup30", 'errorText': "Il manque des informations à des colonne(s) dans la table BMSsup30", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+        verificationList.append({'errorName': "Informations manquantes dans BMSsup30", 'errorText': "Il manque des informations à des colonne(s) dans la table BMSsup30", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
       # Contrôle des valeurs dupliquées
       error = []
@@ -1029,7 +1036,7 @@ def data_verification(data):
             }
           i = i + 1
           error_List_Temp.append(err)
-        verificationList.append({'errorName': "Duplication dans BMSsup30", 'errorText': 'Lignes dupliquées dans la table BMSsup30', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+        verificationList.append({'errorName': "Duplication dans BMSsup30", 'errorText': 'Lignes dupliquées dans la table BMSsup30', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
       BMSsup30[["DiamFin", "DiamMed", "DiamIni"]] = BMSsup30[["DiamFin", "DiamMed", "DiamIni"]].apply(pd.to_numeric)
 
 
@@ -1048,7 +1055,7 @@ def data_verification(data):
               "value": temp.loc[[index],:].to_json(orient='records'),
             }
           error_List_Temp.append(err)
-        verificationList.append({'errorName': "Diamètre trop petit dans BMSsup30", 'errorText': "Certains billons ont des valeurs de diamètre inférieures à 30 cm. Impossible dans le PSDRF", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+        verificationList.append({'errorName': "Diamètre trop petit dans BMSsup30", 'errorText': "Certains billons ont des valeurs de diamètre inférieures à 30 cm. Impossible dans le PSDRF", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
       # ----- Contrôle DiamIni et DiamFin non vides pour les billons > 5m :
       temp = BMSsup30[(BMSsup30["DiamFin"].isna() | BMSsup30["DiamMed"].isna() | BMSsup30["DiamIni"].isna()) & (BMSsup30["Longueur"] >= 5)]
@@ -1064,7 +1071,7 @@ def data_verification(data):
               "value": temp.loc[[index],:].to_json(orient='records'),
             }
           error_List_Temp.append(err)
-        verificationList.append({'errorName': "Diamètre(s) manquant(s) dans BMSsup30", 'errorText': "Valeurs manquantes dans 'DiamIni', 'DiamMed' ou 'DiamFin' pour des billons d'au moins 5 m de longueur. Impossible dans le PSDRF", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+        verificationList.append({'errorName': "Diamètre(s) manquant(s) dans BMSsup30", 'errorText': "Valeurs manquantes dans 'DiamIni', 'DiamMed' ou 'DiamFin' pour des billons d'au moins 5 m de longueur. Impossible dans le PSDRF", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
       # ----- Contrôle DiamIni vide ou DiamFin vides pour les billons < 5m :
       temp = BMSsup30[((~BMSsup30["DiamFin"].isna()) | (~BMSsup30["DiamIni"].isna())) & (BMSsup30["Longueur"] < 5)]
@@ -1141,7 +1148,7 @@ def data_verification(data):
                   "value": tValues.to_json(orient='records'),
                 }
               error_List_Temp.append(err)
-            verificationList.append({'errorName': "Incohérence(s) dans BMSsup30", 'errorText':  "BMSsup30: Incohérence(s) relevée(s) sur les valeurs d'Essence, Azimut et Dist entre les différents inventaires. Conseil: Modifier les valeurs des cycles précédents si vous êtes sûrs de vous.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+            verificationList.append({'errorName': "Incohérence(s) dans BMSsup30", 'errorText':  "BMSsup30: Incohérence(s) relevée(s) sur les valeurs d'Essence, Azimut et Dist entre les différents inventaires. Conseil: Modifier les valeurs des cycles précédents si vous êtes sûrs de vous.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
         # ----- Contrôle Accroissement en diamètre
         if df_Dupl.empty:
@@ -1208,7 +1215,7 @@ def data_verification(data):
       ###Table Regeneration
       error_List_Temp = check_species(Regeneration, CodeEssence, Test, "Regeneration")
       if len(error_List_Temp) >0:
-        verificationList.append({'errorName': 'Essence dans Regeneration', 'errorText':"Essence dans Regeneration", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+        verificationList.append({'errorName': 'Essence dans Regeneration', 'errorText':"Essence dans Regeneration", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
       # --- Contrôle des Cycles de Regenerations :
       check_cycle_Error_List = check_cycle(Regeneration, Test, CyclesCodes, "Regeneration", An, Dispositifs)
@@ -1256,7 +1263,7 @@ def data_verification(data):
             #possibilité de supression d'un des 2 ou de modification
           i = i + 1
           error_List_Temp.append(err)
-        verificationList.append({'errorName': "Duplication dans Regeneration", 'errorText': 'Lignes dupliquées dans la table Regeneration. (Comparaison sur les colonnes "NumDisp", "NumPlac", "SsPlac", "Cycle", "Essence", "Taillis")', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+        verificationList.append({'errorName': "Duplication dans Regeneration", 'errorText': 'Lignes dupliquées dans la table Regeneration. (Comparaison sur les colonnes "NumDisp", "NumPlac", "SsPlac", "Cycle", "Essence", "Taillis")', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
 
 
@@ -1277,7 +1284,7 @@ def data_verification(data):
               "value": temp.loc[[index],:].to_json(orient='records'),
             }
           error_List_Temp.append(err)
-        verificationList.append({'errorName': "Diamètre incohérent dans Transect", 'errorText': "La valeur du diamètre est inférieure à 5.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+        verificationList.append({'errorName': "Diamètre incohérent dans Transect", 'errorText': "La valeur du diamètre est inférieure à 5.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
       # Valeurs extrêmes sup Diam
       temp = Transect[Transect["Diam"] > 30]
@@ -1293,7 +1300,7 @@ def data_verification(data):
               "value": temp.loc[[index],:].to_json(orient='records'),
             }
           error_List_Temp.append(err)
-        verificationList.append({'errorName': "Diamètre incohérent dans Transect", 'errorText': "La valeur du diamètre est supérieure à 30.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+        verificationList.append({'errorName': "Diamètre incohérent dans Transect", 'errorText': "La valeur du diamètre est supérieure à 30.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
 
       # Valeurs extrêmes distance
@@ -1311,28 +1318,28 @@ def data_verification(data):
               "value": temp.loc[[index],:].to_json(orient='records'),
             }
           error_List_Temp.append(err)
-        verificationList.append({'errorName': "Distance incohérente dans Transect", 'errorText': "La valeur de la distance est supérieure à 20.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+        verificationList.append({'errorName': "Distance incohérente dans Transect", 'errorText': "La valeur de la distance est supérieure à 20.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
       
 
       ##### Contrôle des essences inventoriées dans la table #####
       error_List_Temp = check_species(Transect, CodeEssence, Test, "Transect")
       if len(error_List_Temp) >0:
-        verificationList.append({'errorName': 'Essence dans Transect','errorText': 'Essence dans Transect', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+        verificationList.append({'errorName': 'Essence dans Transect','errorText': 'Essence dans Transect', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
       ##### Contrôle des stades de décomposition #####
       error_List_Temp = check_code(CodeDurete, Transect, soundness_code, "Transect")
       if len(error_List_Temp) >0:
-        verificationList.append({'errorName': 'Contrôle Stade de décomposition dans Transect','errorText': 'Contrôle Stade de décomposition dans Transect', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+        verificationList.append({'errorName': 'Contrôle Stade de décomposition dans Transect','errorText': 'Contrôle Stade de décomposition dans Transect', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
       ##### Contrôle des stades de d'écorce #####  
       error_List_Temp = check_code(CodeEcorce, Transect, bark_code, "Transect")
       if len(error_List_Temp) >0:
-        verificationList.append({'errorName': 'Contrôle Stade de décomposition dans Transect','errorText': 'Contrôle Stade de décomposition dans Transect', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+        verificationList.append({'errorName': 'Contrôle Stade de décomposition dans Transect','errorText': 'Contrôle Stade de décomposition dans Transect', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
       ##### Contrôle des Cycles de Transect #####  
       check_cycle_Error_List = check_cycle(Transect, Test, CyclesCodes, "Transect", An, Dispositifs)
       if len(check_cycle_Error_List) >0:
-        verificationList.append({'errorName': 'Contrôle cycles dans Transect','errorText': 'Contrôle des cycles dans Transect', 'errorList' : check_cycle_Error_List, 'errorType': 'PsdrfError', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+        verificationList.append({'errorName': 'Contrôle cycles dans Transect','errorText': 'Contrôle des cycles dans Transect', 'errorList' : check_cycle_Error_List, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
       # ----- Contrôle des valeurs vides des variables :
       Vital = Transect[ Transect["Id"].isna() |  Transect["Essence"].isna() | Transect["Transect"].isna() |  Transect["Diam"].isna() | Transect["Contact"].isna() |  Transect["Angle"].isna() | Transect["Chablis"].isna() |  Transect["StadeD"].isna() |  Transect["StadeE"].isna() ]
@@ -1348,7 +1355,7 @@ def data_verification(data):
               "value": Vital.loc[[index],:].to_json(orient='records'),
             }
           error_List_Temp.append(err)
-        verificationList.append({'errorName': "Informations manquantes dans Transect", 'errorText': "Il manque des informations à une/des colonne(s) dans la table Transect", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+        verificationList.append({'errorName': "Informations manquantes dans Transect", 'errorText': "Il manque des informations à une/des colonne(s) dans la table Transect", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
 
       # ---------- Contrôle des valeurs dupliquées : ---------- #
@@ -1371,7 +1378,7 @@ def data_verification(data):
             }
           i = i + 1
           error_List_Temp.append(err)
-        verificationList.append({'errorName': "Duplication dans Transect", 'errorText': 'Lignes dupliquées dans la table Transect. Conseil: vérifiez l\'id.', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+        verificationList.append({'errorName': "Duplication dans Transect", 'errorText': 'Lignes dupliquées dans la table Transect. Conseil: vérifiez l\'id.', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
 
 
@@ -1390,7 +1397,7 @@ def data_verification(data):
               "value": temp.loc[[index],:].to_json(orient='records'),
             }
           error_List_Temp.append(err)
-        verificationList.append({'errorName': "Angle(s) incohérent(s) dans Transect", 'errorText': "Angle faisant strictement plus de  50°. Impossible dans le PSDRF.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+        verificationList.append({'errorName': "Angle(s) incohérent(s) dans Transect", 'errorText': "Angle faisant strictement plus de  50°. Impossible dans le PSDRF.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
 
       ### Table Placettes
@@ -1408,7 +1415,7 @@ def data_verification(data):
               "value": Vital.loc[[index],:].to_json(orient='records'),
             }
           error_List_Temp.append(err)
-        verificationList.append({'errorName': "Informations manquantes dans Placettes", 'errorText': "Il manque des informations à une/des colonne(s) dans la table Placettes", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+        verificationList.append({'errorName': "Informations manquantes dans Placettes", 'errorText': "Il manque des informations à une/des colonne(s) dans la table Placettes", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
 
 
@@ -1486,7 +1493,7 @@ def data_verification(data):
             }
           i = i + 1
           error_List_Temp.append(err)
-        verificationList.append({'errorName': "Duplication dans Placettes", 'errorText': 'Lignes dupliquées dans la table Placettes', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'isGlobalModificationEnabled': False})
+        verificationList.append({'errorName': "Duplication dans Placettes", 'errorText': 'Lignes dupliquées dans la table Placettes', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
 
       # SHAPE
@@ -1768,6 +1775,26 @@ def check_colonnes(tableName, colonnelist, table_to_test):
               "column": acol,
       }
       error.append(err)
+  return(error)
+
+
+def check_notNULL(tableName, colonneName, table_to_test):
+  error = []
+  if not table_to_test.isnull().values.all():
+    t = table_to_test[[colonneName]]
+    # détection des codes non conformes
+    temp =t[t[colonneName].isna()]
+    if not temp.empty: 
+      for index, row in temp.iterrows():
+        err= {
+          "message": "Dans la table "+tableName+" la colonne "+ colonneName  +" contient la valeur "+ str(row[colonneName]),
+          "table": tableName,
+          "column": [colonneName],
+          "row": [index],
+          "value": temp.loc[[index],:].to_json(orient='records'),
+        }
+        error.append(err)
+
   return(error)
 
 

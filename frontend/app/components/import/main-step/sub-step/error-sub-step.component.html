@@ -47,21 +47,35 @@
                         <button class="mx-1" mat-raised-button matTooltip="Supprimer la ligne" (click)="deleteLine(rowIndex)">
                             <mat-icon> delete </mat-icon>
                         </button>
-                        <button *ngIf="isGlobalModificationEnabled" class="mx-1 " mat-raised-button matTooltip="Afficher les options en plus" [matMenuTriggerFor]="aboveMenu">
+                        <button class="mx-1 " mat-raised-button matTooltip="Afficher les options en plus" [matMenuTriggerFor]="aboveMenu">
                             <mat-icon> more_horiz </mat-icon>
                         </button>
                         <mat-menu #aboveMenu="matMenu" class="row" yPosition="above">
                             <mat-tab-group dynamicHeight (click)="$event.stopPropagation();" headerPosition="below">
                                 <mat-tab label="Changer toutes les lignes">
                                     <mat-form-field class="m-1" appearance="fill">
+                                        <mat-select [(ngModel)]="columnToChange" name="columnSelect">
+                                            <mat-option *ngFor="let psdrfCol of psdrfError.column;" [value]="psdrfCol">
+                                                {{psdrfCol}}
+                                            </mat-option>
+                                        </mat-select>
+                                    </mat-form-field>
+                                    <mat-form-field class="m-1" appearance="fill">
                                         <mat-label>Texte remplaçant</mat-label>
                                         <input matInput [(ngModel)]="textToApply">
                                     </mat-form-field>
-                                    <button class="m-1 " mat-raised-button matTooltip="Appliquer cette valeur à toutes les lignes comporant cette erreur" (click)="modifAllLineValidation()">
+                                    <button class="m-1 " mat-raised-button matTooltip="Appliquer cette valeur à toutes les lignes comportant cette erreur" (click)="modifAllLineValidation()">
                                         <mat-icon> done_outline </mat-icon>
                                     </button>
                                 </mat-tab>
                                 <mat-tab label="Remplacer dans toutes les lignes">
+                                    <mat-form-field class="m-1" appearance="fill">
+                                        <mat-select [(ngModel)]="columnToChange" name="columnSelect">
+                                            <mat-option *ngFor="let psdrfCol of psdrfError.column;" [value]="psdrfCol">
+                                                {{psdrfCol}}
+                                            </mat-option>
+                                        </mat-select>
+                                    </mat-form-field>
                                     <mat-form-field class="m-1" appearance="fill">
                                         <mat-label>Texte à remplacer</mat-label>
                                         <input matInput [(ngModel)]="textToReplace">

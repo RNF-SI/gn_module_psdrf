@@ -18,7 +18,7 @@ export class ErrorMainStepComponent implements OnInit, AfterViewInit {
 
   @Input() mainStepIndex: number;
   @Input() mainStepText: string;
-  @Input() step: {'errorList': PsdrfError[], 'errorType': any, 'isFatalError': boolean, 'isGlobalModificationEnabled': boolean};
+  @Input() step: {'errorList': PsdrfError[], 'errorType': any, 'isFatalError': boolean};
 
 
   @Output() subStepSelectionChange= new EventEmitter<{mainStepIndex: number, subStepIndex: number}>();
@@ -139,14 +139,16 @@ export class ErrorMainStepComponent implements OnInit, AfterViewInit {
    * - Throw allSubStepModified event in import component
    * @param modification Modification wanted
    */  
-  onAppliedToAllRows(modification: {isReplacementWanted: boolean, replacingText: string, textToReplace?: string}){
+  onAppliedToAllRows(modification: {isReplacementWanted: boolean, replacingColumn: string, replacingText: string, textToReplace?: string}){
     this.step.errorList.forEach((error, i) => {
       error.row.forEach((row, rowIdx) => {
         error.column.forEach(col =>{
-          if(modification.isReplacementWanted){
-            error.value[rowIdx][col] = error.value[rowIdx][col].replace(modification.textToReplace, modification.replacingText);
-          } else {
-            error.value[rowIdx][col] = modification.replacingText;
+          if(col==modification.replacingColumn){
+            if(modification.isReplacementWanted){
+              error.value[rowIdx][col] = error.value[rowIdx][col].toString().replace(modification.textToReplace, modification.replacingText);
+            } else {
+              error.value[rowIdx][col] = modification.replacingText;
+            }
           }
         })
         this.modifValidation({errorCoordinates: new PsdrfErrorCoordinates(error.table, error.column, [row]), newErrorValue: error.value});

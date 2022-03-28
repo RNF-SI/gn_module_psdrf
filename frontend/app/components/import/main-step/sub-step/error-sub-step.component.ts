@@ -16,17 +16,17 @@ import {PsdrfError, PsdrfErrorCoordinates} from '../../../../models/psdrfObject.
     changedIndexes: number[] = []; //liste des indexs des boutons modifiés ou supprimés
     listCorrection: any={};
     isOptionCardDisplayed: boolean= false;
+    columnToChange: string;
 
     @Input() mainStepIndex: number; //Index du main step auquel le subStep appartient
     @Input() subStepIndex: number; //Index du subStep 
     @Input() psdrfError: PsdrfError;
     @Input() errorType: any; 
-    @Input() isGlobalModificationEnabled: boolean; 
 
     @Output() indexButtonClicked=new EventEmitter<PsdrfErrorCoordinates>();
     @Output() modificationValidated=new EventEmitter<{errorCoordinates: PsdrfErrorCoordinates, newErrorValue: any}>();
     @Output() allRowsModified=new EventEmitter<number>();
-    @Output() applyToAllRow=new EventEmitter<{isReplacementWanted: boolean, replacingText: string, textToReplace?: string}>();
+    @Output() applyToAllRow=new EventEmitter<{isReplacementWanted: boolean, replacingColumn: string, replacingText: string, textToReplace?: string}>();
     @Output() deletionValidated=new EventEmitter<{errorCoordinates: PsdrfErrorCoordinates}>();
     @Output() allRowsDeleted=new EventEmitter<number>();
     datasource: MatTableDataSource<any>;
@@ -106,11 +106,11 @@ import {PsdrfError, PsdrfErrorCoordinates} from '../../../../models/psdrfObject.
      * TODO: add in the new version
     */
     modifAllLineValidation(buttonIndex: number): void{
-      this.applyToAllRow.next({isReplacementWanted: false, replacingText: this.textToApply})
+      this.applyToAllRow.next({isReplacementWanted: false, replacingColumn: this.columnToChange, replacingText: this.textToApply})
     }
 
     replaceAllLineValidation(): void{
-      this.applyToAllRow.next({isReplacementWanted: true, replacingText: this.replacingText, textToReplace: this.textToReplace})
+      this.applyToAllRow.next({isReplacementWanted: true, replacingColumn: this.columnToChange, replacingText: this.replacingText, textToReplace: this.textToReplace})
     }
 
     /**

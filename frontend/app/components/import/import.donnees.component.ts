@@ -72,8 +72,7 @@ export class ImportDonneesComponent  implements OnInit{
   errorsPsdrfList: {
     errorList: PsdrfError[];
     errorType: string;
-    isFatalError: boolean;
-    isGlobalModificationEnabled: boolean;
+    isFatalError: boolean
   }[] = []; //Tableau des erreurs retournées par la requête psdrf_data_verification
   mainStepNameArr: string[] = []; // Tableau des titres des main step(affichés dans les main steps)
   mainStepTextArr: string[] = []; //Tableau des textes d'erreurs pour chaque mainstep
@@ -362,8 +361,7 @@ export class ImportDonneesComponent  implements OnInit{
         this.errorsPsdrfList.push({
           errorList: errorListTemp,
           errorType: "PsdrfError",
-          isFatalError: mainError.isFatalError,
-          isGlobalModificationEnabled: mainError.isGlobalModificationEnabled
+          isFatalError: mainError.isFatalError
         });
       } else {
         this.mainStepNameArr.push(mainError.errorName);
@@ -382,8 +380,7 @@ export class ImportDonneesComponent  implements OnInit{
         this.errorsPsdrfList.push({
           errorList: errorListTemp,
           errorType: "PsdrfErrorColonnes",
-          isFatalError: mainError.isFatalError,
-          isGlobalModificationEnabled: mainError.isGlobalModificationEnabled
+          isFatalError: mainError.isFatalError
         });
       }
     });
