@@ -1514,11 +1514,30 @@ def data_verification(data):
         print("Il manque des informations (vides) au(x) colonne(s) dans la table Cycles")
 
       # ---------- Contrôle des valeurs dupliquées : ---------- #
-      Cycles = Cycles[["NumDisp", "NumPlac", "Cycle"]].sort_values(by=["NumDisp", "NumPlac", "Cycle"])
-      df_Dupl = Cycles[Cycles.duplicated()]
+      df_Dupl_temp = Cycles[["NumDisp", "NumPlac", "Cycle"]].sort_values(by=["NumDisp", "NumPlac", "Cycle"])
+      df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated()]
       df_Dupl = df_Dupl.drop_duplicates()
       if not df_Dupl.empty:
-        print("Information dupliquée dans la table")
+        entire_df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated(keep=False)]
+        listDupl = entire_df_Dupl.groupby(list(df_Dupl_temp)).apply(lambda x: list(x.index)).tolist()
+        i = 0
+        error_List_Temp = []
+        for index, row in df_Dupl.iterrows():
+          valuesDupl = entire_df_Dupl.loc[listDupl[i]]
+          err = {
+              "message": "La "+ str(row["NumPlac"]) +" au cycle "+ str(row["Cycle"]) +" apparaît plusieurs fois dans la table Cycle",
+              "table": "Cycle",
+              "column": ["NumDisp", "NumPlac", "Cycle"],
+              "row": listDupl[i], 
+              "value": valuesDupl.to_json(orient='records'),
+            }
+          i = i + 1
+          error_List_Temp.append(err)
+        verificationList.append({'errorName': "Duplication dans Cycle", 'errorText': 'Lignes dupliquées dans la table Cycle', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+
+        
+        # print("Information dupliquée dans la table")
+
 
       def miss3 (table, Placettes, tablename):
           if table.shape[0] >0:
@@ -1547,7 +1566,23 @@ def data_verification(data):
         df_Dupl = Reperes[Reperes.duplicated()]
         df_Dupl = df_Dupl.drop_duplicates()
         if not df_Dupl.empty:
-          print("Information dupliquée dans la table")
+          entire_df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated(keep=False)]
+          listDupl = entire_df_Dupl.groupby(list(df_Dupl_temp)).apply(lambda x: list(x.index)).tolist()
+          i = 0
+          error_List_Temp = []
+          for index, row in df_Dupl.iterrows():
+            valuesDupl = entire_df_Dupl.loc[listDupl[i]]
+            err = {
+                "message": "La "+ str(row["NumPlac"]) +" avec l'azimut "+ str(row["Azimut"]) +" et la distance "+ str(row["Dist"])+" apparaît plusieurs fois dans la table Reperes",
+                "table": "Reperes",
+                "column": ["NumDisp", "NumPlac", "Azimut", "Dist"],
+                "row": listDupl[i], 
+                "value": valuesDupl.to_json(orient='records'),
+              }
+            i = i + 1
+            error_List_Temp.append(err)
+          verificationList.append({'errorName': "Duplication dans Reperes", 'errorText': 'Lignes dupliquées dans la table Reperes', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+
 
 
       # Conformité avec les codifications
