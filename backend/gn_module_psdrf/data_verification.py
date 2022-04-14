@@ -130,7 +130,7 @@ def data_verification(data):
         'floatNames' : ['Azimut', 'Dist', 'DiamIni', 'DiamMed', 'DiamFin', 'Longueur', 'StadeD', 'StadeE', 'Contact'],
         'boolNames' : ['Chablis'],
         'dateNames' : [],
-        'notNullNames': ['NumDisp', 'NumPlac']
+        'notNullNames': ['NumDisp', 'NumPlac', 'Id']
       },
       {
         'arrayName': 'Placettes',
@@ -166,7 +166,7 @@ def data_verification(data):
         'floatNames' : ['Dist', 'Diam', 'Angle', 'StadeD', 'StadeE'],
         'boolNames' : ['Contact', 'Chablis'],
         'dateNames' : [],
-        'notNullNames': ['NumDisp', 'NumPlac']
+        'notNullNames': ['NumDisp', 'NumPlac', 'Id']
       },
       {
         'arrayName': 'Reperes',
@@ -1005,7 +1005,7 @@ def data_verification(data):
         error_List_Temp=[]
         for index, row in Vital.iterrows():
           err = {
-              "message": "Une/des colonne(s) de l'arbre "+ str(int(row["Id"])) +" de la placette "+ str(row["NumPlac"]) + " n'est/ne sont pas renseignées.",
+              "message": "Une/des colonne(s) pour la placette "+ str(row["NumPlac"]) + " n'est/ne sont pas renseignées dans la table BMSsup30.",
               "table": "BMSsup30",
               "column": ["Id", "Essence", "DiamMed", "Longueur", "StadeD", "StadeE"],
               "row": [index], 
@@ -1013,31 +1013,32 @@ def data_verification(data):
             }
           error_List_Temp.append(err)
         verificationList.append({'errorName': "Informations manquantes dans BMSsup30", 'errorText': "Il manque des informations à des colonne(s) dans la table BMSsup30", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
-
-      # Contrôle des valeurs dupliquées
-      error = []
-      df_Dupl_temp= BMSsup30[["NumDisp", "NumPlac", "Id", "Cycle"]].sort_values(by=["NumDisp", "NumPlac", "Id", "Cycle"])
-      BMSsup30= BMSsup30.sort_values(by=["NumDisp", "NumPlac", "Id", "Cycle"])
-      df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated()]
-      df_Dupl = df_Dupl.drop_duplicates()
-      if not df_Dupl.empty:
-        entire_df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated(keep=False)]
-        listDupl = entire_df_Dupl.groupby(list(df_Dupl_temp)).apply(lambda x: list(x.index)).tolist()
-        i = 0
-        error_List_Temp = []
-        for index, row in df_Dupl.iterrows():
-          valuesDupl = entire_df_Dupl.loc[listDupl[i]]
-          err = {
-              "message": "L'Arbre "+ str(row["Id"])+" de la placette "+ str(row["NumPlac"]) +" au cycle "+ str(row["Cycle"]) +" apparaît plusieurs fois dans la table BMSsup30",
-              "table": "BMSsup30",
-              "column": ["NumDisp", "NumPlac", "Id", "Cycle"],
-              "row": listDupl[i], 
-              "value": valuesDupl.to_json(orient='records'),
-            }
-          i = i + 1
-          error_List_Temp.append(err)
-        verificationList.append({'errorName': "Duplication dans BMSsup30", 'errorText': 'Lignes dupliquées dans la table BMSsup30', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
-      BMSsup30[["DiamFin", "DiamMed", "DiamIni"]] = BMSsup30[["DiamFin", "DiamMed", "DiamIni"]].apply(pd.to_numeric)
+      else: 
+        # On effectue le contrôle seulement si on sait que les colonnes sont bien renseignées
+        # Contrôle des valeurs dupliquées
+        error = []
+        df_Dupl_temp= BMSsup30[["NumDisp", "NumPlac", "Id", "Cycle"]].sort_values(by=["NumDisp", "NumPlac", "Id", "Cycle"])
+        BMSsup30= BMSsup30.sort_values(by=["NumDisp", "NumPlac", "Id", "Cycle"])
+        df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated()]
+        df_Dupl = df_Dupl.drop_duplicates()
+        if not df_Dupl.empty:
+          entire_df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated(keep=False)]
+          listDupl = entire_df_Dupl.groupby(list(df_Dupl_temp)).apply(lambda x: list(x.index)).tolist()
+          i = 0
+          error_List_Temp = []
+          for index, row in df_Dupl.iterrows():
+            valuesDupl = entire_df_Dupl.loc[listDupl[i]]
+            err = {
+                "message": "L'Arbre "+ str(row["Id"])+" de la placette "+ str(row["NumPlac"]) +" au cycle "+ str(row["Cycle"]) +" apparaît plusieurs fois dans la table BMSsup30",
+                "table": "BMSsup30",
+                "column": ["NumDisp", "NumPlac", "Id", "Cycle"],
+                "row": listDupl[i], 
+                "value": valuesDupl.to_json(orient='records'),
+              }
+            i = i + 1
+            error_List_Temp.append(err)
+          verificationList.append({'errorName': "Duplication dans BMSsup30", 'errorText': 'Lignes dupliquées dans la table BMSsup30', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+        BMSsup30[["DiamFin", "DiamMed", "DiamIni"]] = BMSsup30[["DiamFin", "DiamMed", "DiamIni"]].apply(pd.to_numeric)
 
 
       # Contrôle des diamètres
@@ -1237,33 +1238,33 @@ def data_verification(data):
             }
           error_List_Temp.append(err)
         verificationList.append({'errorName': "Informations manquantes dans Regeneration", 'errorText': "Il manque des informations à une/des colonne(s) dans la table Regeneration", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': False})
+      else :
+        # Contrôle des valeurs dupliquées
+        error = []
+        df_Dupl_temp= Regeneration[["NumDisp", "NumPlac", "Cycle", "SsPlac", "Essence", "Taillis", 'Class1', 'Class2', 'Class3', 'Recouv', 'Abroutis']].sort_values(by=["NumDisp", "NumPlac", "Cycle", "SsPlac", "Essence", "Taillis"])
+        Regeneration= Regeneration.sort_values(by=["NumDisp", "NumPlac", "Cycle", "SsPlac", "Essence", "Taillis"])
 
-      # Contrôle des valeurs dupliquées
-      error = []
-      df_Dupl_temp= Regeneration[["NumDisp", "NumPlac", "Cycle", "SsPlac", "Essence", "Taillis", 'Class1', 'Class2', 'Class3', 'Recouv', 'Abroutis']].sort_values(by=["NumDisp", "NumPlac", "Cycle", "SsPlac", "Essence", "Taillis"])
-      Regeneration= Regeneration.sort_values(by=["NumDisp", "NumPlac", "Cycle", "SsPlac", "Essence", "Taillis"])
+        df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated(subset=["NumDisp", "NumPlac", "Cycle", "SsPlac", "Essence", "Taillis"], keep=False)]
+        df_Dupl = df_Dupl.drop_duplicates(subset=["NumDisp", "NumPlac", "Cycle", "SsPlac", "Essence", "Taillis"])
+        if not df_Dupl.empty:
+          entire_df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated(subset=["NumDisp", "NumPlac", "Cycle", "SsPlac", "Essence", "Taillis"], keep=False)]
+          listDupl = entire_df_Dupl.groupby(["NumDisp", "NumPlac", "Cycle", "SsPlac", "Essence", "Taillis"], dropna=False).apply(lambda x: list(x.index)).tolist()
 
-      df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated(subset=["NumDisp", "NumPlac", "Cycle", "SsPlac", "Essence", "Taillis"], keep=False)]
-      df_Dupl = df_Dupl.drop_duplicates(subset=["NumDisp", "NumPlac", "Cycle", "SsPlac", "Essence", "Taillis"])
-      if not df_Dupl.empty:
-        entire_df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated(subset=["NumDisp", "NumPlac", "Cycle", "SsPlac", "Essence", "Taillis"], keep=False)]
-        listDupl = entire_df_Dupl.groupby(["NumDisp", "NumPlac", "Cycle", "SsPlac", "Essence", "Taillis"], dropna=False).apply(lambda x: list(x.index)).tolist()
-
-        i = 0
-        error_List_Temp = []
-        for index, row in df_Dupl.iterrows():
-          valuesDupl = entire_df_Dupl.loc[listDupl[i]]
-          err = {
-              "message": "L'essence" + str(row["Essence"])+ "de la sous placette "+ str(row["SsPlac"])+" de la placette "+ str(row["NumPlac"]) +" au cycle "+ str(row["Cycle"]) +" apparaît plusieurs fois dans la table Regeneration",
-              "table": "Regeneration",
-              "column": ["NumDisp", "NumPlac", "SsPlac", "Cycle", "Essence", "Taillis", 'Class1', 'Class2', 'Class3', 'Recouv', 'Abroutis'],
-              "row": listDupl[i], 
-              "value": valuesDupl.to_json(orient='records'),
-            }
-            #possibilité de supression d'un des 2 ou de modification
-          i = i + 1
-          error_List_Temp.append(err)
-        verificationList.append({'errorName': "Duplication dans Regeneration", 'errorText': 'Lignes dupliquées dans la table Regeneration. (Comparaison sur les colonnes "NumDisp", "NumPlac", "SsPlac", "Cycle", "Essence", "Taillis")', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+          i = 0
+          error_List_Temp = []
+          for index, row in df_Dupl.iterrows():
+            valuesDupl = entire_df_Dupl.loc[listDupl[i]]
+            err = {
+                "message": "L'essence" + str(row["Essence"])+ "de la sous placette "+ str(row["SsPlac"])+" de la placette "+ str(row["NumPlac"]) +" au cycle "+ str(row["Cycle"]) +" apparaît plusieurs fois dans la table Regeneration",
+                "table": "Regeneration",
+                "column": ["NumDisp", "NumPlac", "SsPlac", "Cycle", "Essence", "Taillis", 'Class1', 'Class2', 'Class3', 'Recouv', 'Abroutis'],
+                "row": listDupl[i], 
+                "value": valuesDupl.to_json(orient='records'),
+              }
+              #possibilité de supression d'un des 2 ou de modification
+            i = i + 1
+            error_List_Temp.append(err)
+          verificationList.append({'errorName': "Duplication dans Regeneration", 'errorText': 'Lignes dupliquées dans la table Regeneration. (Comparaison sur les colonnes "NumDisp", "NumPlac", "SsPlac", "Cycle", "Essence", "Taillis")', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
 
 
@@ -1356,29 +1357,28 @@ def data_verification(data):
             }
           error_List_Temp.append(err)
         verificationList.append({'errorName': "Informations manquantes dans Transect", 'errorText': "Il manque des informations à une/des colonne(s) dans la table Transect", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
-
-
-      # ---------- Contrôle des valeurs dupliquées : ---------- #
-      df_Dupl_temp= Transect[["NumDisp", "NumPlac", "Id", "Cycle"]].sort_values(by=["NumDisp", "NumPlac", "Id", "Cycle"])
-      df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated()]
-      df_Dupl = df_Dupl.drop_duplicates()
-      if not df_Dupl.empty:
-        entire_df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated(keep=False)]
-        listDupl = entire_df_Dupl.groupby(list(df_Dupl_temp)).apply(lambda x: list(x.index)).tolist()
-        i = 0
-        error_List_Temp = []
-        for index, row in df_Dupl.iterrows():
-          valuesDupl = entire_df_Dupl.loc[listDupl[i]]
-          err = {
-              "message": "L'Id" + str(row["Id"])+ "de la placette "+ str(row["NumPlac"]) +" au cycle "+ str(row["Cycle"]) +" apparaît plusieurs fois dans la table Transect",
-              "table": "Transect",
-              "column": ["NumDisp", "NumPlac", "Id", "Cycle"],
-              "row": listDupl[i], 
-              "value": valuesDupl.to_json(orient='records'),
-            }
-          i = i + 1
-          error_List_Temp.append(err)
-        verificationList.append({'errorName': "Duplication dans Transect", 'errorText': 'Lignes dupliquées dans la table Transect. Conseil: vérifiez l\'id.', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+      else:
+        # ---------- Contrôle des valeurs dupliquées : ---------- #
+        df_Dupl_temp= Transect[["NumDisp", "NumPlac", "Id", "Cycle"]].sort_values(by=["NumDisp", "NumPlac", "Id", "Cycle"])
+        df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated()]
+        df_Dupl = df_Dupl.drop_duplicates()
+        if not df_Dupl.empty:
+          entire_df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated(keep=False)]
+          listDupl = entire_df_Dupl.groupby(list(df_Dupl_temp)).apply(lambda x: list(x.index)).tolist()
+          i = 0
+          error_List_Temp = []
+          for index, row in df_Dupl.iterrows():
+            valuesDupl = entire_df_Dupl.loc[listDupl[i]]
+            err = {
+                "message": "L'Id" + str(row["Id"])+ "de la placette "+ str(row["NumPlac"]) +" au cycle "+ str(row["Cycle"]) +" apparaît plusieurs fois dans la table Transect",
+                "table": "Transect",
+                "column": ["NumDisp", "NumPlac", "Id", "Cycle"],
+                "row": listDupl[i], 
+                "value": valuesDupl.to_json(orient='records'),
+              }
+            i = i + 1
+            error_List_Temp.append(err)
+          verificationList.append({'errorName': "Duplication dans Transect", 'errorText': 'Lignes dupliquées dans la table Transect. Conseil: vérifiez l\'id.', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
 
 
@@ -1509,35 +1509,46 @@ def data_verification(data):
 
       # Table Cycles des classeurs d'inventaire
       ##### Contrôle des valeurs vides des variables #####
-      Vital = Cycles[ Cycles["Coeff"].isna() |  Cycles["Année"].isna() | Cycles["DiamLim"].isna()]
       if not Vital.empty:
         print("Il manque des informations (vides) au(x) colonne(s) dans la table Cycles")
 
-      # ---------- Contrôle des valeurs dupliquées : ---------- #
-      df_Dupl_temp = Cycles[["NumDisp", "NumPlac", "Cycle"]].sort_values(by=["NumDisp", "NumPlac", "Cycle"])
-      df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated()]
-      df_Dupl = df_Dupl.drop_duplicates()
-      if not df_Dupl.empty:
-        entire_df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated(keep=False)]
-        listDupl = entire_df_Dupl.groupby(list(df_Dupl_temp)).apply(lambda x: list(x.index)).tolist()
-        i = 0
-        error_List_Temp = []
-        for index, row in df_Dupl.iterrows():
-          valuesDupl = entire_df_Dupl.loc[listDupl[i]]
+      # ----- Contrôle des valeurs vides des variables :
+      Vital = Cycles[ Cycles["Coeff"].isna() |  Cycles["Année"].isna() | Cycles["DiamLim"].isna()]
+      Vital = Vital[["Coeff", "Année", "DiamLim"]]
+      if not Vital.empty:
+        error_List_Temp=[]
+        for index, row in Vital.iterrows():
           err = {
-              "message": "La "+ str(row["NumPlac"]) +" au cycle "+ str(row["Cycle"]) +" apparaît plusieurs fois dans la table Cycle",
-              "table": "Cycle",
-              "column": ["NumDisp", "NumPlac", "Cycle"],
-              "row": listDupl[i], 
-              "value": valuesDupl.to_json(orient='records'),
+              "message": "Une/des colonne(s) de la table Cycles n'est/ne sont pas renseigné(s)",
+              "table": "Cycles",
+              "column": ["Coeff", "Année", "DiamLim"],
+              "row": [index], 
+              "value": Vital.loc[[index],:].to_json(orient='records'),
             }
-          i = i + 1
           error_List_Temp.append(err)
-        verificationList.append({'errorName': "Duplication dans Cycle", 'errorText': 'Lignes dupliquées dans la table Cycle', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
-
-        
-        # print("Information dupliquée dans la table")
-
+        verificationList.append({'errorName': "Informations manquantes dans Cycles", 'errorText': "Il manque des informations à une/des colonne(s) dans la table Cycles", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+      else:
+        # ---------- Contrôle des valeurs dupliquées : ---------- #
+        df_Dupl_temp = Cycles[["NumDisp", "NumPlac", "Cycle"]].sort_values(by=["NumDisp", "NumPlac", "Cycle"])
+        df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated()]
+        df_Dupl = df_Dupl.drop_duplicates()
+        if not df_Dupl.empty:
+          entire_df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated(keep=False)]
+          listDupl = entire_df_Dupl.groupby(list(df_Dupl_temp)).apply(lambda x: list(x.index)).tolist()
+          i = 0
+          error_List_Temp = []
+          for index, row in df_Dupl.iterrows():
+            valuesDupl = entire_df_Dupl.loc[listDupl[i]]
+            err = {
+                "message": "La "+ str(row["NumPlac"]) +" au cycle "+ str(row["Cycle"]) +" apparaît plusieurs fois dans la table Cycle",
+                "table": "Cycle",
+                "column": ["NumDisp", "NumPlac", "Cycle"],
+                "row": listDupl[i], 
+                "value": valuesDupl.to_json(orient='records'),
+              }
+            i = i + 1
+            error_List_Temp.append(err)
+          verificationList.append({'errorName': "Duplication dans Cycle", 'errorText': 'Lignes dupliquées dans la table Cycle', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
       def miss3 (table, Placettes, tablename):
           if table.shape[0] >0:
