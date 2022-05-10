@@ -180,7 +180,7 @@ def data_verification(data):
     ]
 
     for typeObj in typeColumnObj:
-      for check in [{'colnames': typeObj.get('notNullNames'), 'checktypefunction': check_notNULL, 'type_text': '(valeur attendue)'}, {'colnames': typeObj.get('intNames'), 'checktypefunction': check_int, 'type_text': '(entiers attendus)'}, {'colnames': typeObj.get('floatNames'), 'checktypefunction': check_int_or_float, 'type_text': '(decimal entendus)'}, {'colnames': typeObj.get('boolNames'), 'checktypefunction': check_boolean, 'type_text': '(f, t ou rien attendus)'}, {'colnames': typeObj.get('dateNames'), 'checktypefunction': check_date, 'type_text': '(dates attendues sous la forme dd/mm/aaaa)'}]:
+      for check in [{'colnames': typeObj.get('notNullNames'), 'checktypefunction': check_notNULL, 'type_text': '(valeur attendue)'}, {'colnames': typeObj.get('intNames'), 'checktypefunction': check_int, 'type_text': '(entiers attendus)'}, {'colnames': typeObj.get('floatNames'), 'checktypefunction': check_int_or_float, 'type_text': '(décimale attendue)'}, {'colnames': typeObj.get('boolNames'), 'checktypefunction': check_boolean, 'type_text': '(f, t ou rien attendus)'}, {'colnames': typeObj.get('dateNames'), 'checktypefunction': check_date, 'type_text': '(dates attendues sous la forme dd/mm/aaaa)'}]:
         for col in check.get('colnames'):
           check_code_Error_List = check.get('checktypefunction')(typeObj.get('arrayName'), col, typeObj.get('array'))
           if len(check_code_Error_List) >0:
@@ -1527,28 +1527,28 @@ def data_verification(data):
             }
           error_List_Temp.append(err)
         verificationList.append({'errorName': "Informations manquantes dans Cycles", 'errorText': "Il manque des informations à une/des colonne(s) dans la table Cycles", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
-      else:
-        # ---------- Contrôle des valeurs dupliquées : ---------- #
-        df_Dupl_temp = Cycles[["NumDisp", "NumPlac", "Cycle"]].sort_values(by=["NumDisp", "NumPlac", "Cycle"])
-        df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated()]
-        df_Dupl = df_Dupl.drop_duplicates()
-        if not df_Dupl.empty:
-          entire_df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated(keep=False)]
-          listDupl = entire_df_Dupl.groupby(list(df_Dupl_temp)).apply(lambda x: list(x.index)).tolist()
-          i = 0
-          error_List_Temp = []
-          for index, row in df_Dupl.iterrows():
-            valuesDupl = entire_df_Dupl.loc[listDupl[i]]
-            err = {
-                "message": "La "+ str(row["NumPlac"]) +" au cycle "+ str(row["Cycle"]) +" apparaît plusieurs fois dans la table Cycle",
-                "table": "Cycle",
-                "column": ["NumDisp", "NumPlac", "Cycle"],
-                "row": listDupl[i], 
-                "value": valuesDupl.to_json(orient='records'),
-              }
-            i = i + 1
-            error_List_Temp.append(err)
-          verificationList.append({'errorName': "Duplication dans Cycle", 'errorText': 'Lignes dupliquées dans la table Cycle', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+      
+      # ---------- Contrôle des valeurs dupliquées : ---------- #
+      df_Dupl_temp = Cycles[["NumDisp", "NumPlac", "Cycle"]].sort_values(by=["NumDisp", "NumPlac", "Cycle"])
+      df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated()]
+      df_Dupl = df_Dupl.drop_duplicates()
+      if not df_Dupl.empty:
+        entire_df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated(keep=False)]
+        listDupl = entire_df_Dupl.groupby(list(df_Dupl_temp)).apply(lambda x: list(x.index)).tolist()
+        i = 0
+        error_List_Temp = []
+        for index, row in df_Dupl.iterrows():
+          valuesDupl = entire_df_Dupl.loc[listDupl[i]]
+          err = {
+              "message": "La placette "+ str(row["NumPlac"]) +" au cycle "+ str(row["Cycle"]) +" apparaît plusieurs fois dans la table Cycle",
+              "table": "Cycle",
+              "column": ["NumDisp", "NumPlac", "Cycle"],
+              "row": listDupl[i], 
+              "value": valuesDupl.to_json(orient='records'),
+            }
+          i = i + 1
+          error_List_Temp.append(err)
+        verificationList.append({'errorName': "Duplication dans Cycle", 'errorText': 'Lignes dupliquées dans la table Cycle', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
       def miss3 (table, Placettes, tablename):
           if table.shape[0] >0:
