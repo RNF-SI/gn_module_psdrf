@@ -5,7 +5,8 @@
 \usepackage[T1]{fontenc}
 \usepackage{amsfonts}
 \usepackage{amssymb}
-\usepackage[usenames,dvipsnames,svgnames,table]{colortbl,xcolor}
+% \usepackage[usenames,dvipsnames,svgnames,table]{colortbl,xcolor}
+\PassOptionsToPackage{usenames,dvipsnames,svgnames,table}{colortbl,xcolor}
 \PassOptionsToPackage{hyphens}{url}\usepackage{hyperref}
 \usepackage{tikz}
 \usepackage{grffile}

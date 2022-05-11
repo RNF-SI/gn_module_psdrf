@@ -505,11 +505,11 @@ ALTER TABLE ONLY t_bm_sup_30
   FOREIGN KEY (code_essence) REFERENCES bib_essences (code_essence)
   ON UPDATE CASCADE;
 
-ALTER TABLE ONLY t_bm_sup_30
-  ADD CONSTRAINT fk_t_bm_sup_30_t_arbres
-  FOREIGN KEY (id_arbre) REFERENCES t_arbres (id_arbre)
-  ON UPDATE CASCADE
-  ON DELETE CASCADE;
+-- ALTER TABLE ONLY t_bm_sup_30
+--   ADD CONSTRAINT fk_t_bm_sup_30_t_arbres
+--   FOREIGN KEY (id_arbre) REFERENCES t_arbres (id_arbre)
+--   ON UPDATE CASCADE
+--   ON DELETE CASCADE;
 
 ALTER TABLE ONLY t_bm_sup_30_mesures
   ADD CONSTRAINT fk_t_bm_sup_30_mesures_t_bm_sup_30
