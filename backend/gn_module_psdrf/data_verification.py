@@ -1593,7 +1593,7 @@ def data_verification(data):
             }
           i = i + 1
           error_List_Temp.append(err)
-          verificationList.append({'errorName': "Duplication dans Reperes", 'errorText': 'Lignes dupliquées dans la table Reperes', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+        verificationList.append({'errorName': "Duplication dans Reperes", 'errorText': 'Lignes dupliquées dans la table Reperes', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
 
       # Conformité avec les codifications
       # CodeDureté
