@@ -18,7 +18,7 @@ export class ErrorMainStepComponent implements OnInit, AfterViewInit {
 
   @Input() mainStepIndex: number;
   @Input() mainStepText: string;
-  @Input() step: {'errorList': PsdrfError[], 'errorType': any, 'isFatalError': boolean};
+  @Input() step: {'errorList': PsdrfError[], 'errorType': any, 'isFatalError': boolean, 'errorNumber': number};
 
 
   @Output() subStepSelectionChange= new EventEmitter<{mainStepIndex: number, subStepIndex: number}>();
@@ -141,8 +141,8 @@ export class ErrorMainStepComponent implements OnInit, AfterViewInit {
    */  
   onAppliedToAllRows(modification: {isReplacementWanted: boolean, replacingColumn: string, replacingText: string, textToReplace?: string}){
     this.step.errorList.forEach((error, i) => {
-      error.row.forEach((row, rowIdx) => {
-        error.column.forEach(col =>{
+      error.row!.forEach((row, rowIdx) => {
+        error.column!.forEach(col =>{
           if(col==modification.replacingColumn){
             if(modification.isReplacementWanted){
               error.value[rowIdx][col] = error.value[rowIdx][col].toString().replace(modification.textToReplace, modification.replacingText);

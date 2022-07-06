@@ -2,6 +2,7 @@
     <div class="blocking-error-class" *ngIf="!step.isFatalError">Point de vigilence:</div>
     <h4 [innerHTML]="mainStepText"></h4>
 </div>
+<div class="alert alert-info" *ngIf="step.errorNumber > 100">Le nombre d'occurence est très élévé pour cette erreur ({{step.errorNumber}} occurences). Pour des questions de rapidité du navigateur, le nombre d'occurences affichées est limité à 100. Veuillez corriger les erreurs affichées puis relancer l'algorithme de vérification.</div>
 <div class="solution" #subStepperContainer>
     <div class="arrow-icons">
         <button mat-icon-button (click)="paginatorBack()" *ngIf="page > 0">

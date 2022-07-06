@@ -72,13 +72,14 @@ export class ImportDonneesComponent  implements OnInit{
   errorsPsdrfList: {
     errorList: PsdrfError[];
     errorType: string;
-    isFatalError: boolean
+    isFatalError: boolean;
+    errorNumber: number;
   }[] = []; //Tableau des erreurs retournées par la requête psdrf_data_verification
   mainStepNameArr: string[] = []; // Tableau des titres des main step(affichés dans les main steps)
   mainStepTextArr: string[] = []; //Tableau des textes d'erreurs pour chaque mainstep
   errorElementArr: PsdrfErrorCoordinates[] = []; //Tableau de toutes les erreurs
   modifiedElementArr: PsdrfErrorCoordinates[] = []; //Tableau des erreurs qui ont été modifiées
-  selectedErrorElementArr: PsdrfErrorCoordinates; //Erreur qui est actuellement sélectionnée
+  selectedErrorElementArr: PsdrfErrorCoordinates|null; //Erreur qui est actuellement sélectionnée
   deletedElementArr: PsdrfErrorCoordinates[] = [];//Tableau des erreurs supprimées
   totallyModifiedMainStepperArr: number[] = []; //Tableau des indexs des mainstep qui ont été complètement modifiés
   totalErrorNumber: number = 0; //Correspond au nombre de rowButton total. Sert à la barre de progression
@@ -327,18 +328,18 @@ export class ImportDonneesComponent  implements OnInit{
   /**
    *  Convert verification object to list of PSDRF error
    */
-  jsonObjectToPsdrfObject(errorsPsdrfListTemp){
+  jsonObjectToPsdrfObject(errorsPsdrfListTemp: {'errorName': string, 'errorText': string, 'errorList': PsdrfError[], 'errorType': string, 'isFatalError': boolean, 'errorNumber': number}[]){
     
     errorsPsdrfListTemp.forEach((mainError) => {
 
       if(mainError.isFatalError){
         this.isFileContainingFatalError=true;
       }
-      let errorListTemp = [];
+      let errorListTemp:PsdrfError[] = [];
       if(mainError.errorType == "PsdrfError"){
         this.mainStepNameArr.push(mainError.errorName);
         this.mainStepTextArr.push(mainError.errorText);
-        mainError.errorList.forEach((error) => {
+        mainError.errorList.forEach((error: PsdrfError) => {
           errorListTemp.push(
             new PsdrfError(
               error.message,
@@ -351,7 +352,7 @@ export class ImportDonneesComponent  implements OnInit{
           this.errorElementArr.push(
             new PsdrfErrorCoordinates(error.table, error.column, error.row)
           );
-          error.row.forEach((idx) => {
+          error.row!.forEach((idx) => {
             this.totalErrorNumber++;
             if(mainError.isFatalError){
               this.blockingErrorNumber++;
@@ -361,7 +362,8 @@ export class ImportDonneesComponent  implements OnInit{
         this.errorsPsdrfList.push({
           errorList: errorListTemp,
           errorType: "PsdrfError",
-          isFatalError: mainError.isFatalError
+          isFatalError: mainError.isFatalError,
+          errorNumber: mainError.errorNumber
         });
       } else {
         this.mainStepNameArr.push(mainError.errorName);
@@ -380,7 +382,8 @@ export class ImportDonneesComponent  implements OnInit{
         this.errorsPsdrfList.push({
           errorList: errorListTemp,
           errorType: "PsdrfErrorColonnes",
-          isFatalError: mainError.isFatalError
+          isFatalError: mainError.isFatalError,
+          errorNumber: mainError.errorNumber
         });
       }
     });
@@ -398,12 +401,12 @@ export class ImportDonneesComponent  implements OnInit{
       let deleteObject = {}
       //Remplir l'objet avec les indexs
       this.deletedElementArr.forEach(element => {
-        if (!deleteObject.hasOwnProperty(element.table)){
-          deleteObject[element.table] = []
+        if (!deleteObject.hasOwnProperty(element.table!)){
+          deleteObject[element.table!] = []
         }
-        element.row.forEach(i => {
-          if(deleteObject[element.table].indexOf(i) === -1 ){
-            deleteObject[element.table].push(i)
+        element.row!.forEach(i => {
+          if(deleteObject[element.table!].indexOf(i) === -1 ){
+            deleteObject[element.table!].push(i)
           }
         })
       })
@@ -459,8 +462,8 @@ export class ImportDonneesComponent  implements OnInit{
       return this.errorElementArr.some(
         (obj) =>
           obj.table == table &&
-          obj.column.includes(column) &&
-          obj.row.includes(row)
+          obj.column!.includes(column) &&
+          obj.row!.includes(row)
       );
     } else {
       return false;
@@ -480,8 +483,8 @@ export class ImportDonneesComponent  implements OnInit{
       return this.modifiedElementArr.some(
         (obj) =>
           obj.table == table &&
-          obj.column.includes(column) &&
-          obj.row.includes(row)
+          obj.column!.includes(column) &&
+          obj.row!.includes(row)
       );
     } else {
       return false;
@@ -500,7 +503,7 @@ export class ImportDonneesComponent  implements OnInit{
       return this.deletedElementArr.some(
         (obj) =>
           obj.table == table &&
-          obj.row.includes(row)
+          obj.row!.includes(row)
       );
     } else {
       return false;
@@ -519,8 +522,8 @@ export class ImportDonneesComponent  implements OnInit{
       let row = this.getRowIndexFromPaginatorProperties(table, i);
       return (
         this.selectedErrorElementArr.table == table &&
-        this.selectedErrorElementArr.column.includes(column) &&
-        this.selectedErrorElementArr.row.includes(row)
+        this.selectedErrorElementArr.column!.includes(column) &&
+        this.selectedErrorElementArr.row!.includes(row)
       );
     } else {
       return false;
@@ -596,7 +599,7 @@ export class ImportDonneesComponent  implements OnInit{
       let tablePaginator =
         this.tableDataSourceArray[this.indexMatTabGroup].paginator;
       let pageNumber = Math.trunc(
-        errorCoordinates.row[0] / tablePaginator.pageSize
+        errorCoordinates.row![0] / tablePaginator.pageSize
       );
   
       (tablePaginator.pageIndex = pageNumber), // number of the page you want to jump.
@@ -623,9 +626,9 @@ export class ImportDonneesComponent  implements OnInit{
     isFatalError: boolean
   ): void {
     let indexTable = this.indexLabelMatTabGroup.indexOf(
-      modificationErrorObj.errorCoordinates.table
+      modificationErrorObj.errorCoordinates.table!
     );
-    modificationErrorObj.errorCoordinates.row.forEach((idx, i) => {
+    modificationErrorObj.errorCoordinates.row!.forEach((idx, i) => {
       if (
         !this.elementIsInPsdrfErrorCoordinatesList(this.modifiedElementArr, modificationErrorObj.errorCoordinates.table, modificationErrorObj.errorCoordinates.column, idx)
       ) {
@@ -648,7 +651,7 @@ export class ImportDonneesComponent  implements OnInit{
           }
         }
       }
-      modificationErrorObj.errorCoordinates.column.forEach((colName) => {
+      modificationErrorObj.errorCoordinates.column!.forEach((colName) => {
         this.psdrfArray[indexTable][idx][colName] =
           modificationErrorObj.newErrorValue[i][colName];
       });
@@ -673,9 +676,9 @@ export class ImportDonneesComponent  implements OnInit{
     isFatalError: boolean
   ): void {
     let indexTable = this.indexLabelMatTabGroup.indexOf(
-    deletionErrorObj.errorCoordinates.table
+    deletionErrorObj.errorCoordinates.table!
     );
-    deletionErrorObj.errorCoordinates.row.forEach((idx, i) => {
+    deletionErrorObj.errorCoordinates.row!.forEach((idx, i) => {
       if (
           !this.elementIsInPsdrfErrorCoordinatesList(this.deletedElementArr, deletionErrorObj.errorCoordinates.table, deletionErrorObj.errorCoordinates.column, idx)
           ) {

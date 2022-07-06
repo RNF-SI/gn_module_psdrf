@@ -31,50 +31,51 @@ def data_verification(data):
   BMSsup30 = pd.json_normalize(data[5])
   Reperes = pd.json_normalize(data[6])
 
+  i =0
   # Todo: Remettre cette partie de code si Eugénie est d'accord
   # Test des fichiers : colonnes manquantes 
   # Arbres
   columns = ['NumDisp', 'Cycle', 'NumArbre', 'Azimut', 'Dist', 'Diam1', 'Diam2', 'Haut', 'StadeD', 'StadeE', 'Taillis']
   check_code_Error_List = check_colonnes("Arbres", columns, Arbres)
   if len(check_code_Error_List) >0:
-    verificationList.append({'errorName': 'Il manque une colonne dans la table Arbres', 'errorText': 'Il manque une colonne dans la table Arbres', 'errorList': check_code_Error_List, 'errorType': 'PsdrfErrorColonnes', 'isFatalError': True, })
+    verificationList.append({'errorName': 'Il manque une colonne dans la table Arbres', 'errorText': 'Il manque une colonne dans la table Arbres', 'errorList': check_code_Error_List, 'errorType': 'PsdrfErrorColonnes', 'isFatalError': True})
 
   # BMSsup30
   columns = ['Id', 'Cycle', 'NumArbre', 'Azimut', 'Dist', 'DiamIni', 'DiamMed', 'DiamFin', 'Longueur', 'StadeD', 'StadeE', 'Contact', 'Chablis']
   check_code_Error_List = check_colonnes("BMSsup30", columns, BMSsup30)
   if len(check_code_Error_List) >0:
-    verificationList.append({'errorName': 'Il manque une colonne dans la table BMSsup30', 'errorText': 'Il manque une colonne dans la table BMSsup30', 'errorList': check_code_Error_List, 'errorType': 'PsdrfErrorColonnes', 'isFatalError': True, })
+    verificationList.append({'errorName': 'Il manque une colonne dans la table BMSsup30', 'errorText': 'Il manque une colonne dans la table BMSsup30', 'errorList': check_code_Error_List, 'errorType': 'PsdrfErrorColonnes', 'isFatalError': True})
 
   # Placettes
   columns = ['Cycle', "Strate", "PoidsPlacette", 'Pente', 'Exposition', 'CorrectionPente']
   check_code_Error_List = check_colonnes("Placettes", columns, Placettes)
   if len(check_code_Error_List) >0:
-    verificationList.append({'errorName': 'Il manque une colonne dans la table Placettes', 'errorText': 'Il manque une colonne dans la table Placettes', 'errorList': check_code_Error_List, 'errorType': 'PsdrfErrorColonnes', 'isFatalError': True, })
+    verificationList.append({'errorName': 'Il manque une colonne dans la table Placettes', 'errorText': 'Il manque une colonne dans la table Placettes', 'errorList': check_code_Error_List, 'errorType': 'PsdrfErrorColonnes', 'isFatalError': True})
 
   # Cycles
   columns = ['Cycle', 'Coeff']
   check_code_Error_List = check_colonnes("Cycles", columns, Cycles)
   if len(check_code_Error_List) >0:
-    verificationList.append({'errorName': 'Il manque une colonne dans la table Cycles', 'errorText': 'Il manque une colonne dans la table Cycles', 'errorList': check_code_Error_List, 'errorType': 'PsdrfErrorColonnes', 'isFatalError': True, })
+    verificationList.append({'errorName': 'Il manque une colonne dans la table Cycles', 'errorText': 'Il manque une colonne dans la table Cycles', 'errorList': check_code_Error_List, 'errorType': 'PsdrfErrorColonnes', 'isFatalError': True})
 
   # Regeneration
   columns = ['SsPlac', 'Cycle', 'Class1', 'Class2', 'Class3', 'Recouv', 'Taillis', 'Abroutis']
   check_code_Error_List = check_colonnes("Regeneration", columns, Regeneration)
   if len(check_code_Error_List) >0:
-    verificationList.append({'errorName': 'Il manque une colonne dans la table Regeneration', 'errorText': 'Il manque une colonne dans la table Regeneration', 'errorList': check_code_Error_List, 'errorType': 'PsdrfErrorColonnes', 'isFatalError': True, })
+    verificationList.append({'errorName': 'Il manque une colonne dans la table Regeneration', 'errorText': 'Il manque une colonne dans la table Regeneration', 'errorList': check_code_Error_List, 'errorType': 'PsdrfErrorColonnes', 'isFatalError': True})
   
   # Transect
   columns = ['Id', 'Cycle', 'Transect', 'Dist', 'Diam', 'Angle', 'StadeD', 'StadeE', 'Contact', 'Chablis']
   check_code_Error_List = check_colonnes("Transect", columns, Transect)
   if len(check_code_Error_List) >0:
-    verificationList.append({'errorName': 'Il manque une colonne dans la table Transect', 'errorText': 'Il manque une colonne dans la table Transect', 'errorList': check_code_Error_List, 'errorType': 'PsdrfErrorColonnes', 'isFatalError': True, })
+    verificationList.append({'errorName': 'Il manque une colonne dans la table Transect', 'errorText': 'Il manque une colonne dans la table Transect', 'errorList': check_code_Error_List, 'errorType': 'PsdrfErrorColonnes', 'isFatalError': True})
 
   # Reperes
   columns = ['Azimut', 'Dist', 'Diam']
   if not Reperes.empty:
     check_code_Error_List = check_colonnes("Reperes", columns, Reperes)
     if len(check_code_Error_List) >0:
-      verificationList.append({'errorName': 'Il manque une colonne dans la table Reperes', 'errorText': 'Il manque une colonne dans la table Reperes', 'errorList': check_code_Error_List, 'errorType': 'PsdrfErrorColonnes', 'isFatalError': True, })
+      verificationList.append({'errorName': 'Il manque une colonne dans la table Reperes', 'errorText': 'Il manque une colonne dans la table Reperes', 'errorList': check_code_Error_List, 'errorType': 'PsdrfErrorColonnes', 'isFatalError': True})
   else: 
     Reperes = pd.json_normalize([{'NumDisp': None, 'NumPlac': None, 'Azimut': None, 'Dist': None, 'Diam': None, 'Repere': None, 'Observation': None}])
 
@@ -182,9 +183,9 @@ def data_verification(data):
     for typeObj in typeColumnObj:
       for check in [{'colnames': typeObj.get('notNullNames'), 'checktypefunction': check_notNULL, 'type_text': '(valeur attendue)'}, {'colnames': typeObj.get('intNames'), 'checktypefunction': check_int, 'type_text': '(entiers attendus)'}, {'colnames': typeObj.get('floatNames'), 'checktypefunction': check_int_or_float, 'type_text': '(décimale attendue)'}, {'colnames': typeObj.get('boolNames'), 'checktypefunction': check_boolean, 'type_text': '(f, t ou rien attendus)'}, {'colnames': typeObj.get('dateNames'), 'checktypefunction': check_date, 'type_text': '(dates attendues sous la forme dd/mm/aaaa)'}]:
         for col in check.get('colnames'):
-          check_code_Error_List = check.get('checktypefunction')(typeObj.get('arrayName'), col, typeObj.get('array'))
+          check_code_Error_List, i = check.get('checktypefunction')(typeObj.get('arrayName'), col, typeObj.get('array'))
           if len(check_code_Error_List) >0:
-            verificationList.append({'errorName': 'Controle '+ col +' dans la table ' + typeObj.get('arrayName') + ' '+ check.get('type_text'), 'errorText': 'Controle '+ col + ' dans la table ' + typeObj.get('arrayName') + ' '+check.get('type_text'), 'errorList': check_code_Error_List, 'errorType': 'PsdrfError', 'isFatalError': True, })
+            verificationList.append({'errorName': 'Controle '+ col +' dans la table ' + typeObj.get('arrayName') + ' '+ check.get('type_text'), 'errorText': 'Controle '+ col + ' dans la table ' + typeObj.get('arrayName') + ' '+check.get('type_text'), 'errorList': check_code_Error_List, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
 
     base_dir = os.path.dirname(os.path.dirname(config["BASE_DIR"]))
@@ -262,16 +263,16 @@ def data_verification(data):
       
       soundness_code = "de décomposition"
       bark_code = "écorce"
-      check_code_Error_List = check_code(CodeDurete, Arbres, soundness_code, "Arbres")
+      check_code_Error_List, i = check_code(CodeDurete, Arbres, soundness_code, "Arbres")
       if len(check_code_Error_List) >0:
-        verificationList.append({'errorName': 'Contrôle Stade dans Arbres', 'errorText': 'Contrôle Stade dans Arbres', 'errorList': check_code_Error_List, 'errorType': 'PsdrfError', 'isFatalError': True, })
+        verificationList.append({'errorName': 'Contrôle Stade dans Arbres', 'errorText': 'Contrôle Stade dans Arbres', 'errorList': check_code_Error_List, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
       #Appel des fonctions de test
       ###Table Arbres
       #Contrôle des essences rencontrées dans la table Arbres
-      error_List_Temp = check_species(Arbres, CodeEssence, Test, "Arbres")
+      error_List_Temp, i = check_species(Arbres, CodeEssence, Test, "Arbres")
       if len(error_List_Temp) >0:
-        verificationList.append({'errorName': 'Essence dans Arbres', 'errorText':"Essence dans Arbres", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+        verificationList.append({'errorName': 'Essence dans Arbres', 'errorText':"Essence dans Arbres", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
 
       #Contrôle des sauts de cycles: Contrôle qu'il n'y ait pas de cycles qui sautent
@@ -290,7 +291,7 @@ def data_verification(data):
               }
               error.append(err)
       if len(error) >0:
-        verificationList.append({'errorName': 'Cycles dans Arbres', 'errorText': 'Cycles dans Arbres', 'errorList': error, 'errorType': 'PsdrfErrorColonnes', 'isFatalError': True, })
+        verificationList.append({'errorName': 'Cycles dans Arbres', 'errorText': 'Cycles dans Arbres', 'errorList': error, 'errorType': 'PsdrfErrorColonnes', 'isFatalError': True, 'errorNumber': i})
 
       #Contrôle des valeurs dupliquées
       error = []
@@ -304,17 +305,18 @@ def data_verification(data):
         i = 0
         error_List_Temp = []
         for index, row in df_Dupl.iterrows():
-          valuesDupl = entire_df_Dupl.loc[listDupl[i]]
-          err = {
-              "message": "L'Arbre "+ str(row["NumArbre"]) +" au cycle "+ str(row["Cycle"]) +" apparaît plusieurs fois dans la table Arbres",
-              "table": "Arbres",
-              "column": ["NumDisp", "NumPlac", "NumArbre", "Cycle"],
-              "row": listDupl[i], 
-              "value": valuesDupl.to_json(orient='records'),
-            }
+          if i<100:
+            valuesDupl = entire_df_Dupl.loc[listDupl[i]]
+            err = {
+                "message": "L'Arbre "+ str(row["NumArbre"]) +" au cycle "+ str(row["Cycle"]) +" apparaît plusieurs fois dans la table Arbres",
+                "table": "Arbres",
+                "column": ["NumDisp", "NumPlac", "NumArbre", "Cycle"],
+                "row": listDupl[i], 
+                "value": valuesDupl.to_json(orient='records'),
+              }
           i = i + 1
           error_List_Temp.append(err)
-        verificationList.append({'errorName': 'Duplication dans Arbres', 'errorText':'Lignes dupliquées dans la table Arbres', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+        verificationList.append({'errorName': 'Duplication dans Arbres', 'errorText':'Lignes dupliquées dans la table Arbres', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
 
       # 5/ Contrôle du suivi des arbres entre les différents inventaires
@@ -364,18 +366,21 @@ def data_verification(data):
             
         if df_Error.shape[0] > 0 :
           error_List_Temp = []
+          i = 0
           for index, row in df_Error.iterrows():
-            # valuesDupl = df_Error.loc[listDupl[i]]
-            tValues = tArbres[["NumArbre", "Cycle", str(row["variable"].item())]].loc[[int(x) for x in row["<lambda>"].values]]
-            err = {
-                "message": "Incohérence(s) relevée(s) sur les valeurs "+ str(row["variable"].item()) +" pour l'arbre numéro "+ str(row["NumArbre"].item()) + " de la placette numéro " + str(row["NumPlac"].item()),
-                "table": "Arbres",
-                "column": [ "NumArbre", "Cycle", str(row["variable"].item())],
-                "row": [int(x) for x in row["<lambda>"].values], 
-                "value": tValues.to_json(orient='records'),
-              }
-            error_List_Temp.append(err)
-          verificationList.append({'errorName': "Incohérence dans Arbres", 'errorText': "Arbre: Incohérence(s) relevée(s) sur les valeurs d'Essence, Azimut et Dist entre les différents inventaires. Conseil: Modifier les valeurs des cycles précédents si vous êtes sûrs de vous.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+            if i<100:
+              # valuesDupl = df_Error.loc[listDupl[i]]
+              tValues = tArbres[["NumArbre", "Cycle", str(row["variable"].item())]].loc[[int(x) for x in row["<lambda>"].values]]
+              err = {
+                  "message": "Incohérence(s) relevée(s) sur les valeurs "+ str(row["variable"].item()) +" pour l'arbre numéro "+ str(row["NumArbre"].item()) + " de la placette numéro " + str(row["NumPlac"].item()),
+                  "table": "Arbres",
+                  "column": [ "NumArbre", "Cycle", str(row["variable"].item())],
+                  "row": [int(x) for x in row["<lambda>"].values], 
+                  "value": tValues.to_json(orient='records'),
+                }
+              error_List_Temp.append(err)
+            i = i+1
+          verificationList.append({'errorName': "Incohérence dans Arbres", 'errorText': "Arbre: Incohérence(s) relevée(s) sur les valeurs d'Essence, Azimut et Dist entre les différents inventaires. Conseil: Modifier les valeurs des cycles précédents si vous êtes sûrs de vous.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
 
 
@@ -416,18 +421,21 @@ def data_verification(data):
 
         if df_Error.shape[0] > 0 :
           error_List_Temp = []
+          i=0
           for index, row in df_Error.iterrows():
-            # valuesDupl = df_Error.loc[listDupl[i]]
-            tValues = tArbres[["NumArbre", "Cycle", str(row["variable"].item())]].loc[[int(x) for x in row["<lambda>"].values],:]
-            err = {
-                "message": "Accroissement(s) sur le "+ str(row["variable"].item()) +" négatif(s)  pour l'arbre numéro "+ str(row["NumArbre"].item()) + " de la placette numéro " + str(row["NumPlac"].item()),
-                "table": "Arbres",
-                "column": [ "NumArbre", "Cycle", str(row["variable"].item())],
-                "row": [int(x) for x in row["<lambda>"].values], 
-                "value": tValues.to_json(orient='records'),
-              }
-            error_List_Temp.append(err)
-          verificationList.append({'errorName': "Accroissement négatif dans Arbres" , 'errorText': "Accroissement(s) sur le diamètre négatif(s) constaté(s) sur la population d'arbres vivants entre les différents inventaires", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': False})
+            if i<100:
+              # valuesDupl = df_Error.loc[listDupl[i]]
+              tValues = tArbres[["NumArbre", "Cycle", str(row["variable"].item())]].loc[[int(x) for x in row["<lambda>"].values],:]
+              err = {
+                  "message": "Accroissement(s) sur le "+ str(row["variable"].item()) +" négatif(s)  pour l'arbre numéro "+ str(row["NumArbre"].item()) + " de la placette numéro " + str(row["NumPlac"].item()),
+                  "table": "Arbres",
+                  "column": [ "NumArbre", "Cycle", str(row["variable"].item())],
+                  "row": [int(x) for x in row["<lambda>"].values], 
+                  "value": tValues.to_json(orient='records'),
+                }
+              error_List_Temp.append(err)
+            i=i+1
+          verificationList.append({'errorName': "Accroissement négatif dans Arbres" , 'errorText': "Accroissement(s) sur le diamètre négatif(s) constaté(s) sur la population d'arbres vivants entre les différents inventaires", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': False, 'errorNumber': i})
 
 
 
@@ -456,18 +464,21 @@ def data_verification(data):
 
         if df_Error.shape[0] > 0 :
           error_List_Temp = []
+          i=0
           for index, row in df_Error.iterrows():
+            if i<100:
             # valuesDupl = df_Error.loc[listDupl[i]]
-            tValues = tArbres[["NumArbre", "Cycle", "Type", str(row["variable"].item())]].loc[[int(x) for x in row["<lambda>"].values],:]
-            err = {
-                "message": "Accroissement(s) sur le "+ str(row["variable"].item()) +" positif(s)  pour l'arbre numéro "+ str(row["NumArbre"].item()) + " de la placette numéro " + str(row["NumPlac"].item()),
-                "table": "Arbres",
-                "column": [ "NumArbre", "Cycle","Type", str(row["variable"].item())],
-                "row": [int(x) for x in row["<lambda>"].values], 
-                "value": tValues.to_json(orient='records'),
-              }
-            error_List_Temp.append(err)
-          verificationList.append({'errorName': "Accroissement positif BMP dans Arbres", 'errorText': "Accroissement(s) sur le diamètre positif(s) constaté(s) sur la population d'arbres morts sur pied entre les différents inventaires.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': False})
+              tValues = tArbres[["NumArbre", "Cycle", "Type", str(row["variable"].item())]].loc[[int(x) for x in row["<lambda>"].values],:]
+              err = {
+                  "message": "Accroissement(s) sur le "+ str(row["variable"].item()) +" positif(s)  pour l'arbre numéro "+ str(row["NumArbre"].item()) + " de la placette numéro " + str(row["NumPlac"].item()),
+                  "table": "Arbres",
+                  "column": [ "NumArbre", "Cycle","Type", str(row["variable"].item())],
+                  "row": [int(x) for x in row["<lambda>"].values], 
+                  "value": tValues.to_json(orient='records'),
+                }
+              error_List_Temp.append(err)
+            i=i+1
+          verificationList.append({'errorName': "Accroissement positif BMP dans Arbres", 'errorText': "Accroissement(s) sur le diamètre positif(s) constaté(s) sur la population d'arbres morts sur pied entre les différents inventaires.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': False, 'errorNumber': i})
 
 
 
@@ -483,17 +494,20 @@ def data_verification(data):
           error_trees = t[t["temp"] > 20]
         if error_trees.shape[0] > 0 :
           error_List_Temp = []
+          i=0
           for index, row in error_trees.iterrows():
-            tValues = tArbres[["NumArbre", "Cycle", str(row["variable"].item())]].loc[[int(x) for x in row["<lambda>"].values],:]
-            err = {
-                "message": "Valeur d'accroissement trop importante pour le "+ str(row["variable"].item()) +" de l'arbre numéro "+ str(row["NumArbre"].item()) + " de la placette numéro " + str(row["NumPlac"].item()),
-                "table": "Arbres",
-                "column": [ "NumArbre", "Cycle", str(row["variable"].item())],
-                "row": [int(x) for x in row["<lambda>"].values], 
-                "value": tValues.to_json(orient='records'),
-              }
-            error_List_Temp.append(err)
-          verificationList.append({'errorName': "Accroissement anormal dans Arbres", 'errorText': "Valeur(s) d'accroissement en diamètre trop importante(s) détectée(s) (seuil à 20 cm entre les 2 inventaires)", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': False})
+            if i<100:
+              tValues = tArbres[["NumArbre", "Cycle", str(row["variable"].item())]].loc[[int(x) for x in row["<lambda>"].values],:]
+              err = {
+                  "message": "Valeur d'accroissement trop importante pour le "+ str(row["variable"].item()) +" de l'arbre numéro "+ str(row["NumArbre"].item()) + " de la placette numéro " + str(row["NumPlac"].item()),
+                  "table": "Arbres",
+                  "column": [ "NumArbre", "Cycle", str(row["variable"].item())],
+                  "row": [int(x) for x in row["<lambda>"].values], 
+                  "value": tValues.to_json(orient='records'),
+                }
+              error_List_Temp.append(err)
+            i=i+1
+          verificationList.append({'errorName': "Accroissement anormal dans Arbres", 'errorText': "Valeur(s) d'accroissement en diamètre trop importante(s) détectée(s) (seuil à 20 cm entre les 2 inventaires)", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': False, 'errorNumber': i})
 
       # ##### 6/ Incohérence type de Bois Mort sur Pied et de Taillis #####
       # -- contrôle des types de bois mort sur pied :
@@ -502,129 +516,153 @@ def data_verification(data):
       # temp = type_list[['NumPlac', "NumArbre", "Cycle", "Type"]]
       if not temp.empty:
         error_List_Temp = []
+        i=0
         for index, row in temp.iterrows():
-          err= {
-            "message": "Le type "+ str(int(row["Type"])) + " figure dans la table Arbres mais ne figure pas dans la table CodeTypoArbres (fichier administrateur) ",
-            "table": "Arbres",
-            "column": ['Type'],
-            "row": [index],
-            "value": temp.loc[[index],:].to_json(orient='records'),
-          }
-          error_List_Temp.append(err)
-        verificationList.append({'errorName': 'Types dans Arbres', 'errorText': 'Types dans Arbres','errorList': error_List_Temp,  'errorType': 'PsdrfError', 'isFatalError': True, })
+          if i<100:
+            err= {
+              "message": "Le type "+ str(int(row["Type"])) + " figure dans la table Arbres mais ne figure pas dans la table CodeTypoArbres (fichier administrateur) ",
+              "table": "Arbres",
+              "column": ['Type'],
+              "row": [index],
+              "value": temp.loc[[index],:].to_json(orient='records'),
+            }
+            error_List_Temp.append(err)
+          i=i+1
+        verificationList.append({'errorName': 'Types dans Arbres', 'errorText': 'Types dans Arbres','errorList': error_List_Temp,  'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
       # Souches de plus de 1.30m
       temp = Arbres[(Arbres["Haut"] > 1.30) & (Arbres["Type"]==3)]
       temp = temp[["NumPlac", "NumArbre", "Type", "Haut"]]
       if not temp.empty:
+        i=0
         error_List_Temp=[]
         for index, row in temp.iterrows():
-          err = {
-              "message": "La souche  "+ str(int(row["NumArbre"])) +" de la placette "+ str(row["NumPlac"]) + " mesure plus d'1,30m.",
-              "table": "Arbres",
-              "column": [ "NumArbre", "Type", "Haut"],
-              "row": [index], 
-              "value": temp.loc[[index],:].to_json(orient='records'),
-            }
-          error_List_Temp.append(err)
-        verificationList.append({'errorName': "Souche(s) incohérente(s) dans Arbres", 'errorText': "BMP classé(s) en Type 3 (souche) et faisant strictement plus d'1,30m. Impossible dans le PSDRF.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+          if i<100:
+            err = {
+                "message": "La souche  "+ str(int(row["NumArbre"])) +" de la placette "+ str(row["NumPlac"]) + " mesure plus d'1,30m.",
+                "table": "Arbres",
+                "column": [ "NumArbre", "Type", "Haut"],
+                "row": [index], 
+                "value": temp.loc[[index],:].to_json(orient='records'),
+              }
+            error_List_Temp.append(err)
+          i=i+1
+        verificationList.append({'errorName': "Souche(s) incohérente(s) dans Arbres", 'errorText': "BMP classé(s) en Type 3 (souche) et faisant strictement plus d'1,30m. Impossible dans le PSDRF.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
 
       #Arbres ou chandelles < 1.30m
       temp = Arbres[(Arbres["Haut"] < 1.30) & (~Arbres.Type.isin([3, 4, 5]))]
       temp = temp[["NumPlac", "NumArbre", "Type", "Haut"]]
       if not temp.empty:
+        i=0
         error_List_Temp=[]
         for index, row in temp.iterrows():
-          err = {
-              "message": "L'arbre  "+ str(int(row["NumArbre"])) +" de la placette "+ str(row["NumPlac"]) + " mesure moins d'1,30m.",
-              "table": "Arbres",
-              "column": [ "NumArbre", "Type", "Haut"],
-              "row": [index], 
-              "value": temp.loc[[index],:].to_json(orient='records'),
-            }
-          error_List_Temp.append(err)
-        verificationList.append({'errorName': "Arbre(s) incohérent(s) dans Arbres", 'errorText': "Il y a des BMP classés en 'Arbre' ou en 'Chandelle' et faisant moins d'1,30m. Impossible dans le PSDRF", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+          if i<100:  
+            err = {
+                "message": "L'arbre  "+ str(int(row["NumArbre"])) +" de la placette "+ str(row["NumPlac"]) + " mesure moins d'1,30m.",
+                "table": "Arbres",
+                "column": [ "NumArbre", "Type", "Haut"],
+                "row": [index], 
+                "value": temp.loc[[index],:].to_json(orient='records'),
+              }
+            error_List_Temp.append(err)
+          i=i+1
+        verificationList.append({'errorName': "Arbre(s) incohérent(s) dans Arbres", 'errorText': "Il y a des BMP classés en 'Arbre' ou en 'Chandelle' et faisant moins d'1,30m. Impossible dans le PSDRF", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
       # Valeurs extrêmes sup Azimuts
       temp = Arbres[Arbres["Azimut"] > 399]
       temp = temp[["NumPlac", "NumArbre", "Azimut"]]
       if not temp.empty:
         error_List_Temp=[]
+        i=0
         for index, row in temp.iterrows():
-          err = {
-              "message": "L'arbre "+ str(int(row["NumArbre"])) +" de la placette "+ str(row["NumPlac"]) + " a un azimut de " + str(int(row["Azimut"])) +" supérieur à 399.",
-              "table": "Arbres",
-              "column": [ "NumArbre", "Azimut"],
-              "row": [index], 
-              "value": temp.loc[[index],:].to_json(orient='records'),
-            }
-          error_List_Temp.append(err)
-        verificationList.append({'errorName': "Azimut incohérent dans Arbres", 'errorText': "La valeur de l'azimut est supérieur à 399.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+          if i<100:
+            err = {
+                "message": "L'arbre "+ str(int(row["NumArbre"])) +" de la placette "+ str(row["NumPlac"]) + " a un azimut de " + str(int(row["Azimut"])) +" supérieur à 399.",
+                "table": "Arbres",
+                "column": [ "NumArbre", "Azimut"],
+                "row": [index], 
+                "value": temp.loc[[index],:].to_json(orient='records'),
+              }
+            error_List_Temp.append(err)
+          i=i+1
+        verificationList.append({'errorName': "Azimut incohérent dans Arbres", 'errorText': "La valeur de l'azimut est supérieur à 399.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
       # Valeurs extrêmes inf Azimuts
       temp = Arbres[Arbres["Azimut"] < 0]
       temp = temp[["NumPlac", "NumArbre", "Azimut"]]
       if not temp.empty:
+        i=0
         error_List_Temp=[]
         for index, row in temp.iterrows():
-          err = {
-              "message": "L'arbre "+ str(int(row["NumArbre"])) +" de la placette "+ str(row["NumPlac"]) + " a un azimut de " + str(int(row["Azimut"])) +" inférieur à 0.",
-              "table": "Arbres",
-              "column": [ "NumArbre", "Azimut"],
-              "row": [index], 
-              "value": temp.loc[[index],:].to_json(orient='records'),
-            }
-          error_List_Temp.append(err)
-        verificationList.append({'errorName': "Azimut incohérent dans Arbres", 'errorText': "La valeur de l'azimut est inférieur à 0.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+          if i<100:
+            err = {
+                "message": "L'arbre "+ str(int(row["NumArbre"])) +" de la placette "+ str(row["NumPlac"]) + " a un azimut de " + str(int(row["Azimut"])) +" inférieur à 0.",
+                "table": "Arbres",
+                "column": [ "NumArbre", "Azimut"],
+                "row": [index], 
+                "value": temp.loc[[index],:].to_json(orient='records'),
+              }
+            error_List_Temp.append(err)
+          i=i+1
+        verificationList.append({'errorName': "Azimut incohérent dans Arbres", 'errorText': "La valeur de l'azimut est inférieur à 0.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
       # Valeurs extrêmes sup Diam1
       temp = Arbres[Arbres["Diam1"] > 100]
       temp = temp[["NumPlac", "NumArbre", "Diam1"]]
       if not temp.empty:
+        i=0
         error_List_Temp=[]
         for index, row in temp.iterrows():
-          err = {
-              "message": "L'arbre "+ str(int(row["NumArbre"])) +" de la placette "+ str(row["NumPlac"]) + " a un diamètre de " + str(int(row["Diam1"])) +" supérieur à 100.",
-              "table": "Arbres",
-              "column": [ "NumArbre", "Diam1"],
-              "row": [index], 
-              "value": temp.loc[[index],:].to_json(orient='records'),
-            }
-          error_List_Temp.append(err)
-        verificationList.append({'errorName': "Diamètre très élevé dans Arbres", 'errorText': "La valeur du diamètre est supérieure à 100. Vérifiez qu'elle correspond bien à ce que vous vouliez saisir.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': False})
+          if i<100:
+            err = {
+                "message": "L'arbre "+ str(int(row["NumArbre"])) +" de la placette "+ str(row["NumPlac"]) + " a un diamètre de " + str(int(row["Diam1"])) +" supérieur à 100.",
+                "table": "Arbres",
+                "column": [ "NumArbre", "Diam1"],
+                "row": [index], 
+                "value": temp.loc[[index],:].to_json(orient='records'),
+              }
+            error_List_Temp.append(err)
+            i=i+1
+        verificationList.append({'errorName': "Diamètre très élevé dans Arbres", 'errorText': "La valeur du diamètre est supérieure à 100. Vérifiez qu'elle correspond bien à ce que vous vouliez saisir.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': False, 'errorNumber': i})
 
       # Valeurs extrêmes inf Diam1
       temp = Arbres[Arbres["Diam1"] < 7]
       temp = temp[["NumPlac", "NumArbre", "Diam1"]]
       if not temp.empty:
+        i=0
         error_List_Temp=[]
         for index, row in temp.iterrows():
-          err = {
-              "message": "L'arbre "+ str(int(row["NumArbre"])) +" de la placette "+ str(row["NumPlac"]) + " a un diamètre de " + str(int(row["Diam1"])) +" inférieur à 7.",
-              "table": "Arbres",
-              "column": [ "NumArbre", "Diam1"],
-              "row": [index], 
-              "value": temp.loc[[index],:].to_json(orient='records'),
-            }
-          error_List_Temp.append(err)
-        verificationList.append({'errorName': "Diamètre incohérent dans Arbres", 'errorText': "La valeur du diamètre est inférieure à 7.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': False})
+          if i<100:
+            err = {
+                "message": "L'arbre "+ str(int(row["NumArbre"])) +" de la placette "+ str(row["NumPlac"]) + " a un diamètre de " + str(int(row["Diam1"])) +" inférieur à 7.",
+                "table": "Arbres",
+                "column": [ "NumArbre", "Diam1"],
+                "row": [index], 
+                "value": temp.loc[[index],:].to_json(orient='records'),
+              }
+            error_List_Temp.append(err)
+            i=i+1
+        verificationList.append({'errorName': "Diamètre incohérent dans Arbres", 'errorText': "La valeur du diamètre est inférieure à 7.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': False, 'errorNumber': i})
 
       # Valeurs extrêmes distance
       temp = Arbres[Arbres["Dist"] > 40]
       temp = temp[["NumPlac", "NumArbre", "Dist"]]
       if not temp.empty:
+        i=0
         error_List_Temp=[]
         for index, row in temp.iterrows():
-          err = {
-              "message": "L'arbre "+ str(int(row["NumArbre"])) +" de la placette "+ str(row["NumPlac"]) + " a une distance de " + str(int(row["Dist"])) +" supérieure à 40.",
-              "table": "Arbres",
-              "column": [ "NumArbre", "Dist"],
-              "row": [index], 
-              "value": temp.loc[[index],:].to_json(orient='records'),
-            }
-          error_List_Temp.append(err)
-        verificationList.append({'errorName': "Distance trés élevée dans Arbres", 'errorText': "La valeur de la distance est supérieure à 40. Vérifiez qu'elle correspond bien à ce que vous vouliez saisir.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': False})
+          if i<100:
+            err = {
+                "message": "L'arbre "+ str(int(row["NumArbre"])) +" de la placette "+ str(row["NumPlac"]) + " a une distance de " + str(int(row["Dist"])) +" supérieure à 40.",
+                "table": "Arbres",
+                "column": [ "NumArbre", "Dist"],
+                "row": [index], 
+                "value": temp.loc[[index],:].to_json(orient='records'),
+              }
+            error_List_Temp.append(err)
+            i=i+1
+        verificationList.append({'errorName': "Distance trés élevée dans Arbres", 'errorText': "La valeur de la distance est supérieure à 40. Vérifiez qu'elle correspond bien à ce que vous vouliez saisir.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': False, 'errorNumber': i})
 
 
       # Incohérences sur les données Type - Haut - StadeD - StadeE des BMP 
@@ -634,16 +672,19 @@ def data_verification(data):
       BMP_Temp = BMP_Temp[[ "NumPlac", "NumArbre", "Type", "Haut", "StadeD", "StadeE"]]
       if not BMP_Temp.empty:
         error_List_Temp=[]
+        i=0
         for index, row in BMP_Temp.iterrows():
-          err = {
-              "message": "Information manquante pour l'arbre "+ str(int(row["NumArbre"])) +" de la placette "+ str(row["NumPlac"]),
-              "table": "Arbres",
-              "column": [ "NumArbre", "Type", "Haut", "StadeD", "StadeE"],
-              "row": [index], 
-              "value": BMP_Temp.loc[[index],:].to_json(orient='records'),
-            }
-          error_List_Temp.append(err)
-        verificationList.append({'errorName': "Information(s) manquante(s) dans Arbres", 'errorText': "Information(s) manquante(s) pour les BMP", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+          if i<100:
+            err = {
+                "message": "Information manquante pour l'arbre "+ str(int(row["NumArbre"])) +" de la placette "+ str(row["NumPlac"]),
+                "table": "Arbres",
+                "column": [ "NumArbre", "Type", "Haut", "StadeD", "StadeE"],
+                "row": [index], 
+                "value": BMP_Temp.loc[[index],:].to_json(orient='records'),
+              }
+            error_List_Temp.append(err)
+          i=i+1
+        verificationList.append({'errorName': "Information(s) manquante(s) dans Arbres", 'errorText': "Information(s) manquante(s) pour les BMP", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
       # Incohérences sur les données de Taillis 
       Taillis_Temp = Arbres[[ "NumPlac", "NumArbre", "Taillis"]]
@@ -651,16 +692,19 @@ def data_verification(data):
       Taillis_Temp = Taillis_Temp.dropna(subset=['Taillis'])
       if not Taillis_Temp.empty:
         error_List_Temp=[]
+        i=0
         for index, row in Taillis_Temp.iterrows():
-          err = {
-              "message": "Information incorrectes dans la colonne Taillis pour l'arbre "+ str(int(row["NumArbre"])) +" de la placette "+ str(row["NumPlac"]),
-              "table": "Arbres",
-              "column": [ "NumArbre", "Taillis"],
-              "row": [index], 
-              "value": Taillis_Temp.loc[[index],:].to_json(orient='records'),
-            }
-          error_List_Temp.append(err)
-        verificationList.append({'errorName': "Taillis incorrect(s) dans Arbres", 'errorText': "Il y a des informations incorrectes dans la colonne Taillis. Rappel : seules notations acceptées (hormis valeurs vides) = 't' ou 'f'", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+          if i<100:
+            err = {
+                "message": "Information incorrectes dans la colonne Taillis pour l'arbre "+ str(int(row["NumArbre"])) +" de la placette "+ str(row["NumPlac"]),
+                "table": "Arbres",
+                "column": [ "NumArbre", "Taillis"],
+                "row": [index], 
+                "value": Taillis_Temp.loc[[index],:].to_json(orient='records'),
+              }
+            error_List_Temp.append(err)
+          i=i+1
+        verificationList.append({'errorName': "Taillis incorrect(s) dans Arbres", 'errorText': "Il y a des informations incorrectes dans la colonne Taillis. Rappel : seules notations acceptées (hormis valeurs vides) = 't' ou 'f'", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
 
       ##### 7/ Contrôle des valeurs absentes #####
@@ -668,17 +712,20 @@ def data_verification(data):
       Empty_temp = Arbres[(Arbres["Diam1"]>30) & (Arbres["Diam2"].isna()) & (Arbres["Type"].isna())]
       Empty_temp = Empty_temp[[ "NumPlac", "NumArbre", "Diam1", "Diam2"]]
       if not Empty_temp.empty:
+        i=0
         error_List_Temp=[]
         for index, row in Empty_temp.iterrows():
-          err = {
-              "message": "Le Diam2 de l'arbre "+ str(int(row["NumArbre"])) +" de la placette "+ str(row["NumPlac"]) + " n'est pas renseigné.",
-              "table": "Arbres",
-              "column": [ "NumArbre", "Diam1", "Diam2"],
-              "row": [index], 
-              "value": Empty_temp.loc[[index],:].to_json(orient='records'),
-            }
-          error_List_Temp.append(err)
-        verificationList.append({'errorName': "Diam2 non renseigné", "errorText": "Diam2 vides pour des arbres vivants de Diam1 > 30 cm", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+          if i<100:
+            err = {
+                "message": "Le Diam2 de l'arbre "+ str(int(row["NumArbre"])) +" de la placette "+ str(row["NumPlac"]) + " n'est pas renseigné.",
+                "table": "Arbres",
+                "column": [ "NumArbre", "Diam1", "Diam2"],
+                "row": [index], 
+                "value": Empty_temp.loc[[index],:].to_json(orient='records'),
+              }
+            error_List_Temp.append(err)
+          i=i+1
+        verificationList.append({'errorName': "Diam2 non renseigné", "errorText": "Diam2 vides pour des arbres vivants de Diam1 > 30 cm", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
 
       # -- autres variables
@@ -686,33 +733,39 @@ def data_verification(data):
       Vital = Arbres[ Arbres["NumArbre"].isna() |  Arbres["Essence"].isna() | Arbres["Azimut"].isna() | Arbres["Dist"].isna() | Arbres["Diam1"].isna()]
       Vital = Vital[[ "NumPlac", "NumArbre", "Essence", "Azimut", "Dist", "Diam1"]]
       if not Vital.empty:
+        i=0
         error_List_Temp=[]
         for index, row in Vital.iterrows():
-          err = {
-              "message": "Une/des colonne(s) de l'arbre "+ str(int(row["NumArbre"])) +" de la placette "+ str(row["NumPlac"]) + " ne sont pas renseignées.",
-              "table": "Arbres",
-              "column": ["NumArbre", "Essence", "Azimut", "Dist", "Diam1"],
-              "row": [index], 
-              "value": Vital.loc[[index],:].to_json(orient='records'),
-            }
-          error_List_Temp.append(err)
-        verificationList.append({'errorName': "Informations manquantes dans Arbres", 'errorText': "Il manque des informations à des colonne(s) dans la table Arbre", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+          if i<100:
+            err = {
+                "message": "Une/des colonne(s) de l'arbre "+ str(int(row["NumArbre"])) +" de la placette "+ str(row["NumPlac"]) + " ne sont pas renseignées.",
+                "table": "Arbres",
+                "column": ["NumArbre", "Essence", "Azimut", "Dist", "Diam1"],
+                "row": [index], 
+                "value": Vital.loc[[index],:].to_json(orient='records'),
+              }
+            error_List_Temp.append(err)
+          i=i+1
+        verificationList.append({'errorName': "Informations manquantes dans Arbres", 'errorText': "Il manque des informations à des colonne(s) dans la table Arbre", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
       # ---------- Contrôle des codes écologiques : ---------- #
       Table_temp = Arbres[~Arbres["CodeEcolo"].isna() & Arbres["Ref_CodeEcolo"].isna()]
       Table_temp = Table_temp[[ "NumPlac", "NumArbre", "CodeEcolo", "Ref_CodeEcolo" ]]
       if not Table_temp.empty:
+        i=0
         error_List_Temp=[]
         for index, row in Table_temp.iterrows():
-          err = {
-              "message": "L'arbre "+ str(int(row["NumArbre"])) +" de la placette "+ str(row["NumPlac"]) + " n'a pas de Ref_CodeEcolo.",
-              "table": "Arbres",
-              "column": [ "NumPlac", "NumArbre", "CodeEcolo", "Ref_CodeEcolo" ],
-              "row": [index], 
-              "value": Table_temp.loc[[index],:].to_json(orient='records'),
-            }
-          error_List_Temp.append(err)
-        verificationList.append({'errorName': "DMH sans référence de codification", 'errorText': "Il y a des arbres portant des DMH sans référence de codification renseignée (Ref_CodeEcolo vide pour CodeEcolo non vide). <a  target='_blank' rel='noopener noreferrer' href='https://docs.google.com/spreadsheets/d/1b6cfcJwKSZxODuJSbyE_UGCJFt985az-ZMNlxEeavVE/edit#gid=0'>Code Ecolo</a>", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+          if i<100:
+            err = {
+                "message": "L'arbre "+ str(int(row["NumArbre"])) +" de la placette "+ str(row["NumPlac"]) + " n'a pas de Ref_CodeEcolo.",
+                "table": "Arbres",
+                "column": [ "NumPlac", "NumArbre", "CodeEcolo", "Ref_CodeEcolo" ],
+                "row": [index], 
+                "value": Table_temp.loc[[index],:].to_json(orient='records'),
+              }
+            error_List_Temp.append(err)
+          i=i+1
+        verificationList.append({'errorName': "DMH sans référence de codification", 'errorText': "Il y a des arbres portant des DMH sans référence de codification renseignée (Ref_CodeEcolo vide pour CodeEcolo non vide). <a  target='_blank' rel='noopener noreferrer' href='https://docs.google.com/spreadsheets/d/1b6cfcJwKSZxODuJSbyE_UGCJFt985az-ZMNlxEeavVE/edit#gid=0'>Code Ecolo</a>", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
       # ----- CodeEcolo non reconnus
       df_Codes = Arbres[~Arbres["Ref_CodeEcolo"].isna()]
@@ -755,16 +808,19 @@ def data_verification(data):
           temp = posProSilva[[(not (x <= Prosilva_codes)) for x in posProSilva["CodeEcolo"]]]
           if not temp.empty:
             error_List_Temp=[]
+            i=0
             for index, row in temp.iterrows():
-              err = {
-                  "message": "Un/Plusieurs codes DMH n'est/ne sont pas reconnus pour l'arbre "+ str(int(row["NumArbre"])) +" de la placette "+ str(row["NumPlac"]),
-                  "table": "Arbres",
-                  "column": [ "NumPlac", "NumArbre", "CodeEcolo", "Ref_CodeEcolo" ],
-                  "row": [index], 
-                  "value": posProSilva_temp.loc[[index],:].to_json(orient='records'),
-                }
-              error_List_Temp.append(err)
-            verificationList.append({'errorName': 'Code(s) DMH Prosilva non reconnu(s)', 'errorText': "Il y a des codes DMH référencés ProSilva qui ne sont pas reconnus dans la table Arbres. Attention, les codes doivent être séparés par des tirets. Ex: CV2-CV3. <a target='_blank' rel='noopener noreferrer' href='https://docs.google.com/spreadsheets/d/1b6cfcJwKSZxODuJSbyE_UGCJFt985az-ZMNlxEeavVE/edit#gid=0'>Code Ecolo</a>", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+              if i<100:
+                err = {
+                    "message": "Un/Plusieurs codes DMH n'est/ne sont pas reconnus pour l'arbre "+ str(int(row["NumArbre"])) +" de la placette "+ str(row["NumPlac"]),
+                    "table": "Arbres",
+                    "column": [ "NumPlac", "NumArbre", "CodeEcolo", "Ref_CodeEcolo" ],
+                    "row": [index], 
+                    "value": posProSilva_temp.loc[[index],:].to_json(orient='records'),
+                  }
+                error_List_Temp.append(err)
+              i=i+1
+            verificationList.append({'errorName': 'Code(s) DMH Prosilva non reconnu(s)', 'errorText': "Il y a des codes DMH référencés ProSilva qui ne sont pas reconnus dans la table Arbres. Attention, les codes doivent être séparés par des tirets. Ex: CV2-CV3. <a target='_blank' rel='noopener noreferrer' href='https://docs.google.com/spreadsheets/d/1b6cfcJwKSZxODuJSbyE_UGCJFt985az-ZMNlxEeavVE/edit#gid=0'>Code Ecolo</a>", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
         # --- Codification EFI
         if not posEFI.empty:
@@ -775,16 +831,19 @@ def data_verification(data):
           temp = posEFI[[(not (x <= EFI_codes)) for x in posEFI["CodeEcolo"]]]
           if not temp.empty:
             error_List_Temp=[]
+            i=0
             for index, row in temp.iterrows():
-              err = {
-                  "message": "Un/Plusieurs codes DMH n'est/ne sont pas reconnus pour l'arbre "+ str(int(row["NumArbre"])) +" de la placette "+ str(row["NumPlac"]),
-                  "table": "Arbres",
-                  "column": [ "NumPlac", "NumArbre", "CodeEcolo", "Ref_CodeEcolo" ],
-                  "row": [index], 
-                  "value": posEFI_temp.loc[[index],:].to_json(orient='records'),
-                }
-              error_List_Temp.append(err)
-            verificationList.append({'errorName': 'Code(s) DMH EFI non reconnu(s)', 'errorText': "Il y a des codes DMH référencés EFI qui ne sont pas reconnus dans la table Arbres. Attention, les codes doivent être séparés par des tirets. Ex: CV2-CV3. <a target='_blank' rel='noopener noreferrer' href='https://docs.google.com/spreadsheets/d/1b6cfcJwKSZxODuJSbyE_UGCJFt985az-ZMNlxEeavVE/edit#gid=0'>Code Ecolo</a>", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+              if i<100:
+                err = {
+                    "message": "Un/Plusieurs codes DMH n'est/ne sont pas reconnus pour l'arbre "+ str(int(row["NumArbre"])) +" de la placette "+ str(row["NumPlac"]),
+                    "table": "Arbres",
+                    "column": [ "NumPlac", "NumArbre", "CodeEcolo", "Ref_CodeEcolo" ],
+                    "row": [index], 
+                    "value": posEFI_temp.loc[[index],:].to_json(orient='records'),
+                  }
+                error_List_Temp.append(err)
+              i=i+1
+            verificationList.append({'errorName': 'Code(s) DMH EFI non reconnu(s)', 'errorText': "Il y a des codes DMH référencés EFI qui ne sont pas reconnus dans la table Arbres. Attention, les codes doivent être séparés par des tirets. Ex: CV2-CV3. <a target='_blank' rel='noopener noreferrer' href='https://docs.google.com/spreadsheets/d/1b6cfcJwKSZxODuJSbyE_UGCJFt985az-ZMNlxEeavVE/edit#gid=0'>Code Ecolo</a>", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
 
         # --- Codification IRSTEA
@@ -796,30 +855,36 @@ def data_verification(data):
           temp = posIRSTEA[IRSTEA_mask]
           if not temp.empty:
             error_List_Temp=[]
+            i=0
             for index, row in temp.iterrows():
-              err = {
-                  "message": "Un/Plusieurs codes DMH n'est/ne sont pas reconnus pour l'arbre "+ str(int(row["NumArbre"])) +" de la placette "+ str(row["NumPlac"]),
-                  "table": "Arbres",
-                  "column": [ "NumPlac", "NumArbre", "CodeEcolo", "Ref_CodeEcolo" ],
-                  "row": [index], 
-                  "value": posIRSTEA_temp.loc[[index],:].to_json(orient='records'),
-                }
-              error_List_Temp.append(err)
-            verificationList.append({'errorName': 'Code(s) DMH IRSTEA non reconnu(s)', 'errorText': "Il y a des codes DMH référencés IRSTEA qui ne sont pas reconnus dans la table Arbres. Attention, les codes doivent être séparés par des tirets. Ex: CV2-CV3. <a target='_blank' rel='noopener noreferrer' href='https://docs.google.com/spreadsheets/d/1b6cfcJwKSZxODuJSbyE_UGCJFt985az-ZMNlxEeavVE/edit#gid=0'>Code Ecolo</a>", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+              if i<100:
+                err = {
+                    "message": "Un/Plusieurs codes DMH n'est/ne sont pas reconnus pour l'arbre "+ str(int(row["NumArbre"])) +" de la placette "+ str(row["NumPlac"]),
+                    "table": "Arbres",
+                    "column": [ "NumPlac", "NumArbre", "CodeEcolo", "Ref_CodeEcolo" ],
+                    "row": [index], 
+                    "value": posIRSTEA_temp.loc[[index],:].to_json(orient='records'),
+                  }
+                error_List_Temp.append(err)
+              i = i+1
+            verificationList.append({'errorName': 'Code(s) DMH IRSTEA non reconnu(s)', 'errorText': "Il y a des codes DMH référencés IRSTEA qui ne sont pas reconnus dans la table Arbres. Attention, les codes doivent être séparés par des tirets. Ex: CV2-CV3. <a target='_blank' rel='noopener noreferrer' href='https://docs.google.com/spreadsheets/d/1b6cfcJwKSZxODuJSbyE_UGCJFt985az-ZMNlxEeavVE/edit#gid=0'>Code Ecolo</a>", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
         # --- Codification non reconnue
         if not posUnknown.empty:
           error_List_Temp=[]
+          i=0
           for index, row in posUnknown.iterrows():
-            err = {
-                "message": "Références à des codes écologiques non reconnues pour l'arbre "+ str(int(row["NumArbre"])) +" de la placette "+ str(row["NumPlac"]),
-                "table": "Arbres",
-                "column": [ "NumPlac", "NumArbre", "Ref_CodeEcolo" ],
-                "row": [index], 
-                "value": posUnknown.loc[[index],:].to_json(orient='records'),
-              }
-            error_List_Temp.append(err)
-          verificationList.append({'errorName': 'Code(s) écologiques non reconnu(s)', 'errorText': "Il y a des références à des codifications de codes écologiques non reconnues dans la table Arbres. Rappel : les seules codifications reconnues sont celles de ProSilva, de l'IRSTEA et de l'EFI.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+            if i<100:
+              err = {
+                  "message": "Références à des codes écologiques non reconnues pour l'arbre "+ str(int(row["NumArbre"])) +" de la placette "+ str(row["NumPlac"]),
+                  "table": "Arbres",
+                  "column": [ "NumPlac", "NumArbre", "Ref_CodeEcolo" ],
+                  "row": [index], 
+                  "value": posUnknown.loc[[index],:].to_json(orient='records'),
+                }
+              error_List_Temp.append(err)
+            i=i+1
+          verificationList.append({'errorName': 'Code(s) écologiques non reconnu(s)', 'errorText': "Il y a des références à des codifications de codes écologiques non reconnues dans la table Arbres. Rappel : les seules codifications reconnues sont celles de ProSilva, de l'IRSTEA et de l'EFI.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
 
 
@@ -827,172 +892,199 @@ def data_verification(data):
       v = BMSsup30["Essence"].drop_duplicates()
     
       #Contrôle des essences rencontrées dans la table BMSsup30
-      error_List_Temp = check_species(BMSsup30, CodeEssence, Test, "BMSsup30")
+      error_List_Temp, i = check_species(BMSsup30, CodeEssence, Test, "BMSsup30")
       if len(error_List_Temp) >0:
-        verificationList.append({'errorName': 'Essence dans BMSsup30', 'errorText':"Essence dans BMSsup30", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+        verificationList.append({'errorName': 'Essence dans BMSsup30', 'errorText':"Essence dans BMSsup30", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
 
       # Valeurs extrêmes sup Azimuts
       temp = BMSsup30[BMSsup30["Azimut"] > 399]
       temp = temp[["NumPlac", "Id", "Azimut"]]
       if not temp.empty:
+        i=0
         error_List_Temp=[]
         for index, row in temp.iterrows():
-          err = {
-              "message": "Le bms "+ str(int(row["Id"])) +" de la placette "+ str(row["NumPlac"]) + " a un azimut de " + str(int(row["Azimut"])) +" supérieur à 399.",
-              "table": "BMSsup30",
-              "column": [ "Id", "Azimut"],
-              "row": [index], 
-              "value": temp.loc[[index],:].to_json(orient='records'),
-            }
-          error_List_Temp.append(err)
-        verificationList.append({'errorName': "Azimut incohérent dans BMSsup30", 'errorText': "La valeur de l'azimut est supérieur à 399.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+          if i<100:
+            err = {
+                "message": "Le bms "+ str(int(row["Id"])) +" de la placette "+ str(row["NumPlac"]) + " a un azimut de " + str(int(row["Azimut"])) +" supérieur à 399.",
+                "table": "BMSsup30",
+                "column": [ "Id", "Azimut"],
+                "row": [index], 
+                "value": temp.loc[[index],:].to_json(orient='records'),
+              }
+            error_List_Temp.append(err)
+          i=i+1
+        verificationList.append({'errorName': "Azimut incohérent dans BMSsup30", 'errorText': "La valeur de l'azimut est supérieur à 399.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
       # Valeurs extrêmes inf Azimuts
       temp = BMSsup30[BMSsup30["Azimut"] < 0]
       temp = temp[["NumPlac", "Id", "Azimut"]]
       if not temp.empty:
         error_List_Temp=[]
+        i=0
         for index, row in temp.iterrows():
-          err = {
-              "message": "Le bms "+ str(int(row["Id"])) +" de la placette "+ str(row["NumPlac"]) + " a un azimut de " + str(int(row["Azimut"])) +" inférieur à 0.",
-              "table": "BMSsup30",
-              "column": [ "Id", "Azimut"],
-              "row": [index], 
-              "value": temp.loc[[index],:].to_json(orient='records'),
-            }
-          error_List_Temp.append(err)
-        verificationList.append({'errorName': "Azimut incohérent dans BMSsup30", 'errorText': "La valeur de l'azimut est inférieur à 0.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+          if i<100:
+            err = {
+                "message": "Le bms "+ str(int(row["Id"])) +" de la placette "+ str(row["NumPlac"]) + " a un azimut de " + str(int(row["Azimut"])) +" inférieur à 0.",
+                "table": "BMSsup30",
+                "column": [ "Id", "Azimut"],
+                "row": [index], 
+                "value": temp.loc[[index],:].to_json(orient='records'),
+              }
+            error_List_Temp.append(err)
+          i=i+1
+        verificationList.append({'errorName': "Azimut incohérent dans BMSsup30", 'errorText': "La valeur de l'azimut est inférieur à 0.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
       # Valeurs extrêmes distance sup
       temp = BMSsup30[BMSsup30["Dist"] >20 ]
       temp = temp[["NumPlac", "Id", "Dist"]]
       if not temp.empty:
         error_List_Temp=[]
+        i=0
         for index, row in temp.iterrows():
-          err = {
-              "message": "Le bms "+ str(int(row["Id"])) +" de la placette "+ str(row["NumPlac"]) + " a une distance de " + str(int(row["Dist"])) +" supérieure à 20.",
-              "table": "BMSsup30",
-              "column": [ "Id", "Dist"],
-              "row": [index], 
-              "value": temp.loc[[index],:].to_json(orient='records'),
-            }
-          error_List_Temp.append(err)
-        verificationList.append({'errorName': "Distance incohérente dans BMSsup30", 'errorText': "La valeur de la distance est supérieure à 20.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+          if i<100:
+            err = {
+                "message": "Le bms "+ str(int(row["Id"])) +" de la placette "+ str(row["NumPlac"]) + " a une distance de " + str(int(row["Dist"])) +" supérieure à 20.",
+                "table": "BMSsup30",
+                "column": [ "Id", "Dist"],
+                "row": [index], 
+                "value": temp.loc[[index],:].to_json(orient='records'),
+              }
+            error_List_Temp.append(err)
+            i=i+1
+        verificationList.append({'errorName': "Distance incohérente dans BMSsup30", 'errorText': "La valeur de la distance est supérieure à 20.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
       # Valeurs extrêmes distance inf
       temp = BMSsup30[BMSsup30["Dist"] <0 ]
       temp = temp[["NumPlac", "Id", "Dist"]]
       if not temp.empty:
+        i=0
         error_List_Temp=[]
         for index, row in temp.iterrows():
-          err = {
-              "message": "Le bms "+ str(int(row["Id"])) +" de la placette "+ str(row["NumPlac"]) + " a une distance de " + str(int(row["Dist"])) +" inférieure à 0.",
-              "table": "BMSsup30",
-              "column": [ "Id", "Dist"],
-              "row": [index], 
-              "value": temp.loc[[index],:].to_json(orient='records'),
-            }
-          error_List_Temp.append(err)
-        verificationList.append({'errorName': "Distance incohérente dans BMSsup30", 'errorText': "La valeur de la distance est inférieure à 0.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+          if i <100:
+            err = {
+                "message": "Le bms "+ str(int(row["Id"])) +" de la placette "+ str(row["NumPlac"]) + " a une distance de " + str(int(row["Dist"])) +" inférieure à 0.",
+                "table": "BMSsup30",
+                "column": [ "Id", "Dist"],
+                "row": [index], 
+                "value": temp.loc[[index],:].to_json(orient='records'),
+              }
+            error_List_Temp.append(err)
+          i=i+1
+        verificationList.append({'errorName': "Distance incohérente dans BMSsup30", 'errorText': "La valeur de la distance est inférieure à 0.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
 
       # Valeurs extrêmes sup DiamMed
       temp = BMSsup30[BMSsup30["DiamMed"] > 150]
       temp = temp[["NumPlac", "Id", "DiamMed"]]
       if not temp.empty:
+        i=0
         error_List_Temp=[]
         for index, row in temp.iterrows():
-          err = {
-              "message": "Le bms "+ str(int(row["Id"])) +" de la placette "+ str(row["NumPlac"]) + " a un diamètre de " + str(int(row["DiamMed"])) +" supérieur à 150.",
-              "table": "BMSsup30",
-              "column": [ "Id", "DiamMed"],
-              "row": [index], 
-              "value": temp.loc[[index],:].to_json(orient='records'),
-            }
-          error_List_Temp.append(err)
-        verificationList.append({'errorName': "Diamètre incohérent dans BMSsup30", 'errorText': "La valeur du diamètre est supérieur à 150.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': False})
+          if i<100:
+            err = {
+                "message": "Le bms "+ str(int(row["Id"])) +" de la placette "+ str(row["NumPlac"]) + " a un diamètre de " + str(int(row["DiamMed"])) +" supérieur à 150.",
+                "table": "BMSsup30",
+                "column": [ "Id", "DiamMed"],
+                "row": [index], 
+                "value": temp.loc[[index],:].to_json(orient='records'),
+              }
+            error_List_Temp.append(err)
+          i=i+1
+        verificationList.append({'errorName': "Diamètre incohérent dans BMSsup30", 'errorText': "La valeur du diamètre est supérieur à 150.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': False, 'errorNumber': i})
 
       # Valeurs extrêmes sup DiamIni
       temp = BMSsup30[BMSsup30["DiamIni"] > 150]
       temp = temp[["NumPlac", "Id", "DiamIni"]]
       if not temp.empty:
         error_List_Temp=[]
+        i=0
         for index, row in temp.iterrows():
-          err = {
-              "message": "Le bms "+ str(int(row["Id"])) +" de la placette "+ str(row["NumPlac"]) + " a un diamètre de " + str(int(row["DiamIni"])) +" supérieur à 150.",
-              "table": "BMSsup30",
-              "column": [ "Id", "DiamIni"],
-              "row": [index], 
-              "value": temp.loc[[index],:].to_json(orient='records'),
-            }
-          error_List_Temp.append(err)
-        verificationList.append({'errorName': "Diamètre incohérent dans BMSsup30", 'errorText': "La valeur du diamètre est supérieur à 150.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': False})
+          if i<100:
+            err = {
+                "message": "Le bms "+ str(int(row["Id"])) +" de la placette "+ str(row["NumPlac"]) + " a un diamètre de " + str(int(row["DiamIni"])) +" supérieur à 150.",
+                "table": "BMSsup30",
+                "column": [ "Id", "DiamIni"],
+                "row": [index], 
+                "value": temp.loc[[index],:].to_json(orient='records'),
+              }
+            error_List_Temp.append(err)
+            i=i+1
+        verificationList.append({'errorName': "Diamètre incohérent dans BMSsup30", 'errorText': "La valeur du diamètre est supérieur à 150.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': False,'errorNumber': i})
 
       # Valeurs extrêmes sup DiamFin
       temp = BMSsup30[BMSsup30["DiamFin"] > 150]
       temp = temp[["NumPlac", "Id", "DiamFin"]]
+      i=0
       if not temp.empty:
         error_List_Temp=[]
         for index, row in temp.iterrows():
-          err = {
-              "message": "Le bms "+ str(int(row["Id"])) +" de la placette "+ str(row["NumPlac"]) + " a un diamètre de " + str(int(row["DiamFin"])) +" supérieur à 150.",
-              "table": "BMSsup30",
-              "column": [ "Id", "DiamFin"],
-              "row": [index], 
-              "value": temp.loc[[index],:].to_json(orient='records'),
-            }
-          error_List_Temp.append(err)
-        verificationList.append({'errorName': "Diamètre incohérent dans BMSsup30", 'errorText': "La valeur du diamètre est supérieur à 150.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': False})
+          if i<100:
+            err = {
+                "message": "Le bms "+ str(int(row["Id"])) +" de la placette "+ str(row["NumPlac"]) + " a un diamètre de " + str(int(row["DiamFin"])) +" supérieur à 150.",
+                "table": "BMSsup30",
+                "column": [ "Id", "DiamFin"],
+                "row": [index], 
+                "value": temp.loc[[index],:].to_json(orient='records'),
+              }
+            error_List_Temp.append(err)
+          i=i+1 
+        verificationList.append({'errorName': "Diamètre incohérent dans BMSsup30", 'errorText': "La valeur du diamètre est supérieur à 150.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': False,'errorNumber': i})
 
       # Valeurs extrêmes de longueur de billon inf
       temp = BMSsup30[BMSsup30["Longueur"] < 0]
       temp = temp[["NumPlac", "Id", "Longueur"]]
+      i=0
       if not temp.empty:
         error_List_Temp=[]
         for index, row in temp.iterrows():
-          err = {
-              "message": "Le bms "+ str(int(row["Id"])) +" de la placette "+ str(row["NumPlac"]) + " a un diamètre de " + str(float(row["Longueur"])) +" inférieur à 0.",
-              "table": "BMSsup30",
-              "column": [ "Id", "Longueur"],
-              "row": [index], 
-              "value": temp.loc[[index],:].to_json(orient='records'),
-            }
-          error_List_Temp.append(err)
-        verificationList.append({'errorName': "Longueur de billon incohérent dans BMSsup30", 'errorText': "La valeur du diamètre est inférieure à 0.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+          if i<100:
+            err = {
+                "message": "Le bms "+ str(int(row["Id"])) +" de la placette "+ str(row["NumPlac"]) + " a un diamètre de " + str(float(row["Longueur"])) +" inférieur à 0.",
+                "table": "BMSsup30",
+                "column": [ "Id", "Longueur"],
+                "row": [index], 
+                "value": temp.loc[[index],:].to_json(orient='records'),
+              }
+            error_List_Temp.append(err)
+          i=i+1 
+        verificationList.append({'errorName': "Longueur de billon incohérent dans BMSsup30", 'errorText': "La valeur du diamètre est inférieure à 0.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
       # Valeurs extrêmes de longueur de billon sup
       temp = BMSsup30[BMSsup30["Longueur"] > 40]
       temp = temp[["NumPlac", "Id", "Longueur"]]
       if not temp.empty:
         error_List_Temp=[]
+        i=0
         for index, row in temp.iterrows():
-          err = {
-              "message": "Le bms "+ str(int(row["Id"])) +" de la placette "+ str(row["NumPlac"]) + " a une longueur de " + str(row["Longueur"]) +" supérieure à 40.",
-              "table": "BMSsup30",
-              "column": [ "Id", "Longueur"],
-              "row": [index], 
-              "value": temp.loc[[index],:].to_json(orient='records'),
-            }
-          error_List_Temp.append(err)
-        verificationList.append({'errorName': "Longueur de billon incohérent dans BMSsup30", 'errorText': "La valeur du diamètre est supérieure à 40.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+          if i<100:
+            err = {
+                "message": "Le bms "+ str(int(row["Id"])) +" de la placette "+ str(row["NumPlac"]) + " a une longueur de " + str(row["Longueur"]) +" supérieure à 40.",
+                "table": "BMSsup30",
+                "column": [ "Id", "Longueur"],
+                "row": [index], 
+                "value": temp.loc[[index],:].to_json(orient='records'),
+              }
+            error_List_Temp.append(err)
+          i=i+1
+        verificationList.append({'errorName': "Longueur de billon incohérent dans BMSsup30", 'errorText': "La valeur du diamètre est supérieure à 40.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
       # Contrôle des stades de décomposition
       soundness_code = "de décomposition"
-      error_List_Temp = check_code(CodeDurete, BMSsup30, soundness_code, "BMSsup30")
+      error_List_Temp, i = check_code(CodeDurete, BMSsup30, soundness_code, "BMSsup30")
       if len(error_List_Temp) >0:
-        verificationList.append({'errorName': 'Contrôle Stade de décomposition non reconnu(s)', 'errorText': 'Contrôle Stade de décomposition dans BMSsup30', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+        verificationList.append({'errorName': 'Contrôle Stade de décomposition non reconnu(s)', 'errorText': 'Contrôle Stade de décomposition dans BMSsup30', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
 
       # Contrôle des stades de d'écorce'
       bark_code = "écorce"
-      error_List_Temp = check_code(CodeEcorce, BMSsup30, bark_code, "BMSsup30")
+      error_List_Temp, i = check_code(CodeEcorce, BMSsup30, bark_code, "BMSsup30")
       if len(error_List_Temp) >0:
-        verificationList.append({'errorName': "Contrôle Stade d'écorce non reconnu", 'errorText':  "Contrôle Stade d'écorce dans BMSsup30", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+        verificationList.append({'errorName': "Contrôle Stade d'écorce non reconnu", 'errorText':  "Contrôle Stade d'écorce dans BMSsup30", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
 
       # Contrôle des numéros d'inventaire
-      check_cycle_Error_List = check_cycle(BMSsup30, Test, CyclesCodes, "BMSsup30", An, Dispositifs)
+      check_cycle_Error_List, i = check_cycle(BMSsup30, Test, CyclesCodes, "BMSsup30", An, Dispositifs)
       if len(check_cycle_Error_List) >0:
         verificationList.append({'errorName': "Contrôle des cycles dans BMSsup30", 'errorText': 'Contrôle des cycles dans BMSsup30', 'errorList' : check_cycle_Error_List, 'errorType': 'PsdrfError', 'isFatalError': False})
 
@@ -1003,16 +1095,19 @@ def data_verification(data):
       Vital = Vital[["NumPlac", "NumArbre", "Id", "Essence", "DiamMed", "Longueur", "StadeD", "StadeE"]]
       if not Vital.empty:
         error_List_Temp=[]
+        i=0
         for index, row in Vital.iterrows():
-          err = {
-              "message": "Une/des colonne(s) pour la placette "+ str(row["NumPlac"]) + " n'est/ne sont pas renseignées dans la table BMSsup30.",
-              "table": "BMSsup30",
-              "column": ["Id", "Essence", "DiamMed", "Longueur", "StadeD", "StadeE"],
-              "row": [index], 
-              "value": Vital.loc[[index],:].to_json(orient='records'),
-            }
-          error_List_Temp.append(err)
-        verificationList.append({'errorName': "Informations manquantes dans BMSsup30", 'errorText': "Il manque des informations à des colonne(s) dans la table BMSsup30", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+          if i<100:
+            err = {
+                "message": "Une/des colonne(s) pour la placette "+ str(row["NumPlac"]) + " n'est/ne sont pas renseignées dans la table BMSsup30.",
+                "table": "BMSsup30",
+                "column": ["Id", "Essence", "DiamMed", "Longueur", "StadeD", "StadeE"],
+                "row": [index], 
+                "value": Vital.loc[[index],:].to_json(orient='records'),
+              }
+            error_List_Temp.append(err)
+          i=i+1
+        verificationList.append({'errorName': "Informations manquantes dans BMSsup30", 'errorText': "Il manque des informations à des colonne(s) dans la table BMSsup30", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
       else: 
         # On effectue le contrôle seulement si on sait que les colonnes sont bien renseignées
         # Contrôle des valeurs dupliquées
@@ -1027,17 +1122,18 @@ def data_verification(data):
           i = 0
           error_List_Temp = []
           for index, row in df_Dupl.iterrows():
-            valuesDupl = entire_df_Dupl.loc[listDupl[i]]
-            err = {
-                "message": "L'Arbre "+ str(row["Id"])+" de la placette "+ str(row["NumPlac"]) +" au cycle "+ str(row["Cycle"]) +" apparaît plusieurs fois dans la table BMSsup30",
-                "table": "BMSsup30",
-                "column": ["NumDisp", "NumPlac", "Id", "Cycle"],
-                "row": listDupl[i], 
-                "value": valuesDupl.to_json(orient='records'),
-              }
+            if i<100:
+              valuesDupl = entire_df_Dupl.loc[listDupl[i]]
+              err = {
+                  "message": "L'Arbre "+ str(row["Id"])+" de la placette "+ str(row["NumPlac"]) +" au cycle "+ str(row["Cycle"]) +" apparaît plusieurs fois dans la table BMSsup30",
+                  "table": "BMSsup30",
+                  "column": ["NumDisp", "NumPlac", "Id", "Cycle"],
+                  "row": listDupl[i], 
+                  "value": valuesDupl.to_json(orient='records'),
+                }
             i = i + 1
             error_List_Temp.append(err)
-          verificationList.append({'errorName': "Duplication dans BMSsup30", 'errorText': 'Lignes dupliquées dans la table BMSsup30', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+          verificationList.append({'errorName': "Duplication dans BMSsup30", 'errorText': 'Lignes dupliquées dans la table BMSsup30', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
         BMSsup30[["DiamFin", "DiamMed", "DiamIni"]] = BMSsup30[["DiamFin", "DiamMed", "DiamIni"]].apply(pd.to_numeric)
 
 
@@ -1047,65 +1143,77 @@ def data_verification(data):
       temp = temp[["NumPlac", "Id", "DiamFin", "DiamMed", "DiamIni", "Longueur"]]
       if not temp.empty:
         error_List_Temp=[]
+        i=0
         for index, row in temp.iterrows():
-          err = {
-              "message": "Le billon  "+ str(int(row["Id"])) +" de la placette "+ str(row["NumPlac"]) + " mesure moins de 30cm.",
-              "table": "BMSsup30",
-              "column": ["NumPlac", "Id", "DiamFin", "DiamMed", "DiamIni", "Longueur"],
-              "row": [index], 
-              "value": temp.loc[[index],:].to_json(orient='records'),
-            }
-          error_List_Temp.append(err)
-        verificationList.append({'errorName': "Diamètre trop petit dans BMSsup30", 'errorText': "Certains billons ont des valeurs de diamètre inférieures à 30 cm. Impossible dans le PSDRF", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+          if i<100:
+            err = {
+                "message": "Le billon  "+ str(int(row["Id"])) +" de la placette "+ str(row["NumPlac"]) + " mesure moins de 30cm.",
+                "table": "BMSsup30",
+                "column": ["NumPlac", "Id", "DiamFin", "DiamMed", "DiamIni", "Longueur"],
+                "row": [index], 
+                "value": temp.loc[[index],:].to_json(orient='records'),
+              }
+            error_List_Temp.append(err)
+          i=i+1
+        verificationList.append({'errorName': "Diamètre trop petit dans BMSsup30", 'errorText': "Certains billons ont des valeurs de diamètre inférieures à 30 cm. Impossible dans le PSDRF", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
       # ----- Contrôle DiamIni et DiamFin non vides pour les billons > 5m :
       temp = BMSsup30[(BMSsup30["DiamFin"].isna() | BMSsup30["DiamMed"].isna() | BMSsup30["DiamIni"].isna()) & (BMSsup30["Longueur"] >= 5)]
       temp = temp[["NumPlac", "Id", "DiamFin", "DiamMed", "DiamIni", "Longueur"]]
       if not temp.empty:
         error_List_Temp=[]
+        i=0
         for index, row in temp.iterrows():
-          err = {
-              "message": "Il manque une valeur pour le billon  "+ str(int(row["Id"])) +" de la placette "+ str(row["NumPlac"]),
-              "table": "BMSsup30",
-              "column": ["NumPlac", "Id", "DiamFin", "DiamMed", "DiamIni", "Longueur"],
-              "row": [index], 
-              "value": temp.loc[[index],:].to_json(orient='records'),
-            }
-          error_List_Temp.append(err)
-        verificationList.append({'errorName': "Diamètre(s) manquant(s) dans BMSsup30", 'errorText': "Valeurs manquantes dans 'DiamIni', 'DiamMed' ou 'DiamFin' pour des billons d'au moins 5 m de longueur. Impossible dans le PSDRF", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+          if i<100:
+            err = {
+                "message": "Il manque une valeur pour le billon  "+ str(int(row["Id"])) +" de la placette "+ str(row["NumPlac"]),
+                "table": "BMSsup30",
+                "column": ["NumPlac", "Id", "DiamFin", "DiamMed", "DiamIni", "Longueur"],
+                "row": [index], 
+                "value": temp.loc[[index],:].to_json(orient='records'),
+              }
+            error_List_Temp.append(err)
+          i=i+1
+        verificationList.append({'errorName': "Diamètre(s) manquant(s) dans BMSsup30", 'errorText': "Valeurs manquantes dans 'DiamIni', 'DiamMed' ou 'DiamFin' pour des billons d'au moins 5 m de longueur. Impossible dans le PSDRF", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
       # ----- Contrôle DiamIni vide ou DiamFin vides pour les billons < 5m :
       temp = BMSsup30[((~BMSsup30["DiamFin"].isna()) | (~BMSsup30["DiamIni"].isna())) & (BMSsup30["Longueur"] < 5)]
       temp = temp[["NumPlac", "Id", "DiamFin", "DiamIni", "Longueur"]]
       if not temp.empty:
         error_List_Temp=[]
+        i=0
         for index, row in temp.iterrows():
-          err = {
-              "message": "DiamIni et/ou de DiamFin sont renseignées pour le billon  "+ str(int(row["Id"])) +" de la placette "+ str(row["NumPlac"]),
-              "table": "BMSsup30",
-              "column": ["NumPlac", "Id", "DiamFin", "DiamIni", "Longueur"],
-              "row": [index], 
-              "value": temp.loc[[index],:].to_json(orient='records'),
-            }
-          error_List_Temp.append(err)
-        verificationList.append({'errorName': "Diamètre(s) non necessaire(s) dans BMSsup30", 'errorText': "Billons de moins 5m de longueur pour lesquels des valeurs de 'DiamIni' et/ou de 'DiamFin' sont renseignées (impossible dans le PSDRF)", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': False})
+          if i<100:
+            err = {
+                "message": "DiamIni et/ou de DiamFin sont renseignées pour le billon  "+ str(int(row["Id"])) +" de la placette "+ str(row["NumPlac"]),
+                "table": "BMSsup30",
+                "column": ["NumPlac", "Id", "DiamFin", "DiamIni", "Longueur"],
+                "row": [index], 
+                "value": temp.loc[[index],:].to_json(orient='records'),
+              }
+            error_List_Temp.append(err)
+          i=i+1
+        verificationList.append({'errorName': "Diamètre(s) non necessaire(s) dans BMSsup30", 'errorText': "Billons de moins 5m de longueur pour lesquels des valeurs de 'DiamIni' et/ou de 'DiamFin' sont renseignées (impossible dans le PSDRF)", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': False, 'errorNumber': i})
 
 
       # ----- Contrôle DiamIni > DiamMed > DiamFin pour les billons < 5m :
-      temp = BMSsup30[~((BMSsup30["DiamIni"] > BMSsup30["DiamMed"]) & (BMSsup30["DiamMed"] > BMSsup30["DiamFin"])) & (BMSsup30["Longueur"] >= 5)]
+      temp = BMSsup30[~((BMSsup30["DiamIni"] >= BMSsup30["DiamMed"]) & (BMSsup30["DiamMed"] >= BMSsup30["DiamFin"])) & (BMSsup30["Longueur"] >= 5)]
       temp = temp[["NumPlac", "Id", "DiamFin", "DiamMed", "DiamIni", "Longueur"]]
       if not temp.empty:
         error_List_Temp=[]
+        i=0
         for index, row in temp.iterrows():
-          err = {
-              "message": "La logique 'DiamIni' > 'DiamMed' > 'DiamFin' n'est pas respectée pour le billon  "+ str(int(row["Id"])) +" de la placette "+ str(row["NumPlac"]),
-              "table": "BMSsup30",
-              "column": ["NumPlac", "Id", "DiamIni", "DiamMed", "DiamFin", "Longueur"],
-              "row": [index], 
-              "value": temp.loc[[index],:].to_json(orient='records'),
-            }
-          error_List_Temp.append(err)
-        verificationList.append({'errorName': "Grandeurs des Diamètre(s) incohérents dans BMSsup30", 'errorText': "Incohérence possible dans les diamètres des billons : certains ne respectent pas la logique 'DiamIni' > 'DiamMed' > 'DiamFin'", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': False})
+          if i<100:
+            err = {
+                "message": "La logique 'DiamIni' >= 'DiamMed' >= 'DiamFin' n'est pas respectée pour le billon  "+ str(int(row["Id"])) +" de la placette "+ str(row["NumPlac"]),
+                "table": "BMSsup30",
+                "column": ["NumPlac", "Id", "DiamIni", "DiamMed", "DiamFin", "Longueur"],
+                "row": [index], 
+                "value": temp.loc[[index],:].to_json(orient='records'),
+              }
+            error_List_Temp.append(err)
+          i=i+1
+        verificationList.append({'errorName': "Grandeurs des Diamètre(s) incohérents dans BMSsup30", 'errorText': "Incohérence possible dans les diamètres des billons : certains ne respectent pas la logique 'DiamIni' >= 'DiamMed' >= 'DiamFin'", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': False, 'errorNumber': i})
 
       
 
@@ -1139,17 +1247,20 @@ def data_verification(data):
             df_Error = temp1.iloc[pos_Error, : ]
           if df_Error.shape[0] >0:
             error_List_Temp = []
+            i=0
             for index, row in df_Error.iterrows():
-              tValues = BMSsup30[["Id", "Cycle", str(row["variable"].item())]].loc[[int(x) for x in row["<lambda>"].values]]
-              err = {
-                  "message": "Incohérence(s) relevée(s) sur les valeurs "+ str(row["variable"].item()) +" pour l'id numéro "+ str(row["Id"].item()) + " de la placette numéro " + str(row["NumPlac"].item()),
-                  "table": "BMSsup30",
-                  "column": [ "Id", "Cycle", str(row["variable"].item())],
-                  "row": [int(x) for x in row["<lambda>"].values], 
-                  "value": tValues.to_json(orient='records'),
-                }
-              error_List_Temp.append(err)
-            verificationList.append({'errorName': "Incohérence(s) dans BMSsup30", 'errorText':  "BMSsup30: Incohérence(s) relevée(s) sur les valeurs d'Essence, Azimut et Dist entre les différents inventaires. Conseil: Modifier les valeurs des cycles précédents si vous êtes sûrs de vous.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+              if i<100:
+                tValues = BMSsup30[["Id", "Cycle", str(row["variable"].item())]].loc[[int(x) for x in row["<lambda>"].values]]
+                err = {
+                    "message": "Incohérence(s) relevée(s) sur les valeurs "+ str(row["variable"].item()) +" pour l'id numéro "+ str(row["Id"].item()) + " de la placette numéro " + str(row["NumPlac"].item()),
+                    "table": "BMSsup30",
+                    "column": [ "Id", "Cycle", str(row["variable"].item())],
+                    "row": [int(x) for x in row["<lambda>"].values], 
+                    "value": tValues.to_json(orient='records'),
+                  }
+                error_List_Temp.append(err)
+              i=i+1
+            verificationList.append({'errorName': "Incohérence(s) dans BMSsup30", 'errorText':  "BMSsup30: Incohérence(s) relevée(s) sur les valeurs d'Essence, Azimut et Dist entre les différents inventaires. Conseil: Modifier les valeurs des cycles précédents si vous êtes sûrs de vous.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
         # ----- Contrôle Accroissement en diamètre
         if df_Dupl.empty:
@@ -1174,17 +1285,20 @@ def data_verification(data):
 
           if df_Error.shape[0] > 0 :
             error_List_Temp = []
+            i=0
             for index, row in df_Error.iterrows():
-              tValues = BMSsup30[["Id", "Cycle", str(row["variable"].item())]].loc[[int(x) for x in row["<lambda>"].values]]
-              err = {
-                "message": "Accroissement(s) sur le "+ str(row["variable"].item()) +" positif(s)  pour l'id numéro "+ str(row["Id"].item()) + " de la placette numéro " + str(row["NumPlac"].item()),
-                "table": "BMSsup30",
-                "column": [ "Id", "Cycle", str(row["variable"].item())],
-                "row": [int(x) for x in row["<lambda>"].values], 
-                "value": tValues.to_json(orient='records'),
-                    }
-              error_List_Temp.append(err)
-            verificationList.append({'errorName': "Accroissement positif dans BMSsup30", 'errorText': "Accroissement(s) sur le diamètre positif(s) constaté(s) entre les différents inventaires.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': False})
+              if i<100:
+                tValues = BMSsup30[["Id", "Cycle", str(row["variable"].item())]].loc[[int(x) for x in row["<lambda>"].values]]
+                err = {
+                  "message": "Accroissement(s) sur le "+ str(row["variable"].item()) +" positif(s)  pour l'id numéro "+ str(row["Id"].item()) + " de la placette numéro " + str(row["NumPlac"].item()),
+                  "table": "BMSsup30",
+                  "column": [ "Id", "Cycle", str(row["variable"].item())],
+                  "row": [int(x) for x in row["<lambda>"].values], 
+                  "value": tValues.to_json(orient='records'),
+                      }
+                error_List_Temp.append(err)
+              i = i+1
+            verificationList.append({'errorName': "Accroissement positif dans BMSsup30", 'errorText': "Accroissement(s) sur le diamètre positif(s) constaté(s) entre les différents inventaires.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': False, 'errorNumber': i})
 
 
         # ----- Contrôle sur les écarts de diamètre entre les cycles trop importants
@@ -1201,43 +1315,49 @@ def data_verification(data):
 
         if error_trees.shape[0] > 0 :
           error_List_Temp = []
+          i=0
           for index, row in error_trees.iterrows():
-            tValues = BMSsup30[["Id", "Cycle", str(row["variable"].item())]].loc[[int(x) for x in row["<lambda>"].values],:]
-            err = {
-                "message": "Valeur d'accroissement trop importante pour le "+ str(row["variable"].item()) +" de l'arbre id "+ str(row["Id"].item()) + " de la placette numéro " + str(row["NumPlac"].item()),
-                "table": "BMSsup30",
-                "column": [ "Id", "Cycle", str(row["variable"].item())],
-                "row": [int(x) for x in row["<lambda>"].values], 
-                "value": tValues.to_json(orient='records'),
-              }
-          error_List_Temp.append(err)
-          verificationList.append({'errorName': "Accroissement anormal dans BMSsup30", 'errorText': "Valeur(s) d'accroissement en diamètre trop importante(s) détectée(s) (seuil à 15 cm entre les 2 inventaires", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': False})
+            if i<100:
+              tValues = BMSsup30[["Id", "Cycle", str(row["variable"].item())]].loc[[int(x) for x in row["<lambda>"].values],:]
+              err = {
+                  "message": "Valeur d'accroissement trop importante pour le "+ str(row["variable"].item()) +" de l'arbre id "+ str(row["Id"].item()) + " de la placette numéro " + str(row["NumPlac"].item()),
+                  "table": "BMSsup30",
+                  "column": [ "Id", "Cycle", str(row["variable"].item())],
+                  "row": [int(x) for x in row["<lambda>"].values], 
+                  "value": tValues.to_json(orient='records'),
+                }
+              error_List_Temp.append(err)
+            i=i+1
+          verificationList.append({'errorName': "Accroissement anormal dans BMSsup30", 'errorText': "Valeur(s) d'accroissement en diamètre trop importante(s) détectée(s) (seuil à 15 cm entre les 2 inventaires", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': False, 'errorNumber': i})
 
       ###Table Regeneration
-      error_List_Temp = check_species(Regeneration, CodeEssence, Test, "Regeneration")
+      error_List_Temp, i = check_species(Regeneration, CodeEssence, Test, "Regeneration")
       if len(error_List_Temp) >0:
-        verificationList.append({'errorName': 'Essence dans Regeneration', 'errorText':"Essence dans Regeneration", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+        verificationList.append({'errorName': 'Essence dans Regeneration', 'errorText':"Essence dans Regeneration", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
       # --- Contrôle des Cycles de Regenerations :
-      check_cycle_Error_List = check_cycle(Regeneration, Test, CyclesCodes, "Regeneration", An, Dispositifs)
+      check_cycle_Error_List, i = check_cycle(Regeneration, Test, CyclesCodes, "Regeneration", An, Dispositifs)
       if len(check_cycle_Error_List) >0:
-        verificationList.append({'errorName': 'Contrôle cycles dans Regeneration','errorText': 'Contrôle des cycles dans Regeneration', 'errorList' : check_cycle_Error_List, 'errorType': 'PsdrfError', 'isFatalError': False})
+        verificationList.append({'errorName': 'Contrôle cycles dans Regeneration','errorText': 'Contrôle des cycles dans Regeneration', 'errorList' : check_cycle_Error_List, 'errorType': 'PsdrfError', 'isFatalError': False, 'errorNumber': i})
 
       # ----- Contrôle des valeurs vides des variables :
       Vital = Regeneration[ Regeneration["NumPlac"].isna() | Regeneration["SsPlac"].isna() |  Regeneration["Essence"].isna() ]
       Vital = Vital[["NumPlac", "SsPlac", "Essence"]]
       if not Vital.empty:
         error_List_Temp=[]
+        i=0
         for index, row in Vital.iterrows():
-          err = {
-              "message": "Une colonne pour la placette "+ str(row["NumPlac"]) + " n'est/ne sont pas renseignées.",
-              "table": "Regeneration",
-              "column": ["NumPlac", "SsPlac", "Essence"],
-              "row": [index], 
-              "value": Vital.loc[[index],:].to_json(orient='records'),
-            }
-          error_List_Temp.append(err)
-        verificationList.append({'errorName': "Informations manquantes dans Regeneration", 'errorText': "Il manque des informations à une/des colonne(s) dans la table Regeneration", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': False})
+          if i<100:
+            err = {
+                "message": "Une colonne pour la placette "+ str(row["NumPlac"]) + " n'est/ne sont pas renseignées.",
+                "table": "Regeneration",
+                "column": ["NumPlac", "SsPlac", "Essence"],
+                "row": [index], 
+                "value": Vital.loc[[index],:].to_json(orient='records'),
+              }
+            error_List_Temp.append(err)
+          i=i+1
+        verificationList.append({'errorName': "Informations manquantes dans Regeneration", 'errorText': "Il manque des informations à une/des colonne(s) dans la table Regeneration", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': False,  'errorNumber': i})
       else :
         # Contrôle des valeurs dupliquées
         error = []
@@ -1253,18 +1373,19 @@ def data_verification(data):
           i = 0
           error_List_Temp = []
           for index, row in df_Dupl.iterrows():
-            valuesDupl = entire_df_Dupl.loc[listDupl[i]]
-            err = {
-                "message": "L'essence" + str(row["Essence"])+ "de la sous placette "+ str(row["SsPlac"])+" de la placette "+ str(row["NumPlac"]) +" au cycle "+ str(row["Cycle"]) +" apparaît plusieurs fois dans la table Regeneration",
-                "table": "Regeneration",
-                "column": ["NumDisp", "NumPlac", "SsPlac", "Cycle", "Essence", "Taillis", 'Class1', 'Class2', 'Class3', 'Recouv', 'Abroutis'],
-                "row": listDupl[i], 
-                "value": valuesDupl.to_json(orient='records'),
-              }
+            if i<100:
+              valuesDupl = entire_df_Dupl.loc[listDupl[i]]
+              err = {
+                  "message": "L'essence" + str(row["Essence"])+ "de la sous placette "+ str(row["SsPlac"])+" de la placette "+ str(row["NumPlac"]) +" au cycle "+ str(row["Cycle"]) +" apparaît plusieurs fois dans la table Regeneration",
+                  "table": "Regeneration",
+                  "column": ["NumDisp", "NumPlac", "SsPlac", "Cycle", "Essence", "Taillis", 'Class1', 'Class2', 'Class3', 'Recouv', 'Abroutis'],
+                  "row": listDupl[i], 
+                  "value": valuesDupl.to_json(orient='records'),
+                }
               #possibilité de supression d'un des 2 ou de modification
             i = i + 1
             error_List_Temp.append(err)
-          verificationList.append({'errorName': "Duplication dans Regeneration", 'errorText': 'Lignes dupliquées dans la table Regeneration. (Comparaison sur les colonnes "NumDisp", "NumPlac", "SsPlac", "Cycle", "Essence", "Taillis")', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+          verificationList.append({'errorName': "Duplication dans Regeneration", 'errorText': 'Lignes dupliquées dans la table Regeneration. (Comparaison sur les colonnes "NumDisp", "NumPlac", "SsPlac", "Cycle", "Essence", "Taillis")', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
 
 
@@ -1276,32 +1397,38 @@ def data_verification(data):
       temp = temp[["NumPlac", "Id", "Diam"]]
       if not temp.empty:
         error_List_Temp=[]
+        i=0
         for index, row in temp.iterrows():
-          err = {
-              "message": "Le transect "+ str(int(row["Id"])) +" de la placette "+ str(row["NumPlac"]) + " a un diamètre de " + str(int(row["Diam"])) +" inférieur à 5.",
-              "table": "Transect",
-              "column": [ "Id", "Diam"],
-              "row": [index], 
-              "value": temp.loc[[index],:].to_json(orient='records'),
-            }
-          error_List_Temp.append(err)
-        verificationList.append({'errorName': "Diamètre incohérent dans Transect", 'errorText': "La valeur du diamètre est inférieure à 5.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+          if i<100:
+            err = {
+                "message": "Le transect "+ str(int(row["Id"])) +" de la placette "+ str(row["NumPlac"]) + " a un diamètre de " + str(int(row["Diam"])) +" inférieur à 5.",
+                "table": "Transect",
+                "column": [ "Id", "Diam"],
+                "row": [index], 
+                "value": temp.loc[[index],:].to_json(orient='records'),
+              }
+            error_List_Temp.append(err)
+          i = i+1
+        verificationList.append({'errorName': "Diamètre incohérent dans Transect", 'errorText': "La valeur du diamètre est inférieure à 5.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
       # Valeurs extrêmes sup Diam
       temp = Transect[Transect["Diam"] > 30]
       temp = temp[["NumPlac", "Id", "Diam"]]
       if not temp.empty:
         error_List_Temp=[]
+        i=0
         for index, row in temp.iterrows():
-          err = {
-              "message": "Le transect "+ str(int(row["Id"])) +" de la placette "+ str(row["NumPlac"]) + " a un diamètre de " + str(int(row["Diam"])) +" supérieur à 30.",
-              "table": "Transect",
-              "column": [ "Id", "Diam"],
-              "row": [index], 
-              "value": temp.loc[[index],:].to_json(orient='records'),
-            }
-          error_List_Temp.append(err)
-        verificationList.append({'errorName': "Diamètre incohérent dans Transect", 'errorText': "La valeur du diamètre est supérieure à 30.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+          if i<100:
+            err = {
+                "message": "Le transect "+ str(int(row["Id"])) +" de la placette "+ str(row["NumPlac"]) + " a un diamètre de " + str(int(row["Diam"])) +" supérieur à 30.",
+                "table": "Transect",
+                "column": [ "Id", "Diam"],
+                "row": [index], 
+                "value": temp.loc[[index],:].to_json(orient='records'),
+              }
+            error_List_Temp.append(err)
+          i = i+1
+        verificationList.append({'errorName': "Diamètre incohérent dans Transect", 'errorText': "La valeur du diamètre est supérieure à 30.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
 
       # Valeurs extrêmes distance
@@ -1310,53 +1437,59 @@ def data_verification(data):
       temp = temp[["NumPlac", "Id", "Dist"]]
       if not temp.empty:
         error_List_Temp=[]
+        i=0
         for index, row in temp.iterrows():
-          err = {
-              "message": "Le transect "+ str(int(row["Id"])) +" de la placette "+ str(row["NumPlac"]) + " a une distance de " + str(int(row["Dist"])) +" supérieure à 20.",
-              "table": "Transect",
-              "column": [ "Id", "Dist"],
-              "row": [index], 
-              "value": temp.loc[[index],:].to_json(orient='records'),
-            }
-          error_List_Temp.append(err)
-        verificationList.append({'errorName': "Distance incohérente dans Transect", 'errorText': "La valeur de la distance est supérieure à 20.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+          if i<100:
+            err = {
+                "message": "Le transect "+ str(int(row["Id"])) +" de la placette "+ str(row["NumPlac"]) + " a une distance de " + str(int(row["Dist"])) +" supérieure à 20.",
+                "table": "Transect",
+                "column": [ "Id", "Dist"],
+                "row": [index], 
+                "value": temp.loc[[index],:].to_json(orient='records'),
+              }
+            error_List_Temp.append(err)
+          i = i+1
+        verificationList.append({'errorName': "Distance incohérente dans Transect", 'errorText': "La valeur de la distance est supérieure à 20.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
       
 
       ##### Contrôle des essences inventoriées dans la table #####
-      error_List_Temp = check_species(Transect, CodeEssence, Test, "Transect")
+      error_List_Temp, i = check_species(Transect, CodeEssence, Test, "Transect")
       if len(error_List_Temp) >0:
-        verificationList.append({'errorName': 'Essence dans Transect','errorText': 'Essence dans Transect', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+        verificationList.append({'errorName': 'Essence dans Transect','errorText': 'Essence dans Transect', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
       ##### Contrôle des stades de décomposition #####
-      error_List_Temp = check_code(CodeDurete, Transect, soundness_code, "Transect")
+      error_List_Temp, i = check_code(CodeDurete, Transect, soundness_code, "Transect")
       if len(error_List_Temp) >0:
-        verificationList.append({'errorName': 'Contrôle Stade de décomposition dans Transect','errorText': 'Contrôle Stade de décomposition dans Transect', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+        verificationList.append({'errorName': 'Contrôle Stade de décomposition dans Transect','errorText': 'Contrôle Stade de décomposition dans Transect', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
       ##### Contrôle des stades de d'écorce #####  
-      error_List_Temp = check_code(CodeEcorce, Transect, bark_code, "Transect")
+      error_List_Temp, i = check_code(CodeEcorce, Transect, bark_code, "Transect")
       if len(error_List_Temp) >0:
-        verificationList.append({'errorName': 'Contrôle Stade de décomposition dans Transect','errorText': 'Contrôle Stade de décomposition dans Transect', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+        verificationList.append({'errorName': 'Contrôle Stade de décomposition dans Transect','errorText': 'Contrôle Stade de décomposition dans Transect', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
       ##### Contrôle des Cycles de Transect #####  
-      check_cycle_Error_List = check_cycle(Transect, Test, CyclesCodes, "Transect", An, Dispositifs)
+      check_cycle_Error_List, i = check_cycle(Transect, Test, CyclesCodes, "Transect", An, Dispositifs)
       if len(check_cycle_Error_List) >0:
-        verificationList.append({'errorName': 'Contrôle cycles dans Transect','errorText': 'Contrôle des cycles dans Transect', 'errorList' : check_cycle_Error_List, 'errorType': 'PsdrfError', 'isFatalError': True, })
+        verificationList.append({'errorName': 'Contrôle cycles dans Transect','errorText': 'Contrôle des cycles dans Transect', 'errorList' : check_cycle_Error_List, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
       # ----- Contrôle des valeurs vides des variables :
       Vital = Transect[ Transect["Id"].isna() |  Transect["Essence"].isna() | Transect["Transect"].isna() |  Transect["Diam"].isna() | Transect["Contact"].isna() |  Transect["Angle"].isna() | Transect["Chablis"].isna() |  Transect["StadeD"].isna() |  Transect["StadeE"].isna() ]
       Vital = Vital[["Id", "Essence", "Transect", "Diam", "Contact", "Angle", "Chablis", "StadeD", "StadeE"]]
       if not Vital.empty:
         error_List_Temp=[]
+        i=0
         for index, row in Vital.iterrows():
-          err = {
-              "message": "Une/des colonne(s) de la table Transect n'est/ne sont pas renseigné(s)",
-              "table": "Transect",
-              "column": ["Id", "Essence", "Transect", "Diam", "Contact", "Angle", "Chablis", "StadeD", "StadeE"],
-              "row": [index], 
-              "value": Vital.loc[[index],:].to_json(orient='records'),
-            }
-          error_List_Temp.append(err)
-        verificationList.append({'errorName': "Informations manquantes dans Transect", 'errorText': "Il manque des informations à une/des colonne(s) dans la table Transect", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+          if i<100:
+            err = {
+                "message": "Une/des colonne(s) de la table Transect n'est/ne sont pas renseigné(s)",
+                "table": "Transect",
+                "column": ["Id", "Essence", "Transect", "Diam", "Contact", "Angle", "Chablis", "StadeD", "StadeE"],
+                "row": [index], 
+                "value": Vital.loc[[index],:].to_json(orient='records'),
+              }
+            error_List_Temp.append(err)
+          i = i+1
+        verificationList.append({'errorName': "Informations manquantes dans Transect", 'errorText': "Il manque des informations à une/des colonne(s) dans la table Transect", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
       else:
         # ---------- Contrôle des valeurs dupliquées : ---------- #
         df_Dupl_temp= Transect[["NumDisp", "NumPlac", "Id", "Cycle"]].sort_values(by=["NumDisp", "NumPlac", "Id", "Cycle"])
@@ -1368,17 +1501,18 @@ def data_verification(data):
           i = 0
           error_List_Temp = []
           for index, row in df_Dupl.iterrows():
-            valuesDupl = entire_df_Dupl.loc[listDupl[i]]
-            err = {
-                "message": "L'Id" + str(row["Id"])+ "de la placette "+ str(row["NumPlac"]) +" au cycle "+ str(row["Cycle"]) +" apparaît plusieurs fois dans la table Transect",
-                "table": "Transect",
-                "column": ["NumDisp", "NumPlac", "Id", "Cycle"],
-                "row": listDupl[i], 
-                "value": valuesDupl.to_json(orient='records'),
-              }
+            if i<100:
+              valuesDupl = entire_df_Dupl.loc[listDupl[i]]
+              err = {
+                  "message": "L'Id" + str(row["Id"])+ "de la placette "+ str(row["NumPlac"]) +" au cycle "+ str(row["Cycle"]) +" apparaît plusieurs fois dans la table Transect",
+                  "table": "Transect",
+                  "column": ["NumDisp", "NumPlac", "Id", "Cycle"],
+                  "row": listDupl[i], 
+                  "value": valuesDupl.to_json(orient='records'),
+                }
             i = i + 1
             error_List_Temp.append(err)
-          verificationList.append({'errorName': "Duplication dans Transect", 'errorText': 'Lignes dupliquées dans la table Transect. Conseil: vérifiez l\'id.', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+          verificationList.append({'errorName': "Duplication dans Transect", 'errorText': 'Lignes dupliquées dans la table Transect. Conseil: vérifiez l\'id.', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
 
 
@@ -1388,16 +1522,19 @@ def data_verification(data):
       temp = temp[["NumPlac", "Id", "Angle"]]
       if not temp.empty:
         error_List_Temp=[]
+        i=0
         for index, row in temp.iterrows():
-          err = {
-              "message": "A l'Id  "+ str(int(row["Id"])) +" de la placette "+ str(row["NumPlac"]) + " l'angle mesure plus de 50°.",
-              "table": "Transect",
-              "column": [ "NumPlac", "Id", "Angle"],
-              "row": [index], 
-              "value": temp.loc[[index],:].to_json(orient='records'),
-            }
-          error_List_Temp.append(err)
-        verificationList.append({'errorName': "Angle(s) incohérent(s) dans Transect", 'errorText': "Angle faisant strictement plus de  50°. Impossible dans le PSDRF.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+          if i<100:
+            err = {
+                "message": "A l'Id  "+ str(int(row["Id"])) +" de la placette "+ str(row["NumPlac"]) + " l'angle mesure plus de 50°.",
+                "table": "Transect",
+                "column": [ "NumPlac", "Id", "Angle"],
+                "row": [index], 
+                "value": temp.loc[[index],:].to_json(orient='records'),
+              }
+            error_List_Temp.append(err)
+          i = i+1
+        verificationList.append({'errorName': "Angle(s) incohérent(s) dans Transect", 'errorText': "Angle faisant strictement plus de  50°. Impossible dans le PSDRF.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
 
       ### Table Placettes
@@ -1406,16 +1543,19 @@ def data_verification(data):
       Vital = Vital[["Strate", "PoidsPlacette"]]
       if not Vital.empty:
         error_List_Temp=[]
+        i=0
         for index, row in Vital.iterrows():
-          err = {
-              "message": "Une/des colonne(s) de la table Placettes n'est/ne sont pas renseignée(s)",
-              "table": "Placettes",
-              "column": ["Strate", "PoidsPlacette"],
-              "row": [index], 
-              "value": Vital.loc[[index],:].to_json(orient='records'),
-            }
-          error_List_Temp.append(err)
-        verificationList.append({'errorName': "Informations manquantes dans Placettes", 'errorText': "Il manque des informations à une/des colonne(s) dans la table Placettes", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+          if i <100:
+            err = {
+                "message": "Une/des colonne(s) de la table Placettes n'est/ne sont pas renseignée(s)",
+                "table": "Placettes",
+                "column": ["Strate", "PoidsPlacette"],
+                "row": [index], 
+                "value": Vital.loc[[index],:].to_json(orient='records'),
+              }
+            error_List_Temp.append(err)
+          i = i+1
+        verificationList.append({'errorName': "Informations manquantes dans Placettes", 'errorText': "Il manque des informations à une/des colonne(s) dans la table Placettes", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
 
 
@@ -1443,29 +1583,35 @@ def data_verification(data):
 
           if len(list2) >0:
             error_List_Temp=[]
+            i = 0
             for index, row in list2.iterrows():
-              err = {
-                  "message": "La Ligne au numéro de dispositif"+ str(int(row["NumDisp"])) +" et au numéro de placette "+ str(row["NumPlac"]) + " figure dans la table " + tablename+" mais ne figure pas dans la table Placette",
-                  "table": tablename,
-                  "column": [ "NumDisp", "NumPlac"],
-                  "row": [int(row["index_col_temp1"])], 
-                  "value": list2.loc[[index],:].to_json(orient='records'),
-                }
-              error_List_Temp.append(err)
-            verificationList.append({'errorName': "Information incohérente entre la table Placette et la table " +tablename, 'errorText': "Information incohérente entre la table Placette et la table " +tablename, 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': blockingError})
+              if i <100:
+                err = {
+                    "message": "La Ligne au numéro de dispositif"+ str(int(row["NumDisp"])) +" et au numéro de placette "+ str(row["NumPlac"]) + " figure dans la table " + tablename+" mais ne figure pas dans la table Placette",
+                    "table": tablename,
+                    "column": [ "NumDisp", "NumPlac"],
+                    "row": [int(row["index_col_temp1"])], 
+                    "value": list2.loc[[index],:].to_json(orient='records'),
+                  }
+                error_List_Temp.append(err)
+              i=i+1
+            verificationList.append({'errorName': "Information incohérente entre la table Placette et la table " +tablename, 'errorText': "Information incohérente entre la table Placette et la table " +tablename, 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': blockingError, 'errorNumber': i})
 
           if len(list1) >0:
             error_List_Temp=[]
+            i = 0
             for index, row in list1.iterrows():
-              err = {
-                  "message": "La Ligne au numéro de dispositif "+ str(int(row["NumDisp"])) +" et au numéro de placette "+ str(row["NumPlac"]) + " figure dans la table Placette mais ne figure pas dans la table " + tablename,
-                  "table": "Placettes",
-                  "column": [ "NumDisp", "NumPlac"],
-                  "row": [int(row["index_col_temp2"])],
-                  "value": list1.loc[[index],:].to_json(orient='records'),
-                }
-              error_List_Temp.append(err)
-            verificationList.append({'errorName': "Information incohérente entre la table Placette et la table " +tablename, 'errorText': "Information incohérente entre la table Placette et la table " +tablename, 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': blockingError})
+              if i<100:
+                err = {
+                    "message": "La Ligne au numéro de dispositif "+ str(int(row["NumDisp"])) +" et au numéro de placette "+ str(row["NumPlac"]) + " figure dans la table Placette mais ne figure pas dans la table " + tablename,
+                    "table": "Placettes",
+                    "column": [ "NumDisp", "NumPlac"],
+                    "row": [int(row["index_col_temp2"])],
+                    "value": list1.loc[[index],:].to_json(orient='records'),
+                  }
+                error_List_Temp.append(err)
+              i = i+1
+            verificationList.append({'errorName': "Information incohérente entre la table Placette et la table " +tablename, 'errorText': "Information incohérente entre la table Placette et la table " +tablename, 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': blockingError, 'errorNumber': i})
 
       miss2(Arbres, Placettes, "Arbres", True)
       miss2(BMSsup30, Placettes, "BMSsup30", False)
@@ -1483,17 +1629,18 @@ def data_verification(data):
         i = 0
         error_List_Temp = []
         for index, row in df_Dupl.iterrows():
-          valuesDupl = entire_df_Dupl.loc[listDupl[i]]
-          err = {
-              "message": "La placette "+ str(row["NumPlac"]) +" au cycle "+ str(row["Cycle"]) +" à la strate" +  str(row["Strate"])+" apparaît plusieurs fois dans la table Placettes",
-              "table": "Placettes",
-              "column": ["NumDisp", "NumPlac", "Cycle", "Strate"],
-              "row": listDupl[i], 
-              "value": valuesDupl.to_json(orient='records'),
-            }
+          if i<100:
+            valuesDupl = entire_df_Dupl.loc[listDupl[i]]
+            err = {
+                "message": "La placette "+ str(row["NumPlac"]) +" au cycle "+ str(row["Cycle"]) +" à la strate" +  str(row["Strate"])+" apparaît plusieurs fois dans la table Placettes",
+                "table": "Placettes",
+                "column": ["NumDisp", "NumPlac", "Cycle", "Strate"],
+                "row": listDupl[i], 
+                "value": valuesDupl.to_json(orient='records'),
+              }
           i = i + 1
           error_List_Temp.append(err)
-        verificationList.append({'errorName': "Duplication dans Placettes", 'errorText': 'Lignes dupliquées dans la table Placettes', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+        verificationList.append({'errorName': "Duplication dans Placettes", 'errorText': 'Lignes dupliquées dans la table Placettes', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
 
       # SHAPE
@@ -1517,16 +1664,19 @@ def data_verification(data):
       Vital = Vital[["Coeff", "Année", "DiamLim"]]
       if not Vital.empty:
         error_List_Temp=[]
+        i = 0
         for index, row in Vital.iterrows():
-          err = {
-              "message": "Une/des colonne(s) de la table Cycles n'est/ne sont pas renseigné(s)",
-              "table": "Cycles",
-              "column": ["Coeff", "Année", "DiamLim"],
-              "row": [index], 
-              "value": Vital.loc[[index],:].to_json(orient='records'),
-            }
-          error_List_Temp.append(err)
-        verificationList.append({'errorName': "Informations manquantes dans Cycles", 'errorText': "Il manque des informations à une/des colonne(s) dans la table Cycles", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+          if i<100:
+            err = {
+                "message": "Une/des colonne(s) de la table Cycles n'est/ne sont pas renseigné(s)",
+                "table": "Cycles",
+                "column": ["Coeff", "Année", "DiamLim"],
+                "row": [index], 
+                "value": Vital.loc[[index],:].to_json(orient='records'),
+              }
+            error_List_Temp.append(err)
+          i = i+1
+        verificationList.append({'errorName': "Informations manquantes dans Cycles", 'errorText': "Il manque des informations à une/des colonne(s) dans la table Cycles", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
       
       # ---------- Contrôle des valeurs dupliquées : ---------- #
       df_Dupl_temp = Cycles[["NumDisp", "NumPlac", "Cycle"]].sort_values(by=["NumDisp", "NumPlac", "Cycle"])
@@ -1538,17 +1688,18 @@ def data_verification(data):
         i = 0
         error_List_Temp = []
         for index, row in df_Dupl.iterrows():
-          valuesDupl = entire_df_Dupl.loc[listDupl[i]]
-          err = {
-              "message": "La placette "+ str(row["NumPlac"]) +" au cycle "+ str(row["Cycle"]) +" apparaît plusieurs fois dans la table Cycle",
-              "table": "Cycle",
-              "column": ["NumDisp", "NumPlac", "Cycle"],
-              "row": listDupl[i], 
-              "value": valuesDupl.to_json(orient='records'),
-            }
-          i = i + 1
+          if i <100:
+            valuesDupl = entire_df_Dupl.loc[listDupl[i]]
+            err = {
+                "message": "La placette "+ str(row["NumPlac"]) +" au cycle "+ str(row["Cycle"]) +" apparaît plusieurs fois dans la table Cycle",
+                "table": "Cycle",
+                "column": ["NumDisp", "NumPlac", "Cycle"],
+                "row": listDupl[i], 
+                "value": valuesDupl.to_json(orient='records'),
+              }
+            i = i + 1
           error_List_Temp.append(err)
-        verificationList.append({'errorName': "Duplication dans Cycle", 'errorText': 'Lignes dupliquées dans la table Cycle', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+        verificationList.append({'errorName': "Duplication dans Cycle", 'errorText': 'Lignes dupliquées dans la table Cycle', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
       def miss3 (table, Placettes, tablename):
           if table.shape[0] >0:
@@ -1583,17 +1734,19 @@ def data_verification(data):
         i = 0
         error_List_Temp = []
         for index, row in df_Dupl.iterrows():
-          valuesDupl = entire_df_Dupl.loc[listDupl[i]]
-          err = {
-                "message": "La "+ str(row["NumPlac"]) +" avec l'azimut "+ str(row["Azimut"]) +" et la distance "+ str(row["Dist"])+" apparaît plusieurs fois dans la table Reperes",
-                "table": "Reperes",
-                "column": ["NumDisp", "NumPlac", "Azimut", "Dist"],
-                "row": listDupl[i], 
-                "value": valuesDupl.to_json(orient='records'),
-            }
+          if i<100:
+            valuesDupl = entire_df_Dupl.loc[listDupl[i]]
+            err = {
+                  "message": "La "+ str(row["NumPlac"]) +" avec l'azimut "+ str(row["Azimut"]) +" et la distance "+ str(row["Dist"])+" apparaît plusieurs fois dans la table Reperes",
+                  "table": "Reperes",
+                  "column": ["NumDisp", "NumPlac", "Azimut", "Dist"],
+                  "row": listDupl[i], 
+                  "value": valuesDupl.to_json(orient='records'),
+              }
+            error_List_Temp.append(err)
           i = i + 1
-          error_List_Temp.append(err)
-        verificationList.append({'errorName': "Duplication dans Reperes", 'errorText': 'Lignes dupliquées dans la table Reperes', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
+        verificationList.append({'errorName': "Duplication dans Reperes", 'errorText': 'Lignes dupliquées dans la table Reperes', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
+
 
       # Conformité avec les codifications
       # CodeDureté
@@ -1630,23 +1783,23 @@ def data_verification(data):
 
       # Contrôle de la cohérence avec les tables d'inventaire
       #Principe : toutes les essences rencontrées dans l'inventaire doivent figurer dans la table EssReg
-      error_List_Temp = check_species(Arbres, EssReg, Test, "Arbres")
+      # error_List_Temp = check_species(Arbres, EssReg, Test, "Arbres")
       # if len(error_List_Temp) >0:
         # verificationList.append({'errorName': 'Essence Reg dans Arbres', 'errorList': error_List_Temp, 'correctionList': EssReg['Essence'].tolist()})
 
-      error_List_Temp = check_species(Regeneration, EssReg, Test, "Regeneration")
+      # error_List_Temp = check_species(Regeneration, EssReg, Test, "Regeneration")
       # if len(error_List_Temp) >0:
         # verificationList.append({'errorName': 'Essence Reg dans Regeneration', 'errorList': error_List_Temp, 'correctionList': EssReg['Essence'].tolist()})
 
-      error_List_Temp = check_species(Transect, EssReg, Test, "Transect")
+      # error_List_Temp = check_species(Transect, EssReg, Test, "Transect")
       # if len(error_List_Temp) >0:
         # verificationList.append({'errorName': 'Essence Reg dans Transect', 'errorList': error_List_Temp, 'correctionList': EssReg['Essence'].tolist()})
 
-      error_List_Temp = check_species(BMSsup30, EssReg, Test, "BMSsup30")
+      # error_List_Temp = check_species(BMSsup30, EssReg, Test, "BMSsup30")
       # if len(error_List_Temp) >0:
         # verificationList.append({'errorName': 'Essence Reg dans BMSsup30', 'errorList': error_List_Temp, 'correctionList': EssReg['Essence'].tolist()})
 
-      error_List_Temp = check_species(Tarifs, EssReg, Test, "Tarifs")
+      # error_List_Temp = check_species(Tarifs, EssReg, Test, "Tarifs")
       # if len(error_List_Temp) >0:
         # verificationList.append({'errorName': 'Essence Reg dans Tarifs', 'errorList': error_List_Temp, 'correctionList': EssReg['Essence'].tolist()})
 
@@ -1656,11 +1809,6 @@ def data_verification(data):
 
 
     # TODO: Travail sur colonnes Annexes (remarques)
-
-  # #Contrôle des stades de décomposition
-  # error_List_Temp = check_code(CodeDurete, Arbres, soundness_code, "Arbres")
-  # if len(error_List_Temp) >0:
-  #   verificationList.append({'errorName': 'Contrôle Stade dans Arbres', 'errorList': error_List_Temp, 'correctionList': CodeDurete['Code'].tolist()})
   verifiedObj = {"verificationObj": verificationList, "correctionList": correctionList}
 
   verifiedJson = json.dumps(verifiedObj, cls=NumpyEncoder)
@@ -1727,9 +1875,11 @@ def check_species(table_to_test, species, status, tablename):
   [['Essence']]
   species_list = species_list_temp.drop_duplicates()['Essence'].tolist()
 
+  i=0 
   if len(species_list) > 0:
       status = np.where(status >= 2, status, 2)
       for index, row in species_list_temp.iterrows():
+        if i<100:
           err= {
             "message": "L'essence "+ str(row["Essence"]) + " figure dans la table "+ tablename +" mais ne figure pas dans la table 'CodeEssence' (fichier administrateur) ",
             "table": tablename,
@@ -1738,13 +1888,15 @@ def check_species(table_to_test, species, status, tablename):
             "value": species_list_temp.loc[[index],:].to_json(orient='records'),
           }
           error.append(err)
-  return error
+        i = i +1
+  return error, i
 
 
 
 ##### fonction contrôle des Cycles ####
 def check_cycle(table_to_test, status, cycle_admin, tablename, An, Dispositifs): 
     error = []
+    i=0
     if table_to_test.shape[0] > 0 :
       temp = table_to_test.assign(Mark = 1) # add marker
 
@@ -1763,19 +1915,21 @@ def check_cycle(table_to_test, status, cycle_admin, tablename, An, Dispositifs):
         vecttemp = cycle_table.loc[pos,["NumDisp", "Cycle"]].drop_duplicates()
         
         for index, row in vecttemp.iterrows() :
-          nomDisp =  Dispositifs[Dispositifs["NumDisp"]==row["NumDisp"]]["Nom"].item()
-          err = {
-            "message": "La table Cycles du fichier administrateur contient le cycle "+ str(row['Cycle']) + " pour le dispositif " + str(row['NumDisp'])+ "-"+ nomDisp + ", mais ce dernier n'apparaît pas dans la table" + tablename +".",
-            "table": tablename,
-            "column": 'Cycle',
-          }
-          error.append(err)
+          if i<100:
+            nomDisp =  Dispositifs[Dispositifs["NumDisp"]==row["NumDisp"]]["Nom"].item()
+            err = {
+              "message": "La table Cycles du fichier administrateur contient le cycle "+ str(row['Cycle']) + " pour le dispositif " + str(row['NumDisp'])+ "-"+ nomDisp + ", mais ce dernier n'apparaît pas dans la table" + tablename +".",
+              "table": tablename,
+              "column": 'Cycle',
+            }
+            error.append(err)
+          i=i+1
 
     else:
         status = 1
         label = "La feuille"+ tablename +" ne contient pas de données."
     
-    return error
+    return error, i
 
 
 ##### fonction contrôle des stades écorce et de décomposition #####
@@ -1793,20 +1947,21 @@ def check_code(code_admin, table_to_test, code_to_check, tableName):
   table_to_test=table_to_test[table_to_test[stade].notna()]
   df1 = table_to_test[~table_to_test[stade].isin( code_admin['Code'].values)]
   df = df1.loc[:,df1.columns.isin([stade])].drop_duplicates()
-
+  i=0
   if df.shape[0]>0:
     for index, row in df.iterrows():
-      err= {
-        "message": "Stade(s) "+code_to_check+" "+ str(int(row[stade]))  +" non conforme(s) dans la table" +tableName,
-        "table": tableName,
-        "column": [stade],
-        "row": [index],
-        "value": df.loc[[index],:].to_json(orient='records'),
-      }
-      error.append(err)
+      if i<100:
+        err= {
+          "message": "Stade(s) "+code_to_check+" "+ str(int(row[stade]))  +" non conforme(s) dans la table" +tableName,
+          "table": tableName,
+          "column": [stade],
+          "row": [index],
+          "value": df.loc[[index],:].to_json(orient='records'),
+        }
+        error.append(err)
+      i = i+1  
 
-
-  return(error)
+  return error, i
 
 
 def check_colonnes(tableName, colonnelist, table_to_test):
@@ -1825,12 +1980,35 @@ def check_colonnes(tableName, colonnelist, table_to_test):
 
 def check_notNULL(tableName, colonneName, table_to_test):
   error = []
+  i=0
   if not table_to_test.isnull().values.all():
     t = table_to_test[[colonneName]]
     # détection des codes non conformes
     temp =t[t[colonneName].isna()]
     if not temp.empty: 
       for index, row in temp.iterrows():
+        if i<100:
+          err= {
+            "message": "Dans la table "+tableName+" la colonne "+ colonneName  +" contient la valeur "+ str(row[colonneName]),
+            "table": tableName,
+            "column": [colonneName],
+            "row": [index],
+            "value": temp.loc[[index],:].to_json(orient='records'),
+          }
+          error.append(err)
+        i=i+1
+  return error, i
+
+
+def check_boolean(tableName, colonneName, table_to_test):
+  error = []
+  i=0
+  t = table_to_test[["NumPlac", colonneName]]
+  # détection des codes non conformes
+  temp =t[(t[colonneName].notna()) & (t[colonneName] != "t") & (t[colonneName] != "f")]
+  if not temp.empty: 
+    for index, row in temp.iterrows():
+      if i<100:
         err= {
           "message": "Dans la table "+tableName+" la colonne "+ colonneName  +" contient la valeur "+ str(row[colonneName]),
           "table": tableName,
@@ -1839,27 +2017,8 @@ def check_notNULL(tableName, colonneName, table_to_test):
           "value": temp.loc[[index],:].to_json(orient='records'),
         }
         error.append(err)
-
-  return(error)
-
-
-def check_boolean(tableName, colonneName, table_to_test):
-  error = []
-  t = table_to_test[["NumPlac", colonneName]]
-  # détection des codes non conformes
-  temp =t[(t[colonneName].notna()) & (t[colonneName] != "t") & (t[colonneName] != "f")]
-  if not temp.empty: 
-    for index, row in temp.iterrows():
-      err= {
-        "message": "Dans la table "+tableName+" la colonne "+ colonneName  +" contient la valeur "+ str(row[colonneName]),
-        "table": tableName,
-        "column": [colonneName],
-        "row": [index],
-        "value": temp.loc[[index],:].to_json(orient='records'),
-      }
-      error.append(err)
-
-  return(error)
+      i=i+1
+  return error, i
 
 def stringIntConvertion(x):
   return [y.split(".")[0] for y in x]
@@ -1867,40 +2026,44 @@ def stringIntConvertion(x):
 
 def check_int(tableName, colonneName, table_to_test):
   error = []
+  i=0
   t = table_to_test.dropna(subset=[colonneName])
   bool_list = [((not isemptystring(x)) & (not isint(x))) for x in t[colonneName]]
   temp = t[bool_list]
   if not temp.empty: 
     for index, row in temp.iterrows():
-      err= {
-        "message": "Dans la table "+tableName+" la colonne "+ colonneName  +" contient la valeur \""+ str(row[colonneName])+"\"",
-        "table": tableName,
-        "column": [colonneName],
-        "row": [index],
-        "value": temp.loc[[index],:].to_json(orient='records'),
-      }
-      error.append(err)
-
-  return(error)
+      if i<100:
+        err= {
+          "message": "Dans la table "+tableName+" la colonne "+ colonneName  +" contient la valeur \""+ str(row[colonneName])+"\"",
+          "table": tableName,
+          "column": [colonneName],
+          "row": [index],
+          "value": temp.loc[[index],:].to_json(orient='records'),
+        }
+        error.append(err)
+      i=i+1
+  return error,i
 
 def check_int_or_float(tableName, colonneName, table_to_test):
   error = []
+  i=0
   t = table_to_test.dropna(subset=[colonneName])
   bool_list = [((not isemptystring(x)) & (not isint(x)) & (not isfloat(x))) for x in t[colonneName]]
   temp = t[bool_list]
 
   if not temp.empty: 
     for index, row in temp.iterrows():
-      err= {
-        "message": "Dans la table "+tableName+" la colonne "+ colonneName  +" contient la valeur \""+ str(row[colonneName])+"\"",
-        "table": tableName,
-        "column": [colonneName],
-        "row": [index],
-        "value": temp.loc[[index],:].to_json(orient='records'),
-      }
-      error.append(err)
-
-  return(error)
+      if i<100:
+        err= {
+          "message": "Dans la table "+tableName+" la colonne "+ colonneName  +" contient la valeur \""+ str(row[colonneName])+"\"",
+          "table": tableName,
+          "column": [colonneName],
+          "row": [index],
+          "value": temp.loc[[index],:].to_json(orient='records'),
+        }
+        error.append(err)
+      i=i+1
+  return error, i
 
 def isfloat(value):
   try:
@@ -1927,19 +2090,21 @@ def check_date(tableName, colonneName, table_to_test):
   t = table_to_test.dropna(subset=[colonneName])
   bool_list = [((not isemptystring(x)) & (not isdate(x))) for x in t[colonneName]]
   temp = t[bool_list]
+  i= 0
 
   if not temp.empty: 
     for index, row in temp.iterrows():
-      err= {
-        "message": "Dans la table "+tableName+" la colonne "+ colonneName  +" contient la valeur \""+ str(row[colonneName])+"\"",
-        "table": tableName,
-        "column": [colonneName],
-        "row": [index],
-        "value": temp.loc[[index],:].to_json(orient='records'),
-      }
-      error.append(err)
-
-  return(error)
+      if i<100:
+        err= {
+          "message": "Dans la table "+tableName+" la colonne "+ colonneName  +" contient la valeur \""+ str(row[colonneName])+"\"",
+          "table": tableName,
+          "column": [colonneName],
+          "row": [index],
+          "value": temp.loc[[index],:].to_json(orient='records'),
+        }
+        error.append(err)
+      i=i+1
+  return error, i
 
 def isdate(value):
   try:

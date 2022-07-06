@@ -1,11 +1,11 @@
 export class PsdrfError {
     message: string;
-    table: string;
-    column: string[];
-    row: number[];
-    value: any;
+    table: string|null;
+    column: string[]|null;
+    row: number[]|null;
+    value: any|null;
 
-    constructor(message: string, table: string, column: string[], row: number[], value: any) {
+    constructor(message: string, table: string|null, column: string[]|null, row: number[]|null, value: any) {
         this.message = message;
         this.table = table;
         this.column = column; 
@@ -19,11 +19,11 @@ export class PsdrfError {
 }
 
 export class PsdrfErrorCoordinates {
-    table: string;
-    column: string[];
-    row: number[];
+    table: string|null;
+    column: string[]|null;
+    row: number[]|null;
 
-    constructor(table: string, column: string[], row: number[]) {
+    constructor(table: string|null, column: string[]|null, row: number[]|null) {
         this.table = table;
         this.column = column;
         this.row = row;
