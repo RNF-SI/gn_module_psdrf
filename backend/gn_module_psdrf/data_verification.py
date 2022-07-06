@@ -1571,30 +1571,29 @@ def data_verification(data):
 
 
       # Table Reperes
-      if Reperes.shape[0]>0:
-      # ---------- Contrôle des valeurs dupliquées : ---------- #
-        Reperes = Reperes.sort_values(by=["NumDisp", "NumPlac", "Azimut", "Dist"])
-        df_Dupl = Reperes[Reperes.duplicated()]
-        df_Dupl = df_Dupl.drop_duplicates()
-        if not df_Dupl.empty:
-          entire_df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated(keep=False)]
-          listDupl = entire_df_Dupl.groupby(list(df_Dupl_temp)).apply(lambda x: list(x.index)).tolist()
-          i = 0
-          error_List_Temp = []
-          for index, row in df_Dupl.iterrows():
-            valuesDupl = entire_df_Dupl.loc[listDupl[i]]
-            err = {
+      #Contrôle des valeurs dupliquées
+      error = []
+      df_Dupl_temp= Reperes[["NumDisp", "NumPlac", "Azimut", "Dist", "Diam"]].sort_values(by=["NumDisp", "NumPlac", "Azimut", "Dist", "Diam"])
+      Reperes= Reperes.sort_values(by=["NumDisp", "NumPlac", "Azimut", "Dist", "Diam"])
+      df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated()]
+      df_Dupl = df_Dupl.drop_duplicates()
+      if not df_Dupl.empty:
+        entire_df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated(keep=False)]
+        listDupl = entire_df_Dupl.groupby(list(df_Dupl_temp)).apply(lambda x: list(x.index)).tolist()
+        i = 0
+        error_List_Temp = []
+        for index, row in df_Dupl.iterrows():
+          valuesDupl = entire_df_Dupl.loc[listDupl[i]]
+          err = {
                 "message": "La "+ str(row["NumPlac"]) +" avec l'azimut "+ str(row["Azimut"]) +" et la distance "+ str(row["Dist"])+" apparaît plusieurs fois dans la table Reperes",
                 "table": "Reperes",
                 "column": ["NumDisp", "NumPlac", "Azimut", "Dist"],
                 "row": listDupl[i], 
                 "value": valuesDupl.to_json(orient='records'),
-              }
-            i = i + 1
-            error_List_Temp.append(err)
+            }
+          i = i + 1
+          error_List_Temp.append(err)
           verificationList.append({'errorName': "Duplication dans Reperes", 'errorText': 'Lignes dupliquées dans la table Reperes', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, })
-
-
 
       # Conformité avec les codifications
       # CodeDureté
