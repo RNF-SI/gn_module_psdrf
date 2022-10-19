@@ -1595,7 +1595,7 @@ def data_verification(data):
                   }
                 error_List_Temp.append(err)
               i=i+1
-            verificationList.append({'errorName': "Information incohérente entre la table Placette et la table " +tablename, 'errorText': "Information incohérente entre la table Placette et la table " +tablename, 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': blockingError, 'errorNumber': i})
+            verificationList.append({'errorName': "Information incohérente entre la table Placette et la table " +tablename, 'errorText': "Information incohérente entre la table Placette et la table " +tablename, 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
           if len(list1) >0:
             error_List_Temp=[]
@@ -1618,6 +1618,7 @@ def data_verification(data):
       miss2(Cycles, Placettes, "Cycles", True)
       miss2(Regeneration, Placettes, "Regeneration", False)
       miss2(Transect, Placettes, "Transect", False)
+      miss2(Reperes, Placettes, "Reperes", False)
 
       # ---------- Contrôle des valeurs dupliquées : ---------- #
       df_Dupl_temp= Placettes[["NumDisp", "NumPlac", "Cycle", "Strate"]].sort_values(by=["NumDisp", "NumPlac", "Cycle", "Strate"])
