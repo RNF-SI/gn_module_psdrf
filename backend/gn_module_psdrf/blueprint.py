@@ -11,6 +11,7 @@ import zipfile
 from io import BytesIO
 import time
 import os
+import logging
 
 from geonature.utils.env import DB
 # from geonature.utils.utilssqlalchemy import json_resp, get_geojson_feature
@@ -263,8 +264,13 @@ def psdrf_data_analysis(id_dispositif):
     isPlanDesArbresToDownload = request.args.get('isPlanDesArbresToDownload')
 
     outFilePath = "/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/out/"
-
-    data_analysis(str(id_dispositif), isCarnetToDownload, isPlanDesArbresToDownload, carnetToDownloadParameters)
+    try:
+        data_analysis(str(id_dispositif), isCarnetToDownload, isPlanDesArbresToDownload, carnetToDownloadParameters)
+    except Exception as e:
+        logging.critical(e)
+        msg = json.dumps({"type": "bug", "msg": "Unkown error during analysis"})
+        logging.info(msg)
+        return Response(msg, status=500)
 
     memory_file = BytesIO()
     with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zf:
