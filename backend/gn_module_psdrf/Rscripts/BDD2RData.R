@@ -1,5 +1,5 @@
 editDocuments <- function(dispId, lastCycle, dispName, placettes, arbres, bms, reges, transects, reperes, cycles, isCarnetToDownload, isPlanDesArbresToDownload, Answer_Radar){
-
+  
     library(data.table)
     library("stringr")
     library("openxlsx") 
@@ -26,7 +26,6 @@ editDocuments <- function(dispId, lastCycle, dispName, placettes, arbres, bms, r
     library("reshape2")
     library("sf")
 
-    
     lastCycle = lastCycle[1,1]
     setwd('/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts')
 
@@ -157,11 +156,10 @@ editDocuments <- function(dispId, lastCycle, dispName, placettes, arbres, bms, r
     file.path("./psdrf_AgregPlacettes.R"), 
     encoding = 'UTF-8', echo = TRUE
     )
-
-    if (isCarnetToDownload == 'true'){
-        psdrf_EditCarnet(repPSDRF, dispId, lastCycle, dispName, results_by_plot_to_get, Answer_Radar)
+    if (isCarnetToDownload){
+      psdrf_EditCarnet(repPSDRF, dispId, lastCycle, dispName, results_by_plot_to_get, Answer_Radar)
     } 
-    if (isPlanDesArbresToDownload == 'true'){
+    if (isPlanDesArbresToDownload){
         psdrf_EditPlansArbres(repPSDRF, dispId, lastCycle, dispName, results_by_plot_to_get)
     }
     
