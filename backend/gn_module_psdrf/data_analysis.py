@@ -194,6 +194,36 @@ def formatBdd2RData(r, dispId, lastCycle, dispName, isCarnetToDownload, isPlanDe
     with localconverter(ro.default_converter + pandas2ri.converter):
         r_cycles = ro.conversion.py2rpy(cyclesPandas)             
 
+    # Scripts pour le debuggage
+    # robjects.r.assign("myplacettes", r_placettes)
+    # robjects.r("save(myplacettes, file='{}')".format('/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/debugfiles/placette_temp.Rdata'))
+
+    # robjects.r.assign("myarbres", r_arbres)
+    # robjects.r("save(myarbres, file='{}')".format('/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/debugfiles/arbre_temp.Rdata'))
+    
+    # robjects.r.assign("mybmss", r_bmss)
+    # robjects.r("save(mybmss, file='{}')".format('/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/debugfiles/bms_temp.Rdata'))
+
+    # robjects.r.assign("myreges", r_reges)
+    # robjects.r("save(myreges, file='{}')".format('/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/debugfiles/rege_temp.Rdata'))
+
+    # robjects.r.assign("mytransects", r_transects)
+    # robjects.r("save(mytransects, file='{}')".format('/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/debugfiles/transect_temp.Rdata'))
+
+    # robjects.r.assign("myreperes", r_reperes)
+    # robjects.r("save(myreperes, file='{}')".format('/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/debugfiles/repere_temp.Rdata'))
+
+    # robjects.r.assign("mycycles", r_cycles)
+    # robjects.r("save(mycycles, file='{}')".format('/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/debugfiles/cycle_temp.Rdata'))
+    
+    # robjects.r.assign("mylastCycle", lastCycle)
+    # robjects.r("save(mylastCycle, file='{}')".format('/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/debugfiles/lastCycle'))
+
+    # robjects.r.assign("mydispName", dispName)
+    # robjects.r("save(mydispName, file='{}')".format('/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/debugfiles/dispName'))
+
+
+
     # 2/ Formater dans le bon format en modifiant XLs2Rdata
     with open('/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/BDD2RData.R', 'r') as f:
         string = f.read()
