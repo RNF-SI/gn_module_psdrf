@@ -246,6 +246,15 @@ def data_verification(data):
       check_null_DPC(Referents, "Referents")  
       check_null_DPC(Tarifs, "Tarifs")  
 
+      # Conversion des valeur vide en NAN
+      Placettes = Placettes.replace(r'^\s*$', np.nan, regex=True)
+      Cycles = Cycles.replace(r'^\s*$', np.nan, regex=True)
+      Arbres = Arbres.replace(r'^\s*$', np.nan, regex=True)
+      Regeneration = Regeneration.replace(r'^\s*$', np.nan, regex=True)
+      Transect = Transect.replace(r'^\s*$', np.nan, regex=True)
+      BMSsup30 = BMSsup30.replace(r'^\s*$', np.nan, regex=True)
+      Reperes = Reperes.replace(r'^\s*$', np.nan, regex=True)
+
       Placettes = filter_by_disp(disp_num, last_cycle, Placettes, disp_num)
       Cycles = filter_by_disp(disp_num, last_cycle, Cycles, disp_num)
       Arbres = filter_by_disp(disp_num, last_cycle, Arbres, disp_num)
@@ -749,7 +758,7 @@ def data_verification(data):
         verificationList.append({'errorName': "Informations manquantes dans Arbres", 'errorText': "Il manque des informations à des colonne(s) dans la table Arbre", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
       # ---------- Contrôle des codes écologiques : ---------- #
-      Table_temp = Arbres[~Arbres["CodeEcolo"].isna() & Arbres["Ref_CodeEcolo"].isna()]
+      Table_temp = Arbres[(~Arbres["CodeEcolo"].isna()) & (Arbres["Ref_CodeEcolo"].isna())]
       Table_temp = Table_temp[[ "NumPlac", "NumArbre", "CodeEcolo", "Ref_CodeEcolo" ]]
       if not Table_temp.empty:
         i=0
