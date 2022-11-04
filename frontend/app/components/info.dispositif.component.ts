@@ -115,7 +115,7 @@ export class InfoDispositifComponent implements OnInit {
   }
 
   checkCheckboxDisabled(): boolean{
-      return this.mapListService.page.totalElements>140? true: false;
+      return this.mapListService.page.totalElements>150? true: false;
   }
 
   onDetailPlacette(row): void {
