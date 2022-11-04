@@ -12,6 +12,7 @@ export interface Document {
   toDownload: boolean;
   // color: ThemePalette;
   subdocuments?: Document[];
+  activated: boolean;
   documentParameters?: {name: string, text: string, value: boolean}[];
 }
 
@@ -37,15 +38,25 @@ export class InfoDispositifComponent implements OnInit {
   documents: Document = {
       name: 'Tout',
       toDownload: true,
+      activated: true,
       subdocuments: [
-        {name: 'Carnet et figures', toDownload: true, 
+        {
+          name: 'Carnet et figures', 
+          toDownload: true, 
           documentParameters: [{
           name: 'Answer_Radar', 
           text: "Réaliser l'analyse de l'état de conservation du dispositif ?",
-          value: true}
-        ]},
-        {name: 'Plan des arbres et figures', toDownload: true, 
-          documentParameters:[]},
+          value: true
+          }
+        ],
+        activated: true
+      },
+      {
+        name: 'Plan des arbres et figures', 
+        toDownload: false, 
+        documentParameters:[],
+        activated: false
+      },
         // {name: 'Table Excel des Résultats Bruts', toDownload: false},
         // {name: 'Plan des arbres', toDownload: false}
       ],
@@ -101,6 +112,10 @@ export class InfoDispositifComponent implements OnInit {
     if (ft) {
       this.mapListService.onRowSelect(row)
     }
+  }
+
+  checkCheckboxDisabled(): boolean{
+      return this.mapListService.page.totalElements>140? true: false;
   }
 
   onDetailPlacette(row): void {
@@ -220,6 +235,10 @@ export class InfoDispositifComponent implements OnInit {
     if (this.documents.subdocuments == null) {
       return;
     }
-    this.documents.subdocuments.forEach(t => (t.toDownload = toDownload));
+    this.documents.subdocuments.forEach(t => {
+      if(t.activated){
+        t.toDownload = toDownload;
+      }
+    });
   }
 }

@@ -31,9 +31,16 @@
                         <ul>
                             <li *ngFor="let subdocument of documents.subdocuments">
                                 <mat-checkbox [(ngModel)]="subdocument.toDownload"
-                                    (ngModelChange)="updateAllToDownload()">
+                                    (ngModelChange)="updateAllToDownload()"
+                                    [disabled]="subdocument.activated? false : checkCheckboxDisabled()"
+                                    >
                                     {{subdocument.name}}
                                 </mat-checkbox>
+                                <p *ngIf="!subdocument.activated && checkCheckboxDisabled()" >
+                                    <small class="unactive-text">
+                                        Au-delà de 140placettes la génération du plan des arbres est trop lourde. Veuillez nous contacter en attendant l'intégration d'un futur dévelopement.
+                                    </small>
+                                </p>
                                 <ul *ngIf="subdocument.toDownload">
                                     <li *ngFor="let parameter of subdocument.documentParameters">
                                         <mat-checkbox [(ngModel)]="parameter.value">
