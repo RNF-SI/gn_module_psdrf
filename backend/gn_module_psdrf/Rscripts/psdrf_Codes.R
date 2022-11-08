@@ -11,13 +11,17 @@
 #' 
 #' @export
 
-psdrf_Codes <- function(repPSDRF, file) {
+psdrf_Codes <- function(repPSDRF) {
   ##### 1/ Initialisation #####
   # -- Choix du répertoire de travail
   setwd(repPSDRF)
   
   # -- TODO : rajouter une sécurité pour contrôler que file est bien renseigné ?
-  
+  library("dplyr") 
+  library("openxlsx") 
+  library('lubridate')  # gestion des dates
+
+  file <- "/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/psdrf_liste/PsdrfListes.xlsx"
   ##### / \ #####
   
   
@@ -115,6 +119,8 @@ psdrf_Codes <- function(repPSDRF, file) {
   
   ##### 3/ Sauvegarde #####
   # -- dossier
+
+
   dir.create("tables", showWarnings = F)
   save(
     Tiers, CodeEcorce, CodeEcologie, CodeEssence, CodeDurete, Dispositifs, 
@@ -123,11 +129,5 @@ psdrf_Codes <- function(repPSDRF, file) {
     file = "tables/psdrfCodes.Rdata"
   )
   
-  # -- message fin
-  Msg <- tk_messageBox(
-    type = "ok",
-    message = "Importation du fichier psdrfListes termin\u00E9e",
-    icon = "info"
-  )
   ##### / \ #####
 }

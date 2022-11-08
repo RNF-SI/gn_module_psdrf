@@ -5,6 +5,11 @@ import { PsdrfDataService } from "../../services/route.service";
 import { AppConfig } from '@geonature_config/app.config';
 import { ToastrService } from 'ngx-toastr';
 import { AuthService } from '@geonature/components/auth/auth.service';
+import * as _ from "lodash";
+import { MatDialog } from "@angular/material";
+import { ConfirmationDialog } from "@geonature_common/others/modal-confirmation/confirmation.dialog";
+
+
 
 export interface UserDisp {
   nom_utilisateur: string;
@@ -85,6 +90,13 @@ export interface Orga {
 
     majId: number; 
 
+    private psdrfListeFile: any = null;
+    private excelFileName: any;
+    private isPsdrfListeCharging: any;
+    private psdrfListUploading = false; 
+    private isPSDRFListeLoaded= false;
+
+
     public disableSubmit = false;
     public disableSubmitUserDisp = false;
     public disableSubmitOrganisme = false;
@@ -100,7 +112,8 @@ export interface Orga {
         private _authService: AuthService,
         private _router: Router,
         private _toasterService: ToastrService,
-        private dataSrv: PsdrfDataService
+        private dataSrv: PsdrfDataService,
+        public dialog: MatDialog
     ) {
     }
 
@@ -569,4 +582,115 @@ export interface Orga {
       return object1 && object2 && object1 == object2;
     }
 
+  /**
+   * Triggered function on D&D event
+   * @param event Drag and Drop event
+   */
+   onPSDRFListeDropped(event: DragEvent): void {
+    let af = [
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "application/vnd.ms-excel",
+    ];
+    let files = event.dataTransfer.files;
+    if (files.length !== 1) throw new Error("Cannot use multiple files");
+    const file = files[0];
+    if (!_.includes(af, file.type)) {
+      alert("Only EXCEL Docs Allowed!");
+    } else {
+      this.psdrfListeFile = file;
+      const target: DataTransfer = event.dataTransfer;
+      this.loadPSDRFListe(target);
+    }
   }
+
+  /**
+   *  Triggered function on file selection (a file is chosen)
+   * @param event Selection File Event
+   */
+  onPSDRFListeSelect(event): void {
+    const target: DataTransfer = <DataTransfer>event.target;
+    if (target.files.length !== 1) throw new Error("Cannot use multiple files");
+    this.psdrfListeFile = target.files[0];
+    this.loadPSDRFListe(target);
+  }
+
+  loadPSDRFListe(psdrfListe: DataTransfer): void {
+    const reader: FileReader = new FileReader();
+    this.excelFileName = psdrfListe.files[0].name;
+    
+    let numDisp = this.excelFileName.split("-")[0];
+    this.isPsdrfListeCharging = true;
+
+
+      reader.onload = (e: any) => {
+        this.isPSDRFListeLoaded = true;
+      };
+
+      reader.onerror = (e: any) => {
+        this._toasterService.error("Un problème a été rencontré lors du chargement du fichier Excel.", "Chargement des données du fichier Excel", {
+          closeButton: true,
+          disableTimeOut: true,
+        });
+      };
+
+      reader.onloadend = (e) => {
+      };
+  }
+
+   /**
+   * Delete the loaded Excel file
+   */
+    deleteFile(): void {
+
+      const message = `Etes vous sûr de vouloir supprimer vos modifications? `;
+      const dialogRef = this.dialog.open(ConfirmationDialog, {
+        width: "350px",
+        position: { top: "5%" },
+        data: { message: message },
+      });
+  
+      
+      dialogRef.afterClosed().subscribe((confirmed: boolean) => {
+        if(confirmed){
+          this.isPSDRFListeLoaded = false;
+          this.psdrfListeFile = null;
+          this.isPsdrfListeCharging = false;
+        }      
+      })
+    }
+
+    psdrfListeUpdate(){
+      this.psdrfListUploading = true;   
+      this.dataSrv
+        .psdrf_liste_update(
+          this.psdrfListeFile
+        )
+        .subscribe(
+          integrationObj => {
+            this.psdrfListUploading = false;   
+            if(integrationObj.success){
+              this._toasterService.success("PSDRF liste a bien été actualisée", "Mise à jour de PSDRF liste", {
+                closeButton: true,
+                disableTimeOut: true,
+              });
+            } else {
+              this._toasterService.error("Une erreur s'est produite lors de l'actualisation de psdrf liste.", "Mise à jour de PSDRF liste", {
+                closeButton: true,
+                disableTimeOut: true,
+              });
+            }
+
+          },
+          error => {
+            this._toasterService.error(error.message, "Mise à jour de PSDRF liste", {
+              closeButton: true,
+              disableTimeOut: true,
+            });
+            this.psdrfListUploading = false;
+            this.isPSDRFListeLoaded = false;
+            
+          }
+        );
+    }
+
+}

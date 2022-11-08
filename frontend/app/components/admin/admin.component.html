@@ -389,3 +389,52 @@
         </mat-drawer-container>
     </mat-card>
 </div>
+
+
+<div class="container-fluid p-2">
+    <mat-card>
+        <mat-card-title>Import de PSDRF Listes</mat-card-title>
+        <mat-card-content>
+            <div class="container " appDnd (fileDropped)="onPSDRFListeDropped($event)" *ngIf="!isPsdrfListeCharging">
+                <div class="importzone d-flex align-items-center justify-content-center">
+                    <div class="h-25 text-center">
+                        <input type="file" #fileDropRef id="fileDropRef" accept=".xlsx, .xls">
+                        <h3>Déposer </h3>
+                        <h3>ou</h3>
+                        <div class="custom-file">
+                            <input type="file" class="custom-file-input" id="customFile" name="excelFile" (change)="onPSDRFListeSelect($event)" #UploadFileInput accept=".xlsx, .xls">
+                            <label>Choisir un fichier</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div *ngIf="isPsdrfListeCharging">
+                <div class="d-flex justify-content-center">
+                    <div class="d-flex justify-content-between single-file">
+                        <img src="external_assets/psdrf/ms-excel.svg" width="30px" alt="file">
+                        <div class="info ml-3">
+                            <h4 class="name">
+                                {{ psdrfListeFile?.name }}
+                            </h4>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-1 d-flex justify-content-center">
+                    <button class="action-button-class" mat-raised-button matTooltip="Supprimer" (click)="deleteFile()">
+                        <mat-icon> delete </mat-icon>
+                    </button>
+                    <div *ngIf="!isFileContainingFatalError">
+                        <button *ngIf="!psdrfListUploading" class="action-button-class" mat-raised-button matTooltip="Intégrer les données à la base de données" (click)="psdrfListeUpdate()">
+                            <mat-icon > cloud_upload </mat-icon>
+                        </button>
+                        <button *ngIf="psdrfListUploading" class="action-button-class spinner-button" mat-raised-button matTooltip="Intégration des données en cours" disabled>
+                            <mat-spinner diameter="22" color="primary"></mat-spinner>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </mat-card-content>
+    </mat-card>
+</div>

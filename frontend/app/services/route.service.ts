@@ -209,4 +209,13 @@ export class PsdrfDataService {
       );
   }
 
+  psdrf_liste_update(file){
+    let psdrf_liste:FormData = new FormData();
+    psdrf_liste.append('file_upload', file, 'psdrfListe');
+    return this._http.post<any>(
+      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/psdrfListe`,
+      psdrf_liste
+    );
+  }
+
 }

@@ -24,6 +24,7 @@ from .models import TDispositifs, TPlacettes, TArbres, TCycles, \
     CorCyclesPlacettes, TArbresMesures, CorDispositifsRoles
 from .data_verification import data_verification
 from .data_integration import data_integration
+from .psdrf_list_update import psdrf_list_update
 from .data_analysis import data_analysis
 from .bddToExcel import bddToExcel
 
@@ -535,3 +536,17 @@ def get_Groups():
     data = [{'id_utilisateur': user.id_role, 'nom_utilisateur':user.nom_role, 'prenom_utilisateur': user.prenom_role, 'identifiant_utilisateur': user.identifiant} for user in query]
     return data
     
+
+@blueprint.route('/psdrfListe', methods=['POST'])
+@json_resp
+def psdrf_update_psdrf_liste():
+    psdrfListe_file = request.files.get('file_upload', 'psdrfListe')
+    try:
+        psdrf_list_update(psdrfListe_file)
+        return {"success": True, "message": "Les données administrateurs ont bien été mises à jour."}
+    except Exception as e:
+        logging.critical(e)
+        msg = json.dumps({"type": "bug", "msg": "Unknown error during psdrf liste change"})
+        logging.info(msg)
+        return Response(msg, status=500)
+
