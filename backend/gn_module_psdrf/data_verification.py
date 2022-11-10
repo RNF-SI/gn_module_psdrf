@@ -1401,6 +1401,25 @@ def data_verification(data):
 
       ### Table Transect
 
+      # Valeurs de Transect is integer
+      temp = Transect[~Transect["Transect"].isin([1, 2, 3, 11, 12, 21, 22, 31, 32])]
+      temp = temp[["NumPlac", "Id", "Transect"]]
+      if not temp.empty:
+        error_List_Temp=[]
+        i=0
+        for index, row in temp.iterrows():
+          if i<100:
+            err = {
+                "message": "Le transect "+ str(int(row["Id"])) +" de la placette "+ str(row["NumPlac"]) + " a une valeur de Transect " + str(int(row["Transect"])) +" qui ne correspond pas au format attendu",
+                "table": "Transect",
+                "column": [ "Id", "Transect"],
+                "row": [index], 
+                "value": temp.loc[[index],:].to_json(orient='records'),
+              }
+            error_List_Temp.append(err)
+          i = i+1
+        verificationList.append({'errorName': "Transect incohérent dans Transect", 'errorText': "La valeur du transect doit faire parti de la liste suivante: 1, 2, 3, 11, 12, 21, 22, 31, 32", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
+
       # Valeurs extrêmes inf Diam
       temp = Transect[Transect["Diam"] < 5]
       temp = temp[["NumPlac", "Id", "Diam"]]
