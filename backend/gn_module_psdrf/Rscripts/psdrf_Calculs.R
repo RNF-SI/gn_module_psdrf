@@ -273,15 +273,19 @@ calculs_Arbres <- function(
     calculs_Vol(Sup = T) %>%
     mutate(
       TauxV = ifelse(Vha > 0, log(VhaSup / Vha) / 5, 0),
-      # Volumes pour les BMP :
+      
       Vha = ifelse(
-        Type == 1 | is.na(Type),
-        Vha,
-        ifelse(
-          is.na(Haut), 8 * Gha / Nha, 
-          pi / 40000 * (Diam - (Haut / 2 - 1.30)) ^ 2 * Haut
-        )
-      )
+       # choix 1 : si bois vivant ou bois mort type 'Arbre', on garde Vha déjà calculé
+       Type == 1 | is.na(Type),
+       Vha,
+       # choix 2 : si bois mort type souche ou chandelle, on calcule le volume ...
+       ifelse(
+         # ... en multipliant le Gha par 8 pour avoir Vha
+         is.na(Haut), 8 * Gha,
+         # ... à partir de la hauteur (diamètre médian et décroissance métrique = 1cm/m par défaut)
+         ( pi / 40000 * (Diam - (Haut / 2 - 1.30)) ^ 2 * Haut ) * Nha
+       )
+     )
     )
   
   if (echant_change == F) {

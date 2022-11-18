@@ -82,7 +82,7 @@ psdrf_AgregArbres <- function(
       as.data.frame()
     
     t <- 
-      Arbres %>% 
+      Arbres %>% rbind(Perches)%>%
       select(one_of(c(
         "NumDisp", "NumPlac", "NumArbre", "Cycle", 
         "Essence", "EssReg", "EssRegPar", 
