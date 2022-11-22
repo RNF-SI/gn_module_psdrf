@@ -15,6 +15,8 @@ from geonature.core.ref_geo.models import LiMunicipalities, LAreas, BibAreasType
 from .models import TDispositifs, TPlacettes, TArbres, TCycles, \
     CorCyclesPlacettes, TArbresMesures, TReperes, BibEssences, TRegenerations,\
     TBmSup30,TBmSup30Mesures, TTransects, dispositifs_area_assoc
+from .geonature_PSDRF_function import get_cd_nomenclature_from_id_type_and_id_nomenclature, get_id_type_from_mnemonique
+
 
 def data_analysis(dispId, isCarnetToDownload, isPlanDesArbresToDownload, carnetToDownloadParameters):
 
@@ -55,6 +57,10 @@ def data_analysis(dispId, isCarnetToDownload, isPlanDesArbresToDownload, carnetT
     formatBdd2RData(r, dispId, r_lastCycle, dispName, isCarnetToDownload, isPlanDesArbresToDownload, carnetToDownloadParameters)
 
 def formatBdd2RData(r, dispId, lastCycle, dispName, isCarnetToDownload, isPlanDesArbresToDownload, carnetToDownloadParameters):
+
+    id_type_durete = get_id_type_from_mnemonique("PSDRF_DURETE")
+    id_type_ecorce = get_id_type_from_mnemonique("PSDRF_ECORCE")
+
     #### 1/ Rechercher les données dans la base de données
     # ---- Création des Requêtes pour les données des réserves
     arbresQuery = DB.session.query(
@@ -76,10 +82,29 @@ def formatBdd2RData(r, dispId, lastCycle, dispName, isCarnetToDownload, isPlanDe
             TArbresMesures
         ).join(
             TCycles, TCycles.id_cycle == TArbresMesures.id_cycle
-        )
+        ).all()
+
+    stadeDIdxArbre=11
+    stadeEIdxArbre=12
+    Arbres = [arbre for arbre in arbresQuery]
+    Arbres = [id_nomenclatureToMnemonique(arbre, id_type_durete, id_type_ecorce, stadeDIdxArbre, stadeEIdxArbre) for arbre in Arbres]
 
     bmsQuery = DB.session.query(
-        TPlacettes.id_dispositif, TPlacettes.id_placette_orig, TBmSup30, TBmSup30Mesures, TCycles.num_cycle
+        TPlacettes.id_dispositif, TPlacettes.id_placette_orig, 
+        TBmSup30.id_bm_sup_30_orig,
+        TBmSup30.id_arbre, TCycles.num_cycle, TBmSup30.code_essence, TBmSup30.azimut,
+        TBmSup30.distance, TBmSup30Mesures.diametre_ini, TBmSup30Mesures.diametre_med,
+        TBmSup30Mesures.diametre_fin, TBmSup30Mesures.longueur, TBmSup30Mesures.contact,
+        TBmSup30Mesures.chablis, 
+        TBmSup30Mesures.stade_durete,
+        TBmSup30Mesures.stade_ecorce,
+        TBmSup30Mesures.observation,
+        TBmSup30Mesures.diametre_130,
+        TBmSup30.azimut_souche,
+        TBmSup30.distance_souche,
+        TBmSup30Mesures.ratio_hauteur,
+        TBmSup30.orientation,
+        TCycles.num_cycle
         ).filter(
             (TPlacettes.id_dispositif == dispId)
         ).join(
@@ -88,7 +113,13 @@ def formatBdd2RData(r, dispId, lastCycle, dispName, isCarnetToDownload, isPlanDe
             TBmSup30Mesures
         ).join(
             TCycles, TCycles.id_cycle == TBmSup30Mesures.id_cycle
-        )
+        ).all()
+    stadeDIdxBms=14
+    stadeEIdxBms=15
+    bmsSup30 = [bms for bms in bmsQuery]
+    bmsSup30 = [id_nomenclatureToMnemonique(bms, id_type_durete, id_type_ecorce, stadeDIdxBms, stadeEIdxBms) for bms in bmsSup30]
+
+
 
     placettesQuery = DB.session.query(
         TPlacettes.id_dispositif, TPlacettes.id_placette_orig, TPlacettes.strate, TPlacettes.poids_placette,
@@ -105,11 +136,13 @@ def formatBdd2RData(r, dispId, lastCycle, dispName, isCarnetToDownload, isPlanDe
             CorCyclesPlacettes, CorCyclesPlacettes.id_placette == TPlacettes.id_placette
         ).join(
             TCycles, TCycles.id_cycle == CorCyclesPlacettes.id_cycle
-        )
+        ).all()
 
     regesQuery = DB.session.query(
-        TPlacettes.id_dispositif, TPlacettes.id_placette_orig,
-         TCycles.num_cycle, TRegenerations
+        TPlacettes.id_dispositif, TPlacettes.id_placette_orig, TRegenerations.sous_placette,
+         TCycles.num_cycle, TRegenerations.code_essence, TRegenerations.recouvrement,
+         TRegenerations.classe1, TRegenerations.classe2, TRegenerations.classe3, 
+         TRegenerations.taillis, TRegenerations.abroutissement, TRegenerations.observation
         ).filter(
             (TPlacettes.id_dispositif == dispId)
         ).join(
@@ -118,11 +151,15 @@ def formatBdd2RData(r, dispId, lastCycle, dispName, isCarnetToDownload, isPlanDe
             TCycles, TCycles.id_cycle == CorCyclesPlacettes.id_cycle
         ).join(
             TRegenerations, TRegenerations.id_cycle_placette == CorCyclesPlacettes.id_cycle_placette
-        )
+        ).all()
 
     transectsQuery = DB.session.query(
-        TPlacettes.id_dispositif, TPlacettes.id_placette_orig,
-         TCycles.num_cycle, TTransects
+        TPlacettes.id_dispositif, TPlacettes.id_placette_orig, TTransects.id_transect_orig,
+        TCycles.num_cycle, TTransects.ref_transect, TTransects.code_essence, TTransects.distance,
+        TTransects.diametre, TTransects.angle, TTransects.contact,  TTransects.chablis, 
+        TTransects.stade_durete, 
+        TTransects.stade_ecorce,
+        TTransects.observation
         ).filter(
             (TPlacettes.id_dispositif == dispId)
         ).join(
@@ -131,15 +168,15 @@ def formatBdd2RData(r, dispId, lastCycle, dispName, isCarnetToDownload, isPlanDe
             TCycles, TCycles.id_cycle == CorCyclesPlacettes.id_cycle
         ).join(
             TTransects, TTransects.id_cycle_placette == CorCyclesPlacettes.id_cycle_placette
-        )
+        ).all()
 
     reperesQuery = DB.session.query(
-        TPlacettes.id_dispositif, TPlacettes.id_placette_orig, TReperes
-        ).filter(
+        TPlacettes.id_dispositif, TPlacettes.id_placette_orig, TReperes.azimut,
+        TReperes.distance, TReperes.diametre, TReperes.repere, TReperes.observation        ).filter(
             (TPlacettes.id_dispositif == dispId)
         ).join(
             TReperes, TReperes.id_placette == TPlacettes.id_placette
-        )
+        ).all()
 
     cyclesQuery = DB.session.query(
         TPlacettes.id_dispositif, TPlacettes.id_placette_orig,
@@ -151,7 +188,7 @@ def formatBdd2RData(r, dispId, lastCycle, dispName, isCarnetToDownload, isPlanDe
             CorCyclesPlacettes, CorCyclesPlacettes.id_placette == TPlacettes.id_placette
         ).join(
             TCycles, TCycles.id_cycle == CorCyclesPlacettes.id_cycle
-        )
+        ).all()
 
     # TODO: Ajouter les documents administrateur dans la base de données
     # ---- Création des Requêtes pour les données administrateur
@@ -170,13 +207,40 @@ def formatBdd2RData(r, dispId, lastCycle, dispName, isCarnetToDownload, isPlanDe
     # dispositifsPandas = pd.read_sql(dispositifsQuery.statement, dispositifsQuery.session.bind)
     
     #--- Convertion du résultat en pd dataframe
-    arbresPandas = pd.read_sql(arbresQuery.statement, arbresQuery.session.bind)
-    bmsPandas = pd.read_sql(bmsQuery.statement, bmsQuery.session.bind)
-    placettesPandas = pd.read_sql(placettesQuery.statement, placettesQuery.session.bind)
-    regesPandas = pd.read_sql(regesQuery.statement, regesQuery.session.bind)
-    transectsPandas = pd.read_sql(transectsQuery.statement, transectsQuery.session.bind)
-    reperesPandas = pd.read_sql(reperesQuery.statement, reperesQuery.session.bind)
-    cyclesPandas = pd.read_sql(cyclesQuery.statement, cyclesQuery.session.bind)
+    # arbresPandas = pd.read_sql(arbresQuery.statement, arbresQuery.session.bind)
+    arbresPandas = pd.DataFrame(Arbres, columns=['id_dispositif', 'id_placette_orig', 'id_arbre_orig', 'code_essence', 
+    'azimut', 'distance', 'taillis', 'diametre1', 'diametre2', 'type', 'hauteur_totale', 'stade_durete', 
+    'stade_ecorce', 'coupe', 'limite','code_ecolo','ref_code_ecolo','id_nomenclature_code_sanitaire',
+    'hauteur_branche','observation','num_cycle'])
+    
+
+    
+    # bmsPandas = pd.read_sql(bmsQuery.statement, bmsQuery.session.bind)
+    bmsPandas = pd.DataFrame(bmsSup30, columns=['id_dispositif', 'id_placette_orig', 'id_bm_sup_30_orig', 'id_arbre', 'num_cycle', 
+    'code_essence', 'azimut', 'distance', 'diametre_ini', 'diametre_med', 'diametre_fin', 
+    'longueur', 'contact', 'chablis', 'stade_durete', 'stade_ecorce','observation', 
+    'diametre_130', 'azimut_souche', 'distance_souche', 'ratio_hauteur', 
+    'orientation', 'num_cycle'])
+
+    # placettesPandas = pd.read_sql(placettesQuery.statement, placettesQuery.session.bind)
+    placettesPandas = pd.DataFrame(placettesQuery, columns=['id_dispositif', 'id_placette_orig', 
+    'strate', 'poids_placette', 'pente', 'correction_pente', 'exposition', 
+    'habitat', 'precision_gps', 'station', 'typologie', 'groupe', 
+    'groupe1', 'groupe2', 'ref_habitat', 'precision_habitat', 'ref_station', 'ref_typologie', 
+    'descriptif_groupe', 'descriptif_groupe1','descriptif_groupe2','cheminement','date_intervention', 
+    'date_intervention','nature_intervention','gestion_placette','num_cycle'])
+
+    regesPandas = pd.DataFrame(regesQuery, columns=['id_dispositif', 'id_placette_orig', 'sous_placette',
+     'num_cycle', 'code_essence', 'recouvrement', 'classe1', 'classe2', 'classe3', 
+     'taillis', 'abroutissement', 'observation'])
+
+    transectsPandas = pd.DataFrame(transectsQuery, columns=['id_dispositif', 'id_placette_orig', 'id_transect_orig', 
+    'num_cycle', 'ref_transect', 'code_essence', 'distance', 'diametre', 
+    'angle', 'contact', 'chablis', 'stade_durete', 'stade_ecorce', 'observation'])
+
+    reperesPandas = pd.DataFrame(reperesQuery, columns=["id_dispositif", "id_placette_orig", "azimut", 
+    "distance", "diametre", "repere"])
+    cyclesPandas = pd.DataFrame(cyclesQuery, columns=['id_dispositif', 'id_placette_orig', 'annee', 'num_cycle', 'coeff', 'diam_lim'])
 
     #--- Convertion du df Pandas en rdataframe
     with localconverter(ro.default_converter + pandas2ri.converter):
@@ -235,3 +299,14 @@ def formatBdd2RData(r, dispId, lastCycle, dispName, isCarnetToDownload, isPlanDe
         Answer_Radar = carnetToDownloadParameters['Answer_Radar']
     BDD2Rdata.editDocuments(dispId, lastCycle, dispName, r_placettes, r_arbres, r_bmss, r_reges, r_transects, r_reperes, r_cycles, isCarnetToDownload, isPlanDesArbresToDownload, Answer_Radar)
 
+def id_nomenclatureToMnemonique(obj,id_type_durete,id_type_ecorce, stadeDIdx, stadeEIdx):
+    finalObjtemp = list(obj)
+    if (finalObjtemp[stadeDIdx] != None):
+        finalObjtemp[stadeDIdx] = get_cd_nomenclature_from_id_type_and_id_nomenclature(id_type_durete, finalObjtemp[stadeDIdx])
+    
+    if(finalObjtemp[stadeEIdx] != None):
+        finalObjtemp[stadeEIdx] = get_cd_nomenclature_from_id_type_and_id_nomenclature(id_type_ecorce, finalObjtemp[stadeEIdx])
+    
+    finalObj = tuple(finalObjtemp)
+
+    return finalObj
