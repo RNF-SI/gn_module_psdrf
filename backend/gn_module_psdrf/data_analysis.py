@@ -73,6 +73,7 @@ def formatBdd2RData(r, dispId, lastCycle, dispName, isCarnetToDownload, isPlanDe
         TArbresMesures.coupe, TArbresMesures.limite, 
         TArbresMesures.code_ecolo, TArbresMesures.ref_code_ecolo, 
         TArbresMesures.id_nomenclature_code_sanitaire, TArbresMesures.hauteur_branche, 
+        TArbresMesures.ratio_hauteur, 
         TArbresMesures.observation, TCycles.num_cycle, 
         ).filter(
             (TPlacettes.id_dispositif == dispId)
@@ -169,6 +170,10 @@ def formatBdd2RData(r, dispId, lastCycle, dispName, isCarnetToDownload, isPlanDe
         ).join(
             TTransects, TTransects.id_cycle_placette == CorCyclesPlacettes.id_cycle_placette
         ).all()
+    stadeDIdxTransect=11
+    stadeEIdxTransect=12
+    transects = [transect for transect in transectsQuery]
+    transects = [id_nomenclatureToMnemonique(transect, id_type_durete, id_type_ecorce, stadeDIdxTransect, stadeEIdxTransect) for transect in transects]
 
     reperesQuery = DB.session.query(
         TPlacettes.id_dispositif, TPlacettes.id_placette_orig, TReperes.azimut,
@@ -211,8 +216,7 @@ def formatBdd2RData(r, dispId, lastCycle, dispName, isCarnetToDownload, isPlanDe
     arbresPandas = pd.DataFrame(Arbres, columns=['id_dispositif', 'id_placette_orig', 'id_arbre_orig', 'code_essence', 
     'azimut', 'distance', 'taillis', 'diametre1', 'diametre2', 'type', 'hauteur_totale', 'stade_durete', 
     'stade_ecorce', 'coupe', 'limite','code_ecolo','ref_code_ecolo','id_nomenclature_code_sanitaire',
-    'hauteur_branche','observation','num_cycle'])
-    
+    'hauteur_branche', 'ratio_hauteur', 'observation','num_cycle'])
 
     
     # bmsPandas = pd.read_sql(bmsQuery.statement, bmsQuery.session.bind)
@@ -234,13 +238,30 @@ def formatBdd2RData(r, dispId, lastCycle, dispName, isCarnetToDownload, isPlanDe
      'num_cycle', 'code_essence', 'recouvrement', 'classe1', 'classe2', 'classe3', 
      'taillis', 'abroutissement', 'observation'])
 
-    transectsPandas = pd.DataFrame(transectsQuery, columns=['id_dispositif', 'id_placette_orig', 'id_transect_orig', 
+    transectsPandas = pd.DataFrame(transects, columns=['id_dispositif', 'id_placette_orig', 'id_transect_orig', 
     'num_cycle', 'ref_transect', 'code_essence', 'distance', 'diametre', 
     'angle', 'contact', 'chablis', 'stade_durete', 'stade_ecorce', 'observation'])
 
     reperesPandas = pd.DataFrame(reperesQuery, columns=["id_dispositif", "id_placette_orig", "azimut", 
-    "distance", "diametre", "repere"])
+    "distance", "diametre", "repere", "observation"])
     cyclesPandas = pd.DataFrame(cyclesQuery, columns=['id_dispositif', 'id_placette_orig', 'annee', 'num_cycle', 'coeff', 'diam_lim'])
+
+    tableList = [
+        {'name':'Arbres', 'table': arbresPandas},
+        {'name':'BMSsup30', 'table': bmsPandas},
+        {'name':'Placettes', 'table': placettesPandas},
+        {'name':'Rege', 'table': regesPandas},
+        {'name':'Transects', 'table': transectsPandas},
+        {'name':'Cycles', 'table': cyclesPandas},
+        {'name':'Reperes', 'table': reperesPandas}
+    ]
+    for table in tableList:
+        for bc in getBooleanColumnsByTable(table['name']):
+            table['table'][bc] = table['table'][bc].map(booleanToChar)
+
+    for table in tableList:
+        for bc in getNaColumnsByTable(table['name']):
+            table['table'][bc] = table['table'][bc].map(noValueToNa)
 
     #--- Convertion du df Pandas en rdataframe
     with localconverter(ro.default_converter + pandas2ri.converter):
@@ -310,3 +331,40 @@ def id_nomenclatureToMnemonique(obj,id_type_durete,id_type_ecorce, stadeDIdx, st
     finalObj = tuple(finalObjtemp)
 
     return finalObj
+
+def getBooleanColumnsByTable(tableName):
+    allColumnObject = { 
+        "Placettes": ["correction_pente"],
+        "Cycles":  [], 
+        "Arbres": ["taillis", "limite", "ratio_hauteur"],
+        "Rege": ["taillis", "abroutissement"],
+        "Transects": ["contact", "chablis"],
+        "BMSsup30":["ratio_hauteur", "chablis"],
+        "Reperes": []
+      }
+    return allColumnObject[tableName]
+
+# Function for column with no value (which might be NA)
+def getNaColumnsByTable(tableName):
+    allColumnObject = { 
+        "Placettes": [],
+        "Cycles":  [], 
+        "Arbres": ["type"],
+        "Rege": [],
+        "Transects": [],
+        "BMSsup30":[],
+        "Reperes": []
+      }
+    return allColumnObject[tableName]
+
+def booleanToChar(booleanVar):
+    if booleanVar:
+        return 't'
+    else :
+        return 'f'
+
+def noValueToNa(value):
+    if value =='':
+        return None
+    else :
+        return value
