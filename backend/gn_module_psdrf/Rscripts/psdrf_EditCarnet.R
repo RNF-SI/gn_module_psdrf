@@ -435,6 +435,7 @@ psdrf_EditCarnet <- function(
   load("tables/psdrfCodes.Rdata")
   load("tables/psdrfDonneesBrutes.Rdata")
   load("tables/psdrfTablesBrutes.Rdata")
+  load("tables/psdrf_tables_livret.Rdata")
 
     ##### 2/ Préparation des données #####
     # -- gestion des noms et num du dispositif
@@ -517,10 +518,19 @@ build_tables <- function(
   disp, plot_table = NULL,
   repPSDRF = NULL, repSav = NULL
 ) {
+  # -- results : tree scale
+  # Réalisation de l'étape de calcul des variables par arbre
+  psdrf_Calculs(repPSDRF, disp, last_cycle)
   
+  # -- results : plot scale
+  # setup (get "tables_list" via load("tables/psdrf_tables_livret.Rdata"))
+  load("tables/psdrf_tables_livret.Rdata")
+  # construction de la table de combinaison des résultats
+  results_by_plot_to_get <- build_combination_table(tables_list)
+
   # psdrf_AgregArbres call
   # (pour le dispositif en cours d'analyse uniquement)
-  TabPla = psdrf_AgregArbres(
+  psdrf_AgregArbres(
     repPSDRF, dispId, last_cycle,
     results_by_plot_to_get
     )
@@ -700,7 +710,7 @@ if (answ == "yes") { # TODO : à terminer
       psdrf_AgregPlacettes(
         repPSDRF,
         results_by_group_to_get, 
-        repSav, disp, last_cycle, TabPla
+        repSav, disp, last_cycle
       )
       
       # -- retour de la fonction build_results_by_group_to_get
@@ -730,8 +740,8 @@ if (answ == "yes") { # TODO : à terminer
   # psdrf_AgregPlacettes call
   psdrf_AgregPlacettes(
     repPSDRF,
-    results_by_group_to_get, 
-    repSav, disp, last_cycle, TabPla #Arguments dispo plus haut dans le script
+    results_by_group_to_get,
+    disp, last_cycle #Arguments dispo plus haut dans le script
   )
   # -- retour de la fonction build_results_by_group_to_get
   # return(list(results_by_group_to_get, chosen_group_combination))

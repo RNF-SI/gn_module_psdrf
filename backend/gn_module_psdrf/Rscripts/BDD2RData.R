@@ -123,9 +123,49 @@ editDocuments <- function(dispId, lastCycle, dispName, placettes, arbres, bms, r
     "psdrfPlaTot_EssReg"
     )
     tables_list <- sort(unique(tables_list))
+    save(tables_list, file = "tables/psdrf_tables_livret.Rdata")
+    load("tables/psdrf_tables_livret.Rdata")
+    # ----- Lancement manuel -----
+
+    TabCombi <- build_combination_table(tables_list)
+
+    # chargement du script
+    source(
+        file.path("./psdrf_AgregArbres.R"), 
+        encoding = 'UTF-8', echo = TRUE
+    )
+
+    # lancement # TODO : supprimer le message de jonction lors de l'exécution de afi_AgregArbres
+    TabPla = psdrf_AgregArbres(repPSDRF, dispId, lastCycle, TabCombi)
 
     # construction de la table de combinaison des résultats
     results_by_plot_to_get <- build_combination_table(tables_list)
+
+
+    ##### Job 6 : agrégation des résultats par dispositif #####
+    results_by_stand_to_get <- data.frame(
+    V1 = "Disp",
+    V2 = NA,
+    V3 = NA,
+    V4 = NA,
+    V5 = NA,
+    V6 = NA,
+    V7 = NA,
+    V8 = NA,
+    V9 = NA,
+    stringsAsFactors = F
+    )
+
+
+    source(
+    file.path("./psdrf_AgregPlacettes.R"), 
+    encoding = 'UTF-8', echo = TRUE
+    )
+    # lancement # TODO : supprimer le message de jonction lors de l'exécution de afi_AgregArbres
+    psdrf_AgregPlacettes(
+    repPSDRF, results_by_stand_to_get, dispId, lastCycle
+    )
+
 
     source(
     file.path("./psdrf_EditCarnet.R"), 

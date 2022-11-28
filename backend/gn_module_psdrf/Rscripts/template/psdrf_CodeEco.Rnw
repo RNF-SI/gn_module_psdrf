@@ -236,7 +236,7 @@ if (is.na(Param_CodesEcoRare)) {
 @
 \FloatBarrier
 
-<<CodesEco3{{x}}, eval = Eval_CodeEco, fig.height = Param_CodesEcoRare, fig.cap =  "Microhabitats par cat\u00E9gories de diam\u00E8tre.\\\\ \\vspace{0.2cm}\\footnotesize{PER (Perches) = diam\u00E8tre compris entre 7, 5 cm et 17, 5 cm\\\\PB (Petits Bois) = diam\u00E8tre compris entre 17, 5 cm et 27, 5 cm\\\\BM (Bois Moyens) = diam\u00E8tre compris entre 27, 5 cm et 47, 5 cm\\\\GB (Gros Bois) = diam\u00E8tre compris entre 47, 5 cm et 67, 5 cm\\\\TGB (Tr\u00E8s Gros Bois) = diam\u00E8tre sup\u00E9rieur \u00E0 67, 5 cm.}">>= 
+<<CodesEco3{{x}}, eval = Eval_CodeEco, fig.height = 9.7, fig.cap =  "Microhabitats par cat\u00E9gories de diam\u00E8tre.\\\\ \\vspace{0.2cm}\\footnotesize{PER (Perches) = diam\u00E8tre compris entre 7, 5 cm et 17, 5 cm\\\\PB (Petits Bois) = diam\u00E8tre compris entre 17, 5 cm et 27, 5 cm\\\\BM (Bois Moyens) = diam\u00E8tre compris entre 27, 5 cm et 47, 5 cm\\\\GB (Gros Bois) = diam\u00E8tre compris entre 47, 5 cm et 67, 5 cm\\\\TGB (Tr\u00E8s Gros Bois) = diam\u00E8tre sup\u00E9rieur \u00E0 67, 5 cm.}">>= 
 
 if (dim(grouped_results_of_Tot_by_CatCodeEcolo)[1] > 0) {
   cat("Dans la figure \\ref{fig:CodesEco3{{x}}}, l'histogramme du haut pr\u00E9sente la densit\u00E9 \u00E0 l'hectare des principaux  DMH relev\u00E9s par cat\u00E9gorie de diam\u00E8tre. L'histogramme du bas indique le nombre moyen de DMH par arbre porteur de DMH et par cat\u00E9gorie de diam\u00E8tre.")
@@ -268,6 +268,7 @@ names(Palette_Code) <- str_wrap(
   width = 35, indent = 3, exdent = 0
 )
 
+legend_list<- t.m[['Note']]
 p1 <- 
   ggplot() +
   geom_bar(
@@ -276,7 +277,7 @@ p1 <-
     position = "stack", 
     stat = "identity"
   ) +
-  scale_fill_manual(values = Palette_Code) +
+  scale_fill_manual(values = Palette_Code, breaks = legend_list) +
   labs(x = "", y = "Cumul microhabitats (N/ha)") +
   guides(fill = guide_legend(reverse = T)) +
   MyTheme + 
@@ -324,6 +325,15 @@ grid.arrange(
   ), 
   mylegend, nrow = 1, widths = c(5, 5)
 )
+
+
+# Légende en dessous(bonne version)
+# grid.arrange(p1+theme(legend.position='none'), p2+theme(legend.position='none'),
+#              mylegend,
+#              layout_matrix=matrix(c(1,3, 2,3), ncol=2)
+#             # heights=c(1,1,4)
+#              )
+
 } else {
   cat("Pas de données inventoriées.")
 }

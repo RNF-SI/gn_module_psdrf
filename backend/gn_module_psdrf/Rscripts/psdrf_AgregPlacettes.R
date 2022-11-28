@@ -156,8 +156,7 @@ psdrf_AgregMoySdEr <- function(
 psdrf_AgregPlacettes <- function(
   repPSDRF = NULL,
   results_by_group_to_get = NULL, 
-  repSav = repPSDRF, 
-  disp_list = NULL, last_cycle = NULL, TabPla # lorsque appel pour édition du livret
+  disp = NULL, last_cycle = NULL # lorsque appel pour édition du livret
   ) {
   # -- définition nulle des variables utilisées
   objects <- c(
@@ -167,6 +166,7 @@ psdrf_AgregPlacettes <- function(
     "Sd", "TabData", "value", "value1", "value2", "var", 
     "var_result", "variable"
   )
+  disp_list <- list(disp)
   create_null(objects)
   ##### 1/ Initialisation #####
   # -- répertoire de travail
@@ -178,9 +178,22 @@ psdrf_AgregPlacettes <- function(
   load("tables/psdrfDonneesBrutes.Rdata")
   
   # -- chargement des tables élaborées par placettes
-  TabPla = TabPla$TabPla
-  df_list <- TabPla
-
+  load("tables/psdrfTablesElaboreesPlac.Rdata")
+  
+  # -- list des tables pour le choix du dispositif/pour le calcul du dernier cycle/ à filtrer
+  df_list <- load("tables/psdrfTablesElaboreesPlac.Rdata")
+  
+  # -- chargement des résultats de psdrf_AgregPlac()
+  # if (repSav == repPSDRF) {
+  #   # -- choix du dispositif
+  #   # initialisation
+  #   check_all_msg <- "Editer les r\u00E9sultats pour tous les dispositifs"
+  #   df_list <- load("tables/psdrfTablesElaboreesPlac.Rdata")
+  #   disp_list <- choose_disp(df_list, Dispositifs, check_all_msg) # TODO : laisser le choix du dispositif ?(même si déjà fait au job4)
+  # }# else {
+  # #   disp_list <- disp
+  # # } # end condition "repSav == repPSDRF"
+  # last_cycle <- get_last_cycle(df_list, disp_list)
   
   # -- filtre des tables d'inventaire en fonction des numéros de dispositif sélectionnés
   # Placettes,IdArbres,ValArbres,PCQM,Reges,Transect,BMSsup30,Reperes,Cycles
