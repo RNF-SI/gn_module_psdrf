@@ -113,7 +113,6 @@ data/purge.sql
 #vscode
 frontend/tsconfig.json
 
-# Dependency directories
 frontend/node_modules/
 
 #settings
@@ -146,3 +145,4 @@ backend/gn_module_psdrf/Rscripts/template/psdrf_PlanArbres.tex
 
 # Compare files in R scripts
 backend/gn_module_psdrf/Rscripts/template/compare
+
