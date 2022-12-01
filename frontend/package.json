@@ -9,6 +9,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "xlsx": "^0.16.9"
+    "xlsx": "^0.17.0"
   }
 }
