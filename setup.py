@@ -28,6 +28,7 @@ setuptools.setup(
             'code = gn_module_psdrf:MODULE_CODE',
             'picto = gn_module_psdrf:MODULE_PICTO',
             'blueprint = gn_module_psdrf.blueprint:blueprint',
+            "config_schema = gn_module_psdrf.conf_schema_toml:GnModuleSchemaConf",
             'migrations = gn_module_psdrf:migrations',
         ],
     },

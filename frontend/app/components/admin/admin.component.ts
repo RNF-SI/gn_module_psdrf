@@ -6,7 +6,7 @@ import { AppConfig } from '@geonature_config/app.config';
 import { ToastrService } from 'ngx-toastr';
 import { AuthService } from '@geonature/components/auth/auth.service';
 import * as _ from "lodash";
-import { MatDialog } from "@angular/material";
+import { MatDialog } from "@angular/material/dialog";
 import { ConfirmationDialog } from "@geonature_common/others/modal-confirmation/confirmation.dialog";
 
 
@@ -92,7 +92,7 @@ export interface Orga {
 
     private psdrfListeFile: any = null;
     private excelFileName: any;
-    private isPsdrfListeCharging: any;
+    public isPsdrfListeCharging: any;
     private psdrfListUploading = false; 
     private isPSDRFListeLoaded= false;
 

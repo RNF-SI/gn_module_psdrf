@@ -201,7 +201,7 @@
                         </button>
                     </div>
                     <div class="stepper">
-                        <mat-horizontal-stepper #mainStepper class="mainStepper" labelPosition="bottom" #mainStepper (selectionChange)="displayOnMainStepClick($event)">
+                        <mat-horizontal-stepper #mainStepper class="mainStepper" labelPosition="bottom" (selectionChange)="displayOnMainStepClick($event)">
                             <ng-template matStepperIcon="edit">
                                 <mat-icon>done</mat-icon>
                             </ng-template>

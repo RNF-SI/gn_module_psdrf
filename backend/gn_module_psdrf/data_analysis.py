@@ -11,7 +11,7 @@ import rpy2.robjects as robjects
 from rpy2.robjects.packages import STAP
 from geonature.utils.env import DB
 
-from geonature.core.ref_geo.models import LiMunicipalities, LAreas, BibAreasTypes
+from ref_geo.models import LiMunicipalities, LAreas, BibAreasTypes
 from .models import TDispositifs, TPlacettes, TArbres, TCycles, \
     CorCyclesPlacettes, TArbresMesures, TReperes, BibEssences, TRegenerations,\
     TBmSup30,TBmSup30Mesures, TTransects, dispositifs_area_assoc

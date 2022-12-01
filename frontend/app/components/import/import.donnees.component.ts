@@ -27,7 +27,7 @@ import { AuthService } from '@geonature/components/auth/auth.service';
 import { CommonService } from '@geonature/GN2CommonModule/service/common.service';
 import { ToastrService } from 'ngx-toastr';
 
-import { MatDialog } from "@angular/material";
+import { MatDialog } from "@angular/material/dialog";
 import { ConfirmationDialog } from "@geonature_common/others/modal-confirmation/confirmation.dialog";
 
 

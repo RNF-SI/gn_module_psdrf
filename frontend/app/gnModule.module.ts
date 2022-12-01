@@ -18,8 +18,8 @@ import { ErrorCorrectionService } from "./services/error.correction.service";
 import { SharedService } from "./services/shared.service";
 import { KeyValue, FormatNum } from "./utils";
 import { DndDirective } from './directives/dnd.directive';
-import { MatTableModule } from '@angular/material';
-import { MatSnackBarModule } from '@angular/material'; 
+import { MatTableModule } from '@angular/material/table';
+import { MatSnackBarModule } from '@angular/material/snack-bar'; 
 import { CdkStepperModule } from '@angular/cdk/stepper';
 import {MatCheckboxModule} from '@angular/material/checkbox'; 
 

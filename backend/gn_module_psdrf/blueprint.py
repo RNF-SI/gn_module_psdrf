@@ -19,7 +19,7 @@ from geonature.utils.env import DB
 from geonature.core.users.models import CorRole
 from pypnusershub.db.models import Organisme as BibOrganismes
 from pypnusershub.db.models import User
-from geonature.core.ref_geo.models import LiMunicipalities, LAreas, BibAreasTypes
+from ref_geo.models import LiMunicipalities, LAreas, BibAreasTypes
 from .models import TDispositifs, TPlacettes, TArbres, TCycles, \
     CorCyclesPlacettes, TArbresMesures, CorDispositifsRoles
 from .data_verification import data_verification

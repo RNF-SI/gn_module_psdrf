@@ -1,6 +1,6 @@
 import {Component, OnChanges, Input, Output, SimpleChanges, ChangeDetectorRef, EventEmitter } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
-import { MatDialog } from "@angular/material";
+import { MatDialog } from "@angular/material/dialog";
 import { ConfirmationDialog } from "@geonature_common/others/modal-confirmation/confirmation.dialog";
 
 

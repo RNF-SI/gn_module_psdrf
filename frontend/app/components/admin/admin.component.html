@@ -1,8 +1,8 @@
 <button class="m-2" mat-raised-button matTooltip="Revenir à l'écran d'accueil" (click)="returnToPreviousPage()">
     <mat-icon> arrow_back </mat-icon>
-    <span class="user-name">
+    <!-- <span class="user-name">
         {{ currentUser?.user_login }}
-    </span>
+    </span> -->
 </button>
 <div class="container-fluid p-2">
     <mat-card>
@@ -109,7 +109,7 @@
 
             </mat-drawer>
             <div class="example-sidenav-content">
-                <admin-table [tableName]="user" [displayedColumns]="displayedColumns['User']" [data]="utilisateurList" (updatingRow)="openUpdateForm($event, 'userDrawer')">
+                <admin-table [tableName]="'user'" [displayedColumns]="displayedColumns['User']" [data]="utilisateurList" (updatingRow)="openUpdateForm($event, 'userDrawer')">
                 </admin-table>
 
                 <button type="button" class="btn btn-success ml-4 mt-4" (click)="toggleUserDrawer()">
@@ -273,7 +273,7 @@
 
             </mat-drawer>
             <div class="example-sidenav-content">
-                <admin-table [tableName]="disp" [displayedColumns]="displayedColumns['Disp']" [data]="dispositifList" (updatingRow)="openUpdateForm($event, 'dispDrawer')" (deletingRow)="deleteRow($event, 'disp')">
+                <admin-table [tableName]="'disp'" [displayedColumns]="displayedColumns['Disp']" [data]="dispositifList" (updatingRow)="openUpdateForm($event, 'dispDrawer')" (deletingRow)="deleteRow($event, 'disp')">
                 </admin-table>
 
                 <button type="button" class="btn btn-success ml-4 mt-4" (click)="toggleDispDrawer()">
@@ -379,7 +379,7 @@
 
             </mat-drawer>
             <div class="example-sidenav-content">
-                <admin-table [tableName]="organisme" [displayedColumns]="displayedColumns['Orga']" [data]="organismeList" (updatingRow)="openUpdateForm($event, 'organismeDrawer')" (deletingRow)="deleteRow($event, 'organisme')">
+                <admin-table [tableName]="'organisme'" [displayedColumns]="displayedColumns['Orga']" [data]="organismeList" (updatingRow)="openUpdateForm($event, 'organismeDrawer')" (deletingRow)="deleteRow($event, 'organisme')">
                 </admin-table>
 
                 <button type="button" class="btn btn-success ml-4 mt-4" (click)="toggleOrganismeDrawer()">

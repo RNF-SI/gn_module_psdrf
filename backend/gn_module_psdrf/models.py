@@ -3,7 +3,7 @@
 from geoalchemy2 import Geometry
 
 from pypnusershub.db.models import Organisme
-from geonature.core.ref_geo.models import LiMunicipalities, LAreas
+from ref_geo.models import LiMunicipalities, LAreas
 # from geonature.utils.utilssqlalchemy import serializable, geoserializable
 from geonature.utils.env import DB
 
