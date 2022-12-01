@@ -1,0 +1,42 @@
+<div>
+    <div class="blocking-error-class" *ngIf="!step.isFatalError">Point de vigilence:</div>
+    <h4 [innerHTML]="mainStepText"></h4>
+</div>
+<div class="alert alert-info" *ngIf="step.errorNumber > 100">Le nombre d'occurence est très élévé pour cette erreur ({{step.errorNumber}} occurences). Pour des questions de rapidité du navigateur, le nombre d'occurences affichées est limité à 100. Veuillez corriger les erreurs affichées puis relancer l'algorithme de vérification.</div>
+<div class="solution" #subStepperContainer>
+    <div class="arrow-icons">
+        <button mat-icon-button (click)="paginatorBack()" *ngIf="page > 0">
+      <mat-icon>keyboard_arrow_left</mat-icon>
+    </button>
+    </div>
+    <div class="stepper">
+        <mat-horizontal-stepper #subStepper class="subStepper" labelPosition="bottom" (selectionChange)="onSubStepClicked($event)">
+            <ng-template matStepperIcon="edit">
+                <mat-icon>done</mat-icon>
+            </ng-template>
+
+            <mat-step *ngFor="let error of step.errorList; index as subStepIndex" [completed]="checkSubStepCompleted(subStepIndex)">
+                <error-sub-step *ngIf="subStepper.selectedIndex == subStepIndex" (indexButtonClicked)="onIndexButtonClicked($event)" 
+                    (modificationValidated)="modifValidation($event)" (deletionValidated)="deleteValidation($event)" 
+                    (allRowsModified)="onAllRowsModified($event)" (applyToAllRow)="onAppliedToAllRows($event)"
+                    [psdrfError]="error" [subStepIndex]="subStepIndex" [mainStepIndex]="mainStepIndex" 
+                    [errorType]="step.errorType" 
+                    >
+                </error-sub-step>
+            </mat-step>
+        </mat-horizontal-stepper>
+    </div>
+    <div class="arrow-icons">
+        <button mat-icon-button (click)="paginatorNext()" *ngIf="page < totalPages - 1">
+      <mat-icon>keyboard_arrow_right</mat-icon>
+    </button>
+    </div>
+</div>
+<div class="action-buttons">
+    <button *ngIf="stepIndex > 0" class="m-1 float-left" mat-raised-button matTooltip="Cas Précédent" (click)="goBack()">
+        <mat-icon> arrow_back </mat-icon>
+    </button>
+    <button *ngIf="stepIndex < totalSteps - 1" class="m-1 float-left" mat-raised-button matTooltip="Cas Suivant" (click)="goForward()">
+        <mat-icon> arrow_forward </mat-icon>
+    </button>
+</div>

@@ -1,0 +1,253 @@
+\thispagestyle{empty} % la page en tour n'a pas de numéro de page
+\EditIf{\Sexpr{is.element(disp_num,c(93,125,183))}}{TRUE}{
+\EditIf{\Sexpr{is.element(disp_num,c(93,125))}}{TRUE}{
+\begin{multicols}{3}
+\includegraphics[height=1cm]{\Sexpr{ImagesLogoEDF}} %changement ../../
+\begin{center}
+\includegraphics[height=1.5cm]{\Sexpr{ImagesLogo}} %changement ../../
+\end{center}
+\begin{flushright}
+\includegraphics[height=1cm]{\Sexpr{ImagesLogoONF}} % changement
+\end{flushright}
+\end{multicols}
+
+\vspace*{1.5cm}
+\begin{center}
+\textbf{SUIVI DENDROMETRIQUE DES RESERVES FORESTIERES}
+% \date{\today}
+
+% \end{center}
+% 
+% \begin{center}
+% Dispositif n°\Sexpr{disp_num} : \Sexpr{NomDisp}
+Dispositif n°\Sexpr{disp_num} : \Sexpr{disp_name} - Cycle \Sexpr{last_cycle}\\
+Carnet d'analyse automatisé
+% \end{center}
+
+\vspace*{4cm}
+% \begin{center}
+\includegraphics[width=15cm, height=11cm]{\Sexpr{NomPhoto}}
+% \end{center}
+
+\vspace*{1cm}
+% \begin{center}
+\today
+
+\vspace*{2cm}
+
+\end{center}
+
+\begin{multicols}{3}
+\includegraphics[height=1.5cm]{\Sexpr{LogoFNADT}} %changement ../../
+\begin{center}
+\includegraphics[height=1.5cm]{\Sexpr{LogoPNC}}
+\end{center}
+\begin{flushright}
+\includegraphics[height=1.5cm]{\Sexpr{LogoUE}} % changement
+\end{flushright}
+\end{multicols}
+
+% \begin{titlepage}
+% \thispagestyle{empty} % page sans en-tête ni pieds de page (pas de numéro)
+% \setcounter{page}{0}
+% \newgeometry{left=1.5cm,bottom=1cm}
+% \begin{sffamily}
+% \parindent=0pt % supprime l'indentation de la page
+% 
+% \begin{minipage}{0.4\textwidth}
+%   \begin{flushleft} \large
+%     \includegraphics[scale=0.45]{Images/LogoMA}
+%   \end{flushleft}
+% \end{minipage}
+% \begin{minipage}{0.6\textwidth}
+%   \begin{flushright} \large
+%     \includegraphics[scale=0.45]{Images/LogoMA1}
+%   \end{flushright}
+% \end{minipage}
+% 
+% \vspace*{3cm}
+% % \hrulefill
+% \rule{\textwidth}{0.5mm}
+% \begin{center}
+%   {\huge \bfseries{Suivi des espaces boisés du \\ Parc Naturel Régional des Vosges du Nord}} \\
+%   {\large par un réseau de placettes permanentes}
+% \end{center}
+% \rule{\textwidth}{0.5mm}
+% 
+% \begin{center}
+%   \makebox[\textwidth]{\includegraphics[height=10cm]{Images/CarteHetre}}
+% \end{center}
+% 
+% \begin{footnotesize}
+% \begin{center}
+%   Avec le financement de la Direction Régionale de l'Alimentation, \\
+%   de l'Agriculture et de la Forêt d'Alsace et de Lorraine\\
+%   - juillet 2015 -
+% \end{center}
+% \end{footnotesize}
+% 
+% \vspace*{2cm}
+% \begin{minipage}{0.4\textwidth}
+%   \begin{flushleft} \large
+%     \includegraphics[scale=0.45]{Images/RA}
+%   \end{flushleft}
+% \end{minipage}
+%   \begin{minipage}{0.6\textwidth}
+%     \begin{flushright} \large
+%       \includegraphics[scale=0.45]{Images/RL}
+%     \end{flushright}
+%   \end{minipage}
+% \end{sffamily}
+% \restoregeometry
+% \end{titlepage}
+}{
+\begin{multicols}{3}
+\includegraphics[height=1cm]{\Sexpr{ImagesLogoEDF}} %changement ../../
+\begin{center}
+\includegraphics[height=1.5cm]{\Sexpr{ImagesLogo}} %changement ../../
+\end{center}
+\begin{flushright}
+\includegraphics[height=1cm]{\Sexpr{ImagesLogoONF}} % changement
+\end{flushright}
+\end{multicols}
+
+\vspace*{1.5cm}
+\begin{center}
+\textbf{SUIVI DENDROMETRIQUE DES RESERVES FORESTIERES}
+% \date{\today}
+
+% \end{center}
+% 
+% \begin{center}
+% Dispositif n°\Sexpr{disp_num} : \Sexpr{NomDisp}
+Dispositif n°\Sexpr{disp_num} : \Sexpr{disp_name} - Cycle \Sexpr{last_cycle}\\
+Carnet d'analyse automatisé
+% \end{center}
+
+\vspace*{2cm}
+% \begin{center}
+\includegraphics[height=13cm]{\Sexpr{NomPhoto}}
+% \end{center}
+
+\vspace*{1cm}
+% \begin{center}
+\today
+
+\vspace*{1cm}
+
+\end{center}
+
+% \begin{center}
+% \begin{multicols}{2}
+% \includegraphics[height=1.5cm]{\Sexpr{LogoFNADT}} %changement ../../
+% \includegraphics[height=1.5cm]{\Sexpr{LogoUE}} % changement
+% % \begin{flushright}
+% % \includegraphics[height=1.5cm]{\Sexpr{LogoPNC}}
+% % \end{flushright}
+% \end{multicols}
+% \end{center}
+
+\centering
+\begin{minipage}[t]{\dimexpr.7\textwidth-\tabcolsep-.5pt}
+\centering
+\includegraphics[height=3cm]{\Sexpr{LogoPNC}} %changement ../../
+\hspace{0.5cm}
+\includegraphics[height=2cm]{\Sexpr{LogoUE}}
+% \begin{flushright}
+% \includegraphics[height=1.5cm]{LogoUE} % changement
+% \end{flushright}
+\end{minipage}
+}
+}{
+
+\vspace*{2.5cm}
+\begin{center}
+\textbf{SUIVI DENDROMETRIQUE DES RESERVES FORESTIERES}
+% \date{\today}
+
+% \end{center}
+% 
+% \begin{center}
+% Dispositif n°\Sexpr{disp_num} : \Sexpr{NomDisp}
+Dispositif n°\Sexpr{disp_num} : \Sexpr{disp_name} - Cycle \Sexpr{last_cycle}\\
+Carnet d'analyse automatisé
+% \end{center}
+
+\vspace*{4cm}
+% \begin{center}
+\includegraphics[width=15cm]{\Sexpr{NomPhoto}}
+% \end{center}
+
+\vspace*{1cm}
+% \begin{center}
+\today
+
+\vspace*{2cm}
+
+\end{center}
+
+\begin{multicols}{3}
+\includegraphics[height=1cm]{\Sexpr{ImagesLogoEDF}} %changement ../../
+\begin{center}
+\includegraphics[height=1.5cm]{\Sexpr{ImagesLogo}} %changement ../../
+\end{center}
+\begin{flushright}
+\includegraphics[height=1cm]{\Sexpr{ImagesLogoONF}} % changement
+\end{flushright}
+\end{multicols}
+
+% \begin{titlepage}
+% \thispagestyle{empty} % page sans en-tête ni pieds de page (pas de numéro)
+% \setcounter{page}{0}
+% \newgeometry{left=1.5cm,bottom=1cm}
+% \begin{sffamily}
+% \parindent=0pt % supprime l'indentation de la page
+% 
+% \begin{minipage}{0.4\textwidth}
+%   \begin{flushleft} \large
+%     \includegraphics[scale=0.45]{Images/LogoMA}
+%   \end{flushleft}
+% \end{minipage}
+% \begin{minipage}{0.6\textwidth}
+%   \begin{flushright} \large
+%     \includegraphics[scale=0.45]{Images/LogoMA1}
+%   \end{flushright}
+% \end{minipage}
+% 
+% \vspace*{3cm}
+% % \hrulefill
+% \rule{\textwidth}{0.5mm}
+% \begin{center}
+%   {\huge \bfseries{Suivi des espaces boisés du \\ Parc Naturel Régional des Vosges du Nord}} \\
+%   {\large par un réseau de placettes permanentes}
+% \end{center}
+% \rule{\textwidth}{0.5mm}
+% 
+% \begin{center}
+%   \makebox[\textwidth]{\includegraphics[height=10cm]{Images/CarteHetre}}
+% \end{center}
+% 
+% \begin{footnotesize}
+% \begin{center}
+%   Avec le financement de la Direction Régionale de l'Alimentation, \\
+%   de l'Agriculture et de la Forêt d'Alsace et de Lorraine\\
+%   - juillet 2015 -
+% \end{center}
+% \end{footnotesize}
+% 
+% \vspace*{2cm}
+% \begin{minipage}{0.4\textwidth}
+%   \begin{flushleft} \large
+%     \includegraphics[scale=0.45]{Images/RA}
+%   \end{flushleft}
+% \end{minipage}
+%   \begin{minipage}{0.6\textwidth}
+%     \begin{flushright} \large
+%       \includegraphics[scale=0.45]{Images/RL}
+%     \end{flushright}
+%   \end{minipage}
+% \end{sffamily}
+% \restoregeometry
+% \end{titlepage}
+}
+

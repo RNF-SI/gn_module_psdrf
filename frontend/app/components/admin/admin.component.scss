@@ -1,0 +1,53 @@
+@import '../../../styles/styles.scss';
+::ng-deep .mat-select {
+    background-color: #DCDCDC;
+}
+
+.mat-drawer-inner-container {
+    width: 800px;
+}
+
+::ng-deep .mat-sidenav {
+    width: 800px;
+}
+
+::ng-deep .mat-drawer-inner-container {
+    width: 800px;
+}
+
+::ng-deep .mat-sidenav {
+    width: 800px;
+}
+
+.request-sidenav {
+    width: 1000px;
+}
+
+.importzone {
+    width: 100%;
+    height: 400px;
+    padding: 2rem;
+    text-align: center;
+    position: relative;
+    margin: 0 auto;
+    input {
+        opacity: 0;
+        position: absolute;
+        z-index: 2;
+        top: 0;
+        left: 0;
+    }
+    label {
+        color: white;
+        width: 300px;
+        height: 44px;
+        border-radius: 21.5px;
+        background-color: $dark-green;
+        padding: 8px 16px;
+    }
+    h3 {
+        font-size: 20px;
+        font-weight: 600;
+        color: #38424c
+    }
+}

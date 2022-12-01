@@ -1,0 +1,183 @@
+@import '../../../styles/styles.scss';
+.importzone {
+    width: 600px;
+    height: 85vh;
+    padding: 2rem;
+    text-align: center;
+    position: relative;
+    margin: 0 auto;
+    input {
+        opacity: 0;
+        position: absolute;
+        z-index: 2;
+        top: 0;
+        left: 0;
+    }
+    label {
+        color: white;
+        width: 300px;
+        height: 44px;
+        border-radius: 21.5px;
+        background-color: $dark-green;
+        padding: 8px 16px;
+    }
+    h3 {
+        font-size: 20px;
+        font-weight: 600;
+        color: #38424c
+    }
+}
+
+.single-file {
+    padding: 2px;
+    align-items: center;
+    border: dashed 1px #979797;
+    img.delete {
+        margin-left: 0.5rem;
+        cursor: pointer;
+        align-self: flex-end;
+    }
+    .name {
+        font-size: 14px;
+        font-weight: 500;
+        color: #353f4a;
+        margin: 0;
+    }
+    .size {
+        font-size: 12px;
+        font-weight: 500;
+        color: #a4a4a4;
+        margin: 0;
+        margin-bottom: 0.25rem;
+    }
+    .info {}
+}
+
+.action-button-class {
+    margin: 4px 8px;
+}
+
+table {
+    width: 100%;
+}
+
+.mat-tab-group {
+    border: 2mm ridge rgba(89, 137, 121, .6);
+    background: #BAD2CA;
+}
+
+.mat-header-row {
+    background: #DCE8E4;
+}
+
+.mat-header-cell,
+.mat-cell {
+    text-align: center;
+}
+
+.mat-tab-group.mat-primary .mat-ink-bar,
+.mat-tab-nav-bar.mat-primary .mat-ink-bar {
+    background: rgba(149, 165, 166, 0.3);
+    height: 35px;
+    border-radius: 100px;
+    margin-bottom: 5px;
+}
+
+.example-loading-shade {
+    position: absolute;
+    top: 50px;
+    left: 0;
+    bottom: 0px;
+    right: 0;
+    background: rgba(127, 127, 127, 0.15);
+    z-index: 9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.isError {
+    background-color: $error-color;
+}
+
+.isSelectedError {
+    border: 2px dashed #000000;
+    font-weight: bold;
+}
+
+.isModifiedError {
+    background-color: $corrified-color;
+}
+
+.isDeletedError {
+    text-decoration: line-through;
+    background-color: #D3D3D3;
+}
+
+::ng-deep .mat-progress-bar-fill::after {
+    background-color: $corrified-color;
+}
+
+::ng-deep .mat-progress-bar-buffer {
+    background: $error-color;
+}
+
+::ng-deep .mat-progress-bar {
+    border-radius: 2px;
+    height: 15px !important;
+}
+
+::ng-deep .mat-ink-bar {
+    background-color: $dark-green !important;
+}
+
+::ng-deep .mat-step-header[aria-selected="true"] {
+    border: solid 1px black;
+}
+
+.stepperPart {
+    display: flex;
+    margin-left: 2rem;
+    margin-right: 2rem;
+}
+
+.stepper {
+    flex-grow: 2;
+}
+
+.stepper-arrow-icons {
+    display: flex;
+    height: 72px;
+    align-items: center;
+}
+
+.action-buttons {
+    margin-left: 2.5rem;
+}
+
+::ng-deep.mat-step-icon {
+    background-color: $error-color!important
+}
+
+::ng-deep.mat-step-icon-state-edit {
+    background-color: $corrified-color!important
+}
+
+::ng-deep.mat-step-icon-selected {
+    background-color: $dark-green!important
+}
+
+.extensionIcon-rotation {
+    transform: rotate(90deg);
+}
+
+.spinner-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 35px;
+}
+
+::ng-deep.mat-menu-panel {
+    max-width: none !important;
+  }

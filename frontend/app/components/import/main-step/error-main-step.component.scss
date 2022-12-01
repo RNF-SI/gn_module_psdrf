@@ -1,0 +1,55 @@
+@import '../../../../styles/styles.scss';
+.example-form {
+    min-width: 50px;
+    max-width: 500px;
+    width: 100%;
+}
+
+.example-full-width {
+    width: 100%;
+}
+
+.isError {
+    background-color: $error-color;
+}
+
+.isSelected {
+    //background-color: #ffa600;
+    border: 2px dashed #000000;
+    font-weight: bold;
+}
+
+.wasModified {
+    background-color: $corrified-color;
+}
+
+.solution {
+    display: flex;
+    margin-left: 2rem;
+    margin-right: 2rem;
+}
+
+.stepper {
+    flex-grow: 2;
+}
+
+.arrow-icons {
+    display: flex;
+    height: 72px;
+    align-items: center;
+}
+
+.action-buttons {
+    margin-left: 2.5rem;
+}
+
+.corrified {
+    color: $corrified-color;
+}
+
+.blocking-error-class {
+    font-size: 20px;
+    font-weight: 700;
+    color: #353f4a;
+    margin: 0;
+}

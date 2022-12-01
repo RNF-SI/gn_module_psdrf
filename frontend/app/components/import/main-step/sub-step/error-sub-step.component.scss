@@ -1,0 +1,22 @@
+@import '../../../../../styles/styles.scss';
+.select-form {
+    min-width: 50px;
+    max-width: 500px;
+}
+
+.isError {
+    background-color: $error-color;
+}
+
+.isSelected {
+    border: 2px dashed #000000;
+    font-weight: bold;
+}
+
+.wasModified {
+    background-color: $corrified-color;
+}
+
+.button-top-margin {
+    margin-top: 55px;
+}

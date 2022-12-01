@@ -1,0 +1,465 @@
+<<PreparationRadar{{x}}>>= 
+# -- extraction des informations de x
+group <- "{{x}}"
+# group <- "GrOupe_Parcelle1-1" # debug
+# group <- "Disp_-1" # debug
+
+# liste des tables demandées
+tables_list <- c(
+  "psdrfDispFpied_", "psdrfDispFpied_Classe", 
+  "psdrfDispTaillis_", "psdrfDispTaillis_Classe", 
+  "psdrfDispBMP_", "psdrfDispBMS_", 
+  "psdrfDispBM_", "psdrfDispBM_StadeD"
+)
+
+# filtre des données d'inventaire et de résultats
+prepare_tables_results <- 
+  prepare_tables(disp_num, group, tables_list, admin = Placettes_Sel)
+tables_needed <- prepare_tables_results[[1]]
+inventory_tables <- prepare_tables_results[[2]]
+# # extraction des tables d'inventaire et de résultats # TODO : à modifier ?
+# for (i in 1:length(tables_needed)) {
+#   assign(names(tables_needed)[i], tables_needed[[i]])
+# }
+for (i in 1:length(inventory_tables)) {
+  assign(names(inventory_tables)[i], inventory_tables[[i]])
+}
+
+# -- répertoire des figures :
+# path
+output_dir <- file.path(repFigures, figure_path)
+# create directory
+dir.create(output_dir, showWarnings = F, recursive = T)
+# set chunck option
+opts_chunk$set(fig.path = output_dir, dev = 'jpeg', dpi=500)
+
+# -- expression pour citer le sous-ensemble :
+quote_group <- with( df_Expr, quote[match(plot_group, group)] )
+
+# -- expression pour paragraphe suivant (envisager le fait où pas d'habitats) :
+# Placettes_temp <- Placettes_SUB[!is.na(Placettes_SUB$Habitat), ]
+
+# if (dim(Placettes_temp)[1] > 1) {
+# conservation_str <- "Les radars des figures \\ref{fig:ConservHabitats1{{x}}} et \\ref{fig:ConservHabitats2{{x}}} repr\u00E9sentent une 'photo' de la structure des peuplements \u00E9chantillonn\u00E9es, pour le dispositif dans son ensemble et par habitat (dans le cas o\u00F9 cette information est disponible)"
+# 
+# } else {
+  conservation_str <- "Le radar de la figure \\ref{fig:ConservHabitats1{{x}}} repr\u00E9sente une 'photo' de la structure des peuplements \u00E9chantillonn\u00E9es, pour le dispositif dans son ensemble"
+# }
+@
+
+\section{\Sexpr{section_str}}
+Les bras du radar repr\u00E9sentent les indicateurs issus de la m\u00E9thodologie RNF et permettent d'\u00E9valuer la "qualit\u00E9" de la structure foresti\u00E8re au regard de l'\u00E9tat de conservation optimal.\\
+Lors de l'interpr\u00E9tation, il sera tenu compte, \u00E0 la fois :
+\begin{itemize}
+\item Du nombre de placettes concern\u00E9es par l'ensemble pr\u00E9sent\u00E9 ici.
+\item De la variabilit\u00E9 du volume entre les placettes
+\end{itemize}
+
+<<Conserv{{x}}, fig.height = 3.25, fig.cap =  "\u00E9valuation de la structure foresti\u00E8re au regard de l'\u00E9tat de conservation (pour l'ensemble du dispositif)", include = EvalRadar, eval = EvalRadar >>=
+# t <- dplyr::filter(grouped_results_of_Fpied_by_,
+#             NumDisp == Choix &
+#               Cycle == cycle_num &
+#               !is.na(Vha) &
+#               Vha != 0) %>%
+#   dplyr::select(NumDisp,Cycle,Vha)
+# names(t)[names(t) == "Vha"] <- "VhaArbres"
+# 
+# 
+# 
+# t <- merge(t,grouped_results_of_Taillis_by_[grouped_results_of_Taillis_by_$NumDisp == Choix & grouped_results_of_Taillis_by_$Cycle == cycle_num &
+#                                  !is.na(grouped_results_of_Taillis_by_$Vha) & grouped_results_of_Taillis_by_$Vha != 0,
+#                           c("NumDisp","Cycle","Vha")],
+#            by = c("NumDisp","Cycle"), all = T)
+# names(t)[names(t) == "Vha"] <- "VhaTaillis"
+# t <- merge(t,grouped_results_of_BMP_by_[grouped_results_of_BMP_by_$NumDisp == Choix & grouped_results_of_BMP_by_$Cycle == cycle_num &
+#                              !is.na(grouped_results_of_BMP_by_$Vha) & grouped_results_of_BMP_by_$Vha != 0,
+#                           c("NumDisp","Cycle","Vha")],
+#            by = c("NumDisp","Cycle"), all = T)
+# names(t)[names(t) == "Vha"] <- "VhaBMP"
+# # t <- summaryBy(VhaBMP ~ NumDisp + Cycle, data = t, keep.names = T, na.rm = T)
+# t <- merge(t,grouped_results_of_BMS_by_[grouped_results_of_BMS_by_$NumDisp == Choix &
+#                              grouped_results_of_BMS_by_$Cycle == cycle_num &
+#                              grouped_results_of_BMS_by_$Vha != 0,
+#                            c("NumDisp","Cycle","Vha")],
+#            by = c("NumDisp","Cycle"), all = T)
+# names(t)[names(t) == "Vha"] <- "VhaBMS"
+# t <- unique(t)
+# 
+# #----- Calcul des ensembles :
+# t$BVivantT <- rowSums(t[,c("VhaArbres","VhaTaillis")], na.rm = T)
+# t$BMortT <- rowSums(t[,c("VhaBMP","VhaBMS")], na.rm = T)
+# t$BTot <- rowSums(t[,c("BVivantT","BMortT")], na.rm = T)
+# 
+# #---------- Notation Bois Mort :
+# #----- Ratio volume bois mort sur volume bois total
+# t1 <- t[,c("NumDisp","Cycle","BMortT","BTot")]
+# t1$RatioBMT <- with(t1, BMortT/BTot*100)
+# t1$NoteRatioBMT <- cut(t1$RatioBMT, breaks = c(-Inf,3,5,10,15,100),labels = c(1,2,3,4,5)) #Rqe : 1er intervale = ]-Inf;3]. right = F pour changer
+# 
+# #----- % de bois mort > 30 cm
+# t2 <- dplyr::filter(grouped_results_of_BM_by_,
+#              NumDisp == Choix & Cycle == cycle_num)
+# t2$RatioBM30 <-  with(t2,BMPsup+BMSsup/VhaBMT*100)
+# t2$NoteRatioBM30 <- cut(t2$RatioBM30, breaks = c(-Inf,5,25,50,75,100), labels = c(1,2,3,4,5))
+# #-----Stades de d\u00E9composition
+# t3 <- dplyr::filter(grouped_results_of_BM_by_StadeD,
+#              NumDisp == Choix & Cycle == cycle_num) %>%
+#   dplyr::select(NumDisp,Disp,Cycle,StadeD,VhaBMT) %>%
+#   group_by(NumDisp,Disp,Cycle) %>%
+#   dplyr::mutate(Vha = VhaBMT,
+#          VhaTot = sum(Vha,na.rm = T),
+#          RatioBMD = Vha/VhaTot*100,
+#          NoteRatioBMD = ifelse(RatioBMD > 5,
+#                                1, 0)) %>%
+#   summarise(NoteBMD = max(cumsum(NoteRatioBMD)))
+# 
+# #---------- Structure horizontale :
+# #----- Diversité des classes de diam\u00E8tre :
+# t4 <- dplyr::filter(grouped_results_of_Fpied_by_Classe,
+#              NumDisp == Choix & Cycle == cycle_num & !is.na(Gha) & Gha != 0) %>%
+#   dplyr::select(NumDisp,Cycle,Classe,Gha)
+# names(t4)[names(t4) == "Gha"] <- "GhaArbres"
+# t4 <- merge(t4,grouped_results_of_Taillis_by_Classe[grouped_results_of_Taillis_by_Classe$NumDisp == Choix &
+#                                          grouped_results_of_Taillis_by_Classe$Cycle == cycle_num &
+#                                          !is.na(grouped_results_of_Taillis_by_Classe$Gha) &
+#                                          grouped_results_of_Taillis_by_Classe$Gha != 0,
+#                                  c("NumDisp","Cycle","Classe","Gha")],all = T)
+# names(t4)[names(t4) == "Gha"] <- "GhaTaillis"
+# t4$Gha <- rowSums(t4[,c("GhaArbres","GhaTaillis")],na.rm = T)
+# # t4 <- ddply(t4, .(NumDisp,Cycle), mutate,
+# #             GhaTot = sum(Gha))
+# t4 <- group_by(t4,
+#                NumDisp,Cycle) %>%
+#   mutate(GhaTot = sum(Gha, na.rm = T)) %>%
+#   ungroup() %>%
+#   data.frame()
+# TabSav <- t4
+# t4$RatioGha <- with(t4,Gha/GhaTot*100)
+# t4$NoteRatioGha <- ifelse(t4$RatioGha > 5, 1, 0)
+# # t4 <- ddply(t4, .(NumDisp,Cycle), summarize,
+# #                     CumGha = max(cumsum(NoteRatioGha)))
+# t4 <- group_by(t4,
+#                NumDisp,Cycle) %>%
+#   summarise(CumGha = max(cumsum(NoteRatioGha), na.rm = T)) %>%
+#   ungroup() %>%
+#   data.frame()
+# t4$Note <- cut(t4$CumGha, breaks = c(-Inf,3,4,5,6,+Inf),labels = c(1,2,3,4,5),right = F)
+# 
+# #----- % de TGB (% de G):
+# t5 <- TabSav
+# t5$Cat <- cut(t5$Classe, breaks = c(-Inf,17.5,27.5,47.5,67.5,+Inf), labels = c("PER","PB","BM","GB","TGB"))
+# t5 <- summaryBy(Gha ~ NumDisp + Cycle + GhaTot + Cat, data = t5, FUN = sum, na.rm = T, keep.names = T)
+# # Attention : erreur au niveau du dispositif 84 : NA repéré  = >
+# t5 <- t5[!is.na(t5$Cat),]
+# # Calcul du ratio :
+# t5$RatioTGB <- with(t5, Gha/GhaTot*100)
+# # t5 <- merge(t5, psdrfDispCat[,c("NumDisp","Cycle","Cat")], by = c("NumDisp","Cycle","Cat"), all.y = T)
+# # t5$RatioTGB[t5$Cat != "TGB"] <- 0
+# t5 <- t5[t5$Cat == "TGB",]
+# t5$NoteRatioTGB <- cut(t5$RatioTGB, breaks = c(-Inf,0,5,10,15,+Inf),labels = c(1,2,3,4,5),right = F)
+# 
+# # Assemblage pour radar :
+# TabRadar <- merge(t1[,c("NumDisp","Cycle","NoteRatioBMT")],
+#                   t2[,c("NumDisp","Cycle","NoteRatioBM30")],
+#                   by = c("NumDisp","Cycle"),all = T)
+# TabRadar <- merge(TabRadar,
+#                   t3,
+#                   by = c("NumDisp","Cycle"),all = T)
+# TabRadar <- merge(TabRadar,
+#                   t4[,c("NumDisp","Cycle","Note")],
+#                   by = c("NumDisp","Cycle"),all = T)
+# TabRadar <- merge(TabRadar,
+#                   t5[,c("NumDisp","Cycle","NoteRatioTGB")],
+#                   by = c("NumDisp","Cycle"),all = T)
+# TabRadar[is.na(TabRadar)] <- 1
+# TabRadar <- unique(TabRadar)
+# 
+# #-------------------- Graphiques :
+# # Preparation :
+# maxmin <- data.frame(
+#   BMort = c(5, 0),
+#   BMort30 = c(5,0),
+#   StadeD = c(5, 0),
+#   DivClasses = c(5, 0),
+#   PartTGB = c(5, 0))
+# 
+# names(TabRadar)[match(c("NoteRatioBMT","NoteRatioBM30","NoteBMD","Note","NoteRatioTGB"),
+#                       names(TabRadar))] <- c("BMort","BMort30","StadeD","DivClasses","PartTGB")
+# 
+# TabRadar <- TabRadar[,c("BMort","BMort30","StadeD","DivClasses","PartTGB")]
+# 
+# dat1 <- rbind(maxmin,TabRadar)
+# for (i in 1:dim(dat1)[2]) {
+#   dat1[,i] <- as.numeric(dat1[,i])
+# }
+# 
+# par(mar = c(0, 0, 1, 0),family = "Times",cex.main = 1, fig = c(0,1,0,1),mgp = c(5,5,5))
+# a <- radarchart(dat1, axistype = 1,
+#            pty = 32, pcol = "black",
+#            plty = 1, pdensity = 50,plwd = 0.3,pfcol = "salmon",
+#            # title = Name,
+#            centerzero = T,seg = 5,caxislabels = c(0,1,2,3,4,5),calcex = 0.8,
+#            vlcex = 0.85, vlabels = c("Rapport :\nBMort/BTotal",
+#                                 "Rapport :\nBMort>30/BMort total",
+#                                 "Stades de \npourriture pr\u00E9sents",
+#                                 "Diversit\u00E9 des \nclasses de diam\u00E8tre ",
+#                                 "Part de TGB"))
+# text(0.75,0.9,paste0("Nombre de \n placettes : ",NbPlac), cex = 0.75, col = "firebrick")
+@
+
+% \VersionRadar{
+% \chapter[Evaluation de l'\u00E9tat de conservation]{Evaluation de l'\u00E9tat de conservation des habitats forestiers : analyse des donn\u00E9es de structure\protect\footnote{Commission scientifique  et groupe for\u00EAts de R\u00E9serves naturelles de France. Evaluation de l'\u00E9tat de conservation (habitats forestiers et \u00E9co-complexes alluviaux). Cahier  RNF n\u00B02. 2013, 72 p. La m\u00E9thode est disponible en t\u00E9l\u00E9chargement sur le site internet de RNF (www.reserves-naturelles.org/publications/numero-2-des-cahiers-rnf-evaluation-de-l-etat-de-conservation-habitats-forestiers-et) ou sur demande (rnf@espaces-naturels.fr)}}
+% \Sexpr{conservation_str}. Les bras du radar repr\u00E9sentent les indicateurs issus de la m\u00E9thodologie RNF et permettent d'\u00E9valuer la "qualit\u00E9" de la structure foresti\u00E8re au regard de l'\u00E9tat de conservation optimal.\\
+% Lors de l'interpr\u00E9tation, il sera tenu compte, \u00E0 la fois :
+% \begin{itemize}
+% \item Du nombre de placettes concern\u00E9es par un m\u00EAme habitat
+% \item De la variabilit\u00E9 du volume entre les placettes
+% \end{itemize}
+% }{}
+
+<<ConservHabitats1{{x}}, fig.height = 4, fig.cap =  "\u00E9valuation de la structure foresti\u00E8re au regard de l'\u00E9tat de conservation (pour l'ensemble du dispositif)", include = EvalRadar, eval = EvalRadar >>= 
+
+##### 1/ Get radar coords #####
+radar_coords <- get_radar_coords(plot_group, tables_needed) %>% select(-plot_group)
+
+# number of plots
+plot_nb <- dim(Placettes_SUB)[1]
+
+##### 2/ Figure #####
+# preparation :
+
+maxmin <- data.frame(
+  BMort = c(5, 0), 
+  BMort30 = c(5, 0), 
+  StadeD = c(5, 0), 
+  DivClasses = c(5, 0), 
+  PartTGB = c(5, 0)
+)
+
+dat1 <- rbind(maxmin, radar_coords)
+for (i in 1:dim(dat1)[2]) {
+  dat1[, i] <- as.numeric(dat1[, i])
+}
+
+par(
+  mar = c(0, 0, 1, 0), 
+  family = "Times", 
+  cex.main = 1, 
+  fig = c(0, 1, 0, 1), 
+  mgp = c(5, 5, 5)
+)
+radarchart(
+  dat1, 
+  axistype = 1, 
+  pty = 32, pcol = "black", 
+  plty = 1, pdensity = 50, plwd = 0.3, pfcol = "salmon", 
+  # title = disp_name, 
+  centerzero = T, seg = 5, caxislabels = c(0, 1, 2, 3, 4, 5), calcex = 0.8, 
+  vlcex = 0.85, 
+  vlabels = c(
+    "Rapport :\nBMort/BTotal", 
+    "Rapport :\nBMort>30/BMort total", 
+    "Stades de \npourriture pr\u00E9sents", 
+    "Diversit\u00E9 des \nclasses de diam\u00E8tre ", 
+    "Part de TGB"
+  )
+)
+text(
+  x = 0.75, 
+  y = 0.9, 
+  labels = paste0("Nombre de \n placettes : ", plot_nb), 
+  cex = 0.75, # numeric character expansion factor
+  col = "firebrick" # color font
+)
+@
+
+\clearpage
+
+<<ConservHabitats2{{x}}, fig.height = 10, fig.pos = 'h', include = F, eval = F, results = 'asis', fig.cap =  "\u00E9valuation de la structure foresti\u00E8re au regard de l'\u00E9tat de conservation (par habitats)">>= 
+# TODO : bloquée dans version 2 -> passer par une analyse par groupe en sélectionnant Habitat
+if (length(unique(Placettes_temp$Habitat)) > 1) { # sécurité
+  # -- filtre des données de résultats
+  prepare_tables_results <- 
+    prepare_tables(
+      disp_num, group, tables_list, 
+      analyze_by_habitat = T, 
+      admin = Placettes_Sel
+    )
+  tables_needed <- prepare_tables_results[[1]]
+  
+  # changement du groupe
+  plot_group <- "Habitat" # debug
+  
+  # -- get radar coords
+  radar_coords <- get_radar_coords(plot_group, tables_needed)
+  
+  # -- figures :
+  # preparation :
+  maxmin <- data.frame(
+    BMort = c(5, 0), 
+    BMort30 = c(5, 0), 
+    StadeD = c(5, 0), 
+    DivClasses = c(5, 0), 
+    PartTGB = c(5, 0))
+  
+  # liste des habitats à représenter.
+  habitat_list <- unique(radar_coords$Habitat)
+  
+  # -- création d'une liste contenant les radar_coord pour les différents habitats
+  # initialisation
+  coords_list_by_habitat <- c()
+  
+  # loop
+  for (habitat in habitat_list) {
+    # habitat <- habitat_list[1] # debug
+    # print(habitat) # debug
+    tmp <- radar_coords %>% filter(Habitat == habitat) %>% select(-Habitat)
+    coords <- rbind(maxmin, tmp)
+    
+    coords_list_by_habitat <- c(coords_list_by_habitat, list(coords))
+  } # end of loop habitat_list
+  
+  # -- calcul du nombre de feuilles nécessaires
+  sheet_nb = ceiling( length(coords_list_by_habitat) / 6 )
+  
+  
+  # -- préparation de la commande latex (appel de figure) à insérer dans le document
+  # initialisation
+  src2 <- c()
+  
+  # loop
+  src2 <- paste0("\\clearpage\\begin{figure}\\centering{")
+  for (sheet in 1:sheet_nb) {
+    # continued float
+    if (sheet > 1) {
+      src2 <- 
+        paste0(src2, "\\clearpage\\begin{figure}\\ContinuedFloat\\centering{")
+    }
+    
+    # figure path
+    radar_figure_path <- paste0(
+      output_dir,
+      # "figures/Cycle", cycle_num, 
+      "ConservHabitats2", group, "-", sheet
+    )
+    
+    # subfloat arg (LoF entry ?)
+    radar_subfloat_arg <- paste0("Radars " ,sheet, "/", sheet_nb)
+    
+    # source content
+    src2 <- paste0(
+      src2, 
+      "\\subfloat[",
+      radar_subfloat_arg,
+      "]{\\includegraphics[width = \\maxwidth]{",
+      radar_figure_path, 
+      "}}\\\\
+\\caption{Evaluation de la structure foresti\u00E8re au regard de l'\u00E9tat de conservation (pour les diff\u00E9rents habitats \u00E9chantillonn\u00E9s).}"
+    )
+    
+    # ending source
+    src2 <- if (sheet < sheet_nb) {
+      paste0(src2, "}\\end{figure}")
+    } else {
+      paste0(
+        src2, 
+        "\\label{fig:ConservHabitats2", group, "}}\\end{figure}"
+      )
+    }
+  } # end of loop 1:sheet_nb
+  
+  
+  # if (length(coords_list_by_habitat) > 1) {
+    # initialisation
+    sheet_counter = 0
+    
+    for (sheet in 1:sheet_nb) {
+      
+      # -- get data
+      if (sheet * 6 < length(coords_list_by_habitat)) {
+        # coords
+        coords_list_tmp <- coords_list_by_habitat[ (sheet_counter + 1):(sheet * 6) ]
+        # habitat
+        habitat_list_tmp <- habitat_list[ (sheet_counter + 1):(sheet * 6) ]
+        
+      } else {
+        # coords
+        coords_list_tmp <- 
+          coords_list_by_habitat[ (sheet_counter + 1):length(coords_list_by_habitat) ]
+        # habitat
+        habitat_list_tmp <- 
+          habitat_list[ (sheet_counter + 1):length(coords_list_by_habitat) ]
+      }
+      
+      
+      # -- setting figure coords
+      if (length(coords_list_by_habitat) > 1) {
+        # number of slots needed
+        slot_nb <- ceiling(length(coords_list_tmp) / 2)
+        
+        # coords
+        sub_figure_coords <- data.frame(
+          xmin = rep(c(0, 0.525), slot_nb), 
+          xmax = rep(c(0.475, 1), slot_nb), 
+          ymin = sort(
+            rep( seq(1, 0, -1 / slot_nb)[2:(slot_nb + 1)] , 2), 
+            decreasing = T
+          ), 
+          ymax = sort(
+            rep( seq(1, 0, -1 / slot_nb)[1:slot_nb], 2) , 
+            decreasing = T
+          )
+        )
+        
+        # changement de l'échelle de représentation (empirique)
+        magnif <- data.frame(
+          cex.main = 0.1, calcex = 0.13, vlcex = 0.13
+        ) 
+        magnif <- 1 - magnif * floor(length(coords_list_tmp) / 2 + 0.5)
+        
+       } else {
+          # coords
+          sub_figure_coords <- data.frame(
+            xmin = 0, xmax = 1, 
+            ymin = 0, ymax = 1
+          )
+          
+          # pas de changement d'échelle
+          magnif <- data.frame(
+            cex.main = 1, calcex = 0.8, vlcex = 0.85
+          ) 
+        } # end of cond length(coords_list_by_habitat) > 1
+        
+        # -- création de la/des figure(s)
+        sub_figure_coords <- sub_figure_coords[1:length(coords_list_tmp), ]
+        
+        for (i in 1:dim(sub_figure_coords)[1]) {
+          # parameters
+          habitat <- habitat_list_tmp[i]
+          plot_nb <- dim(Placettes_temp[Placettes_temp$Habitat == habitat, ])[1]
+          figure_coords <- sub_figure_coords[i, ]
+          radar_coords <- coords_list_tmp[[i]]
+          
+          # new plot T/F
+          new_plot <- if (i == 1) FALSE else TRUE
+          
+          # plot
+          draw_RNF_radar(
+            figure_coords, radar_coords, habitat,
+            magnif, plot_nb,
+            new_plot
+          )
+        } # end of loop 1:dim(sub_figure_coords)[1]
+        
+        # compteur
+        sheet_counter = sheet_counter + length(coords_list_tmp)
+      } # end of loop 1:sheet_nb
+  } else { # end of cond length(unique(Placettes_temp$Habitat)) > 1
+    src2 <- c()
+  }
+@
+% \centering \includegraphics[width = \maxwidth]{\Sexpr{paste0(repFigures, "Cycle", cycle_num, "/ConservHabitats2{{x}}-1")}}
+% \centering \includegraphics[width = \maxwidth]{\Sexpr{paste0(repFigures, "Cycle", cycle_num, "/ConservHabitats2{{x}}-2")}}
+% \centering \includegraphics[width = \maxwidth]{\Sexpr{paste0(repFigures, "Cycle", cycle_num, "/ConservHabitats2{{x}}-3")}}
+
+% \Sexpr{src2}

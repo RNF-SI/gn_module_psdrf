@@ -1,0 +1,1492 @@
+<<PreparationBV{{x}}>>= 
+# -- extraction des informations de x
+# intitulé du groupe
+group <- "{{x}}"
+# group <- "GrOupe_Parcelle1-1" # debug
+# group <- "Disp_-1" # debug
+# group <- "Strate_1-1" # debug
+# group <- "Habitat_41.13-1" # debug
+# group <- "Gestion_Gere-1" # debug
+# group <- "Gestion_Non-gere-1" # debug
+# liste des tables demandées
+tables_list <- c(
+    "psdrfDispFpied_Cat", "psdrfDispFpied_Classe", 
+    "psdrfDispFpied_EssenceCat", "psdrfDispTot_", 
+    "psdrfDispTot_Cat", "psdrfDispTot_Essence", 
+    "psdrfDispTot_EssReg", "psdrfDispTot_EssRegCat", 
+    "psdrfDispTaillis_", "psdrfDispTaillis_Classe", 
+    "psdrfDispDen_", "psdrfDispDen_Essence", 
+    "psdrfDispTaillis_Essence", "psdrfDispRege_Essence", 
+    "psdrfDispDen_CodeSanit", "psdrfDispDen_EssenceCodeSanit"
+  )
+
+# filtre des données d'inventaire et de résultats
+prepare_tables_results <- 
+  prepare_tables(disp_num, group, tables_list, admin = Placettes_Sel)
+tables_needed <- prepare_tables_results[[1]]
+inventory_tables <- prepare_tables_results[[2]]
+
+# extraction des tables d'inventaire et de résultats # TODO : à modifier ? -> meilleure gestion de la mémoire si objets conservés sous forme de liste ?
+for (i in 1:length(tables_needed)) {
+  assign(names(tables_needed)[i], tables_needed[[i]])
+}
+for (i in 1:length(inventory_tables)) {
+  assign(names(inventory_tables)[i], inventory_tables[[i]])
+}
+
+# -- répertoire des figures :
+# path
+output_dir <- file.path(repFigures, figure_path)
+# create directory
+dir.create(output_dir, showWarnings = F, recursive = T)
+# set chunck option
+opts_chunk$set(fig.path = output_dir, dev = 'jpeg', dpi=500)
+
+# -- expression pour citer le sous-ensemble :
+df_Expr <- tibble(
+  group = c(
+    "Disp", "Strate", "Habitat", "Station", 
+    "Typologie", "Groupe", "Groupe1", "Groupe2", 
+    "Gestion"
+  ), 
+  quote = c(
+    "le dispositif", "cette strate", "cet habitat", 
+    "cette station", "ce type de peuplement", "ce groupe", 
+    "ce groupe 1", "ce groupe 2", "cet ensemble de gestion"
+  )
+)
+quote_group <- with( df_Expr, quote[match(plot_group, group)] )
+@
+
+\section{\Sexpr{section_str}}
+\subsection{Moyennes et variations}
+Le tableau \ref{DendroBis{{x}}} pr\u00E9sente la moyenne des principales caract\u00E9ristiques dendrom\u00E9triques (volume, surface terri\u00E8re et nombre de tiges \u00E0 l'hectare) pour les arbres vivants, accompagn\u00E9es du coefficient de variation\footnote{Le coefficient de variation (CV) est le rapport de l'\u00E9cart-type \u00E0 la moyenne. Plus la valeur du coefficient de variation est faible, plus les valeurs sont homog\u00E8nes et plus l'estimation est meilleure} et de la pr\u00E9cision\footnote{L'erreur relative, exprim\u00E9e en pourcentage, est li\u00E9e \u00E0 l'effort d'\u00E9chantillonnage. Plus il y a de placettes \u00E9chantillonn\u00E9es, plus la pr\u00E9cision est meilleure. La pr\u00E9cision souhait\u00E9e est, dans le cas de ce protocole, situ\u00E9e aux alentours de 10\% sur le volume vivant.} associ\u00E9e.
+% \textcolor{red}{(A REFORMULER)}  \\
+On distingue ici, selon leur origine v\u00E9g\u00E9tative, les arbres de franc-pied du taillis. Ainsi :
+\begin{itemize}
+\item les perches de franc-pied d\u00E9signent les arbres de franc-pied de diam\u00E8tre inf\u00E9rieur \u00E0 17, 5 cm
+\item les pr\u00E9comptables de franc-pied d\u00E9signent les arbres de franc-pied de diam\u00E8tre sup\u00E9rieur \u00E0 17, 5 cm
+\item le taillis d\u00E9signe les arbres de toutes dimensions appartenant \u00E0 une c\u00E9p\u00E9e de plusieurs tiges.
+\end{itemize}
+La ligne "total" inclut \u00E0 la fois les arbres de franc-pied et le taillis.
+<<DendroBis{{x}}>>=
+if (cycle_num == 1) {
+  # ---- 1 seul cycle :
+  # -- préparation tables
+  # perches
+  t <-
+    grouped_results_of_Tot_by_Cat %>%
+    filter(Cat == "PER") %>%
+    mutate(Cat = "\\parbox{2cm}{\\centering Perches de franc-pied}") %>%
+    select(
+      NumDisp, Cycle, Disp, Cat,
+      Nha, Gha, Vha,
+      CV_Nha, CV_Gha, CV_Vha,
+      Er_Nha, Er_Gha, Er_Vha,
+      NbrePlacettes
+    )
+  # précomptables
+  temp <-
+    grouped_results_of_Den_by_ %>%
+    # filter(NumDisp == disp_num & Cycle == cycle_num) %>%
+    mutate(Cat = "\\parbox{2cm}{\\centering Pr\u00E9comptables de franc-pied}") %>%
+    select(
+      NumDisp, Cycle, Disp, Cat,
+      Nha, Gha, Vha,
+      CV_Nha, CV_Gha, CV_Vha,
+      Er_Nha, Er_Gha, Er_Vha,
+      NbrePlacettes
+    )
+  # taillis
+  if (dim(Taillis[
+    Taillis$NumDisp == disp_num &
+    Taillis$Cycle == cycle_num,
+    ])[1] > 0) {
+    temp1 <-
+      grouped_results_of_Taillis_by_ %>%
+      mutate(Cat = "Taillis") %>%
+      # filter(NumDisp == disp_num & Cycle == cycle_num) %>%
+      select(
+        NumDisp, Cycle, Disp, Cat,
+        Nha, Gha, Vha,
+        CV_Nha, CV_Gha, CV_Vha,
+        Er_Nha, Er_Gha, Er_Vha,
+        NbrePlacettes
+      )
+  } else {
+    temp1 <- data.frame()
+  }
+  # total
+  temp2 <-
+    grouped_results_of_Tot_by_ %>% # TODO : corriger
+    mutate(Cat = "Total") %>%
+    # filter(NumDisp == disp_num & Cycle == cycle_num) %>%
+    select(
+      NumDisp, Cycle, Disp, Cat,
+      Nha, Gha, Vha,
+      CV_Nha, CV_Gha, CV_Vha,
+      Er_Nha, Er_Gha, Er_Vha,
+      NbrePlacettes
+    )
+
+  # -- synthèse
+  t2 <- rbind(t, temp, temp1, temp2)
+  if (dim(t2)[1] > 0) {
+    t2 <-
+      t2 %>%
+      filter(!is.na(Disp)) %>%
+      melt(id = c("NumDisp", "Cycle", "Disp", "Cat", "NbrePlacettes")) %>%
+      mutate(value = round(value, 1)) %>%
+      dcast(NumDisp + Cycle + Disp + Cat + NbrePlacettes ~ variable) %>%
+      mutate(
+        IC_Nha = paste0(
+          "[", round(Nha - Er_Nha * Nha / 100, 1),
+          "-", round(Nha + Er_Nha * Nha / 100, 1), "]"
+        ),
+        IC_Gha = paste0(
+          "[", round(Gha - Er_Gha * Gha / 100, 1),
+          "-", round(Gha + Er_Gha * Gha / 100, 1), "]"
+        ),
+        IC_Vha = paste0(
+          "[", round(Vha - Er_Vha * Vha / 100, 1),
+          "-", round(Vha + Er_Vha * Vha / 100, 1), "]"
+        )
+      ) %>%
+      melt(id = c("NumDisp", "Cycle", "Disp", "Cat", "NbrePlacettes")) %>%
+      mutate(
+        stat = variable,
+        variable = str_replace(variable, "CV_", ""),
+        variable = str_replace(variable, "Er_", ""),
+        variable = str_replace(variable, "IC_", ""),
+        stat = str_replace(stat, "_Nha", ""),
+        stat = str_replace(stat, "_Gha", ""),
+        stat = str_replace(stat, "_Vha", ""),
+        stat = str_replace(stat, "Nha", "Moy"),
+        stat = str_replace(stat, "Gha", "Moy"),
+        stat = str_replace(stat, "Vha", "Moy"),
+        stat = factor(stat, levels = c("Moy", "CV", "Er", "IC"))
+      ) %>%
+      arrange(Cycle, Cat, variable, stat) %>%
+      dcast(NumDisp + Cycle + Disp + Cat + NbrePlacettes + stat ~ variable)
+    t3 <-
+      t2 %>%
+      select(Cycle, Cat, stat, Nha, Gha, Vha, NbrePlacettes) %>%
+      mutate(
+        stat = str_replace(stat, "Moy", "Moyenne"), # Mise en forme du tableau
+        stat = str_replace(stat, "CV", "Coefficient de variation"),
+        stat = str_replace(stat, "Er", "Erreur relative (\\\\%)"),
+        stat = str_replace(stat, "IC", "Intervalle de confiance")
+      )
+
+    # Repère tableau :
+    Rep = 3
+
+    # ---------- Tableaux
+    t4 <-
+      t3 %>%
+      MultiRow2(c(1, 2, dim(t3)[2])) %>%
+      rename(
+        "N" = "Nha",
+        "G" = "Gha",
+        "V" = "Vha",
+        "Population" = "Cat",
+        "Nombre de placettes" = "NbrePlacettes",
+        " " = "stat"
+      )
+
+    ListPos <- list()
+    for (i in 1:(dim(t4)[1]-1)) {
+      ListPos[i] <- i
+    }
+    print(
+      xtable(
+        t4,
+        caption = "Principales caract\u00E9ristiques dendrom\u00E9triques pour les arbres vivants\\\\\\footnotesize{N = densit\u00E9 de tiges (/ha)\\\\G = surface terri\u00E8re (m\\up{2}/ha)\\\\V = volume (m\\up{3}/ha)}",
+        caption.placement = "top",
+        digits = c(rep(0, 4), rep(1, Rep), 0),
+        align = c(
+          "|M{0.5cm}|", "M{1cm}|", "M{1.8cm}|",
+          "M{3.5cm}|", rep("M{1.8cm}|", Rep), "M{1.5cm}"
+        ),
+        label = paste0("DendroBis", group)
+      ),
+      include.rownames = FALSE,
+      sanitize.text.function = function(x){return(x)},
+      hline.after = c(-1, 0, dim(t4)[1]),
+      add.to.row = list(
+        pos = ListPos,
+        command = c(
+          rep(
+            c(rep("\\cline{3-6}", 3), "\\cmidrule[0.8pt]{2-6}"),
+            dim(t4)[1] / 4 - 1
+          ),
+          rep("\\cline{3-6}", 3)
+        )
+      ),
+      size = "\\footnotesize"
+    )
+  } else cat("Pas de données inventoriées")
+} else {
+  # ---- Plusieurs cycles :
+  # -- Préparation tables
+  # perches
+  t <-
+    grouped_results_of_Fpied_by_Cat %>%
+    filter(Cat == "PER") %>%
+    mutate(Cat = "\\parbox{2cm}{\\centering Perches de franc-pied}") %>%
+    select(
+      NumDisp, Cycle, Disp, Cat,
+      Nha, Gha, Vha, AcctGper, AcctVper,
+      CV_Nha, CV_Gha, CV_Vha, CV_AcctGper, CV_AcctVper,
+      Er_Nha, Er_Gha, Er_Vha, Er_AcctGper, Er_AcctVper, NbrePlacettes
+    )
+  # précomptables
+  temp <-
+    grouped_results_of_Den_by_ %>%
+    # filter(NumDisp == disp_num & Cycle == cycle_num) %>%
+    mutate(Cat = "\\parbox{2cm}{\\centering Pr\u00E9comptables de franc-pied}") %>%
+    select(
+      NumDisp, Cycle, Disp, Cat,
+      Nha, Gha, Vha, AcctGper, AcctVper,
+      CV_Nha, CV_Gha, CV_Vha, CV_AcctGper, CV_AcctVper,
+      Er_Nha, Er_Gha, Er_Vha, Er_AcctGper, Er_AcctVper, NbrePlacettes
+    )
+  # taillis
+  if (dim(Taillis[Taillis$NumDisp == disp_num & Taillis$Cycle == cycle_num, ])[1] > 0) {
+    temp1 <-
+      grouped_results_of_Taillis_by_ %>%
+      mutate(Cat = "Taillis") %>%
+      # filter(NumDisp == disp_num & Cycle == cycle_num) %>%
+      select(
+        NumDisp, Cycle, Disp, Cat,
+        Nha, Gha, Vha, AcctGper, AcctVper,
+        CV_Nha, CV_Gha, CV_Vha, CV_AcctGper, CV_AcctVper,
+        Er_Nha, Er_Gha, Er_Vha, Er_AcctGper, Er_AcctVper, NbrePlacettes
+      )
+  } else {
+    temp1 <- data.frame()
+  }
+  # total
+  temp2 <-
+    grouped_results_of_Tot_by_ %>%
+    mutate(Cat = "Total") %>%
+    # filter(NumDisp == disp_num & Cycle == cycle_num) %>%
+    select(
+      NumDisp, Cycle, Disp, Cat,
+      Nha, Gha, Vha, AcctGper, AcctVper,
+      CV_Nha, CV_Gha, CV_Vha, CV_AcctGper, CV_AcctVper,
+      Er_Nha, Er_Gha, Er_Vha, Er_AcctGper, Er_AcctVper, NbrePlacettes
+    )
+
+  # -- synthèse
+  t2 <- t %>% rbind(temp, temp1, temp2)
+  if (dim(t2)[1] > 0) {
+    t2 <-
+      t2 %>%
+      filter(!is.na(Disp)) %>%
+      melt(id = c("NumDisp", "Cycle", "Disp", "Cat", "NbrePlacettes")) %>%
+      mutate(value = round(value, 1)) %>%
+      dcast(NumDisp + Cycle + Disp + Cat + NbrePlacettes ~ variable) %>%
+      mutate(
+        IC_Nha = paste0(
+          "[", round(Nha - Er_Nha * Nha / 100, 1),
+          "-", round(Nha + Er_Nha * Nha / 100, 1), "]"
+        ),
+        IC_Gha = paste0(
+          "[", round(Gha - Er_Gha * Gha / 100, 1),
+          "-", round(Gha + Er_Gha * Gha / 100, 1), "]"
+        ),
+        IC_Vha = paste0(
+          "[", round(Vha - Er_Vha * Vha / 100, 1),
+          "-", round(Vha + Er_Vha * Vha / 100, 1), "]"
+        ),
+        IC_AcctGper = paste0(
+          "[", round(AcctGper - Er_AcctGper * AcctGper / 100, 1),
+          "-", round(AcctGper + Er_AcctGper * AcctGper / 100, 1), "]"
+        ),
+        IC_AcctVper = paste0(
+          "[", round(AcctVper - Er_AcctVper * AcctVper / 100, 1),
+          "-", round(AcctVper + Er_AcctVper * AcctVper / 100, 1), "]"
+        )
+      ) %>%
+      melt(id = c("NumDisp", "Cycle", "Disp", "Cat", "NbrePlacettes")) %>%
+      mutate(
+        stat = variable,
+        variable = str_replace(variable, "CV_", ""),
+        variable = str_replace(variable, "Er_", ""),
+        variable = str_replace(variable, "IC_", ""),
+        stat = str_replace(stat, "_Nha", ""),
+        stat = str_replace(stat, "_Gha", ""),
+        stat = str_replace(stat, "_Vha", ""),
+        stat = str_replace(stat, "_AcctGper", ""),
+        stat = str_replace(stat, "_AcctVper", ""),
+        stat = str_replace(stat, "Nha", "Moy"),
+        stat = str_replace(stat, "Gha", "Moy"),
+        stat = str_replace(stat, "Vha", "Moy"),
+        stat = str_replace(stat, "AcctGper", "Moy"),
+        stat = str_replace(stat, "AcctVper", "Moy"),
+        stat = factor(stat, levels = c("Moy", "CV", "Er", "IC"))
+      ) %>%
+      arrange(Cycle, Cat, variable, stat) %>%
+      dcast(NumDisp + Cycle + Disp + Cat + NbrePlacettes + stat ~ variable)
+
+    t3 <-
+      t2 %>%
+      select(
+        Cycle, Cat, stat, Nha, Gha, Vha,
+        AcctGper, AcctVper, NbrePlacettes
+      ) %>%
+      mutate(
+        stat = str_replace(stat, "Moy", "Moyenne"), # Mise en forme du tableau
+        stat = str_replace(stat, "CV", "Coefficient de variation"),
+        stat = str_replace(stat, "Er", "Erreur relative (\\\\%)"),
+        stat = str_replace(stat, "IC", "Intervalle de confiance")
+      )
+
+    # Repère tableau :
+    Rep = 5
+
+    # ---------- Tableaux
+    t4 <-
+      t3 %>%
+      MultiRow2(c(1, 2, dim(t3)[2])) %>%
+      rename(
+        "N" = "Nha",
+        "G" = "Gha",
+        "V" = "Vha",
+        "Acct G" = "AcctGper",
+        "Acct V" = "AcctVper",
+        "Population" = "Cat",
+        "Nombre de placettes" = "NbrePlacettes",
+        " " = "stat"
+      )
+
+    ListPos <- list()
+    for (i in 1:(dim(t4)[1] - 1)) {
+      ListPos[i] <- i
+    }
+    print(
+      xtable(
+        t4,
+        caption = "Principales caract\u00E9ristiques dendrom\u00E9triques pour les arbres vivants\\\\\\footnotesize{N = densit\u00E9 de tiges (/ha)\\\\G = surface terri\u00E8re (m\\up{2}/ha)\\\\V = volume (m\\up{3}/ha)\\\\Acct G = accroissement en surface terri\u00E8re (m\\up{2}/ha/an)\\\\Acct V = accroissement en volume (m\\up{3}/ha/an)}",
+        caption.placement = "top",
+        digits = c(rep(0, 4), rep(1, Rep), 0),
+        align = c(
+          "|M{0.5cm}|", "M{0.7cm}|", "M{1.8cm}|", "M{2.9cm}|",
+          rep("M{1.3cm}|", 3), rep("M{1.2cm}|", 2), "M{1.2cm}"
+        ),
+        label = paste0("DendroBis", group)),
+      include.rownames = FALSE,
+      sanitize.text.function = function(x){return(x)},
+      hline.after = c(-1, 0, dim(t4)[1]
+      ),
+      add.to.row = list(
+        pos = ListPos,
+        command = c(
+          rep(
+            c(rep("\\cline{3-8}", 3), "\\cmidrule[0.8pt]{2-8}"),
+            dim(t4)[1] / 4 - 1
+          ),
+          rep("\\cline{3-8}", 3)
+        )
+      ),
+      size = "\\footnotesize"
+    )
+  } else {
+    cat("Pas de données inventoriées")
+  }
+}
+@
+
+La figure \ref{fig:GraphDendro{{x}}}\footnote{Ces figures (boites \u00E0 moustache) permettent d'observer la r\u00E9partition des donn\u00E9es, la position de la valeur m\u00E9diane et la dispersion des donn\u00E9es. Le rectangle correspond \u00E0 l'intervalle contenant la moiti\u00E9 des observations. Lorsqu'une observation se trouve au-del\u00E0 des valeurs adjacentes (les "moustaches"), elle peut \u00EAtre consid\u00E9r\u00E9e comme extr\u00EAme.} compl\u00E8te le tableau \ref{DendroBis{{x}}} en illustrant la variabilit\u00E9 des donn\u00E9es entre les placettes.\\
+<<GraphDendro{{x}}, size = 'footnotesize', out.width = '.75\\linewidth', fig.height = 2.5, fig.cap = "Variabilit\u00E9 entre les placettes des principales caract\u00E9ristiques dendrom\u00E9triques pour les arbres vivants ">>=
+t <-
+  psdrfPlaTot_ %>%
+  filter(NumDisp == disp_num & Cycle == cycle_num & NumPlac %in% group_plots) %>% # TODO : intégrer résultats par placettes dans prepare_tables ?
+  select(-NumPlac, -VhaIFN) %>%
+  melt(id = c("NumDisp", "Cycle"))
+
+tN <-
+  t %>%
+  filter(variable == "Nha") %>%
+  mutate(variable = "N")
+
+tG <-
+  t %>%
+  filter(variable == "Gha") %>%
+  mutate(variable = "G")
+
+tV <-
+  t %>%
+  filter(variable == "Vha") %>%
+  mutate(variable = "V")
+
+p1 <-
+  ggplot() +
+  geom_boxplot(tN, mapping = aes(variable, value)) +
+  scale_y_continuous(
+    limits = c(0, max(tN$value, na.rm = T) * 1.1),
+    expand = c(0, 0),
+    name = "(tiges/ha)"
+  ) +
+  theme_bw() +
+  theme(
+    axis.title.x = element_blank(),
+    axis.title.y = element_text(size = 11, colour = "navy"),
+    axis.ticks.x = element_blank(),
+    axis.line.x = element_blank(),
+    axis.text.x = element_text(size = 13, colour = "springgreen4"),
+    axis.text.y = element_text(size = 11, colour = "navy")
+  )
+
+p2 <-
+  ggplot() +
+  geom_boxplot(tG, mapping = aes(variable, value)) +
+  scale_y_continuous(
+    expand = c(0, 0),
+    limits = c(0, max(tG$value, na.rm = T) + max(tG$value, na.rm = T) * 0.1),
+    name = "(m2/ha)"
+  ) +
+  theme_bw() +
+  theme(
+    axis.title.x = element_blank(),
+    axis.title.y = element_text(size = 11, colour = "navy"),
+    axis.ticks.x = element_blank(),
+    axis.line.x = element_blank(),
+    axis.text.x = element_text(size = 13, colour = "springgreen4"),
+    axis.text.y = element_text(size = 11, colour = "navy")
+  )
+
+p3 <-
+  ggplot() +
+  geom_boxplot(tV, mapping = aes(variable, value)) +
+  scale_y_continuous(
+    expand = c(0, 0),
+    limits = c(0, max(tV$value, na.rm = T) + max(tV$value, na.rm = T) * 0.1),
+    name = "(m3/ha)"
+  ) +
+  theme_bw() +
+  theme(
+    axis.title.x = element_blank(),
+    axis.title.y = element_text(size = 11, colour = "navy"),
+    axis.ticks.x = element_blank(),
+    axis.line.x = element_blank(),
+    axis.text.x = element_text(size = 13, colour = "springgreen4"),
+    axis.text.y = element_text(size = 11, colour = "navy")
+  )
+grid.arrange(p1, p2, p3, widths = c(1, 1, 1))
+@
+\FloatBarrier
+A la diff\u00E9rence du tableau pr\u00E9c\u00E9dent, le tableau \ref{StructureBis{{x}}} pr\u00E9sente les principales caract\u00E9ristiques dendrom\u00E9triques (volume, surface terri\u00E8re et nombre de tiges \u00E0 l'hectare) des arbres vivants par cat\u00E9gories de diam\u00E8tre, accompagn\u00E9e de leur coefficient de variation et pr\u00E9cision.\\
+Dans ce tableau, les arbres de franc-pied et les tiges de taillis ne sont pas diff\u00E9renci\u00E9es.
+
+<<StructureBis{{x}}>>=
+if (cycle_num == 1) {
+  # tk_messageBox(type = "ok", message = 3)
+  # ----- 1 seul cycle :
+  # --- Préparation tables
+  t <-
+    grouped_results_of_Tot_by_Cat %>%
+    filter(!is.na(Cat)) %>%
+    select(
+      NumDisp, Cycle, Disp, Cat,
+      Nha, Gha, Vha,
+      CV_Nha, CV_Gha, CV_Vha,
+      Er_Nha, Er_Gha, Er_Vha, NbrePlacettes
+    )
+
+  t2 <-
+    t %>%
+    melt(id = c("NumDisp", "Cycle", "Disp", "Cat", "NbrePlacettes")) %>%
+    mutate(value = round(value, 1))
+
+  if (dim(t2)[1] > 0) {
+    t2 <-
+      t2 %>%
+      dcast(NumDisp + Cycle + Disp + Cat + NbrePlacettes ~ variable) %>%
+      mutate(
+        IC_Nha = paste0(
+          "[", round(Nha-Er_Nha*Nha/100, 1), "-",
+          round(Nha+Er_Nha*Nha/100, 1), "]"
+        ),
+        IC_Gha = paste0(
+          "[", round(Gha-Er_Gha*Gha/100, 1), "-",
+          round(Gha+Er_Gha*Gha/100, 1), "]"
+        ),
+        IC_Vha = paste0(
+          "[", round(Vha-Er_Vha*Vha/100, 1), "-",
+          round(Vha+Er_Vha*Vha/100, 1), "]"
+        )
+      ) %>%
+      melt(id = c("NumDisp", "Cycle", "Disp", "Cat", "NbrePlacettes")) %>%
+      mutate(
+        stat = variable,
+        variable = str_replace(variable, "CV_", ""),
+        variable = str_replace(variable, "Er_", ""),
+        variable = str_replace(variable, "IC_", ""),
+        stat = str_replace(stat, "_Nha", ""),
+        stat = str_replace(stat, "_Gha", ""),
+        stat = str_replace(stat, "_Vha", ""),
+        stat = str_replace(stat, "Nha", "Moy"),
+        stat = str_replace(stat, "Gha", "Moy"),
+        stat = str_replace(stat, "Vha", "Moy"),
+        stat = factor(stat, levels = c("Moy", "CV", "Er", "IC")),
+        Cat = factor(Cat, levels = c("PER", "PB", "BM", "GB", "TGB"))
+      ) %>%
+      arrange(Cycle, Cat, variable, stat) %>%
+      dcast(NumDisp + Cycle + Disp + Cat + NbrePlacettes + stat ~ variable)
+
+    t3 <-
+      t2 %>%
+      select(Cycle, Cat, stat, Nha, Gha, Vha, NbrePlacettes) %>%
+      mutate(
+        stat = str_replace(stat, "Moy", "Moyenne"), # Mise en forme du tableau
+        stat = str_replace(stat, "CV", "Coefficient de variation"),
+        stat = str_replace(stat, "Er", "Erreur relative (\\\\%)"),
+        stat = str_replace(stat, "IC", "Intervalle de confiance")
+      )
+
+    t4 <-
+      t3 %>%
+      MultiRow2( c(1, 2, 7) ) %>%
+      rename(
+        "N" = "Nha",
+        "G" = "Gha",
+        "V" = "Vha",
+        "Nombre de placettes" = "NbrePlacettes",
+        " " = "stat"
+      )
+
+    ListPos <- list()
+    for (i in 1:(dim(t4)[1]-1)) {
+      ListPos[i] <- i
+    }
+
+    print(
+      xtable(
+        t4,
+        caption = "Structure du peuplement par cat\u00E9gories de bois (toutes tiges confondues)\\\\ \\vspace{0.2cm}\\footnotesize{PER (Perches) = diam\u00E8tre compris entre 7, 5 cm et 17, 5 cm\\\\PB (Petits Bois) = diam\u00E8tre compris entre 17, 5 cm et 27, 5 cm\\\\BM (Bois Moyens) = diam\u00E8tre compris entre 27, 5 cm et 47, 5 cm\\\\GB (Gros Bois) = diam\u00E8tre compris entre 47, 5 cm et 67, 5 cm\\\\TGB (Tr\u00E8s Gros Bois) = diam\u00E8tre sup\u00E9rieur \u00E0 67, 5 cm.}",
+        caption.placement = "top",
+        digits = c(rep(0, 4), rep(1, 3), 0),
+        align = c(
+          "|M{0.5cm}|", "M{1cm}|", "M{1.8cm}|", "M{3.5cm}|",
+          rep("M{1.8cm}|", 3), "M{1.5cm}"
+        ),
+        label = paste0("StructureBis", group)),
+      include.rownames = FALSE,
+      sanitize.text.function = function(x) return(x),
+      hline.after = c(-1, 0, dim(t4)[1]),
+      add.to.row = list(
+        pos = ListPos,
+        command = c(
+          rep(
+            c(rep("\\cline{3-6}", 3), "\\cmidrule[0.8pt]{2-6}"),
+            dim(t4)[1]/4-1
+          ),
+          rep("\\cline{3-6}", 3)
+        )
+      ),
+      size = "\\footnotesize"
+    )
+
+  } else { cat("Pas de données inventoriées")}
+} else {
+
+  # ----- 1 seul cycle :
+  # --- Préparation tables
+  t <-
+    grouped_results_of_Tot_by_Cat %>%
+    filter(!is.na(Cat)) %>%
+    select(
+      NumDisp, Cycle, Disp, Cat,
+      Nha, Gha, Vha, AcctGper, AcctVper,
+      CV_Nha, CV_Gha, CV_Vha, CV_AcctGper, CV_AcctVper,
+      Er_Nha, Er_Gha, Er_Vha, Er_AcctGper, Er_AcctVper, NbrePlacettes
+    )
+
+  t2 <-
+    t %>%
+    melt(id = c("NumDisp", "Cycle", "Disp", "Cat", "NbrePlacettes")) %>%
+    mutate(value = round(value, 1))
+
+  if (dim(t2)[1] > 0) {
+    t2 <-
+      t2 %>%
+      dcast(NumDisp + Cycle + Disp + Cat + NbrePlacettes ~ variable) %>%
+      mutate(
+        IC_Nha = paste0(
+          "[", round(Nha - Er_Nha * Nha / 100, 1),
+          "-", round(Nha + Er_Nha * Nha / 100, 1), "]"
+        ),
+        IC_Gha = paste0(
+          "[", round(Gha - Er_Gha * Gha / 100, 1),
+          "-", round(Gha + Er_Gha * Gha / 100, 1), "]"
+        ),
+        IC_Vha = paste0(
+          "[", round(Vha - Er_Vha * Vha / 100, 1),
+          "-", round(Vha + Er_Vha * Vha / 100, 1), "]"
+        ),
+        IC_AcctGper = paste0(
+          "[", round(AcctGper - Er_AcctGper * AcctGper / 100, 1),
+          "-", round(AcctGper + Er_AcctGper * AcctGper / 100, 1), "]"
+        ),
+        IC_AcctVper = paste0(
+          "[", round(AcctVper - Er_AcctVper * AcctVper / 100, 1),
+          "-", round(AcctVper + Er_AcctVper * AcctVper / 100, 1), "]"
+        )
+      ) %>%
+      melt(id = c("NumDisp", "Cycle", "Disp", "Cat", "NbrePlacettes")) %>%
+      mutate(
+        stat = variable,
+        variable = str_replace(variable, "CV_", ""),
+        variable = str_replace(variable, "Er_", ""),
+        variable = str_replace(variable, "IC_", ""),
+        stat = str_replace(stat, "_Nha", ""),
+        stat = str_replace(stat, "_Gha", ""),
+        stat = str_replace(stat, "_Vha", ""),
+        stat = str_replace(stat, "_AcctGper", ""),
+        stat = str_replace(stat, "_AcctVper", ""),
+        stat = str_replace(stat, "Nha", "Moy"),
+        stat = str_replace(stat, "Gha", "Moy"),
+        stat = str_replace(stat, "Vha", "Moy"),
+        stat = str_replace(stat, "AcctGper", "Moy"),
+        stat = str_replace(stat, "AcctVper", "Moy"),
+        stat = factor(stat, levels = c("Moy", "CV", "Er", "IC")),
+        Cat = factor(Cat, levels = c("PER", "PB", "BM", "GB", "TGB"))
+      ) %>%
+      arrange(Cycle, Cat, variable, stat) %>%
+      dcast(NumDisp + Cycle + Disp + Cat + NbrePlacettes + stat ~ variable)
+
+    t3 <-
+      t2 %>%
+      select(
+        Cycle, Cat, stat, Nha, Gha, Vha,
+        AcctGper, AcctVper, NbrePlacettes
+      ) %>%
+      mutate(
+        stat = str_replace(stat, "Moy", "Moyenne"), # Mise en forme du tableau
+        stat = str_replace(stat, "CV", "Coefficient de variation"),
+        stat = str_replace(stat, "Er", "Erreur relative (\\\\%)"),
+        stat = str_replace(stat, "IC", "Intervalle de confiance")
+      )
+
+    t4 <-
+      t3 %>%
+      MultiRow2( c(1, 2, dim(t3)[2]) ) %>%
+      rename(
+        "N" = "Nha",
+        "G" = "Gha",
+        "V" = "Vha",
+        "Acct G" = "AcctGper",
+        "Acct V" = "AcctVper",
+        "Nombre de placettes" = "NbrePlacettes",
+        " " = "stat"
+      )
+
+    ListPos <- list()
+    for (i in 1:(dim(t4)[1] - 1)) {
+      ListPos[i] <- i
+    }
+
+    print(
+      xtable(
+        t4,
+        caption = "Structure du peuplement par cat\u00E9gories de bois (toutes tiges confondues)\\\\ \\vspace{0.2cm}\\footnotesize{PER (Perches) = diam\u00E8tre compris entre 7, 5 cm et 17, 5 cm\\\\PB (Petits Bois) = diam\u00E8tre compris entre 17, 5 cm et 27, 5 cm\\\\BM (Bois Moyens) = diam\u00E8tre compris entre 27, 5 cm et 47, 5 cm\\\\GB (Gros Bois) = diam\u00E8tre compris entre 47, 5 cm et 67, 5 cm\\\\TGB (Tr\u00E8s Gros Bois) = diam\u00E8tre sup\u00E9rieur \u00E0 67, 5 cm.}",
+        caption.placement = "top",
+        digits = c(rep(0, 4), rep(1, 5), 0),
+        align = c(
+          "|M{0.5cm}|", "M{0.7cm}|", "M{1.8cm}|", "M{2.9cm}|",
+          rep("M{1.3cm}|", 3), rep("M{1.2cm}|", 2), "M{1.2cm}"
+        ),
+        label = paste0("StructureBis", group)
+      ),
+      include.rownames = FALSE,
+      sanitize.text.function = function(x) return(x),
+      hline.after = c(-1, 0, dim(t4)[1]),
+      add.to.row = list(
+        pos = ListPos,
+        command = c(
+          rep(
+            c(rep("\\cline{3-8}", 3), "\\cmidrule[0.8pt]{2-8}"),
+            dim(t4)[1] / 4 - 1
+          ),
+          rep("\\cline{3-8}", 3)
+        )
+      ),
+      size = "\\footnotesize"
+    )
+
+  } else { cat("Pas de données inventoriées")}
+}
+@
+
+\FloatBarrier
+\newpage
+\subsection {Structure}
+La figure \ref{fig:Classe{{x}}} permet de visualiser la r\u00E9partition du volume et du nombre de tiges par classe de diam\u00E8tre (espac\u00E9es chacune de 5 cm). On distingue ici, selon leur origine v\u00E9g\u00E9tative, les arbres de franc-pied des tiges de taillis.
+
+<<Classe{{x}}, size = 'footnotesize', fig.height = 3, fig.cap =  "R\u00E9partition du volume et du nombre de tiges par classes de diam\u00E8tre (arbres vivants).">>=
+if (dim(grouped_results_of_Fpied_by_Classe)[1] == 0) {
+  cat("Pas de données inventoriées")
+} else {
+
+  tab <-
+    grouped_results_of_Fpied_by_Classe %>%
+    # filter(NumDisp == disp_num & Cycle == cycle_num) %>%
+    select(NumDisp, Disp, Classe, Nha, Vha) %>%
+    mutate(Population = "Tiges de\nfranc-pied") %>%
+    data.frame()
+
+  if (dim(grouped_results_of_Taillis_by_Classe)[1] > 0) {
+    tab2 <-
+      grouped_results_of_Taillis_by_Classe %>%
+      # filter(NumDisp == disp_num & Cycle == cycle_num) %>%
+      select(NumDisp, Disp, Classe, Nha, Vha) %>%
+      mutate(Population = "Tiges de\ntaillis") %>%
+      data.frame()
+
+  } else {
+    tab2 <- tab[0, ]
+  }
+  # if (dim(tab2)[1] > 0) {
+  # tab2$Population <-"Tiges de\ntaillis"
+  # }
+  tab <-
+    tab %>%
+    rbind(tab2) %>%
+    group_by(NumDisp, Classe) %>%
+    mutate(
+      VhaTot = sum(Vha, na.rm = T),
+      NhaTot = sum(Nha, na.rm = T)
+    ) %>%
+    ungroup() %>%
+    data.frame()
+
+  som <- round(sum(tab$Vha, na.rm = T), 0)
+  X <- max(tab$Classe, na.rm = T)
+  Y <- max(tab$VhaTot, na.rm = T)
+
+  p1 <-
+    ggplot(tab, aes(x = Classe, y = Vha, fill = Population)) +
+    geom_bar(stat = "identity") + theme_bw() +
+    MyTheme +
+    annotate("text", label = paste("Vha  = ", som, " m3"), x = X-20, y = Y-5, size = 2.5) +
+    labs(x = "Classes de diam\u00E8tre", y = "Volume \u00E0 l'hectare (m3/ha)") +
+    scale_x_continuous(
+      limits = c(0, X + 5),
+      expand = c(0, 0),
+      breaks = c(
+        10, 30,
+        ifelse(X > 50, seq(50, X, 20), 50)
+      )
+    ) +
+    scale_y_continuous(
+      limits = c(0, Y + 5),
+      expand = c(0, 0)
+    ) +
+    scale_fill_manual(
+      values = c("grey80", "grey40"),
+      name = "Origine\nv\u00E9g\u00E9tative"
+    ) +
+    guides(
+      fill = guide_legend(reverse = T)
+    )
+
+  X <- max(tab$Classe, na.rm = T)
+  Y <- max(tab$NhaTot, na.rm = T)
+
+  p2 <-
+    ggplot(tab, aes(x = Classe, y = Nha, fill = Population)) +
+    geom_bar(stat = "identity") +
+    theme_bw() +
+    theme(
+      axis.text.x = element_text(size = 8),
+      axis.title.x = element_text(size = 9),
+      axis.text.y = element_text(size = 8),
+      axis.title.y = element_text(size = 9)
+    ) +
+    labs(
+      x = "Classes de diam\u00E8tre",
+      y = "Densit\u00E9 de tiges \u00E0 l'hectare (tiges/ha)"
+    ) +
+    scale_x_continuous(
+      limits = c(0, X + 5),
+      expand = c(0, 0),
+      breaks = c(
+        10, 30,
+        ifelse(X > 50, seq(50, X, 20), 50)
+      )
+    ) +
+    scale_y_continuous(
+      limits = c(0, Y + 10),
+      expand = c(0, 0)
+    ) +
+    scale_fill_manual(values = c("grey80", "grey40"))
+
+
+
+  mylegend <- g_legend(p1)
+
+  grid.arrange(
+    arrangeGrob(
+      p1 + theme(legend.position = "none"),
+      p2 + theme(legend.position = "none"),
+      nrow = 1, widths = c(0.5, 0.5)),
+    mylegend, nrow = 1, widths = c(9, 1)
+  )
+
+  # A part :
+  t1 <-
+    grouped_results_of_Tot_by_Essence %>%
+    # filter(NumDisp == disp_num) %>%
+    select(NumDisp, Disp, Cycle, Essence, Nha)
+
+  t2 <-
+    grouped_results_of_Rege_by_Essence %>%
+    # filter(NumDisp == disp_num) %>%
+    select(
+      NumDisp, Disp, Cycle, Essence,
+      Recouv, Classe1Ha, Classe2Ha, Classe3Ha
+    )
+
+  tab <- t1 %>% full_join(t2)
+  tab <- tab %>% left_join(CodeEssence[, c("Essence", "Nom")], by = "Essence")
+  ListEss <- tab[order(tab$Nom), -1]
+}
+@
+
+\FloatBarrier
+
+\EditIf{\Sexpr{Eval_PSDRFMA}}{TRUE}{
+\subsection{Hauteurs}
+La figure \ref{fig:Hauteurs{{x}}} représente les hauteurs d'arbres par classe de diamètre.
+<<Hauteurs{{x}}, fig.height = 3.5, fig.cap =  "Hauteurs par classe de diamètre", eval = Eval_PSDRFMA, include = Eval_PSDRFMA>>=
+# ----- Palette Essence :
+# Essences_PALETTE <- CodeEssence$Couleur
+# names(Essences_PALETTE) <- CodeEssence$Nom
+
+# ----- Hauteurs totales par classes de diamètre
+Haut_DF <-
+  Arbres_SUB %>%
+  select(NumDisp, Cycle, Essence, Diam, Haut, HautV) %>%
+  filter(!is.na(Haut)) %>%
+  mutate(Essence = CodeEssence$Nom[match(Essence, CodeEssence$Essence)])
+
+X = max(Haut_DF$Diam)
+
+ggplot() +
+  geom_point(
+    Haut_DF,
+    mapping = aes(Diam, Haut, col = Essence)
+  ) +
+  scale_colour_manual(name = "Essences", values = Essences_PALETTE) +
+  scale_x_continuous(
+    limits = c(0, X + 5),
+    breaks = c(0, 10, seq(30, X + 5, 20))
+  ) +
+  labs(y = "Hauteurs", x = "Diamètre") +
+  guides(colour = guide_legend(ncol = 2)) +
+  theme_bw() +
+  MyTheme
+
+@
+\FloatBarrier
+
+<<Classes_Hauteurs{{x}}, fig.height = 2.5, fig.cap =  "Classes de hauteurs", eval = Eval_PSDRFMA, include = Eval_PSDRFMA>>=
+# ----- Hauteurs totales par classes de diamètre
+ClassesHaut_DF <-
+  Arbres_SUB %>%
+  select(NumDisp, Cycle, Nha, Haut, HautV) %>%
+  filter(!is.na(Haut)) %>%
+  mutate(
+    Classe_Haut = cut(
+      Haut,
+      breaks = seq(-2.5, floor(max(Haut) / 5 + 0.5) * 5 + 2.5, 5),
+      labels = seq(0, max(Haut), 5),
+      right = T
+    )
+  ) %>%
+  group_by(Classe_Haut) %>%
+  summarise(Nbre = length(Haut)) %>%
+  ungroup()
+
+ggplot() +
+  geom_bar(
+    ClassesHaut_DF,
+    mapping = aes(Classe_Haut, Nbre),
+    fill = "dodgerblue3",
+    stat = "identity",
+    position = "stack"
+  ) +
+  labs(y = "Nombre d'arbres", x = "Classes de hauteur") +
+  theme_bw() +
+  MyTheme
+@
+\FloatBarrier
+}{}
+
+\newpage
+\subsection{Composition}
+Sur \Sexpr{quote_group}, \Sexpr{length(unique(ListEss[, "Nom"]))} esp\u00E8ces sous forme de semis, de brins de taillis ou d'arbres de franc-pied ont \u00E9t\u00E9 \u00E9chantillonn\u00E9es. La figure \ref{fig:CompoGlobal{{x}}} donne une  image  de la r\u00E9partition de la densit\u00E9 des diff\u00E9rentes essences dans chacun des stades de vie de l'arbre :
+\begin{itemize}
+\item semis (inf\u00E9rieurs \u00E0 50 cm de hauteur ; exprim\u00E9 en pourcentage de recouvrement),
+\item classes de r\u00E9g\u00E9n\u00E9ration (tiges de hauteur sup\u00E9rieure \u00E0 50 cm et de diam\u00E8tre inf\u00E9rieur \u00E0 7, 5 cm ;  classes 1, 2 et 3).
+\item brins de taillis (tiges de diam\u00E8tre sup\u00E9rieur \u00E0 7, 5 cm)
+\item perches de franc-pied (tiges dont le diam\u00E8tre est compris entre 7, 5 et 17, 5 cm)
+\item arbres pr\u00E9comptables (tiges de diam\u00E8tre sup\u00E9rieur \u00E0 17, 5 cm)
+\end{itemize}
+
+<<Listes{{x}}>>=
+t1 <-
+  grouped_results_of_Tot_by_Essence %>%
+  # filter(NumDisp == disp_num & Cycle == cycle_num) %>% # TODO : vérifier que filtre ok
+  select(NumDisp, Disp, Cycle, Essence, Nha)
+
+t2 <-
+  grouped_results_of_Rege_by_Essence %>%
+  # filter(NumDisp == disp_num & Cycle == cycle_num) %>%
+  select(
+    NumDisp, Disp, Cycle, Essence,
+    Recouv, Classe1Ha, Classe2Ha, Classe3Ha
+  )
+
+tab <-
+  t1 %>%
+  full_join(t2) %>%
+  left_join(CodeEssence[, c("Essence", "Nom")], by = "Essence")
+ListEss <- tab[order(tab$Nom), -1]
+names(ListEss)[names(ListEss) %in% "Nha"] <- "Arbres"
+
+
+t <-
+  grouped_results_of_Fpied_by_EssenceCat %>%
+  select(NumDisp, Disp, Cycle, Cat, Essence, Nha) %>%
+  filter(Cat == "PER" & !is.na(Essence)) %>%
+  mutate(Cat = NULL) %>%
+  rename(Perches = Nha) %>%
+  melt(id = c("NumDisp", "Disp", "Cycle", "Essence"))
+
+t1 <-
+  grouped_results_of_Den_by_Essence %>%
+  select(NumDisp, Disp, Cycle, Essence, Nha) %>%
+  filter(!is.na(Essence)) %>%
+  rename("Pr\u00E9comptables" = "Nha") %>%
+  melt(id = c("NumDisp", "Disp", "Cycle", "Essence"))
+
+if (dim(grouped_results_of_Taillis_by_Essence)[1] > 0) {
+  t2 <-
+    grouped_results_of_Taillis_by_Essence %>%
+    select(NumDisp, Disp, Cycle, Essence, Nha) %>%
+    filter(!is.na(Essence)) %>%
+    rename(Taillis = Nha) %>%
+    melt(id = c("NumDisp", "Disp", "Cycle", "Essence"))
+}
+t3 <-
+  grouped_results_of_Rege_by_Essence %>%
+  filter(!is.na(Essence)) %>%
+  select(
+    NumDisp, Disp, Cycle, Essence,
+    Classe3Ha, Classe2Ha, Classe1Ha, Recouv
+  ) %>%
+  melt(id = c("NumDisp", "Disp", "Cycle", "Essence"))
+
+if (dim(grouped_results_of_Taillis_by_Essence)[1] > 0) {
+  ListEss.m <-
+    t %>%
+    rbind(t1, t2, t3) %>%
+    left_join(CodeEssence) %>%
+    select(NumDisp, Disp, Cycle, Essence, Nom, variable, value) %>%
+    filter(value != 0) %>%
+    group_by(variable) %>%
+    mutate(
+      rescale = rescale(value),
+      taux = value / sum(value, na.rm = T) * 100
+    ) %>%
+    ungroup() %>%
+    mutate(
+      variable = str_replace(variable, "Recouv", "Recouvrement"),
+      variable = str_replace(variable, "Classe1Ha", "Classe 1"),
+      variable = str_replace(variable, "Classe2Ha", "Classe 2"),
+      variable = str_replace(variable, "Classe3Ha", "Classe 3"),
+      variable = factor(
+        variable,
+        levels = c(
+          "Recouvrement", "Classe 1", "Classe 2", "Classe 3",
+          "Taillis", "Perches", "Pr\u00E9comptables"
+        )
+      ),
+      value = ifelse(value < 0.1, round(value, 3), round(value, 1))
+    )
+
+  Nb_Essences <- unique(ListEss.m$Nom)
+
+} else {
+  ListEss.m <-
+    t %>%
+    rbind(t1, t3) %>%
+    left_join(CodeEssence) %>%
+    select(NumDisp, Disp, Cycle, Essence, Nom, variable, value) %>%
+    filter(value != 0) %>%
+    group_by(variable) %>%
+    mutate(
+      rescale = rescale(value),
+      taux = value / sum(value, na.rm = T) * 100
+    ) %>%
+    ungroup() %>%
+    mutate(
+      variable = str_replace(variable, "Recouv", "Recouvrement"),
+      variable = str_replace(variable, "Classe1Ha", "Classe 1"),
+      variable = str_replace(variable, "Classe2Ha", "Classe 2"),
+      variable = str_replace(variable, "Classe3Ha", "Classe 3"),
+      variable = factor(
+        variable,
+        levels = c(
+          "Recouvrement", "Classe 1", "Classe 2", "Classe 3",
+          "Taillis", "Perches", "Pr\u00E9comptables"
+        )
+      ),
+      value = ifelse(value < 0.1, round(value, 3), round(value, 1))
+    )
+
+  Nb_Essences <- unique(ListEss.m$Nom)
+}
+
+df_Scales <-
+  data.frame(
+    Nb_Essences = seq(0, 40),
+    Classe_Essence = sort(c(rep(c(1, seq(5, 35, 5)), 5), 35)),
+    Height_Essence = c(sort(rep(seq(1, 8), 5)), 8)
+  ) %>%
+  mutate(Height_Essence = ifelse(
+    Height_Essence == 1 | Height_Essence == 2, 3, Height_Essence
+  ))
+
+# TODO : à changer
+Param_Essence <- df_Scales$Height_Essence[match(length(Nb_Essences), df_Scales$Nb_Essences)]
+# TODO : tester (changer les noms Nb_Essences et Nb_Essences ?)
+# Param_Essence <- with(
+#   df_Scales,
+#   Height_Essence[match(length(Nb_Essences), Nb_Essences)]
+# )
+
+if (is.na(Param_Essence)) {
+  Param_Essence <- 8
+}
+@
+
+<<CompoGlobal{{x}}, fig.height = Param_Essence, fig.cap = "R\u00E9partition de la densit\u00E9 de tiges entre les essences selon les diff\u00E9rents stades de vie de l'arbre (tiges/ha).\\\\\\footnotesize{Recouvrement = hauteur semis < 50 cm\\\\Classe 1 = hauteur semis > 50cm et < 1, 50 m\\\\Classe 2 = hauteur semis > 1, 50 m et diam\u00E8tre < 2, 5 cm\\\\Classe 3 = 2, 5 cm < diam\u00E8tre < 7, 5 cm\\\\Taillis = diam\u00E8tre > 7, 5 cm\\\\Perches = diam\u00E8tre compris entre 7, 5 cm et 30 cm\\\\Pr\u00E9comptables = diam\u00E8tre > 30 cm}">>=
+
+Levels1 <- sort(unique(ListEss.m$Nom))
+Levels2 <- c(
+  "Recouvrement", "Classe 1", "Classe 2", "Classe 3",
+  "Taillis", "Perches", "Pr\u00E9comptables"
+)
+t <-
+  ListEss.m %>%
+  mutate(
+    Nom = match(Nom, Levels1),
+    variable = match(variable, Levels2)
+  )
+
+ggplot(t, aes(variable, Nom)) +
+  geom_tile(aes(fill = taux), colour = "black") +
+  geom_text(
+    aes(variable, Nom, label = round(value, 3)),
+    size = 2.5
+  ) +
+  scale_fill_gradient(
+    name = "Part de la \ndensit\u00E9 (%)",
+    low = "white", high = "blue",
+    limits = c(0, 100),
+    breaks = c(0, 25, 50, 75, 100)
+  ) +
+  scale_x_continuous(
+    expand = c(0, 0),
+    breaks = seq(1, 7),
+    limits = c(0.5, 7.5),
+    minor_breaks = seq(0.5, 7.5, 0.1),
+    label = Levels2
+  ) +
+  scale_y_continuous(
+    expand = c(0, 0),
+    limits = c(0.5, max(t$Nom, na.rm = T)+0.5),
+    breaks = seq(1, max(t$Nom, na.rm = T)),
+    minor_breaks = seq(0.5, max(t$Nom, na.rm = T)+0.5, 0.1),
+    label = Levels1
+  ) +
+  labs(x = NULL, y = NULL) +
+  theme(
+    axis.text.x  = element_text(size = 9, angle = 45, hjust = 1),
+    axis.text.y  = element_text(size = 9),
+    legend.text = element_text(size = 8),
+    legend.title = element_text(size = 9, face = 'plain'),
+    panel.grid.major = element_line(colour = "gray"),
+    panel.grid.minor = element_line(colour = "gray"),
+    panel.background = element_rect(fill = "white")
+  )
+@
+\FloatBarrier
+
+La figure \ref{fig:Compo{{x}}} illustre la part relative des  diff\u00E9rentes essences relev\u00E9es, selon un regroupement op\u00E9r\u00E9 et pr\u00E9cis\u00E9 dans le tableau \ref{EssReg} en annexe \ref{Regroupement}. Elle est constitu\u00E9e  de deux cercles concentriques :
+\begin{itemize}
+\item Le cercle "int\u00E9rieur" pr\u00E9sente la part des  diff\u00E9rentes essences en nombre de tige (Nha)
+\item Le cercle "ext\u00E9rieur" pr\u00E9sente la part des diff\u00E9rentes essences en volume (m\up{3}/ha).
+\end{itemize}
+% \clearpage
+<<Compo{{x}}, fig.height = 4, fig.cap = "R\u00E9partition des diff\u00E9rentes essences relev\u00E9es - en nombre de tiges et en volume.">>=
+t <-
+  grouped_results_of_Tot_by_EssReg
+
+if (dim(t)[1] == 0) {
+  cat("Pas de données inventoriées")
+} else {
+  t <-
+    t %>%
+    group_by(EssReg) %>%
+    summarise(
+      Nha = sum(Nha, na.rm = T),
+      Vha = sum(Vha, na.rm = T)
+    ) %>%
+    ungroup() %>%
+    melt(id = "EssReg") %>%
+    group_by(variable) %>%
+    mutate(
+      Tot = sum(value, na.rm = T),
+      Ratio = value / Tot,
+      RatioCum = cumsum(value / Tot)
+    ) %>%
+    ungroup() %>%
+    arrange(variable)
+  Ess.m <- t
+
+  ggplot() +
+    geom_bar(
+      Ess.m,
+      mapping = aes(x = variable, y = value, fill = EssReg),
+      stat = 'identity',
+      position = 'fill'
+    ) +
+    geom_text(
+      Ess.m,
+      mapping = aes(
+        x = ifelse(variable == "Nha", 1, 2),
+        y = round(RatioCum - Ratio / 2, 3),
+        label = ifelse(
+          Ratio > 0.2,
+          ifelse(
+            variable == "Nha",
+            paste0(EssReg, " : ", round(Ratio, 3) * 100, " %"),
+            paste0(round(value, 0), " m3/ha")
+          ),
+          ""
+        )
+      ),
+      size = 2.5, alpha = 1, colour = "black"
+    ) +
+    geom_text(
+      Ess.m,
+      mapping = aes(
+        x = ifelse(variable == "Nha", 0.75, 1.75),
+        y = 0.5,
+        label = ifelse(variable == "Nha", "Nombre\nde tiges", "Volume (m3/ha)")
+      ),
+      size = 3,
+      colour = "black",
+      alpha = 1
+    ) +
+    coord_polar(theta = "y") +
+    scale_x_discrete("") +
+    scale_y_continuous(
+      name = "Part relative des essences" ,
+      labels = percent
+    ) +
+    scale_fill_manual(
+      "Essences Regroup\u00E9es :",
+      values = Palette_EssReg
+    ) +
+    guides(
+      fill = guide_legend(
+        ncol = ifelse(length(unique(t$EssReg)) > 10, 2, 1),
+        bycol = T
+      )
+    ) +
+    theme_bw() +
+    theme(
+      title = element_text(face = 'plain'),
+      axis.text.y  = element_blank(),
+      axis.text.x = element_text(size = 6),
+      axis.ticks = element_blank(),
+      axis.title.x = element_blank(),
+      legend.text = element_text(size = 7),
+      legend.position = "right",
+      legend.direction = "vertical",
+      strip.text = element_text(size = 7, colour = "white"),
+      legend.title = element_text(size = 8),
+      plot.margin = unit(c(0.1, 0.1, 0.1, 0.1), "cm"),
+      panel.grid.major = element_blank(),
+      panel.border = element_blank(),
+      strip.background = element_rect(fill = "forestgreen", colour = "black")
+    )
+}
+@
+Le tableau \ref{TabCompoBis{{x}}} pr\u00E9cise les valeurs absolues et relatives pour chaque groupe d'essence, en nombre de tiges et en volume.
+
+<<TabCompoBis{{x}}, fig.pos = "H">>=
+if (dim(t)[1] == 0) cat("Pas de données inventoriées") else {
+  t2 <-
+    t %>%
+    dcast(EssReg ~ variable) %>% # TODO : à modifier
+    mutate(
+      NhaTot = sum(Nha, na.rm = T),
+      NhaRel = paste0("\\color{blue}", round(Nha / NhaTot * 100, 1), " \\%"),
+      Nha = paste0("\\multicolumn{1}{|c|}{", round(Nha, 1), "}"),
+      NhaTot = NULL,
+      VhaTot = sum(Vha, na.rm = T),
+      VhaRel = paste0("\\color{blue}", round(Vha / VhaTot * 100, 1), " \\%"),
+      Vha = paste0("\\multicolumn{1}{|c|}{", round(Vha, 1), "}"),
+      VhaTot = NULL
+    ) %>%
+    select(EssReg, Nha, NhaRel, Vha, VhaRel) %>%
+    rename(
+      "Groupes d'essence" = "EssReg",
+      "\\multicolumn{2}{|c}{N}" = "Nha",
+      "\\multicolumn{2}{|c}{V}" = "Vha"
+      )
+  names(t2)[names(t2) %in% c("NhaRel", "VhaRel")] <- NA
+
+  print(
+    xtable(
+      t2,
+      caption = "R\u00E9partition absolue et relative des diff\u00E9rentes essences relev\u00E9es - en nombre de tiges et en volume.",
+      caption.placement = "top",
+      digits = c(0, 0, rep(1, 4)),
+      label = paste0("TabCompoBis", group),
+      align = rep("c", dim(t2)[2] + 1)
+      ),
+    include.rownames = FALSE,
+    floating = T,
+    table.placement = "H",
+    size = "\\footnotesize",
+    hline.after = c(-1:dim(t2)[1]),
+    sanitize.colnames.function = function(x) na.omit(x),
+    sanitize.text.function = function(x) ifelse(is.na(x), "", x)
+  )
+}
+@
+\FloatBarrier
+\clearpage
+
+\subsection{Composition et structure}
+La figure \ref{fig:CompoNG{{x}}} pr\u00E9cise la figure pr\u00E9c\u00E9dente en introduisant la notion de structure du peuplement. Ainsi, on visualise la distribution des essences relev\u00E9es (regroupement pr\u00E9cis\u00E9 dans le tableau \ref{EssReg} en annexe \ref{Regroupement}) dans les diff\u00E9rentes cat\u00E9gories de diam\u00E8tre, \u00E0 la fois en  densit\u00E9 et en volume, pour toutes tiges confondues (taillis et franc-pied).
+<<CompoNG{{x}}, fig.height = 4, fig.cap = "Composition absolue ou relative en nombre de tiges et en surface terri\u00E8re, par cat\u00E9gories de bois.\\\\ \\vspace{0.2cm}\\footnotesize{PER (Perches) = diam\u00E8tre compris entre 7, 5 cm et 17, 5 cm\\\\PB (Petits Bois) = diam\u00E8tre compris entre 17, 5 cm et 27, 5 cm\\\\BM (Bois Moyens) = diam\u00E8tre compris entre 27, 5 cm et 47, 5 cm\\\\GB (Gros Bois) = diam\u00E8tre compris entre 47, 5 cm et 67, 5 cm\\\\TGB (Tr\u00E8s Gros Bois) = diam\u00E8tre sup\u00E9rieur \u00E0 67, 5 cm.}">>=
+
+tab <-
+  grouped_results_of_Tot_by_EssRegCat %>%
+  filter(!is.na(Cat)) %>%
+  mutate(Cat = factor(
+    Cat,
+    levels = c("PER", "PB", "BM", "GB", "TGB")
+  )) %>%
+  arrange(NumDisp, Cycle, Cat)
+
+p1 <-
+  ggplot(tab, aes(Cat, Nha, fill = EssReg)) +
+  geom_bar(stat = "identity", position = "stack") +
+  labs(
+    x = "Cat\u00E9gories de diam\u00E8tre",
+    y = "Densit\u00E9 de tiges\n(tiges/ha)"
+  ) +
+  scale_fill_manual(
+    "Essences Regroup\u00E9es",
+    values = Palette_EssReg
+  ) +
+  guides(fill = guide_legend(
+    nrow = ifelse(length(unique(tab$EssReg)) > 10, 2, 1),
+    byrow = TRUE
+  )) +
+  MyTheme + theme(legend.position = "bottom")
+# scale_fill_discrete("Essences Regroup\u00E9es")
+p2 <- ggplot(tab, aes(Cat, Nha, fill = EssReg)) +
+  geom_bar(stat = "identity", position = "fill") +
+  labs(x = "Cat\u00E9gories de diam\u00E8tre", y = "Part de la densit\u00E9\nde tiges (%)") +
+  scale_y_continuous(labels = percent) +
+  scale_fill_manual("Essences Regroup\u00E9es", values = Palette_EssReg) +
+  MyTheme + theme(legend.position = "none")
+
+p3 <-
+  ggplot(
+    tab, aes(Cat, Vha, fill = EssReg)
+  ) +
+  geom_bar(stat = "identity", position = "stack") +
+  scale_fill_manual(
+    "Essences Regroup\u00E9es",
+    values = Palette_EssReg
+  ) +
+  guides(fill = FALSE) +
+  labs(
+    x = "Cat\u00E9gories de diam\u00E8tre",
+    y = "Volume \u00E0 l'hectare (m3/ha)"
+  ) +
+  MyTheme
+
+p4 <-
+  ggplot(
+    tab,
+    aes(Cat, Vha, fill = EssReg)
+  ) +
+  geom_bar(stat = "identity", position = "fill") +
+  labs(
+    x = "Cat\u00E9gories de diam\u00E8tre",
+    y = "Part du volume (%)"
+  ) +
+  scale_fill_manual(
+    "Essences Regroup\u00E9es",
+    values = Palette_EssReg
+  ) +
+  scale_y_continuous(labels = percent) +
+  MyTheme +
+  theme(axis.title = element_text(size = 10))
+
+mylegend <- g_legend(p1)
+
+grid.arrange(
+  arrangeGrob(
+    p1 + theme(legend.position = "none"),
+    p2 + theme(legend.position = "none"),
+    p3 + theme(legend.position = "none"),
+    p4 + theme(legend.position = "none")
+  ),
+  mylegend, nrow = 3, heights = c(20, 1, 1)
+)
+@
+\FloatBarrier
+
+\EditIf{\Sexpr{Eval_PSDRFMA}}{TRUE}{
+\subsection{Etat sanitaire}
+La figure \ref{fig:Etat_Sanitaire{{x}}} représente la répartition de la densité de tiges par état sanitaire, en distinguant les résultats d'analyse par essence.
+<<Etat_Sanitaire{{x}}, fig.height = 3.5, fig.cap =  "Bilan sur l'état sanitaire", eval = Eval_PSDRFMA, include = Eval_PSDRFMA>>=
+# ----- Palette état sanitaires
+CodeSanit_Palette <- c(
+  "forestgreen", "chartreuse3", "yellow",
+  "orange2", "firebrick3", "firebrick4", "gray70"
+)
+names(CodeSanit_Palette) <- c(0, 1, 2, 3, 4, 5, "Non renseigné")
+
+# ----- Etat sanitaire
+df1 <-
+  grouped_results_of_Den_by_CodeSanit %>%
+  select(Cycle, CodeSanit, Nha) %>%
+  # filter(Cycle == cycle_num) %>% # !is.na(CodeSanit) &
+  mutate(
+    CodeSanit = ifelse(is.na(CodeSanit), "Non renseigné", CodeSanit),
+    CodeSanit = factor(
+      CodeSanit,
+      levels = c("Non renseigné", 5, 4, 3, 2, 1, 0))
+  ) %>%
+  group_by(CodeSanit) %>%
+  summarize(Nha = sum(Nha)) %>%
+  ungroup()
+
+
+p1 <-
+  ggplot() +
+  geom_bar(
+    df1,
+    mapping = aes(x = "", y = Nha, fill = CodeSanit),
+    stat = "identity",
+    position = "fill",
+    width = 1
+  ) +
+  coord_polar(theta = "y") +
+  labs(y = "Répartition de la densité de tiges\npar état sanitaire") +
+  scale_y_continuous(labels = percent) +
+  scale_fill_manual(
+    name = "Etat sanitaire :",
+    values = CodeSanit_Palette,
+    drop = F
+  ) +
+  guides(
+    fill = guide_legend(
+      title = "Etat sanitaire :", reverse = T
+    )
+  ) +
+  theme_bw() +
+  theme(
+    title = element_text(face = 'plain'),
+    axis.text.y  = element_blank(),
+    axis.text.x = element_text(size = 6),
+    axis.ticks = element_blank(),
+    axis.title.y = element_blank(),
+    legend.text = element_text(size = 7),
+    legend.direction = "vertical",
+    strip.text = element_text(size = 7, colour = "white"),
+    legend.position = "none",
+    plot.margin = unit(c(0.1, 0.1, 0.1, 0.1), "cm"),
+    panel.grid.major = element_blank(),
+    panel.border = element_blank(),
+    strip.background = element_rect(fill = "forestgreen", colour = "black")
+  )
+
+
+# ----- Etat sanitaire par essence
+df2 <-
+  grouped_results_of_Den_by_EssenceCodeSanit %>%
+  select(Cycle, Essence, CodeSanit, Nha) %>%
+  # filter(Cycle == cycle_num) %>%
+  mutate(
+    CodeSanit = ifelse(is.na(CodeSanit), "Non renseigné", CodeSanit),
+    CodeSanit = factor(
+      CodeSanit,
+      levels = c("Non renseigné", 5, 4, 3, 2, 1, 0)
+    ),
+    Essence = CodeEssence$Nom[match(Essence, CodeEssence$Essence)]
+  ) %>%
+  group_by(Essence, CodeSanit) %>%
+  summarize(Nha = sum(Nha)) %>%
+  ungroup()
+
+p2 <-
+  ggplot() +
+  geom_bar(
+    df2,
+    mapping = aes(x = Essence, y = Nha, fill = CodeSanit),
+    stat = "identity", position = "fill", width = 0.95
+  ) +
+  coord_flip() +
+  labs(y = "Répartition de la densité de tiges\npar état sanitaire et par essence") +
+  scale_y_continuous(labels = percent) +
+  scale_fill_manual(
+    name = "Etat sanitaire :",
+    values = CodeSanit_Palette,
+    drop = F
+  ) +
+  guides(
+    fill = guide_legend(reverse = T, nrow = 1)
+  ) +
+  theme_bw() +
+  theme(
+    title = element_text(face = 'plain'),
+    axis.text.x = element_text(size = 6),
+    legend.text = element_text(size = 7),
+    legend.position = "right",
+    legend.direction = "horizontal",
+    strip.text = element_text(size = 7, colour = "white"),
+    legend.title = element_text(size = 8),
+    plot.margin = unit(c(0.1, 0.1, 0.1, 0.1), "cm"),
+    strip.background = element_rect(fill = "forestgreen", colour = "black")
+  )
+
+mylegend <- g_legend(p2)
+
+grid.arrange(
+  arrangeGrob(
+    p1 + theme(legend.position = "none"),
+    p2 + theme(legend.position = "none"),
+    nrow = 1
+  ),
+  mylegend, nrow = 2, heights = c(9, 2)
+)
+@
+\FloatBarrier
+}{}
+

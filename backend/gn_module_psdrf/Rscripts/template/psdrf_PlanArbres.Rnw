@@ -1,0 +1,243 @@
+\documentclass[a4paper]{book}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage[french]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usepackage{fancyvrb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{pgfsys}
+\usepackage{keyval}
+\usepackage{subfig}
+\usepackage{eurosym}
+\usepackage{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+
+\voffset -2cm
+\hoffset 0cm
+\oddsidemargin 0cm
+\evensidemargin -0.5cm
+\textwidth 17cm
+\topmargin 1cm
+\textheight 24cm
+\parindent 0cm
+\columnsep 0.7cm
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+<<OptionsGenerales, include=FALSE>>=
+opts_chunk$set(concordance=T,include=T,tidy=F, warning=F, comment=F, error=F)
+opts_chunk$set(size='normalsize')
+# repFigures <- "Figures"
+# repFigures <- "D:/Traitements_PSDRF/Out/Remesures/PlansArbres/Figures/"
+opts_chunk$set(fig.path=repPlansArbresFigures, dev='pdf')
+# opts_chunk$set(fig.path=repFigures, dev='pdf')
+opts_chunk$set(fig.align='center',fig.show='hold')
+options(width=45)
+opts_knit$set(eval.after = 'fig.cap') # evaluate fig.cap after the chunk
+par(mar=c(0,0,0,0))
+@
+
+
+<<Librairies, echo=FALSE, warning=F, error=F, comment=F, message=F >>=
+library(ggplot2)
+library(grid)
+library(gridExtra)
+library(stringr)
+@
+
+<<Import, echo=FALSE>>= 
+repPSDRF <- "/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts"
+# --- Chargement des données administrateurs
+load(file.path(repPSDRF, "tables/psdrfCodes.Rdata"))
+
+# --- Chargement des données d'inventaire
+load(file.path(repPSDRF, "tables/psdrfDonneesBrutes.Rdata"))
+setwd(repPlansArbres)
+@
+
+<<Initialisation, echo=FALSE, warning=F, error=F, comment=F, message=F >>=
+
+# repPSDRF <- "/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts"
+# repOut <- paste0(
+#   repPSDRF, "/out/remesures/plans_arbres"
+# )
+
+# -------Import des donnees ------
+# setwd(repOut)
+
+# -------Extraction ------
+Arbres <- left_join(IdArbres, ValArbres, by = "IdArbre")
+Nom <- disp_name
+# Nom <- Dispositifs$Nom[which(Dispositifs$NumDisp==disp_num)]
+nom1 <- Nom
+t1 <- subset(Arbres, NumDisp==disp_num, select=-1)
+t1 <- subset(t1, Cycle==max(t1$Cycle))  # , select=-16
+t1 <- t1[order(t1$NumPlac, t1$Azimut),]
+# -------Création population ------
+t1$Type[is.na(t1$Type)] <- "vivant"
+t1$Type[which(t1$Type==1)] <- "mort"
+t1$Type[which(t1$Type==2)] <- "volis"
+t1$Type[which(t1$Type==3)] <- "souche"
+t1$Type[which(t1$Type==4)] <- "souche"
+t1$Type[which(t1$Type==5)] <- "souche"
+t1$Type[which(t1$Type=="vivant")] <- 21
+t1$Type[which(t1$Type=="mort")]   <- 22
+t1$Type[which(t1$Type=="volis")]  <- 24
+t1$Type[which(t1$Type=="souche")] <- 25
+t1$Type[which(t1$Type=="A")]   <- 22
+t1$Type[which(t1$Type=="V")]  <- 24
+t1$Type[which(t1$Type=="S")] <- 25
+
+# ------------- Formats
+# windowsFonts(Times=windowsFont("TT Times New Roman")) #Manoeuvre pour avoir Times New Roman sous windows...bizarre
+MyTheme <-  theme_bw() +
+  theme(axis.text.x  = element_text(size=8),
+        axis.title.x  = element_text(size=9),
+        axis.title.y  = element_text(size=9),
+        axis.text.y  = element_text(size=8),
+        plot.margin = unit(c(0.1,0.1,0.1,0.1), "cm"))
+
+CodeCouleurs <- data.frame(Essence=unique(t1$Essence),
+                           Col=CodeEssence$Couleur[match(unique(t1$Essence),CodeEssence$Essence)],
+                           stringsAsFactors = F)
+# unique(t1$Essence)
+@
+
+\begin{document}
+
+<<PlanArbres, echo=FALSE, fig.height=9, fig.show='asis', fig.pos='h', warning=FALSE, message=FALSE>>=
+#N.B : pour avoir accès aux polices de Windows, il faut les importer grâce à la fonction import_font() du pckg extrafont
+ListPlac <- unique(t1$NumPlac)
+# pb <- tkProgressBar("Progression",
+#                     paste0("Edition Plan Arbres/placettes pour le dispositif ",
+#                            nom1,
+#                            " (%)"),
+#                     0, 100, width=800)
+ListWarn <- c()
+for (plac in ListPlac) {
+  #   i=8
+  p <- t1[t1$NumPlac==plac,] %>%
+      dplyr::mutate(Azimut=as.numeric(Azimut),
+             Dist=as.numeric(Dist))
+  pRepere <- p[p$Diam1 > 30,]
+  temp <- dplyr::filter(Reperes, NumDisp==disp_num & NumPlac==plac)
+  if (dim(temp)[1] > 0) {
+    pRepere <- merge(pRepere, temp, all=T) %>%
+      dplyr::filter(!is.na(Azimut) & !is.na(Dist)) %>%
+      dplyr::mutate(Azimut=as.numeric(Azimut),
+             Dist=as.numeric(Dist))
+  }
+
+  #   p$NumArbre <- 1:dim(p)[1]
+  # MaxDist <- 20
+  MaxDist <- ifelse(max(p$Dist, na.rm=T) < 20,
+                    20,max(p$Dist, na.rm=T))
+#   shapes <- c("vivant" = 21,"mort" = 22,"volis" = 24, "souche" = 25)
+
+  if (length(unique(p$Diam1))==1) {
+    if (is.na(unique(p$Diam1))) {
+      ListWarn <- c(ListWarn,i)
+    }
+  } else {
+
+ SizeMin <- ifelse(round(min(p$Diam1,na.rm=T)/4) > 5, round(min(p$Diam1,na.rm=T)/4), 5)
+  SizeMax <- ifelse(SizeMin+round((max(p$Diam1,na.rm=T)-min(p$Diam1,na.rm=T))/10)*4 < 15,
+                    15,SizeMin+round((max(p$Diam1,na.rm=T)-min(p$Diam1,na.rm=T))/10)*4)
+
+Palette <- CodeCouleurs$Col
+names(Palette) <- CodeCouleurs$Essence
+
+  pl <- ggplot(data=p,
+               aes(y=Dist, x=Azimut,
+                   shape=factor(Type), color=Essence, size=Diam1, label=NumArbre)
+               ) +
+
+        geom_hline(yintercept=seq(5,MaxDist,5), colour="grey", linetype=2, alpha=1) +
+  geom_vline(xintercept=c(0,100,200,300,400), colour="grey", size=0.5) +
+    geom_point(aes(fill=Essence), alpha=0.6) +
+    geom_text(pRepere, mapping=aes(y=Dist, x=Azimut), color="navyblue", size=3, vjust=2, fontface="bold") + #, position=position_dodge(width = 0.9) , position="dodge"
+    # geom_text(data=p, aes(label=paste0(Diam1," cm")), color='black', size=3) +
+    # xlim(0,400) + #ylim(0,NA) +
+    # scale_size(name="Ordres de grandeur\n de Diam1",range = c(SizeMin/1.5,SizeMax/1.5)) +
+    scale_size(name="Ordres de grandeur\n de Diam1",breaks = seq(SizeMin,SizeMax,length.out=5),
+               range=c(1,10)) +
+    scale_shape_manual(name = "Population",labels = c("Vivant", "Mort", "Volis", "Souche"),
+                     values = c(21, 22, 24, 25)) +
+    scale_y_continuous(limits=c(0,MaxDist), expand=c(0,0))+
+    scale_x_continuous(limits=c(0,400), expand=c(0,0), label=paste0(c(0,100,200,300,400)," gr")) +
+    scale_fill_manual(values=Palette, guide=F) +
+   scale_colour_manual(values=Palette) +
+  # pl +
+
+    #Changer la couleur de l'azimut, enlever le dernier cercle (ou au moins le différencier), sur l'ensemble, changer la police, faire en sorte que les geom_text s'évitent.
+
+    # geom_text(color='black', size=3) +
+    annotate("text", x=rep(seq(100,400,100),(MaxDist-5)/5+1),y=sort(rep(seq(5,MaxDist,5),(400-100)/100+1)),
+             label=paste0(sort(rep(seq(5,MaxDist,5),(400-100)/100+1))," m"),
+             size=3.5, colour="grey", fontface="bold",
+             vjust=-0.8, angle = rep(c(-90,180,90,0),(MaxDist-5)/5+1),alpha=1) +
+    # annotate("text", x=seq(50,350,100),y=rep(MaxDist,4),
+             # label=c("NE","SE","SO","NO"),
+             # size=5, colour="black", fontface="bold", alpha=0.5) +
+    theme_bw() +
+    theme(axis.text.x  = element_text(size=10, colour="blue"),
+      # text=element_text(family="Times"),
+        axis.title.x  = element_blank(),
+        axis.title.y  = element_blank(),
+        axis.text.y= element_blank(),
+        # axis.text.y  = element_text(size=8),
+        axis.line=element_blank(),
+      legend.position="bottom",
+      legend.direction="vertical",
+  axis.ticks.y =element_blank(),
+
+  panel.grid=element_blank(),
+  panel.grid.minor.y=element_blank(),
+  panel.border=element_blank(),
+        plot.margin = unit(c(0.1,0.1,0.1,0.1), "cm")) +#,
+   # panel.margin=unit(c(0.25,0.25,0.25,0.25), "cm")) + # strip.background=element_blank()
+    coord_polar() +
+
+
+     ggtitle(paste(Nom," - Placette",plac)) +
+    # guides(size=FALSE) + # MyTheme +
+    guides(colour = guide_legend(override.aes = list(size=7,linetype=1),
+                                order=2)) +
+    guides(shape = guide_legend(override.aes = list(size=7),
+                                order=3)) +
+    # guides(size = guide_legend(override.aes = list(size=7))) +
+    guides(size = guide_legend(order=1)) +
+    theme(legend.key = element_rect(colour = "white"))
+
+  # TODO: Supprimé fait buguer le tout 
+  # suppressWarnings(print(pl))
+  print(pl)
+  }
+  info <- round(match(plac,ListPlac)/length(ListPlac)*100)
+#   setTkProgressBar(pb, info, paste0("Edition (",info," %)"),
+#                    paste0("Edition des plans placettes - dispositif ",
+#                            nom1,
+#                            " : ",
+#                           info,"% done"))
+}
+# close(pb)
+
+if (length(ListWarn) > 0){
+  if (length(ListWarn) > 1) {
+    message(paste0("Les placettes N° ",paste0(ListPlac[ListWarn],collapse=",")," n'ont aucun Diam1 non vide.
+                   Pas de plans créés pour ces placettes"))
+  } else {
+    message(paste0("La placette N° ",paste0(ListPlac[ListWarn],collapse=",")," n'a aucun Diam1 non vide.
+                   Pas de plan créé pour cette placette"))
+  }
+}
+@
+
+
+\end{document}
