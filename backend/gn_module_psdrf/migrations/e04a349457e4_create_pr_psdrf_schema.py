@@ -7,9 +7,7 @@ Create Date: 2021-07-21 18:38:24.512562
 """
 from alembic import op
 from sqlalchemy.sql import text
-import pkg_resources
-
-from geonature.utils.config import config
+import importlib
 
 
 # revision identifiers, used by Alembic.
@@ -25,8 +23,9 @@ schema = 'pr_psdrf'
 def upgrade():
     sql_files = ['schema.sql', 'data.sql']
     for sql_file in sql_files:
-        operations = pkg_resources.resource_string("gn_module_psdrf.migrations", f"data/{sql_file}").decode('utf-8')
-        op.get_bind().execute(text(operations), MYLOCALSRID=config['LOCAL_SRID'])
+        operations = importlib.resources.read_text("gn_module_psdrf.migrations.data", sql_file)
+        op.execute(operations)
+
 
 
 def downgrade():
