@@ -27,7 +27,6 @@ import { ToastrService } from 'ngx-toastr';
     public mapZoom: number = 5;
     public tableData: any;
     public layerDict: object;
-    public tableColumns: Array<object>;
     public isLoading: boolean = false;
     public searchForm = new FormGroup({
       region: new FormControl(''),
@@ -82,9 +81,6 @@ import { ToastrService } from 'ngx-toastr';
           }
         )
 
-
-
-      this.tableColumns = [{name: "Nom du dispositif", prop: "name"}];
 
       this._api.get<any>(`${AppConfig.API_ENDPOINT}/psdrf/status_types`)
         .subscribe(data => {this.statusList = data});
