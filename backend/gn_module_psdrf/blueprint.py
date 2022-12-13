@@ -290,7 +290,7 @@ def psdrf_data_analysis(id_dispositif):
     result = send_file(
         memory_file, 
         mimetype = 'zip',
-        attachment_filename= zipName,
+        download_name= zipName,
         as_attachment=True
         )
 

@@ -4,6 +4,7 @@ import { HttpClient, HttpHeaders, HttpParams } from "@angular/common/http";
 
 import { AppConfig } from "@geonature_config/app.config";
 import { ModuleConfig } from "../module.config";
+import { map } from 'rxjs/operators';
 
 @Injectable()
 export class PsdrfDataService {
@@ -50,13 +51,17 @@ export class PsdrfDataService {
       url, 
       { observe: "response", headers : headers, params: params, responseType : 'blob' }
       )
-      .map((res) => {
-        let data = {
-                      zip: new Blob([res.body], {type: res.headers.get('Content-Type')}),
-                      filename: res.headers.get('filename')
-                    }
-        return data ;
-      }).catch((err) => {
+      .pipe(
+        map((res) => {
+          let data = {
+                        zip: new Blob([res.body], {type: res.headers.get('Content-Type')}),
+                        filename: res.headers.get('filename')
+                      }
+          return data ;
+        })
+
+      )
+      .catch((err) => {
         return Observable.throw(err);
       });
     
