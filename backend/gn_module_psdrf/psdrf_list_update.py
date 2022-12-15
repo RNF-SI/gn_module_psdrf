@@ -23,6 +23,7 @@ def psdrf_list_update(psdrf_list_file):
     pd.read_excel(open("/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/psdrf_liste/PsdrfListes.xlsx", 'rb'), sheet_name='EssReg').to_pickle("/home/geonatureadmin/gn_module_psdrf/data/EssReg") 
     pd.read_excel(open("/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/psdrf_liste/PsdrfListes.xlsx", 'rb'), sheet_name='Referents').to_pickle("/home/geonatureadmin/gn_module_psdrf/data/Referents") 
     pd.read_excel(open("/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/psdrf_liste/PsdrfListes.xlsx", 'rb'), sheet_name='Tarifs').to_pickle("/home/geonatureadmin/gn_module_psdrf/data/Tarifs") 
+    pd.read_excel(open("/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/psdrf_liste/PsdrfListes.xlsx", 'rb'), sheet_name='Cycles').to_pickle("/home/geonatureadmin/gn_module_psdrf/data/CyclesCodes") 
 
     
 
