@@ -255,26 +255,56 @@ def data_verification(data):
       BMSsup30 = BMSsup30.replace(r'^\s*$', np.nan, regex=True)
       Reperes = Reperes.replace(r'^\s*$', np.nan, regex=True)
 
-      Placettes = filter_by_disp(disp_num, last_cycle, Placettes, disp_num)
-      Cycles = filter_by_disp(disp_num, last_cycle, Cycles, disp_num)
-      Arbres = filter_by_disp(disp_num, last_cycle, Arbres, disp_num)
-      Regeneration = filter_by_disp(disp_num, last_cycle, Regeneration, disp_num)
-      Transect = filter_by_disp(disp_num, last_cycle, Transect, disp_num)
-      BMSsup30 = filter_by_disp(disp_num, last_cycle, BMSsup30, disp_num)
-      Reperes = filter_by_disp(disp_num, last_cycle, Reperes, disp_num)
-      CyclesCodes = filter_by_disp(disp_num, last_cycle, CyclesCodes, disp_num)
-      Dispositifs = filter_by_disp(disp_num, last_cycle, Dispositifs, disp_num)
-      EssReg = filter_by_disp(disp_num, last_cycle, EssReg, disp_num)
-      Communes = filter_by_disp(disp_num, last_cycle, Communes, disp_num)
-      Referents = filter_by_disp(disp_num, last_cycle, Referents, disp_num)
-      Tarifs = filter_by_disp(disp_num, last_cycle, Tarifs, disp_num)
+
+      # Tester si dans chaque tables les cycles sont à 1, 2, 3 ou 4 
+      tablesWithCycle =[Placettes, Cycles, Arbres, Regeneration, Transect, BMSsup30] 
+      tablesWithCycleNames =["Placettes", "Cycles", "Arbres", "Regeneration", 
+      "Transect", "BMSsup30"] 
+      # Contrôle Cycle égal à 1, 2, 3 ou 4
+      for idx, table in enumerate(tablesWithCycle):
+        temp = table[~table["Cycle"].isin([1,2,3,4])]
+        temp = temp[["NumPlac", "Cycle"]]
+        if not temp.empty:
+          i=0
+          error_List_Temp=[]
+          for index, row in temp.iterrows():
+            if i<100:
+              err = {
+                  "message": "Le cycle "+ str(int(row["Cycle"])) +" de la placette "+ str(row["NumPlac"]) + " est différent de 1, 2, 3 ou 4",
+                  "table": tablesWithCycleNames[idx],
+                  "column": [ "Cycle"],
+                  "row": [index], 
+                  "value": temp.loc[[index],:].to_json(orient='records'),
+                }
+              error_List_Temp.append(err)
+            i=i+1
+          verificationList.append({'errorName': "Cycle(s) incohérent(s) dans "+str(tablesWithCycleNames[idx]), 'errorText': "Le cycle n'est pas à 1, 2, 3 ou 4. Impossible dans le PSDRF.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
+
+      # Placettes = filter_by_disp(disp_num, last_cycle, Placettes, disp_num)
+      # Cycles = filter_by_disp(disp_num, last_cycle, Cycles, disp_num)
+      # Arbres = filter_by_disp(disp_num, last_cycle, Arbres, disp_num)
+      # Regeneration = filter_by_disp(disp_num, last_cycle, Regeneration, disp_num)
+      # Transect = filter_by_disp(disp_num, last_cycle, Transect, disp_num)
+      # BMSsup30 = filter_by_disp(disp_num, last_cycle, BMSsup30, disp_num)
+      # Reperes = filter_by_disp(disp_num, last_cycle, Reperes, disp_num)
+      # CyclesCodes = filter_by_disp(disp_num, last_cycle, CyclesCodes, disp_num)
+      # Dispositifs = filter_by_disp(disp_num, last_cycle, Dispositifs, disp_num)
+      # EssReg = filter_by_disp(disp_num, last_cycle, EssReg, disp_num)
+      # Communes = filter_by_disp(disp_num, last_cycle, Communes, disp_num)
+      # Referents = filter_by_disp(disp_num, last_cycle, Referents, disp_num)
+      # Tarifs = filter_by_disp(disp_num, last_cycle, Tarifs, disp_num)
 
       
       soundness_code = "de décomposition"
       bark_code = "écorce"
       check_code_Error_List, i = check_code(CodeDurete, Arbres, soundness_code, "Arbres")
       if len(check_code_Error_List) >0:
-        verificationList.append({'errorName': 'Contrôle Stade dans Arbres', 'errorText': 'Contrôle Stade dans Arbres', 'errorList': check_code_Error_List, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
+        verificationList.append({'errorName': 'Contrôle Stade Dureté dans Arbres', 'errorText': 'Contrôle Stade Dureté dans Arbres', 'errorList': check_code_Error_List, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
+
+      check_code_Error_List, i = check_code(CodeEcorce, Arbres, bark_code, "Arbres")
+      if len(check_code_Error_List) >0:
+        verificationList.append({'errorName': 'Contrôle Stade Ecorce dans Arbres', 'errorText': 'Contrôle Stade Ecorce dans Arbres', 'errorList': check_code_Error_List, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
+
 
       #Appel des fonctions de test
       ###Table Arbres
@@ -1093,9 +1123,9 @@ def data_verification(data):
 
 
       # Contrôle des numéros d'inventaire
-      check_cycle_Error_List, i = check_cycle(BMSsup30, Test, CyclesCodes, "BMSsup30", An, Dispositifs)
-      if len(check_cycle_Error_List) >0:
-        verificationList.append({'errorName': "Contrôle des cycles dans BMSsup30", 'errorText': 'Contrôle des cycles dans BMSsup30', 'errorList' : check_cycle_Error_List, 'errorType': 'PsdrfError', 'isFatalError': False})
+      # check_cycle_Error_List, i = check_cycle(BMSsup30, Test, CyclesCodes, "BMSsup30", An, Dispositifs)
+      # if len(check_cycle_Error_List) >0:
+      #   verificationList.append({'errorName': "Contrôle des cycles dans BMSsup30", 'errorText': 'Contrôle des cycles dans BMSsup30', 'errorList' : check_cycle_Error_List, 'errorType': 'PsdrfError', 'isFatalError': False})
 
 
       # Contrôle des valeurs vides des variables :
@@ -1345,9 +1375,9 @@ def data_verification(data):
         verificationList.append({'errorName': 'Essence dans Regeneration', 'errorText':"Essence dans Regeneration", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
       # --- Contrôle des Cycles de Regenerations :
-      check_cycle_Error_List, i = check_cycle(Regeneration, Test, CyclesCodes, "Regeneration", An, Dispositifs)
-      if len(check_cycle_Error_List) >0:
-        verificationList.append({'errorName': 'Contrôle cycles dans Regeneration','errorText': 'Contrôle des cycles dans Regeneration', 'errorList' : check_cycle_Error_List, 'errorType': 'PsdrfError', 'isFatalError': False, 'errorNumber': i})
+      # check_cycle_Error_List, i = check_cycle(Regeneration, Test, CyclesCodes, "Regeneration", An, Dispositifs)
+      # if len(check_cycle_Error_List) >0:
+      #   verificationList.append({'errorName': 'Contrôle cycles dans Regeneration','errorText': 'Contrôle des cycles dans Regeneration', 'errorList' : check_cycle_Error_List, 'errorType': 'PsdrfError', 'isFatalError': False, 'errorNumber': i})
 
       # ----- Contrôle des valeurs vides des variables :
       Vital = Regeneration[ Regeneration["NumPlac"].isna() | Regeneration["SsPlac"].isna() |  Regeneration["Essence"].isna() ]
@@ -1496,9 +1526,9 @@ def data_verification(data):
         verificationList.append({'errorName': 'Contrôle Stade de décomposition dans Transect','errorText': 'Contrôle Stade de décomposition dans Transect', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
       ##### Contrôle des Cycles de Transect #####  
-      check_cycle_Error_List, i = check_cycle(Transect, Test, CyclesCodes, "Transect", An, Dispositifs)
-      if len(check_cycle_Error_List) >0:
-        verificationList.append({'errorName': 'Contrôle cycles dans Transect','errorText': 'Contrôle des cycles dans Transect', 'errorList' : check_cycle_Error_List, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
+      # check_cycle_Error_List, i = check_cycle(Transect, Test, CyclesCodes, "Transect", An, Dispositifs)
+      # if len(check_cycle_Error_List) >0:
+      #   verificationList.append({'errorName': 'Contrôle cycles dans Transect','errorText': 'Contrôle des cycles dans Transect', 'errorList' : check_cycle_Error_List, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
       # ----- Contrôle des valeurs vides des variables :
       Vital = Transect[ Transect["Id"].isna() |  Transect["Essence"].isna() | Transect["Transect"].isna() |  Transect["Diam"].isna() | Transect["Contact"].isna() |  Transect["Angle"].isna() | Transect["Chablis"].isna() |  Transect["StadeD"].isna() |  Transect["StadeE"].isna() ]
@@ -1646,7 +1676,8 @@ def data_verification(data):
       miss2(Cycles, Placettes, "Cycles", True)
       miss2(Regeneration, Placettes, "Regeneration", False)
       miss2(Transect, Placettes, "Transect", False)
-      miss2(Reperes, Placettes, "Reperes", False)
+      # Enlever car pas présent dans les algos de départ
+      # miss2(Reperes, Placettes, "Reperes", False)
 
       # ---------- Contrôle des valeurs dupliquées : ---------- #
       df_Dupl_temp= Placettes[["NumDisp", "NumPlac", "Cycle", "Strate"]].sort_values(by=["NumDisp", "NumPlac", "Cycle", "Strate"])
@@ -1975,7 +2006,7 @@ def check_code(code_admin, table_to_test, code_to_check, tableName):
   # détection des codes non conformes
   table_to_test=table_to_test[table_to_test[stade].notna()]
   df1 = table_to_test[~table_to_test[stade].isin( code_admin['Code'].values)]
-  df = df1.loc[:,df1.columns.isin([stade])].drop_duplicates()
+  df = df1.loc[:,df1.columns.isin([stade])]
   i=0
   if df.shape[0]>0:
     for index, row in df.iterrows():
