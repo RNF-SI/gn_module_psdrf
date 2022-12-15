@@ -196,11 +196,11 @@ def data_integration(dispId, dispName, data):
             (TCycles.num_cycle == arbre["Cycle"]) & (TCycles.id_dispositif == id_dispositif)  
         ).one()
         if(arbre["Diam1"]):
-            arbre["Diam1"]=float(arbre["Diam1"].replace(',', '.'))
+            arbre["Diam1"]=float(arbre["Diam1"].replace(',', '.')) if isinstance(arbre["Diam1"], str) else float(arbre["Diam1"])
         if(arbre["Diam2"]):
-            arbre["Diam2"]=float(arbre["Diam2"].replace(',', '.'))
+            arbre["Diam2"]=float(arbre["Diam2"].replace(',', '.')) if isinstance(arbre["Diam2"], str) else float(arbre["Diam2"])
         if(arbre["Haut"]):
-            arbre["Haut"]=float(arbre["Haut"].replace(',', '.'))
+            arbre["Haut"]=float(arbre["Haut"].replace(',', '.')) if isinstance(arbre["Haut"], str) else float(arbre["Haut"])
         new_arbre_mesure = TArbresMesures(
             id_arbre = arbre_id,
             id_cycle = cycle_id,
