@@ -38,6 +38,7 @@ class TDispositifs (DB.Model):
     placettes = DB.relationship('TPlacettes', back_populates='dispositif', passive_deletes=True)
     municipalities = DB.relationship('LiMunicipalities', secondary=dispositifs_municipalities_assoc)
     areas = DB.relationship('LAreas', secondary=dispositifs_area_assoc)
+    cycles = DB.relationship('TCycles', back_populates='dispositif', passive_deletes=True)
 
 
 @serializable
@@ -75,7 +76,9 @@ class TPlacettes (DB.Model):
     geom_wgs84 = DB.Column('geom_wgs84', Geometry('POINT', 4326))
 
     dispositif = DB.relationship('TDispositifs', foreign_keys=id_dispositif, back_populates='placettes')
-
+    reperes = DB.relationship('TReperes', back_populates='placette', passive_deletes=True)
+    arbres = DB.relationship('TArbres', back_populates='placette', passive_deletes=True)
+    bmsSup30 = DB.relationship('TBmSup30', back_populates='placette', passive_deletes=True)
 
 @serializable
 class TReperes (DB.Model):
@@ -89,7 +92,7 @@ class TReperes (DB.Model):
     repere = DB.Column('repere', DB.String)
     observation = DB.deferred(DB.Column('observation', DB.Text))
 
-    placette = DB.relationship('TPlacettes', foreign_keys=id_placette)
+    placette = DB.relationship('TPlacettes', foreign_keys=id_placette, back_populates='reperes')
 
 
 @serializable
@@ -105,8 +108,8 @@ class TCycles (DB.Model):
     diam_lim = DB.Column('diam_lim', DB.Float)
     monitor = DB.Column('monitor', DB.String)
 
-    dispositif = DB.relationship('TDispositifs', foreign_keys=id_dispositif)
-
+    dispositif = DB.relationship('TDispositifs', foreign_keys=id_dispositif, back_populates='cycles')
+    corCyclesPlacettes = DB.relationship('CorCyclesPlacettes', back_populates='cycle', passive_deletes=True)
 
 @serializable
 class BibEssences (DB.Model):
@@ -140,9 +143,10 @@ class CorCyclesPlacettes (DB.Model):
     recouv_buissons = DB.Column('recouv_buissons', DB.Float)
     recouv_arbres = DB.Column('recouv_arbres', DB.Float)
 
-    cycle = DB.relationship('TCycles', foreign_keys=id_cycle)
+    cycle = DB.relationship('TCycles', foreign_keys=id_cycle, back_populates='corCyclesPlacettes')
     placette = DB.relationship('TPlacettes', foreign_keys=id_placette)
-
+    regenerations = DB.relationship('TRegenerations', back_populates='cor_cycles_placettes', passive_deletes=True)
+    transects = DB.relationship('TTransects', back_populates='cor_cycles_placettes', passive_deletes=True)
 
 
 class CorCyclesRoles (DB.Model):
@@ -175,9 +179,9 @@ class TArbres (DB.Model):
     taillis = DB.Column('taillis', DB.Boolean)
     observation = DB.deferred(DB.Column('observation', DB.Text))
 
-    placette = DB.relationship('TPlacettes', foreign_keys=id_placette)
+    placette = DB.relationship('TPlacettes', foreign_keys=id_placette, back_populates='arbres')
     essence = DB.relationship('BibEssences', foreign_keys=code_essence)
-
+    arbres_mesures = DB.relationship('TArbresMesures', back_populates='arbre', passive_deletes=True)
 
 @serializable
 class TArbresMesures (DB.Model):
@@ -203,7 +207,7 @@ class TArbresMesures (DB.Model):
     ratio_hauteur = DB.Column('ratio_hauteur', DB.Boolean)
     observation = DB.deferred(DB.Column('observation', DB.Text))
 
-    arbre = DB.relationship('TArbres', foreign_keys=id_arbre)
+    arbre = DB.relationship('TArbres', foreign_keys=id_arbre, back_populates='arbres_mesures')
     cycle = DB.relationship('TCycles', foreign_keys=id_cycle)
 
 
@@ -224,7 +228,7 @@ class TRegenerations (DB.Model):
     id_nomenclature_abroutissement = DB.Column('id_nomenclature_abroutissement', DB.Integer)
     observation = DB.deferred(DB.Column('observation', DB.Text))
 
-    cor_cycles_placettes = DB.relationship('CorCyclesPlacettes', foreign_keys=id_cycle_placette)
+    cor_cycles_placettes = DB.relationship('CorCyclesPlacettes', foreign_keys=id_cycle_placette, back_populates='regenerations')
 
 
 @serializable
@@ -257,8 +261,9 @@ class TBmSup30 (DB.Model):
     distance_souche = DB.Column('distance_souche', DB.Float)
     observation = DB.deferred(DB.Column('observation', DB.Text))
 
-    placette = DB.relationship('TPlacettes', foreign_keys=id_placette)
+    placette = DB.relationship('TPlacettes', foreign_keys=id_placette, back_populates='bmsSup30')
     essence = DB.relationship('BibEssences', foreign_keys=code_essence)
+    bm_sup_30_mesures = DB.relationship('TBmSup30Mesures', back_populates='bm_sup_30', passive_deletes=True)
 
 
 @serializable
@@ -280,7 +285,7 @@ class TBmSup30Mesures (DB.Model):
     stade_ecorce = DB.Column('stade_ecorce', DB.Integer)
     observation = DB.deferred(DB.Column('observation', DB.Text))
 
-    bm_sup_30 = DB.relationship('TBmSup30', foreign_keys=id_bm_sup_30)
+    bm_sup_30 = DB.relationship('TBmSup30', foreign_keys=id_bm_sup_30, back_populates='bm_sup_30_mesures')
     cycle = DB.relationship('TCycles', foreign_keys=id_cycle)
 
 
@@ -307,7 +312,7 @@ class TTransects (DB.Model):
     stade_ecorce = DB.Column('stade_ecorce', DB.Integer)
     observation = DB.deferred(DB.Column('observation', DB.Text))
 
-    cor_cycles_placettes = DB.relationship('CorCyclesPlacettes', foreign_keys=id_cycle_placette)
+    cor_cycles_placettes = DB.relationship('CorCyclesPlacettes', foreign_keys=id_cycle_placette, back_populates='transects')
 
 
 @serializable

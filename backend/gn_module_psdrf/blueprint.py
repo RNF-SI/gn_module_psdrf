@@ -1,4 +1,4 @@
-from flask import Blueprint, request, make_response, send_file, send_from_directory, Response
+from flask import Blueprint, request, make_response, send_file, send_from_directory, Response, jsonify
 from sqlalchemy.orm import subqueryload, joinedload
 from sqlalchemy.sql import func, distinct
 from sqlalchemy.exc import SQLAlchemyError
@@ -21,12 +21,13 @@ from pypnusershub.db.models import Organisme as BibOrganismes
 from pypnusershub.db.models import User
 from ref_geo.models import LiMunicipalities, LAreas, BibAreasTypes
 from .models import TDispositifs, TPlacettes, TArbres, TCycles, \
-    CorCyclesPlacettes, TArbresMesures, CorDispositifsRoles
+    CorCyclesPlacettes, TArbresMesures, CorDispositifsRoles, TBmSup30, TBmSup30Mesures
 from .data_verification import data_verification
 from .data_integration import data_integration
 from .psdrf_list_update import psdrf_list_update
 from .data_analysis import data_analysis
 from .bddToExcel import bddToExcel
+from .schemas.dispositifs import DispositifSchema
 
 
 from utils_flask_sqla.response import json_resp
@@ -550,3 +551,37 @@ def psdrf_update_psdrf_liste():
         logging.info(msg)
         return Response(msg, status=500)
 
+
+# Fonctions pour l'application de saisir PSDRF
+
+@blueprint.route('/user-dispositif-list/<int:userId>', methods=['GET'])
+@json_resp
+def get_user_dispositif_list(userId):
+    query = DB.session.query(
+        TDispositifs.id_dispositif, TDispositifs.name, TDispositifs.id_organisme, TDispositifs.alluvial, CorDispositifsRoles.id_role
+    ).join(
+        TDispositifs, TDispositifs.id_dispositif == CorDispositifsRoles.id_dispositif
+    ).filter(
+        CorDispositifsRoles.id_role == userId
+    ).all()
+    data = [{'id_dispositif': userDisp.id_dispositif, 'alluvial': userDisp.alluvial, 'name': userDisp.name, "id_organisme": userDisp.id_organisme} for userDisp in query]
+    return data
+
+@blueprint.route('/dispositif-complet/<int:id_dispositif>', methods=['GET'])
+def get_dispositif_complet(id_dispositif):
+    query = DB.session.query(
+        TDispositifs
+    ).filter(
+        TDispositifs.id_dispositif == id_dispositif
+    ).one()
+    schema = DispositifSchema(many=False)
+    Obj = schema.dump(query)
+    return make_response(jsonify(Obj), 200)
+
+
+# @blueprint.route('/arbres/<int:id_dispositif>', methods=['GET'])
+# @json_resp
+# def get_arbres(id_dispositif):
+#     """ Recherche tous les arbres d'un dispositif donné """
+#     pgs = DB.session.query(TArbres).filter(TArbres.placette.id_dispositif == id_dispositif).all()
+#     return [pg.as_dict() for pg in pgs]
