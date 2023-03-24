@@ -11,6 +11,8 @@ from math import isnan
 
 def data_integration(dispId, dispName, data):
     try:
+        
+
         Placettes = data[0]
         Cycles = data[1]
         Arbres = data[2]
@@ -19,6 +21,7 @@ def data_integration(dispId, dispName, data):
         BMSsup30 = data[5]
         Reperes = data[6]
 
+        # Arreter si le dispositif n'existe pas dans la bdd (donc n'est pas dans PSDRFListe) 
         id_dispositif = int(dispId)
         if( DB.session.query(TDispositifs.id_dispositif).filter_by(id_dispositif=id_dispositif).first() is not None):
             TPlacettes.query.filter_by(id_dispositif=id_dispositif).delete()
@@ -26,7 +29,25 @@ def data_integration(dispId, dispName, data):
             DB.session.commit()
         else : 
             return (json.dumps({'success': False, "message":"Le dispositif n'a pas ete prealablement ajoute a la table des dispositif. Veuillez contacter un administrateur."}), 500, {'ContentType':'application/json'})
+        # Arreter si tous les cycles du dispositif ne sont pas dans la table des cycles de la bdd (donc dans PSDRFListe)
+        # Créer la liste de cycle du dispositif (numCycle)
+        cycleList = []
+        for cycle in Cycles:
+            if int(cycle["Cycle"]) not in cycleList:
+                cycleList.append(int(cycle['Cycle']))
+        print('r')
+        # print(DB.session.query(TCycles.id_cycle).filter_by(id_dispositif=id_dispositif, num_cycle=cycle).first())
+        print('r')
 
+        # Vérifier que tous les cycles du dispositif sont dans la table des cycles de la bdd
+        for cycle in cycleList:
+            print(cycle)
+            if( DB.session.query(TCycles.id_cycle).filter_by(id_dispositif=id_dispositif, num_cycle=cycle).first() is None):
+                return (json.dumps({'success': False, "message":"Le cycle "+str(cycle)+" pour le dispositif "+ str(id_dispositif) +" n'a pas ete prealablement ajoute a la table des cycles. Veuillez contacter un administrateur."}), 500, {'ContentType':'application/json'})
+            else: 
+                print("Le cycle "+str(cycle)+" pour le dispositif "+ str(id_dispositif) +" est bien présent dans la table des cycles de la bdd")
+
+        print("Tous les cycles du fichiers sont bien présent dans la table des cycles de la bdd")
 
         # Placettes 
         newPlacettesList = []
@@ -89,39 +110,50 @@ def data_integration(dispId, dispName, data):
 
         # Cycle
         # Récupérer les cycles présents dans le dispositif
-        dfCyclePSDRFListe = pd.read_excel(open("/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/psdrf_liste/PsdrfListes.xlsx", 'rb'), sheet_name='Cycles')
-        df = dfCyclePSDRFListe.loc[dfCyclePSDRFListe['NumDisp'] == id_dispositif]
+        # dfCyclePSDRFListe = pd.read_excel(open("/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/psdrf_liste/PsdrfListes.xlsx", 'rb'), sheet_name='Cycles')
+        # df = dfCyclePSDRFListe.loc[dfCyclePSDRFListe['NumDisp'] == id_dispositif]
 
-        for index, row in df.iterrows():
-            cycleDispList = DB.session.query(TCycles).filter(TCycles.id_dispositif == row["NumDisp"])
-            dup_cycleDispList = cycleDispList.first()
-            cycleList = DB.session.query(TCycles).filter((TCycles.id_dispositif == row["NumDisp"]) & (TCycles.num_cycle == row["Cycle"]))
-            dup_cycleList = cycleList.first()
-            if dup_cycleList:
+        # print('test')   
+        # print(df) 
+        # for index, row in df.iterrows():
+        #     print('plue') 
+        #     cycleDispList = DB.session.query(TCycles).filter(TCycles.id_dispositif == row["NumDisp"])
+        #     print(cycleDispList) 
 
-                # Si le le disp a ce cycle est déjà en bdd, update des valeurs
-                cycleList.update(
-                    {
-                        v: (row[k] 
-                        if k not in ['DateIni', 'DateFin'] 
-                        else (None if isnan(row[k]) else (datetime.strptime('31/12/'+str(row[k]), '%d/%m/%Y') if k=='DateFin' else datetime.strptime('1/1/'+str(row[k]), '%d/%m/%Y'))))
-                        for k, v in {'NumDisp': 'id_dispositif', 'Cycle': 'num_cycle', 'Monitor': 'monitor', 'DateIni': 'date_debut', 'DateFin': 'date_fin'}.items()
-                        if k in row.index 
-                    }
-                )
+        #     dup_cycleDispList = cycleDispList.first()
+        #     print(dup_cycleDispList) 
+        #     cycleList = DB.session.query(TCycles).filter((TCycles.id_dispositif == row["NumDisp"]) & (TCycles.num_cycle == row["Cycle"]))
+        #     print(cycleList) 
+        #     dup_cycleList = cycleList.first()
+        #     print(dup_cycleList) 
+        #     if dup_cycleList:
+        #         print('test update')    
 
-            elif dup_cycleDispList:
-                # Si le le disp existe mais pas à ce cycle, création de la valeur
-                new_cycle =TCycles(
-                    **{
-                        v: (row[k] 
-                        if k not in ['DateIni', 'DateFin'] 
-                        else (None if isnan(row[k]) else (datetime.strptime('31/12/'+str(row[k]), '%d/%m/%Y') if k=='DateFin' else datetime.strptime('1/1/'+str(row[k]), '%d/%m/%Y'))))
-                        for k, v in {'NumDisp': 'id_dispositif', 'Cycle': 'num_cycle', 'Monitor': 'monitor', 'DateIni': 'date_debut', 'DateFin': 'date_fin'}.items()
-                        if k in row.index 
-                    }
-                )    
-                DB.session.add(new_cycle) 
+        #         # Si le le disp a ce cycle est déjà en bdd, update des valeurs
+        #         cycleList.update(
+        #             {
+        #                 v: (row[k] 
+        #                 if k not in ['DateIni', 'DateFin'] 
+        #                 else (None if isnan(row[k]) else (datetime.strptime('31/12/'+str(row[k]), '%d/%m/%Y') if k=='DateFin' else datetime.strptime('1/1/'+str(row[k]), '%d/%m/%Y'))))
+        #                 for k, v in {'NumDisp': 'id_dispositif', 'Cycle': 'num_cycle', 'Monitor': 'monitor', 'DateIni': 'date_debut', 'DateFin': 'date_fin'}.items()
+        #                 if k in row.index 
+        #             }
+        #         )
+
+        #     elif dup_cycleDispList:
+        #         print('test add')    
+
+        #         # Si le le disp existe mais pas à ce cycle, création de la valeur
+        #         new_cycle =TCycles(
+        #             **{
+        #                 v: (row[k] 
+        #                 if k not in ['DateIni', 'DateFin'] 
+        #                 else (None if isnan(row[k]) else (datetime.strptime('31/12/'+str(row[k]), '%d/%m/%Y') if k=='DateFin' else datetime.strptime('1/1/'+str(row[k]), '%d/%m/%Y'))))
+        #                 for k, v in {'NumDisp': 'id_dispositif', 'Cycle': 'num_cycle', 'Monitor': 'monitor', 'DateIni': 'date_debut', 'DateFin': 'date_fin'}.items()
+        #                 if k in row.index 
+        #             }
+        #         )    
+        #         DB.session.add(new_cycle) 
 
             # cycles_id_in_disp = []
             # for cycle in Cycles:
@@ -415,4 +447,6 @@ def data_integration(dispId, dispName, data):
         # Rollback and print error
         DB.session.rollback()
         print(e)
+        return (json.dumps({'success': False, "message":"Une erreur inconnue a eu lieu. Veuillez contacter un administrateur."}), 500, {'ContentType':'application/json'})
+
 
