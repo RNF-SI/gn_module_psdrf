@@ -4,7 +4,7 @@ import rpy2.robjects as robjects
 from rpy2.robjects.packages import STAP
 import pandas as pd
 from geonature.utils.env import DB
-from .models import TCycles
+from .models import TCycles, TDispositifs
 import datetime
 
 # from werkzeug import FileStorage
@@ -30,25 +30,54 @@ def psdrf_list_update(psdrf_list_file):
 
     df = pd.read_excel(open("/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/psdrf_liste/PsdrfListes.xlsx", 'rb'), sheet_name='Cycles')
     for index, row in df.iterrows():
+        add_dispositif(row)
         add_cycle(row)
 
     psdrf_Codes.psdrf_Codes('/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/')
 
 
+def add_dispositif(row):
+    """
+    Add new dispositif to db if it doesn't exist, update it if it does
+    """
+    try:
+        # Check if primary key exists already in table
+        dispList = DB.session.query(TDispositifs.id_dispositif, TDispositifs.name).filter(TDispositifs.id_dispositif == row["NumDisp"])
+        dup_dispList = dispList.first()
+        if dup_dispList:
+            # # Si le disp est déjà en bdd, update des valeurs
+            dispList.update(
+                {
+                    TDispositifs.name: row["Nom"],
+                }
+            )
+            DB.session.commit()
+        else:
+            # Si le disp n'est pas en bdd, ajout du nouveau
+            new_disp = TDispositifs(
+                id_dispositif=row["NumDisp"],
+                name=row["Nom"],
+                id_organisme=-1,
+                alluvial=False
+            )
+            DB.session.add(new_disp)
+            DB.session.commit()
+    except Exception as e:
+        DB.session.rollback()
+        raise e
 
 def add_cycle(row):
     """
     Add new cycle to db if it doesn't exist, update it if it does
     """
-    
+    print('a')
     try:
         # Check if primary key exists already in table
-        cycleDispList = DB.session.query(TCycles).filter(TCycles.id_dispositif == row["NumDisp"])
-        dup_cycleDispList = cycleDispList.first()
         cycleList = DB.session.query(TCycles).filter((TCycles.id_dispositif == row["NumDisp"]) & (TCycles.num_cycle == row["Cycle"]))
         dup_cycleList = cycleList.first()
+
         if dup_cycleList:
-            # Si le le disp a ce cycle est déjà en bdd, update des valeurs
+            # Si le disp a ce cycle est déjà en bdd, update des valeurs
             cycleList.update(
                 {
                     v: (row[k] 
@@ -59,8 +88,8 @@ def add_cycle(row):
                 }
 
             )
-        elif dup_cycleDispList:
-            # Si le le disp existe mais pas à ce cycle, création de la valeur
+        else:
+            # Si le cycle n'est pas présent en bdd l'ajouter
             new_cycle =TCycles(
                 **{
                     v: (row[k] 
