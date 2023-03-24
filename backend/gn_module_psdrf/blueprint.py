@@ -21,13 +21,15 @@ from pypnusershub.db.models import Organisme as BibOrganismes
 from pypnusershub.db.models import User
 from ref_geo.models import LiMunicipalities, LAreas, BibAreasTypes
 from .models import TDispositifs, TPlacettes, TArbres, TCycles, \
-    CorCyclesPlacettes, TArbresMesures, CorDispositifsRoles, TBmSup30, TBmSup30Mesures
+    CorCyclesPlacettes, TArbresMesures, CorDispositifsRoles, TBmSup30, TBmSup30Mesures, BibEssences
 from .data_verification import data_verification
 from .data_integration import data_integration
 from .psdrf_list_update import psdrf_list_update
 from .data_analysis import data_analysis
 from .bddToExcel import bddToExcel
 from .schemas.dispositifs import DispositifSchema
+from .schemas.cycles import ConciseCycleSchema
+from .schemas.essences import EssenceSchema
 
 
 from utils_flask_sqla.response import json_resp
@@ -577,6 +579,59 @@ def get_dispositif_complet(id_dispositif):
     schema = DispositifSchema(many=False)
     Obj = schema.dump(query)
     return make_response(jsonify(Obj), 200)
+
+@blueprint.route('/dispositif-cycles/<int:id_dispositif>', methods=['GET'])
+def get_dispositif_cycles(id_dispositif):
+    query = DB.session.query(
+        TCycles
+    ).filter(
+        TCycles.id_dispositif == id_dispositif
+    ).all()
+    schema = ConciseCycleSchema(many=True)
+    Obj = schema.dump(query)
+    return make_response(jsonify(Obj), 200)
+
+@blueprint.route('/essences', methods=['GET'])
+def get_essences():
+    query = DB.session.query(
+        BibEssences
+    ).all()
+    schema = EssenceSchema(many=True)
+    Obj = schema.dump(query)
+    return make_response(jsonify(Obj), 200)
+
+@blueprint.route('/bib_nomenclatures_types', methods=['GET'])
+def get_PSDRF_bib_nomenclatures():
+    try:
+        bib_nomenclatures_types = DB.session.execute("""
+            SELECT *
+            FROM ref_nomenclatures.bib_nomenclatures_types
+            WHERE source = 'PSDRF';
+            """
+        ).fetchall()
+        return bib_nomenclatures_types
+    except Exception:
+        raise
+
+@blueprint.route('/t_nomenclatures', methods=['GET'])
+def get_PSDRF_t_nomenclatures():
+    try:
+        t_nomenclatures = DB.session.execute("""
+            SELECT *
+            FROM ref_nomenclatures.t_nomenclatures
+            WHERE source = 'PSDRF';
+            """
+        ).fetchall()
+        return t_nomenclatures
+    except Exception:
+        raise
+
+    # query = DB.session.query(
+    #     ref_nomenclatures.bib_nomenclatures_types
+    # ).all()
+    # # schema = EssenceSchema(many=True)
+    # Obj = schema.dump(query)
+    # return make_response(jsonify(Obj), 200)
 
 
 # @blueprint.route('/arbres/<int:id_dispositif>', methods=['GET'])

@@ -9,3 +9,8 @@ class CycleSchema(ma.SQLAlchemyAutoSchema) :
         model = TCycles
         include_fk = True
     corCyclesPlacettes= ma.Nested(CorCyclePlacetteSchema, many = True)
+
+class ConciseCycleSchema(ma.SQLAlchemyAutoSchema) :
+    class Meta :
+        model = TCycles
+        include_fk = True
