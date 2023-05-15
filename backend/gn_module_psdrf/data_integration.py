@@ -8,6 +8,7 @@ from .geonature_PSDRF_function import get_id_type_from_mnemonique, get_id_nomenc
 from datetime import datetime
 from math import isnan
 
+import traceback
 
 def data_integration(dispId, dispName, data):
     try:
@@ -82,7 +83,9 @@ def data_integration(dispId, dispName, data):
             DB.session.bulk_save_objects(newPlacettesList)
             DB.session.flush()
         except Exception as e:
-            return (json.dumps({'success': False, "message":"Erreur lors de l'insertion des placettes dans la bdd. Veuillez contacter un administrateur."}), 500, {'ContentType':'application/json'})
+            tb_str = traceback.format_exception(Exception, e, e.__traceback__)
+            message = ''.join(tb_str)
+            return (json.dumps({'success': False, "message":"Erreur lors de l'insertion des placettes dans la bdd. Veuillez contacter un administrateur.", "error_detail": message}), 500, {'ContentType':'application/json'})
 
         try:
             # Reperes 
@@ -111,7 +114,9 @@ def data_integration(dispId, dispName, data):
             DB.session.bulk_save_objects(newReperesList)
             DB.session.flush()
         except Exception as e:
-            return (json.dumps({'success': False, "message":"Erreur lors de l'insertion des reperes dans la bdd. Veuillez contacter un administrateur."}), 500, {'ContentType':'application/json'})
+            tb_str = traceback.format_exception(Exception, e, e.__traceback__)
+            message = ''.join(tb_str)
+            return (json.dumps({'success': False, "message":"Erreur lors de l'insertion des reperes dans la bdd. Veuillez contacter un administrateur.", "error_detail": message}), 500, {'ContentType':'application/json'})
         
         # CorCyclePlacettes
         # Récupérer les cycles présents dans le dispositif
@@ -141,7 +146,9 @@ def data_integration(dispId, dispName, data):
             DB.session.flush()
         except Exception as e:
             print(e)
-            return (json.dumps({'success': False, "message":"Erreur lors de l'insertion des cor_cycles_placette dans la bdd. Veuillez contacter un administrateur."}), 500, {'ContentType':'application/json'})
+            tb_str = traceback.format_exception(Exception, e, e.__traceback__)
+            message = ''.join(tb_str)
+            return (json.dumps({'success': False, "message":"Erreur lors de l'insertion des cor_cycles_placette dans la bdd. Veuillez contacter un administrateur.", "error_detail": message}), 500, {'ContentType':'application/json'})
         
 
 
@@ -174,7 +181,9 @@ def data_integration(dispId, dispName, data):
             DB.session.bulk_save_objects(new_arbres_array)
             DB.session.flush()
         except Exception as e:
-            return (json.dumps({'success': False, "message":"Erreur lors de l'insertion des arbres dans la bdd. Veuillez contacter un administrateur."}), 500, {'ContentType':'application/json'})
+            tb_str = traceback.format_exception(Exception, e, e.__traceback__)
+            message = ''.join(tb_str)
+            return (json.dumps({'success': False, "message":"Erreur lors de l'insertion des arbres dans la bdd. Veuillez contacter un administrateur.", "error_detail": message}), 500, {'ContentType':'application/json'})
 
 
         # #TArbresMesurés
@@ -218,7 +227,9 @@ def data_integration(dispId, dispName, data):
             DB.session.bulk_save_objects(new_arbres_mesures_array)
             DB.session.flush()
         except Exception as e:
-            return (json.dumps({'success': False, "message":"Erreur lors de l'insertion des arbres mesurés dans la bdd. Veuillez contacter un administrateur."}), 500, {'ContentType':'application/json'})
+            tb_str = traceback.format_exception(Exception, e, e.__traceback__)
+            message = ''.join(tb_str)
+            return (json.dumps({'success': False, "message":"Erreur lors de l'insertion des arbres mesurés dans la bdd. Veuillez contacter un administrateur.", "error_detail": message}), 500, {'ContentType':'application/json'})
 
 
         # TRegenerations
@@ -261,7 +272,9 @@ def data_integration(dispId, dispName, data):
             DB.session.bulk_save_objects(listRege)
             DB.session.flush()
         except Exception as e:
-            return (json.dumps({'success': False, "message":"Erreur lors de l'insertion des regenerations dans la bdd. Veuillez contacter un administrateur."}), 500, {'ContentType':'application/json'})
+            tb_str = traceback.format_exception(Exception, e, e.__traceback__)
+            message = ''.join(tb_str)
+            return (json.dumps({'success': False, "message":"Erreur lors de l'insertion des regenerations dans la bdd. Veuillez contacter un administrateur.", "error_detail": message}), 500, {'ContentType':'application/json'})
         
         
         # TCategories
@@ -294,7 +307,9 @@ def data_integration(dispId, dispName, data):
             DB.session.bulk_save_objects(bmsSup30List)
             DB.session.flush()
         except Exception as e:
-            return (json.dumps({'success': False, "message":"Erreur lors de l'insertion des BMSsup30 dans la bdd. Veuillez contacter un administrateur."}), 500, {'ContentType':'application/json'})
+            tb_str = traceback.format_exception(Exception, e, e.__traceback__)
+            message = ''.join(tb_str)
+            return (json.dumps({'success': False, "message":"Erreur lors de l'insertion des BMSsup30 dans la bdd. Veuillez contacter un administrateur.", "error_detail": message}), 500, {'ContentType':'application/json'})
         
         # # # BMSsup30Mesurés
         try:
@@ -348,7 +363,9 @@ def data_integration(dispId, dispName, data):
             DB.session.bulk_save_objects(bmsSup30MesuresList)
             DB.session.flush()
         except Exception as e:
-            return (json.dumps({'success': False, "message":"Erreur lors de l'insertion des BMSsup30Mesures dans la bdd. Veuillez contacter un administrateur."}), 500, {'ContentType':'application/json'})
+            tb_str = traceback.format_exception(Exception, e, e.__traceback__)
+            message = ''.join(tb_str)
+            return (json.dumps({'success': False, "message":"Erreur lors de l'insertion des BMSsup30Mesures dans la bdd. Veuillez contacter un administrateur.", "error_detail": message}), 500, {'ContentType':'application/json'})
 
         try:
             transectList = []
@@ -385,7 +402,9 @@ def data_integration(dispId, dispName, data):
             DB.session.bulk_save_objects(transectList)
             DB.session.flush()
         except Exception as e:
-            return (json.dumps({'success': False, "message":"Erreur lors de l'insertion des transects dans la bdd. Veuillez contacter un administrateur."}), 500, {'ContentType':'application/json'})
+            tb_str = traceback.format_exception(Exception, e, e.__traceback__)
+            message = ''.join(tb_str)
+            return (json.dumps({'success': False, "message":"Erreur lors de l'insertion des transects dans la bdd. Veuillez contacter un administrateur.", "error_detail": message}), 500, {'ContentType':'application/json'})
 
         DB.session.commit()
         return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
@@ -393,6 +412,8 @@ def data_integration(dispId, dispName, data):
         # Rollback and print error
         DB.session.rollback()
         print(e)
-        return (json.dumps({'success': False, "message":"Une erreur inconnue a eu lieu. Veuillez contacter un administrateur."}), 500, {'ContentType':'application/json'})
+        tb_str = traceback.format_exception(Exception, e, e.__traceback__)
+        message = ''.join(tb_str)
+        return (json.dumps({'success': False, "message":"Une erreur inconnue a eu lieu. Veuillez contacter un administrateur.", "error_detail": message}), 500, {'ContentType':'application/json'})
 
 
