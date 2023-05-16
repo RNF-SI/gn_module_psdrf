@@ -145,7 +145,7 @@ def data_verification(data):
       {
         'arrayName': 'Cycles',
         'array': Cycles,
-        'intNames' : ['Cycle'],
+        'intNames' : ['Cycle', 'Année', 'DiamLim'],
         'floatNames' : ['Coeff'],
         'dateNames' : ['Date'],
         'boolNames' : [],
