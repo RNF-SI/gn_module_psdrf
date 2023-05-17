@@ -1,0 +1,47 @@
+:host {
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+    border: none;
+    box-shadow: none;
+    width: 500px;
+}
+
+.custom-toast {
+    max-width: 90vw;
+    margin: 0.5rem;
+    background-color: #bd2130; /* adjust the background color as needed */
+    color: #fff; /* adjust the text color as needed */
+    border-radius: 0.25rem;
+    box-shadow: 0 0.1rem 0.75rem rgba(0, 0, 0, 0.1);
+  }
+  
+  .custom-toast-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0.75rem;
+    color: #fff;
+    background-color: #bd2130; /* adjust the background color as needed */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-top-left-radius: 0.25rem;
+    border-top-right-radius: 0.25rem;
+  }
+  
+  .custom-toast-body {
+    padding: 0.5rem 0.75rem;
+  }
+  
+  .error-line-title {
+    font-weight: bold;
+    font-size: medium;
+  }

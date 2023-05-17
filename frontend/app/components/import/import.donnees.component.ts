@@ -25,12 +25,14 @@ import { StepperSelectionEvent } from "@angular/cdk/stepper";
 import { MatStepper } from "@angular/material/stepper";
 import { AuthService } from '@geonature/components/auth/auth.service';
 import { CommonService } from '@geonature/GN2CommonModule/service/common.service';
-import { ToastrService } from 'ngx-toastr';
+import { ToastrService, Toast, ToastPackage } from 'ngx-toastr';
 
 import { MatDialog } from "@angular/material/dialog";
 import { ConfirmationDialog } from "@geonature_common/others/modal-confirmation/confirmation.dialog";
 
+import { CustomToastComponent } from '../../reusable-components/custom-toast/custom-toast.component';
 
+import { ErrorDetailService } from '../../services/error-detail.service'; // replace with the actual path to your service
 
 @Component({
   selector: "rnf-psdrf-import-donnees",
@@ -129,6 +131,7 @@ export class ImportDonneesComponent  implements OnInit{
     private _commonService: CommonService,
     private sharedSrv: SharedService,
     private _toasterService: ToastrService,
+    private errorDetailService: ErrorDetailService,
     public dialog: MatDialog
   ) {}
 
@@ -1153,10 +1156,18 @@ export class ImportDonneesComponent  implements OnInit{
           }
         }, 
         error => {
-          this._toasterService.error(error.error, "Intégration des données en BDD", {
-            closeButton: true,
-            disableTimeOut: true,
-          });
+          this.errorDetailService.changeErrorDetail(error.error);
+          this._toasterService.show(
+            error.error.success + error.error.message,
+            "Intégration des données en BDD",
+            {
+                closeButton: true,
+                disableTimeOut: true,
+                tapToDismiss: false,
+                toastComponent: CustomToastComponent
+            },
+          );
+
           this.integrationLoading = false;
         });
 
