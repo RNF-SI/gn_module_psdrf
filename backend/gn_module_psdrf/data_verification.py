@@ -1789,8 +1789,10 @@ def data_verification(data):
       df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated()]
       df_Dupl = df_Dupl.drop_duplicates()
       if not df_Dupl.empty:
-        entire_df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated(keep=False)]
-        listDupl = entire_df_Dupl.groupby(list(df_Dupl_temp)).apply(lambda x: list(x.index)).tolist()
+        entire_df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated(keep=False)]        
+        #Get list of indexes of duplicated rows
+        groups= entire_df_Dupl.groupby(list(df_Dupl_temp)).groups
+        listDupl =[list(groups[key]) for key in groups.keys()]
         i = 0
         error_List_Temp = []
         for index, row in df_Dupl.iterrows():
