@@ -169,7 +169,7 @@ def data_verification(data):
           'floatNames' : ['Dist', 'Diam', 'Angle', 'StadeD', 'StadeE'],
           'boolNames' : ['Contact', 'Chablis'],
           'dateNames' : [],
-          'notNullNames': ['NumDisp', 'NumPlac', 'Id']
+          'notNullNames': ['NumDisp', 'NumPlac', 'Id', 'Transect']
         },
         {
           'arrayName': 'Reperes',
