@@ -213,6 +213,14 @@ export class ImportDonneesComponent  implements OnInit{
    * @param target DataTransfertObject
    */
   onFileLoad(target: DataTransfer): void {
+    // Reset application state
+    this.psdrfArray = [];
+    this.tableColumnsArray = [];
+    this.tableDataSourceArray = [];
+    this.isExcelLoaded = false;
+    this.isDataCharging = false;
+    this.isVerificationObjLoaded = false;
+
     let excelData;
     const reader: FileReader = new FileReader();
     this.excelFileName = target.files[0].name;
@@ -310,10 +318,25 @@ export class ImportDonneesComponent  implements OnInit{
               }, 0);
             },
             error => {
-              this._toasterService.error(error.message, "Vérification des données PSDRF", {
-                closeButton: true,
-                disableTimeOut: true,
-              });
+              console.log('aaa')
+              console.log(error.error)
+              this.errorDetailService.changeErrorDetail(error.error);
+
+              this._toasterService.show(
+                error.error.success + error.error.message,
+                "Vérification des données",
+                {
+                    closeButton: true,
+                    disableTimeOut: true,
+                    tapToDismiss: false,
+                    toastComponent: CustomToastComponent
+                },
+              );
+
+              // this._toasterService.error(error.message, "Vérification des données PSDRF", {
+              //   closeButton: true,
+              //   disableTimeOut: true,
+              // });
               this.isDataCharging = false;
               this.isExcelLoaded = false;
               this.isVerificationObjLoaded = false;
