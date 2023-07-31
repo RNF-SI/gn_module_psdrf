@@ -1796,29 +1796,8 @@ def data_verification(data):
             error_List_Temp.append(err)
           verificationList.append({'errorName': "Duplication dans Cycle", 'errorText': 'Lignes dupliquées dans la table Cycle', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
-        def miss3 (table, Placettes, tablename):
-            if table.shape[0] >0:
-              temp1 = table.drop_duplicates(subset=["NumDisp", "NumPlac", "Cycle"])
-              temp1= temp1.assign(Corresp1 = 1)
-              temp2 = Placettes[["NumDisp", "NumPlac", "Cycle"]]
-              temp2= temp2.assign(Corresp2 = 2)
-              temp3 = pd.merge(temp1, temp2, how="outer")
-              temp3 = temp3[temp3["Corresp1"].isna() | temp3["Corresp2"].isna() ]
-
-              list1 = temp3[temp3["Corresp1"].isna()]
-              list2 = temp3[temp3["Corresp2"].isna()]
-
-              if len(list2) >0:
-                print("Un des numéros d'inventaires figure dans la table" + tablename+ "mais ne figure pas dans la table Placette")
-              
-              if len(list1) >0:
-                print("Un des numéros d'inventaires figure dans la table Placette mais ne figure pas dans la table Placette"+ tablename)
-
-
-
         # Table Reperes
         #Contrôle des valeurs dupliquées
-        error = []
         df_Dupl_temp= Reperes[["NumDisp", "NumPlac", "Azimut", "Dist", "Diam"]].sort_values(by=["NumDisp", "NumPlac", "Azimut", "Dist", "Diam"])
         Reperes= Reperes.sort_values(by=["NumDisp", "NumPlac", "Azimut", "Dist", "Diam"])
         df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated()]
@@ -1844,6 +1823,39 @@ def data_verification(data):
             i = i + 1
           verificationList.append({'errorName': "Duplication dans Reperes", 'errorText': 'Lignes dupliquées dans la table Reperes', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
+        # Contrôle de l'existence de la placette dans la table Placettes
+        list1, list2 = miss3(Reperes, Placettes, "Reperes")
+        if not list1.empty:
+          error = []
+          i = 0
+          for index, row in list1.iterrows():
+            err = {
+                  "message": "La placette "+ str(row["NumPlac"]) +" n'existe pas dans la table Repère mais existe dans la table Placette",
+                  "table": "Reperes",
+                  "column": ["NumDisp", "NumPlac"],
+                  "row": [index], 
+                  # "value": row.to_json(orient='records'),
+                  "value": list1.loc[[index],:].to_json(orient='records'),
+              }
+            
+            error.append(err)
+            i = i + 1
+          verificationList.append({'errorName': "Placette inexistante dans la table Repères mais existe dans la table Placette", 'errorText': 'Placette inexistante dans la table Reperes', 'errorList': error, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
+
+        if not list2.empty:
+          i = 0
+          error = []
+          for index, row in list2.iterrows():
+            err = {
+                  "message": "La placette "+ str(row["NumPlac"]) +" n'existe pas dans la table Placettes mais existe dans la table Repères",
+                  "table": "Placettes",
+                  "column": ["NumDisp", "NumPlac"],
+                  "row": [index], 
+                  "value": list2.loc[[index],:].to_json(orient='records'),
+              }
+            error.append(err)
+            i = i + 1
+          verificationList.append({'errorName': "Placette inexistante dans Placette mais existe dans la table Repères", 'errorText': 'Placette inexistante dans la table Placette', 'errorList': error, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
         # Conformité avec les codifications
         # CodeDureté
@@ -1995,6 +2007,24 @@ def check_species(table_to_test, species, status, tablename):
         i = i +1
   return error, i
 
+def miss3 (table, Placettes, tablename):
+  if table.shape[0] >0:
+    temp1 = table.drop_duplicates(subset=["NumDisp", "NumPlac"])
+    temp1= temp1.assign(Corresp1 = 1)
+    temp2 = Placettes[["NumDisp", "NumPlac"]]
+    temp2= temp2.assign(Corresp2 = 2)
+    temp3 = pd.merge(temp1, temp2, how="outer")
+    temp3 = temp3[temp3["Corresp1"].isna() | temp3["Corresp2"].isna() ]
+
+    list1 = temp3[temp3["Corresp1"].isna()]
+    list2 = temp3[temp3["Corresp2"].isna()]
+
+    if len(list2) >0:
+      print("Un des numéros d'inventaires figure dans la table " + tablename+ " mais ne figure pas dans la table Placette")
+    
+    if len(list1) >0:
+      print("Un des numéros d'inventaires figure dans la table Placette mais ne figure pas dans la table Placette "+ tablename)
+  return list1, list2
 
 
 ##### fonction contrôle des Cycles ####
