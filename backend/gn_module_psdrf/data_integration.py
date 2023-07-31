@@ -217,7 +217,7 @@ def data_integration(dispId, dispName, data):
                     hauteur_totale = float(arbre["Haut"]) if arbre["Haut"] else None,
                     stade_durete = get_id_nomenclature_from_id_type_and_cd_nomenclature(id_type_durete, arbre["StadeD"]) if arbre["StadeD"] else None,
                     stade_ecorce = get_id_nomenclature_from_id_type_and_cd_nomenclature(id_type_ecorce, arbre["StadeE"]) if arbre["StadeE"] else None,
-                    coupe = "C" if arbre["Coupe"] == "Chablis" else "E" if arbre["Coupe"] == "Exploité" else arbre["Coupe"],
+                    coupe = "C" if (arbre["Coupe"] == "Chablis" or arbre["Coupe"] == "CHABLIS") else "E" if (arbre["Coupe"] == "Exploité" or arbre["Coupe"] == "EXPLOITE")  else arbre["Coupe"],
                     limite = True if arbre["Limite"] == "t" else False if arbre["Limite"] == "f" else False,
                     code_ecolo = arbre["CodeEcolo"],
                     ref_code_ecolo = arbre["Ref_CodeEcolo"],
