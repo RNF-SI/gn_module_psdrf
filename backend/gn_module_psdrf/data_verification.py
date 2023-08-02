@@ -107,15 +107,7 @@ def data_verification(data):
       # Convertion de types
       # Conversion de toutes les colonnes en numériques si possible 
       # errors='ignore' permet de ne pas convertir si le type n'est pas convertible en nombre
-      Arbres = Arbres.apply(pd.to_numeric, errors='ignore')
-      BMSsup30 = BMSsup30.apply(pd.to_numeric, errors='ignore')
-      Transect = Transect.apply(pd.to_numeric, errors='ignore')
-      Placettes = Placettes.apply(pd.to_numeric, errors='ignore')
-      Regeneration = Regeneration.apply(pd.to_numeric, errors='ignore')
-      Cycles = Cycles.apply(pd.to_numeric, errors='ignore')
-      Reperes = Reperes.apply(pd.to_numeric, errors='ignore')
-
-    # Test des types des colonnes dans toutes les tables
+      # Test des types des colonnes dans toutes les tables
       typeColumnObj = [
         {
           'arrayName': 'Arbres',
@@ -182,12 +174,6 @@ def data_verification(data):
         }
       ]
 
-      for df_info in typeColumnObj:
-          df = df_info['array']
-          for col_name in df_info['intNames']:
-              df[col_name] = pd.to_numeric(df[col_name], errors='ignore', downcast='integer')
-          for col_name in df_info['floatNames']:
-              df[col_name] = pd.to_numeric(df[col_name], errors='ignore', downcast='float')
 
 
 
@@ -197,6 +183,15 @@ def data_verification(data):
             check_code_Error_List, i = check.get('checktypefunction')(typeObj.get('arrayName'), col, typeObj.get('array'))
             if len(check_code_Error_List) >0:
               verificationList.append({'errorName': 'Controle '+ col +' dans la table ' + typeObj.get('arrayName') + ' '+ check.get('type_text'), 'errorText': 'Controle '+ col + ' dans la table ' + typeObj.get('arrayName') + ' '+check.get('type_text'), 'errorList': check_code_Error_List, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
+
+      for df_info in typeColumnObj:
+          df = df_info['array']
+          for col_name in df_info['intNames']:
+              df[col_name] = pd.to_numeric(df[col_name], errors='ignore', downcast='integer')
+          for col_name in df_info['floatNames']:
+              df[col_name] = pd.to_numeric(df[col_name], errors='ignore', downcast='float')
+
+
 
 
       base_dir = os.path.dirname(os.path.dirname(config["BASE_DIR"]))
@@ -1465,7 +1460,6 @@ def data_verification(data):
             error_List_Temp=[]
             i=0
             for index, row in temp.iterrows():
-              print(row)
               if i<100:
 
                 err = {
@@ -2163,21 +2157,24 @@ def check_int(tableName, colonneName, table_to_test):
   i=0
   t = table_to_test.dropna(subset=[colonneName])
   
-  bool_list = [((not isemptystring(x)) & (not isint(x))) for x in t[colonneName]]
-  temp = t[bool_list]
-  if not temp.empty: 
-    for index, row in temp.iterrows():
-      if i<100:
-        err= {
-          "message": "Dans la table "+tableName+" la colonne "+ colonneName  +" contient la valeur \""+ str(row[colonneName])+"\"",
-          "table": tableName,
-          "column": [colonneName],
-          "row": [index],
-          "value": temp.loc[[index],:].to_json(orient='records'),
-        }
-        error.append(err)
-      i=i+1
-  return error,i
+  for index, value in t[colonneName].iteritems():
+      try:
+          int(value)
+      except ValueError:
+          err = {
+              "message": f"Dans la table {tableName}, la colonne {colonneName} contient la valeur \"{value}\" qui n'est pas convertible en entier.",
+              "table": tableName,
+              "column": [colonneName],
+              "row": [index],
+              "value": t.loc[[index], :].to_json(orient='records'),
+          }
+          error.append(err)
+          i += 1
+          if i >= 100:
+              break
+  
+  return error, i
+
 
 def check_int_or_float(tableName, colonneName, table_to_test):
   error = []
