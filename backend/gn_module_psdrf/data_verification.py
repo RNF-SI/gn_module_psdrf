@@ -130,7 +130,7 @@ def data_verification(data):
         {
           'arrayName': 'Placettes',
           'array': Placettes,
-          'intNames' : ['NumDisp', 'NumPlac', 'Cycle', "Strate"],
+          'intNames' : ['NumDisp', 'Cycle', "Strate"],
           'floatNames' : ["PoidsPlacette", 'Pente', 'Exposition'],
           'boolNames' : ['CorrectionPente'],
           'dateNames' : [],
@@ -157,7 +157,7 @@ def data_verification(data):
         {
           'arrayName': 'Transect',
           'array': Transect,
-          'intNames' : ['NumDisp', 'NumPlac', 'Id', 'Cycle', 'Transect'],
+          'intNames' : ['NumDisp', 'Id', 'Cycle', 'Transect'],
           'floatNames' : ['Dist', 'Diam', 'Angle', 'StadeD', 'StadeE'],
           'boolNames' : ['Contact', 'Chablis'],
           'dateNames' : [],
@@ -169,7 +169,7 @@ def data_verification(data):
           'floatNames': ['Azimut', 'Dist', 'Diam'],
           'boolNames' : [],
           'dateNames' : [],
-          'intNames' : ['NumDisp', 'NumPlac'],
+          'intNames' : ['NumDisp'],
           'notNullNames': ['NumDisp', 'NumPlac']
         }
       ]
