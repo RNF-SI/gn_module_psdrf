@@ -2009,19 +2009,12 @@ def miss3 (table, Placettes, tablename):
     temp1= temp1.assign(Corresp1 = 1)
     temp2 = Placettes[["NumDisp", "NumPlac"]]
     temp2= temp2.assign(Corresp2 = 2)
-    print(temp1)
-    print(temp2)
     temp3 = pd.merge(temp1, temp2, how="outer")
     temp3 = temp3[temp3["Corresp1"].isna() | temp3["Corresp2"].isna() ]
 
     # # Add index column to temp3
     # temp3 = temp3.reset_index().rename(columns={"index": "index_temp3"})
 
-
-    # Get line with "NumDisp" value to 61
-    print(temp1[temp1["NumDisp"]==61])
-    print(temp2[temp2["NumDisp"]==61])
-    print(temp3)
     list1 = temp3[temp3["Corresp1"].isna()]
     list2 = temp3[temp3["Corresp2"].isna()]
 
