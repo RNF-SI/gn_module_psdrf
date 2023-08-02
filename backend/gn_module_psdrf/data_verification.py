@@ -121,7 +121,7 @@ def data_verification(data):
         {
           'arrayName': 'BMSsup30',
           'array': BMSsup30,
-          'intNames' : ['Id', 'Cycle', 'NumArbre'],
+          'intNames' : ['NumDisp','NumPlac', 'Id', 'Cycle', 'NumArbre'],
           'floatNames' : ['Azimut', 'Dist', 'DiamIni', 'DiamMed', 'DiamFin', 'Longueur', 'StadeD', 'StadeE', 'Contact'],
           'boolNames' : ['Chablis'],
           'dateNames' : [],
@@ -130,7 +130,7 @@ def data_verification(data):
         {
           'arrayName': 'Placettes',
           'array': Placettes,
-          'intNames' : ['NumPlac', 'Cycle', "Strate"],
+          'intNames' : ['NumDisp', 'NumPlac', 'Cycle', "Strate"],
           'floatNames' : ["PoidsPlacette", 'Pente', 'Exposition'],
           'boolNames' : ['CorrectionPente'],
           'dateNames' : [],
@@ -139,7 +139,7 @@ def data_verification(data):
         {
           'arrayName': 'Cycles',
           'array': Cycles,
-          'intNames' : ['Cycle', 'Année', 'DiamLim'],
+          'intNames' : ['NumDisp', 'NumPlac', 'Cycle', 'Année', 'DiamLim'],
           'floatNames' : ['Coeff'],
           'dateNames' : ['Date'],
           'boolNames' : [],
@@ -148,7 +148,7 @@ def data_verification(data):
         {
           'arrayName': 'Regeneration',
           'array': Regeneration,
-          'intNames' : ['SsPlac', 'Cycle', 'Class1', 'Class2', 'Class3'],
+          'intNames' : ['NumDisp', 'NumPlac', 'SsPlac', 'Cycle', 'Class1', 'Class2', 'Class3'],
           'floatNames' : ['Recouv'],
           'boolNames' : ['Taillis', 'Abroutis'],
           'dateNames' : [],
@@ -157,7 +157,7 @@ def data_verification(data):
         {
           'arrayName': 'Transect',
           'array': Transect,
-          'intNames' : ['Id', 'Cycle', 'Transect'],
+          'intNames' : ['NumDisp', 'NumPlac', 'Id', 'Cycle', 'Transect'],
           'floatNames' : ['Dist', 'Diam', 'Angle', 'StadeD', 'StadeE'],
           'boolNames' : ['Contact', 'Chablis'],
           'dateNames' : [],
@@ -169,7 +169,7 @@ def data_verification(data):
           'floatNames': ['Azimut', 'Dist', 'Diam'],
           'boolNames' : [],
           'dateNames' : [],
-          'intNames' : [],
+          'intNames' : ['NumDisp', 'NumPlac'],
           'notNullNames': ['NumDisp', 'NumPlac']
         }
       ]
@@ -306,7 +306,6 @@ def data_verification(data):
         # Referents = filter_by_disp(disp_num, last_cycle, Referents, disp_num)
         # Tarifs = filter_by_disp(disp_num, last_cycle, Tarifs, disp_num)
 
-        
         soundness_code = "de décomposition"
         bark_code = "écorce"
         check_code_Error_List, i = check_code(CodeDurete, Arbres, soundness_code, "Arbres")
@@ -1819,22 +1818,23 @@ def data_verification(data):
 
         # Contrôle de l'existence de la placette dans la table Placettes
         list1, list2 = miss3(Reperes, Placettes, "Reperes")
-        if not list1.empty:
-          error = []
-          i = 0
-          for index, row in list1.iterrows():
-            err = {
-                  "message": "La placette "+ str(row["NumPlac"]) +" n'existe pas dans la table Repère mais existe dans la table Placette",
-                  "table": "Reperes",
-                  "column": ["NumDisp", "NumPlac"],
-                  "row": [index], 
-                  # "value": row.to_json(orient='records'),
-                  "value": list1.loc[[index],:].to_json(orient='records'),
-              }
+        # Test commented because not usefull
+        # if not list1.empty:
+        #   error = []
+        #   i = 0
+        #   for index, row in list1.iterrows():
+        #     err = {
+        #           "message": "La placette "+ str(row["NumPlac"]) +" n'existe pas dans la table Repère mais existe dans la table Placette",
+        #           "table": "Reperes",
+        #           "column": ["NumDisp", "NumPlac"],
+        #           "row": [index], 
+        #           # "value": row.to_json(orient='records'),
+        #           "value": list1.loc[[index],:].to_json(orient='records'),
+        #       }
             
-            error.append(err)
-            i = i + 1
-          verificationList.append({'errorName': "Placette inexistante dans la table Repères mais existe dans la table Placette", 'errorText': 'Placette inexistante dans la table Reperes', 'errorList': error, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
+        #     error.append(err)
+        #     i = i + 1
+        #   verificationList.append({'errorName': "Placette inexistante dans la table Repères mais existe dans la table Placette", 'errorText': 'Placette inexistante dans la table Reperes', 'errorList': error, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
         if not list2.empty:
           i = 0
@@ -1842,9 +1842,9 @@ def data_verification(data):
           for index, row in list2.iterrows():
             err = {
                   "message": "La placette "+ str(row["NumPlac"]) +" n'existe pas dans la table Placettes mais existe dans la table Repères",
-                  "table": "Placettes",
+                  "table": "Reperes",
                   "column": ["NumDisp", "NumPlac"],
-                  "row": [index], 
+                  "row": [row["index_temp1"]], 
                   "value": list2.loc[[index],:].to_json(orient='records'),
               }
             error.append(err)
@@ -2004,12 +2004,24 @@ def check_species(table_to_test, species, status, tablename):
 def miss3 (table, Placettes, tablename):
   if table.shape[0] >0:
     temp1 = table.drop_duplicates(subset=["NumDisp", "NumPlac"])
+    temp1= temp1[["NumDisp", "NumPlac"]]
+    temp1 = temp1.reset_index().rename(columns={"index": "index_temp1"})
     temp1= temp1.assign(Corresp1 = 1)
     temp2 = Placettes[["NumDisp", "NumPlac"]]
     temp2= temp2.assign(Corresp2 = 2)
+    print(temp1)
+    print(temp2)
     temp3 = pd.merge(temp1, temp2, how="outer")
     temp3 = temp3[temp3["Corresp1"].isna() | temp3["Corresp2"].isna() ]
 
+    # # Add index column to temp3
+    # temp3 = temp3.reset_index().rename(columns={"index": "index_temp3"})
+
+
+    # Get line with "NumDisp" value to 61
+    print(temp1[temp1["NumDisp"]==61])
+    print(temp2[temp2["NumDisp"]==61])
+    print(temp3)
     list1 = temp3[temp3["Corresp1"].isna()]
     list2 = temp3[temp3["Corresp2"].isna()]
 
@@ -2017,7 +2029,7 @@ def miss3 (table, Placettes, tablename):
       print("Un des numéros d'inventaires figure dans la table " + tablename+ " mais ne figure pas dans la table Placette")
     
     if len(list1) >0:
-      print("Un des numéros d'inventaires figure dans la table Placette mais ne figure pas dans la table Placette "+ tablename)
+      print("Un des numéros d'inventaires figure dans la table Placette mais ne figure pas dans la table "+ tablename)
   return list1, list2
 
 
