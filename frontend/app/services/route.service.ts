@@ -1,10 +1,14 @@
 import { Injectable } from "@angular/core";
-import { Observable } from 'rxjs';
+import { Observable, throwError, interval } from 'rxjs';
 import { HttpClient, HttpHeaders, HttpParams } from "@angular/common/http";
-
+import { HttpResponse } from '@angular/common/http';
 import { AppConfig } from "@geonature_config/app.config";
 import { ModuleConfig } from "../module.config";
-import { map } from 'rxjs/operators';
+import { map, switchMap, filter, take, catchError } from 'rxjs/operators';
+
+interface TaskResponse {
+  task_id: string;
+}
 
 @Injectable()
 export class PsdrfDataService {
@@ -39,32 +43,55 @@ export class PsdrfDataService {
 
   psdrf_data_analysis(id: number, isCarnetToDownload: boolean, isPlanDesArbresToDownload: boolean, parameters: {name: string, text: string, value: any}[] ) {
     const headers = new HttpHeaders({ 'Content-Type': 'application/json', responseType : 'blob'});
-
+  
     let url = `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/analysis/`+ id
     let params = new HttpParams().set("isCarnetToDownload",isCarnetToDownload.toString()).set("isPlanDesArbresToDownload",isPlanDesArbresToDownload.toString())
     //Ajouter les paramètres relatifs à la génération des documents
     parameters.forEach(param => {
       params= params.append(param.name, param.value.toString());
     })
-
+  
     return this._http.get(
       url, 
-      { observe: "response", headers : headers, params: params, responseType : 'blob' }
+      { observe: "response", headers : headers, params: params }
       )
       .pipe(
-        map((res) => {
-          let data = {
-                        zip: new Blob([res.body], {type: res.headers.get('Content-Type')}),
-                        filename: res.headers.get('filename')
-                      }
-          return data ;
+        map((res: HttpResponse<TaskResponse>) => {
+          return res.body.task_id;
         })
-
       )
       .catch((err) => {
         return Observable.throw(err);
       });
-    
+  }
+  
+  get_task_status(taskId: string) {
+    const url = `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/analysis/status/` + taskId;
+    return this._http.get(url)
+      .pipe(
+        map((res: any) => {
+          return res;
+        })
+      )
+      .catch((err) => {
+        return Observable.throw(err);
+      });
+  }
+
+  get_task_result(taskId: string, dispId: number) {
+    const url = `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/analysis/result/` + taskId;
+    return this._http.get(url, { responseType: 'blob' })  // set responseType to 'blob' to handle files
+      .pipe(
+        map((blob: any) => {
+          return {
+            zip: blob,  // the file content
+            filename: 'documents_dispositif_' +dispId+ '.zip'  // this should be dynamically set if the server provides the filename
+          };
+        }),
+        catchError((err) => {
+          return throwError(err);
+        })
+      );
   }
 
   getDispositifList(){

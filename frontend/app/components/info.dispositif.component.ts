@@ -6,6 +6,9 @@ import { MapListService } from '@geonature_common/map-list/map-list.service';
 import { PsdrfDataService } from "../services/route.service";
 import { ToastrService } from 'ngx-toastr';
 import { ExcelImportService } from "../services/excel.import.service";
+import { interval, EMPTY } from 'rxjs';
+import { switchMap, catchError, takeWhile, tap, first} from 'rxjs/operators';
+
 
 export interface Document {
   name: string;
@@ -143,31 +146,83 @@ export class InfoDispositifComponent implements OnInit {
 
 
         this.dataSrv
-          .psdrf_data_analysis(this.id, isCarnetToDownload, isPlanDesArbresToDownload, parameters)
-          .subscribe(
-            data => {
-              this.analysisLoading = false;
-              var file = new Blob([data.zip], { type: 'octet/stream' })
-              var fileURL = URL.createObjectURL(file);
+        .psdrf_data_analysis(this.id, isCarnetToDownload, isPlanDesArbresToDownload, parameters)
+        .subscribe(
+          taskId => {
+            this.analysisLoading = true;
     
-              // if you want to open PDF in new tab
-              // window.open(fileURL); 
-              var a         = document.createElement('a');
-              a.href        = fileURL; 
-              a.target      = '_blank';
-              a.download    = data.filename;
-              document.body.appendChild(a);
-              a.click();
-              this._toasterService.success("Les documents ont bien étés générés.", "Génération des documents PSDRF");
-            },
-            (error) => {
-              this._toasterService.error(error.message, "Génération du rapport PSDRF", {
-                closeButton: true,
-                disableTimeOut: true,
-              });
-              this.analysisLoading = false;
-            }
-          );
+            // Poll the status of the task every 20 seconds
+            const statusCheck$ = interval(20000).pipe(
+              switchMap(() => this.dataSrv.get_task_status(taskId)),
+              tap(taskStatus => console.log('Inside observable:', taskStatus.status)),
+              first(taskStatus => taskStatus.status === 'SUCCESS' || taskStatus.status === 'FAILURE'),
+              catchError(error => {
+                console.log('error 7');
+
+                this.analysisLoading = false;
+                // Handle the error
+                // ...
+                return EMPTY;
+              })
+            );
+
+            statusCheck$.subscribe(
+              taskStatus => {
+                console.log('1')
+                console.log(taskStatus)
+                console.log(taskStatus.status)
+                if (taskStatus.status === 'SUCCESS') {
+                  this.analysisLoading = false;
+                  console.log('2')
+                  console.log(taskStatus)
+                  // Once the task is successful, fetch the result
+                  this.dataSrv.get_task_result(taskId, this.id).subscribe(
+                    data => {
+                      var file = new Blob([data.zip], { type: 'octet/stream' });
+                      var fileURL = URL.createObjectURL(file);
+
+                      var a = document.createElement('a');
+                      a.href = fileURL; 
+                      a.target = '_blank';
+                      a.download = data.filename;
+                      document.body.appendChild(a);
+                      a.click();
+                      this._toasterService.success("Les documents ont bien étés générés.", "Génération des documents PSDRF");
+                    },
+                    error => {
+                      this._toasterService.error(error.message, "Génération du rapport PSDRF", {
+                        closeButton: true,
+                        disableTimeOut: true,
+                      });
+                      this.analysisLoading = false;
+                      console.log('error 3');
+
+                    }
+                  );
+
+                } else if (taskStatus.status === 'FAILURE') {
+                  this.analysisLoading = false;
+                  console.log('error 4');
+
+                  // Handle the failure of the task
+                  // ...
+                }
+              },
+              error => {
+                this.analysisLoading = false;
+                console.log('error 5');
+                // Handle the error
+                // ...
+              }
+            );
+          },
+          error => {
+            this.analysisLoading = false;
+            console.log('error 6');
+            // Handle the error
+            // ...
+          }
+        );
       }
     }
   }
