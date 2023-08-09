@@ -7,11 +7,9 @@ from sqlalchemy.sql.expression import false
 from geoalchemy2.shape import to_shape, from_shape
 from shapely.geometry import MultiPoint, Point
 import json
-import zipfile
-from io import BytesIO
 import time
-import os
 import logging
+import os
 
 from geonature.utils.env import DB
 # from geonature.utils.utilssqlalchemy import json_resp, get_geojson_feature
@@ -25,15 +23,18 @@ from .models import TDispositifs, TPlacettes, TArbres, TCycles, \
 from .data_verification import data_verification
 from .data_integration import data_integration
 from .psdrf_list_update import psdrf_list_update
-from .data_analysis import data_analysis
 from .bddToExcel import bddToExcel
 from .schemas.dispositifs import DispositifSchema
 from .schemas.cycles import ConciseCycleSchema
 from .schemas.essences import EssenceSchema
+from .tasks import test_celery
+
 
 
 from utils_flask_sqla.response import json_resp
 from utils_flask_sqla_geo.generic import get_geojson_feature
+
+from geonature.utils.celery import celery_app
 
 blueprint = Blueprint('psdrf', __name__)
 
@@ -268,42 +269,45 @@ def psdrf_data_analysis(id_dispositif):
     isPlanDesArbresToDownload = request.args.get('isPlanDesArbresToDownload')
 
     outFilePath = "/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/out/"
-    try:
-        data_analysis(str(id_dispositif), isCarnetToDownload, isPlanDesArbresToDownload, carnetToDownloadParameters)
-    except Exception as e:
-        logging.critical(e)
-        msg = json.dumps({"type": "bug", "msg": "Unkown error during analysis"})
-        logging.info(msg)
-        return Response(msg, status=500)
+    task = test_celery.delay(str(id_dispositif), isCarnetToDownload, isPlanDesArbresToDownload, carnetToDownloadParameters, outFilePath)
 
-    memory_file = BytesIO()
-    with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zf:
+    # Return the task ID to the client
+    return jsonify({'task_id': task.id})
 
-        for dirname, subdirs, files in os.walk(outFilePath):
-            for filename in files:
-                absname = os.path.abspath(os.path.join(dirname, filename))
-                arcname = absname[len(outFilePath) :]
-                if (arcname != '.gitignore') and (not arcname.endswith(('.log', '.tex'))):
-                    zf.write(absname, arcname)
 
-    memory_file.seek(0)
 
-    zipName = 'documents_dispositif-'+str(id_dispositif)+'.zip'
+@blueprint.route('/analysis/status/<task_id>', methods=['GET'])
+def get_task_status(task_id):
+    # Get the AsyncResult object for the task
+    task = celery_app.AsyncResult(task_id)
+    # Return the task status to the client
+    return jsonify({'status': task.status})
 
-    result = send_file(
-        memory_file, 
-        mimetype = 'zip',
-        download_name= zipName,
-        as_attachment=True
-        )
+@blueprint.route('/analysis/result/<task_id>', methods=['GET'])
+def get_task_result(task_id):
+    # Get the AsyncResult object for the task
+    task = celery_app.AsyncResult(task_id)
+    
+    # Check if the task is finished
+    if task.status == 'SUCCESS':
+        file_info = task.result
+        file_path = file_info["file_path"]
+        file_name = file_info["file_name"]
+        # Check if file exists and then send it
+        if os.path.exists(file_path):
+            with open(file_path, 'rb') as f:
+                response = Response(f.read(), content_type='application/zip')
+                response.headers["Content-Disposition"] = f"attachment; filename=\"{file_name}\""
+                return response
+        else:
+            return jsonify({"error": "File not found"}), 404
+    elif task.status == 'FAILURE':
+        return jsonify({"error": "Task failed", "reason": str(task.result)}), 500
+    else:
+        return jsonify({'status': 'Task not finished'}), 400
 
-    response = make_response(result)
-    response.headers["filename"]=zipName
-    response.headers['Access-Control-Expose-Headers'] = 'filename'   
-    try:
-        return response
-    except FileNotFoundError:
-        abort(404)
+
+
 
 @blueprint.route('/dispositifsList', methods=['GET'])
 @json_resp
