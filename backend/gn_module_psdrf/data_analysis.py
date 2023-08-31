@@ -55,7 +55,7 @@ def data_analysis(dispId, isCarnetToDownload, isPlanDesArbresToDownload, carnetT
         r_lastCycle = ro.conversion.py2rpy(lastCycledf)
 
     formatBdd2RData(r, dispId, r_lastCycle, dispName, isCarnetToDownload, isPlanDesArbresToDownload, carnetToDownloadParameters)
-    del r
+    # del r
 
 def formatBdd2RData(r, dispId, lastCycle, dispName, isCarnetToDownload, isPlanDesArbresToDownload, carnetToDownloadParameters):
 
