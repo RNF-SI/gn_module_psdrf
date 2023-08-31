@@ -292,6 +292,8 @@ def get_task_result(task_id):
     if task.status == 'SUCCESS':
         file_info = task.result
         file_path = file_info["file_path"]
+        print(file_path)
+        print(file_info)
         file_name = file_info["file_name"]
         # Check if file exists and then send it
         if os.path.exists(file_path):
