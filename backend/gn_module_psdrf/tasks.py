@@ -23,14 +23,28 @@ def test_celery(self, id_dispositif, isCarnetToDownload, isPlanDesArbresToDownlo
         logging.info(msg)
         return Response(msg, status=500)
 
-    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".zip")
+    base_dir = os.path.dirname(os.path.abspath(__file__))  # Gets the directory of the current script
+    output_dir = os.path.join(base_dir, 'Rscripts/zip')
+
+    # Ensure the directory exists
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    # Now, you can create the temporary file
+    temp_file = tempfile.NamedTemporaryFile(dir=output_dir, delete=False, suffix=".zip")
+
+    # The directory you want to archive
+    outFilePath = os.path.join(base_dir, 'Rscripts/out')
+
     with zipfile.ZipFile(temp_file.name, 'w', zipfile.ZIP_DEFLATED) as zf:
         for dirname, subdirs, files in os.walk(outFilePath):
             for filename in files:
                 absname = os.path.abspath(os.path.join(dirname, filename))
-                arcname = absname[len(outFilePath) :]
+                arcname = absname[len(outFilePath) + 1:]  # +1 to remove the leading slash or backslash
                 if (arcname != '.gitignore') and (not arcname.endswith(('.log', '.tex'))):
                     zf.write(absname, arcname)
+
+    os.chmod(temp_file.name, 0o777)
 
     zipName = 'documents_dispositif-'+str(id_dispositif)+'.zip'
 
