@@ -460,9 +460,10 @@ export class ImportDonneesComponent  implements OnInit{
    * @param tableName Table Name
    */
   getPaginatorFromTableName(tableName: string): MatPaginator {
-    return this.tableDataSourceArray[
+    const dataSource = this.tableDataSourceArray[
       this.indexLabelMatTabGroup.indexOf(tableName)
-    ].paginator;
+    ];
+    return (dataSource.paginator as MatPaginator);
   }
 
   /**

@@ -50,7 +50,7 @@ export class FormDispositifComponent implements OnInit {
     }
 
     onSubmit() {
-        let data = this.dispositifForm.value;
+        let data = this.dispositifForm.value as { name: string; id_organisme: any; id: any };
         data.id = this.dispositif.id;
         this._api.post<any>(`${AppConfig.API_ENDPOINT}/${this.dispositifSaveEndPoint}`, data)
           .subscribe(data => {

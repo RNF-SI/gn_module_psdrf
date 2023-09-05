@@ -53,6 +53,14 @@
     .info {}
 }
 
+// In Buttons, change mat-icon element margin 
+button {
+    // Add margin-right to mat-icon children of button
+    mat-icon {
+        margin-right: 0;
+    }
+}
+
 .action-button-class {
     margin: 4px 8px;
 }
