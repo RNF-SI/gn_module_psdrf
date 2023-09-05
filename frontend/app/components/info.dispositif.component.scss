@@ -32,3 +32,8 @@ margin-top: 4px;
 .unactive-text{
     color: rgba(0,0,0,.54);
 }
+
+button > mat-icon {
+    // Add margin-right to mat-icon children of button
+    margin-right: 0;
+}

@@ -23,3 +23,10 @@
         font-size: 14px !important;
     }
 }
+
+button {
+    // Add margin-right to mat-icon children of button
+    mat-icon {
+        margin-right: 0;
+    }
+}
