@@ -191,13 +191,11 @@ def data_verification(data):
           for col_name in df_info['floatNames']:
               df[col_name] = pd.to_numeric(df[col_name], errors='ignore', downcast='float')
 
+      current_dir = os.path.dirname(os.path.abspath(__file__))
+      parent_dir = os.path.dirname(current_dir)
+      base_dir = os.path.dirname(parent_dir)
 
-
-
-      base_dir = os.path.dirname(os.path.dirname(config["BASE_DIR"]))
-
-      # Trouver le chemin d'accès au dossier data, qui contient les tables nécessaires aux tests
-      DATA_DIR_PSDRF = os.path.join( base_dir, 'gn_module_psdrf', 'data')
+      DATA_DIR_PSDRF = os.path.join(base_dir, 'data')
 
       #chargement des tables nécessaires aux tests 
       CodeEssence = pd.read_pickle(os.path.join( DATA_DIR_PSDRF, 'CodeEssence'))

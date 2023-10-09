@@ -9,14 +9,18 @@ import os
 import tempfile
 
 from celery.utils.log import get_task_logger
+from celery.exceptions import SoftTimeLimitExceeded
 
 logger = get_task_logger(__name__)
 
-@celery_app.task(bind=True)
+@celery_app.task(bind=True, soft_time_limit=700, time_limit=900)
 def test_celery(self, id_dispositif, isCarnetToDownload, isPlanDesArbresToDownload, carnetToDownloadParameters, outFilePath):
     logger.info(f"Starting carnet d'analyse of dispositif {id_dispositif}.")
     try:
         data_analysis(str(id_dispositif), isCarnetToDownload, isPlanDesArbresToDownload, carnetToDownloadParameters)
+    except SoftTimeLimitExceeded:
+        # Handle the soft time limit, e.g., cleanup, logging, etc.
+        pass
     except Exception as e:
         logging.critical(e)
         msg = json.dumps({"type": "bug", "msg": "Unkown error during analysis"})
