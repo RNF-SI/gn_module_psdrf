@@ -122,17 +122,17 @@ config/settings.ini
 backend/test.py
 
 #data 
-data/CodeEssence
-data/CodeDurete
-data/Communes
-data/CyclesCodes
-data/Dispositifs
-data/EssReg
-data/Referents
-data/Tarifs
-data/CodeEcologie
-data/CodeEcorce
-data/CodeTypoArbres
+data/CodeEssence.csv
+data/CodeDurete.csv
+data/Communes.csv
+data/Cycles.csv
+data/Dispositifs.csv
+data/EssReg.csv
+data/Referents.csv
+data/Tarifs.csv
+data/CodeEcologie.csv
+data/CodeEcorce.csv
+data/CodeTypoArbres.csv
 .vscode/launch.json
 
 # Rdata

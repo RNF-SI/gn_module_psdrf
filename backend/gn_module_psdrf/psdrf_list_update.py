@@ -6,6 +6,7 @@ import pandas as pd
 from geonature.utils.env import DB
 from .models import TCycles, TDispositifs
 import datetime
+import os
 
 # from werkzeug import FileStorage
 
@@ -15,18 +16,18 @@ def psdrf_list_update(psdrf_list_file):
         string = f.read()
     psdrf_Codes = STAP(string, "psdrf_Codes")
 
+
     psdrf_list_file.save("/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/psdrf_liste/PsdrfListes.xlsx")
-    pd.read_excel(open("/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/psdrf_liste/PsdrfListes.xlsx", 'rb'), sheet_name='CodeDurete').to_pickle("/home/geonatureadmin/gn_module_psdrf/data/CodeDurete") 
-    pd.read_excel(open("/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/psdrf_liste/PsdrfListes.xlsx", 'rb'), sheet_name='CodeEcologie').to_pickle("/home/geonatureadmin/gn_module_psdrf/data/CodeEcologie") 
-    pd.read_excel(open("/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/psdrf_liste/PsdrfListes.xlsx", 'rb'), sheet_name='CodeEcorce').to_pickle("/home/geonatureadmin/gn_module_psdrf/data/CodeEcorce") 
-    pd.read_excel(open("/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/psdrf_liste/PsdrfListes.xlsx", 'rb'), sheet_name='CodeEssence').to_pickle("/home/geonatureadmin/gn_module_psdrf/data/CodeEssence") 
-    pd.read_excel(open("/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/psdrf_liste/PsdrfListes.xlsx", 'rb'), sheet_name='CodeTypoArbres').to_pickle("/home/geonatureadmin/gn_module_psdrf/data/CodeTypoArbres") 
-    pd.read_excel(open("/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/psdrf_liste/PsdrfListes.xlsx", 'rb'), sheet_name='Communes').to_pickle("/home/geonatureadmin/gn_module_psdrf/data/Communes") 
-    pd.read_excel(open("/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/psdrf_liste/PsdrfListes.xlsx", 'rb'), sheet_name='Dispositifs').to_pickle("/home/geonatureadmin/gn_module_psdrf/data/Dispositifs") 
-    pd.read_excel(open("/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/psdrf_liste/PsdrfListes.xlsx", 'rb'), sheet_name='EssReg').to_pickle("/home/geonatureadmin/gn_module_psdrf/data/EssReg") 
-    pd.read_excel(open("/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/psdrf_liste/PsdrfListes.xlsx", 'rb'), sheet_name='Referents').to_pickle("/home/geonatureadmin/gn_module_psdrf/data/Referents") 
-    pd.read_excel(open("/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/psdrf_liste/PsdrfListes.xlsx", 'rb'), sheet_name='Tarifs').to_pickle("/home/geonatureadmin/gn_module_psdrf/data/Tarifs") 
-    pd.read_excel(open("/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/psdrf_liste/PsdrfListes.xlsx", 'rb'), sheet_name='Cycles').to_pickle("/home/geonatureadmin/gn_module_psdrf/data/CyclesCodes") 
+    
+    excel_file_path = "/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/psdrf_liste/PsdrfListes.xlsx"
+    
+    sheet_names = ['CodeDurete', 'CodeEcologie', 'CodeEcorce', 'CodeEssence', 'CodeTypoArbres',
+                   'Communes', 'Dispositifs', 'EssReg', 'Referents', 'Tarifs', 'Cycles']
+    
+    for sheet_name in sheet_names:
+        df = pd.read_excel(open(excel_file_path, 'rb'), sheet_name=sheet_name)
+        csv_file_path = os.path.join("/home/geonatureadmin/gn_module_psdrf/data", f"{sheet_name}.csv")
+        df.to_csv(csv_file_path, index=False) 
 
     df = pd.read_excel(open("/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/psdrf_liste/PsdrfListes.xlsx", 'rb'), sheet_name='Cycles')
     for index, row in df.iterrows():
