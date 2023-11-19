@@ -116,7 +116,8 @@ def data_verification(data):
           'floatNames' : ['Azimut', 'Dist', 'Diam1', 'Diam2', 'Haut', 'StadeD', 'StadeE'],
           'boolNames' : [],
           'dateNames' : [],
-          'notNullNames': ['NumDisp', 'NumPlac', 'NumArbre', 'Cycle']
+          'notNullNames': ['NumDisp', 'NumPlac', 'NumArbre', 'Cycle'],
+          'charNames': ['Coupe']
         },
         {
           'arrayName': 'BMSsup30',
@@ -125,7 +126,8 @@ def data_verification(data):
           'floatNames' : ['Azimut', 'Dist', 'DiamIni', 'DiamMed', 'DiamFin', 'Longueur', 'StadeD', 'StadeE', 'Contact'],
           'boolNames' : ['Chablis'],
           'dateNames' : [],
-          'notNullNames': ['NumDisp', 'NumPlac', 'Id']
+          'notNullNames': ['NumDisp', 'NumPlac', 'Id'],
+          'charNames': []
         },
         {
           'arrayName': 'Placettes',
@@ -134,7 +136,8 @@ def data_verification(data):
           'floatNames' : ["PoidsPlacette", 'Pente', 'Exposition'],
           'boolNames' : ['CorrectionPente'],
           'dateNames' : [],
-          'notNullNames': ['NumDisp', 'NumPlac', 'Cycle']
+          'notNullNames': ['NumDisp', 'NumPlac', 'Cycle'],
+          'charNames': []
         },
         {
           'arrayName': 'Cycles',
@@ -143,7 +146,8 @@ def data_verification(data):
           'floatNames' : ['Coeff'],
           'dateNames' : ['Date'],
           'boolNames' : [],
-          'notNullNames': ['NumDisp', 'NumPlac', 'Cycle']
+          'notNullNames': ['NumDisp', 'NumPlac', 'Cycle'],
+          'charNames': []
         },
         {
           'arrayName': 'Regeneration',
@@ -152,7 +156,8 @@ def data_verification(data):
           'floatNames' : ['Recouv'],
           'boolNames' : ['Taillis', 'Abroutis'],
           'dateNames' : [],
-          'notNullNames': ['NumDisp', 'NumPlac']
+          'notNullNames': ['NumDisp', 'NumPlac', 'Class1', 'Class2', 'Class3'],
+          'charNames': []
         },
         {
           'arrayName': 'Transect',
@@ -161,7 +166,8 @@ def data_verification(data):
           'floatNames' : ['Dist', 'Diam', 'Angle', 'StadeD', 'StadeE'],
           'boolNames' : ['Contact', 'Chablis'],
           'dateNames' : [],
-          'notNullNames': ['NumDisp', 'NumPlac', 'Id', 'Transect']
+          'notNullNames': ['NumDisp', 'NumPlac', 'Id', 'Transect'],
+          'charNames': []
         },
         {
           'arrayName': 'Reperes',
@@ -170,7 +176,8 @@ def data_verification(data):
           'boolNames' : [],
           'dateNames' : [],
           'intNames' : ['NumDisp'],
-          'notNullNames': ['NumDisp', 'NumPlac']
+          'notNullNames': ['NumDisp', 'NumPlac'],
+          'charNames': []
         }
       ]
 
@@ -178,7 +185,14 @@ def data_verification(data):
 
 
       for typeObj in typeColumnObj:
-        for check in [{'colnames': typeObj.get('notNullNames'), 'checktypefunction': check_notNULL, 'type_text': '(valeur attendue)'}, {'colnames': typeObj.get('intNames'), 'checktypefunction': check_int, 'type_text': '(entiers attendus)'}, {'colnames': typeObj.get('floatNames'), 'checktypefunction': check_int_or_float, 'type_text': '(décimale attendue)'}, {'colnames': typeObj.get('boolNames'), 'checktypefunction': check_boolean, 'type_text': '(f, t ou rien attendus)'}, {'colnames': typeObj.get('dateNames'), 'checktypefunction': check_date, 'type_text': '(dates attendues sous la forme dd/mm/aaaa)'}]:
+        for check in [
+          {'colnames': typeObj.get('notNullNames'), 'checktypefunction': check_notNULL, 'type_text': '(valeur attendue)'}, 
+          {'colnames': typeObj.get('intNames'), 'checktypefunction': check_int, 'type_text': '(entiers attendus)'}, 
+          {'colnames': typeObj.get('floatNames'), 'checktypefunction': check_int_or_float, 'type_text': '(décimale attendue)'}, 
+          {'colnames': typeObj.get('boolNames'), 'checktypefunction': check_boolean, 'type_text': '(f, t ou rien attendus)'}, 
+          {'colnames': typeObj.get('dateNames'), 'checktypefunction': check_date, 'type_text': '(dates attendues sous la forme dd/mm/aaaa)'},
+          {'colnames': typeObj.get('charNames'), 'checktypefunction': check_char, 'type_text': '(1 seul caractère attendu)'},
+          ]:
           for col in check.get('colnames'):
             check_code_Error_List, i = check.get('checktypefunction')(typeObj.get('arrayName'), col, typeObj.get('array'))
             if len(check_code_Error_List) >0:
@@ -1703,6 +1717,104 @@ def data_verification(data):
         miss2(Cycles, Placettes, "Cycles", True)
         miss2(Regeneration, Placettes, "Regeneration", False)
         miss2(Transect, Placettes, "Transect", False)
+
+        
+        # --- Contrôler cohérence NumDisp, Placette et Cycle avec les tables : Arbres, BMSsup30, Regeneration, Transect et Cycles
+        def missCycleInPlacette(table, Placettes, tablename, blockingError):
+          if table.shape[0] >0:
+            temp1 = table[["NumDisp", "NumPlac", "Cycle"]]
+            temp1 = temp1.drop_duplicates()
+            temp1= temp1.assign(Corresp1 = 1)
+            temp1['index_col_temp1'] = temp1.index
+            temp1["NumDisp"]= temp1["NumDisp"].astype(int)
+            temp1["NumPlac"]= temp1["NumPlac"].astype(int)
+            temp1["Cycle"]= temp1["Cycle"].astype(int)
+
+            temp2 = Placettes[["NumDisp", "NumPlac", "Cycle"]]
+            temp2= temp2.assign(Corresp2 = 2)
+            temp2['index_col_temp2'] = temp2.index
+            temp2["NumDisp"]= temp2["NumDisp"].astype(int)
+            temp2["NumPlac"]= temp2["NumPlac"].astype(int)
+            temp2["Cycle"]= temp2["Cycle"].astype(int)
+
+
+            temp3 = pd.merge(temp1, temp2, how="outer", on=["NumDisp", "NumPlac", "Cycle"])
+            temp3 = temp3[temp3["Corresp2"].isna() ]      
+
+            list2 = temp3[temp3["Corresp2"].isna()]
+
+            if len(list2) >0:
+              error_List_Temp=[]
+              i = 0
+              for index, row in list2.iterrows():
+                if i <100:
+                  err = {
+                      "message": "La Ligne au numéro de dispositif "+ str(int(row["NumDisp"])) +", au numéro de placette "+ str(row["NumPlac"]) +" et au numéro de cycle "+ str(row["Cycle"]) + " figure dans la table " + tablename+" mais ne figure pas dans la table Placette",
+                      "table": tablename,
+                      "column": [ "NumDisp", "NumPlac", "Cycle"],
+                      "row": [int(row["index_col_temp1"])], 
+                      "value": list2.loc[[index],:].to_json(orient='records'),
+                    }
+                  error_List_Temp.append(err)
+                i=i+1
+              verificationList.append({'errorName': "Information incohérente entre la table Placette et la table " +tablename, 'errorText': "Information incohérente entre la table Placette et la table " +tablename, 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
+
+        missCycleInPlacette(Arbres, Placettes, "Arbres", True)
+        missCycleInPlacette(BMSsup30, Placettes, "BMSsup30", True)
+        missCycleInPlacette(Cycles, Placettes, "Cycles", True)
+        missCycleInPlacette(Regeneration, Placettes, "Regeneration", True)
+        missCycleInPlacette(Transect, Placettes, "Transect", True)
+
+
+
+
+        # --- Contrôler cohérence NumDisp, Placette et Cycle avec les tables : Arbres, BMSsup30, Regeneration, Transect et Cycles
+        def missCycleInCycles(table, Cycles, tablename, blockingError):
+          if table.shape[0] >0:
+            temp1 = table[["NumDisp", "NumPlac", "Cycle"]]
+            temp1 = temp1.drop_duplicates()
+            temp1= temp1.assign(Corresp1 = 1)
+            temp1['index_col_temp1'] = temp1.index
+            temp1["NumDisp"]= temp1["NumDisp"].astype(int)
+            temp1["NumPlac"]= temp1["NumPlac"].astype(int)
+            temp1["Cycle"]= temp1["Cycle"].astype(int)
+
+
+            temp2 = Cycles[["NumDisp", "NumPlac", "Cycle"]]
+            temp2= temp2.assign(Corresp2 = 2)
+            temp2['index_col_temp2'] = temp2.index
+            temp2["NumDisp"]= temp2["NumDisp"].astype(int)
+            temp2["NumPlac"]= temp2["NumPlac"].astype(int)
+            temp2["Cycle"]= temp2["Cycle"].astype(int)
+
+
+            temp3 = pd.merge(temp1, temp2, how="outer", on=["NumDisp", "NumPlac", "Cycle"])
+            temp3 = temp3[temp3["Corresp2"].isna() ]      
+
+            list2 = temp3[temp3["Corresp2"].isna()]
+
+            if len(list2) >0:
+              error_List_Temp=[]
+              i = 0
+              for index, row in list2.iterrows():
+                if i <100:
+                  err = {
+                      "message": "La Ligne au numéro de dispositif "+ str(int(row["NumDisp"])) +", au numéro de placette "+ str(row["NumPlac"]) +" et au numéro de cycle "+ str(row["Cycle"]) + " figure dans la table " + tablename+" mais ne figure pas dans la table Placette",
+                      "table": tablename,
+                      "column": [ "NumDisp", "NumPlac", "Cycle"],
+                      "row": [int(row["index_col_temp1"])], 
+                      "value": list2.loc[[index],:].to_json(orient='records'),
+                    }
+                  error_List_Temp.append(err)
+                i=i+1
+              verificationList.append({'errorName': "Information incohérente entre la table Placette et la table " +tablename, 'errorText': "Information incohérente entre la table Placette et la table " +tablename, 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
+
+        missCycleInCycles(Arbres, Placettes, "Arbres", True)
+        missCycleInCycles(BMSsup30, Placettes, "BMSsup30", True)
+        missCycleInCycles(Cycles, Placettes, "Cycles", True)
+        missCycleInCycles(Regeneration, Placettes, "Regeneration", True)
+        missCycleInCycles(Transect, Placettes, "Transect", True)
+
         # Enlever car pas présent dans les algos de départ
         # miss2(Reperes, Placettes, "Reperes", False)
 
@@ -2177,6 +2289,27 @@ def check_int(tableName, colonneName, table_to_test):
           if i >= 100:
               break
   
+  return error, i
+
+# Check if the value is only one char
+def check_char(tableName, colonneName, table_to_test): 
+  error = []
+  i=0
+  t = table_to_test.dropna(subset=[colonneName])
+  bool_list = [((not isemptystring(x)) & (len(x)>1)) for x in t[colonneName]]
+  temp = t[bool_list]
+  if not temp.empty: 
+    for index, row in temp.iterrows():
+      if i<100:
+        err= {
+          "message": "Dans la table "+tableName+" la colonne "+ colonneName  +" contient la valeur \""+ str(row[colonneName])+"\"",
+          "table": tableName,
+          "column": [colonneName],
+          "row": [index],
+          "value": temp.loc[[index],:].to_json(orient='records'),
+        }
+        error.append(err)
+      i=i+1
   return error, i
 
 
