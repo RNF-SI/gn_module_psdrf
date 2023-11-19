@@ -2272,23 +2272,21 @@ def check_int(tableName, colonneName, table_to_test):
   error = []
   i=0
   t = table_to_test.dropna(subset=[colonneName])
-  
-  for index, value in t[colonneName].iteritems():
-      try:
-          int(value)
-      except ValueError:
-          err = {
-              "message": f"Dans la table {tableName}, la colonne {colonneName} contient la valeur \"{value}\" qui n'est pas convertible en entier.",
-              "table": tableName,
-              "column": [colonneName],
-              "row": [index],
-              "value": t.loc[[index], :].to_json(orient='records'),
-          }
-          error.append(err)
-          i += 1
-          if i >= 100:
-              break
-  
+  bool_list = [((not isemptystring(x)) & (not isint(x))) for x in t[colonneName]]
+  temp = t[bool_list]
+
+  if not temp.empty: 
+    for index, row in temp.iterrows():
+      if i<100:
+        err= {
+          "message": "Dans la table "+tableName+" la colonne "+ colonneName  +" contient la valeur \""+ str(row[colonneName])+"\"",
+          "table": tableName,
+          "column": [colonneName],
+          "row": [index],
+          "value": temp.loc[[index],:].to_json(orient='records'),
+        }
+        error.append(err)
+      i=i+1
   return error, i
 
 # Check if the value is only one char
