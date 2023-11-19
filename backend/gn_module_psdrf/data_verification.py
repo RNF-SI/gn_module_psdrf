@@ -1799,7 +1799,7 @@ def data_verification(data):
               for index, row in list2.iterrows():
                 if i <100:
                   err = {
-                      "message": "La Ligne au numéro de dispositif "+ str(int(row["NumDisp"])) +", au numéro de placette "+ str(row["NumPlac"]) +" et au numéro de cycle "+ str(row["Cycle"]) + " figure dans la table " + tablename+" mais ne figure pas dans la table Placette",
+                      "message": "La Ligne au numéro de dispositif "+ str(int(row["NumDisp"])) +", au numéro de placette "+ str(row["NumPlac"]) +" et au numéro de cycle "+ str(row["Cycle"]) + " figure dans la table " + tablename+" mais ne figure pas dans la table Cycle",
                       "table": tablename,
                       "column": [ "NumDisp", "NumPlac", "Cycle"],
                       "row": [int(row["index_col_temp1"])], 
@@ -1807,13 +1807,13 @@ def data_verification(data):
                     }
                   error_List_Temp.append(err)
                 i=i+1
-              verificationList.append({'errorName': "Information incohérente entre la table Placette et la table " +tablename, 'errorText': "Information incohérente entre la table Placette et la table " +tablename, 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
+              verificationList.append({'errorName': "Information incohérente entre la table Cycle et la table " +tablename, 'errorText': "Information incohérente entre la table Cycle et la table " +tablename, 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
-        missCycleInCycles(Arbres, Placettes, "Arbres", True)
-        missCycleInCycles(BMSsup30, Placettes, "BMSsup30", True)
-        missCycleInCycles(Cycles, Placettes, "Cycles", True)
-        missCycleInCycles(Regeneration, Placettes, "Regeneration", True)
-        missCycleInCycles(Transect, Placettes, "Transect", True)
+        missCycleInCycles(Arbres, Cycles, "Arbres", True)
+        missCycleInCycles(BMSsup30, Cycles, "BMSsup30", True)
+        missCycleInCycles(Cycles, Cycles, "Cycles", True)
+        missCycleInCycles(Regeneration, Cycles, "Regeneration", True)
+        missCycleInCycles(Transect, Cycles, "Transect", True)
 
         # Enlever car pas présent dans les algos de départ
         # miss2(Reperes, Placettes, "Reperes", False)
