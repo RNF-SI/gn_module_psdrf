@@ -23,6 +23,7 @@ from .models import TDispositifs, TPlacettes, TArbres, TCycles, \
 from .data_verification import data_verification
 from .data_integration import data_integration
 from .psdrf_list_update import psdrf_list_update
+from .disp_placette_liste import disp_placette_liste_add
 from .bddToExcel import bddToExcel
 from .schemas.dispositifs import DispositifSchema
 from .schemas.cycles import ConciseCycleSchema
@@ -556,6 +557,20 @@ def psdrf_update_psdrf_liste():
     except Exception as e:
         logging.critical(e)
         msg = json.dumps({"type": "bug", "msg": "Unknown error during psdrf liste change"})
+        logging.info(msg)
+        return Response(msg, status=500)
+    
+# add Placette List request
+@blueprint.route('/disp_placette_liste', methods=['POST'])
+@json_resp
+def psdrf_update_disp_placette_liste():
+    disp_placette_liste_file = request.files.get('file_upload', 'disp_placette_liste')
+    try:
+        result_message = disp_placette_liste_add(disp_placette_liste_file)
+        return {"success": True, "message": result_message}
+    except Exception as e:
+        logging.critical(e)
+        msg = json.dumps({"type": "bug", "msg": "Unknown error during disp_placette_liste change"})
         logging.info(msg)
         return Response(msg, status=500)
 

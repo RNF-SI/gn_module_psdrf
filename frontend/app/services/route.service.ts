@@ -250,4 +250,12 @@ export class PsdrfDataService {
     );
   }
 
+  disp_placette_liste_update(file){
+    let disp_placette_liste:FormData = new FormData();
+    disp_placette_liste.append('file_upload', file, 'disp_placette_liste');
+    return this._http.post<any>(
+      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/disp_placette_liste`,
+      disp_placette_liste
+    );
+  }
 }
