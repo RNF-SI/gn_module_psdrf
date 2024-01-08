@@ -79,7 +79,7 @@ def data_verification(data):
       if len(check_code_Error_List) >0:
         verificationList.append({'errorName': 'Il manque une colonne dans la table Reperes', 'errorText': 'Il manque une colonne dans la table Reperes', 'errorList': check_code_Error_List, 'errorType': 'PsdrfErrorColonnes', 'isFatalError': True})
     else: 
-      Reperes = pd.json_normalize([{'NumDisp': None, 'NumPlac': None, 'Azimut': None, 'Dist': None, 'Diam': None, 'Repere': None, 'Observation': None}])
+      Reperes = pd.json_normalize([])
 
 
 
@@ -185,20 +185,23 @@ def data_verification(data):
 
 
       for typeObj in typeColumnObj:
-        for check in [
-          {'colnames': typeObj.get('notNullNames'), 'checktypefunction': check_notNULL, 'type_text': '(valeur attendue)'}, 
-          {'colnames': typeObj.get('intNames'), 'checktypefunction': check_int, 'type_text': '(entiers attendus)'}, 
-          {'colnames': typeObj.get('floatNames'), 'checktypefunction': check_int_or_float, 'type_text': '(décimale attendue)'}, 
-          {'colnames': typeObj.get('boolNames'), 'checktypefunction': check_boolean, 'type_text': '(f, t ou rien attendus)'}, 
-          {'colnames': typeObj.get('dateNames'), 'checktypefunction': check_date, 'type_text': '(dates attendues sous la forme dd/mm/aaaa)'},
-          {'colnames': typeObj.get('charNames'), 'checktypefunction': check_char, 'type_text': '(1 seul caractère attendu)'},
-          ]:
-          for col in check.get('colnames'):
-            check_code_Error_List, i = check.get('checktypefunction')(typeObj.get('arrayName'), col, typeObj.get('array'))
-            if len(check_code_Error_List) >0:
-              verificationList.append({'errorName': 'Controle '+ col +' dans la table ' + typeObj.get('arrayName') + ' '+ check.get('type_text'), 'errorText': 'Controle '+ col + ' dans la table ' + typeObj.get('arrayName') + ' '+check.get('type_text'), 'errorList': check_code_Error_List, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
+        # Verify if typeColmnObj.array is not empty
+        if not typeObj.get('array').empty:
+          for check in [
+            {'colnames': typeObj.get('notNullNames'), 'checktypefunction': check_notNULL, 'type_text': '(valeur attendue)'}, 
+            {'colnames': typeObj.get('intNames'), 'checktypefunction': check_int, 'type_text': '(entiers attendus)'}, 
+            {'colnames': typeObj.get('floatNames'), 'checktypefunction': check_int_or_float, 'type_text': '(décimale attendue)'}, 
+            {'colnames': typeObj.get('boolNames'), 'checktypefunction': check_boolean, 'type_text': '(f, t ou rien attendus)'}, 
+            {'colnames': typeObj.get('dateNames'), 'checktypefunction': check_date, 'type_text': '(dates attendues sous la forme dd/mm/aaaa)'},
+            {'colnames': typeObj.get('charNames'), 'checktypefunction': check_char, 'type_text': '(1 seul caractère attendu)'},
+            ]:
+            for col in check.get('colnames'):
+              check_code_Error_List, i = check.get('checktypefunction')(typeObj.get('arrayName'), col, typeObj.get('array'))
+              if len(check_code_Error_List) >0:
+                verificationList.append({'errorName': 'Controle '+ col +' dans la table ' + typeObj.get('arrayName') + ' '+ check.get('type_text'), 'errorText': 'Controle '+ col + ' dans la table ' + typeObj.get('arrayName') + ' '+check.get('type_text'), 'errorList': check_code_Error_List, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
       for df_info in typeColumnObj:
+        if not df_info.get('array').empty:
           df = df_info['array']
           for col_name in df_info['intNames']:
               df[col_name] = pd.to_numeric(df[col_name], errors='ignore', downcast='integer')
@@ -1902,33 +1905,36 @@ def data_verification(data):
 
         # Table Reperes
         #Contrôle des valeurs dupliquées
-        df_Dupl_temp= Reperes[["NumDisp", "NumPlac", "Azimut", "Dist", "Diam"]].sort_values(by=["NumDisp", "NumPlac", "Azimut", "Dist", "Diam"])
-        Reperes= Reperes.sort_values(by=["NumDisp", "NumPlac", "Azimut", "Dist", "Diam"])
-        df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated()]
-        df_Dupl = df_Dupl.drop_duplicates()
-        if not df_Dupl.empty:
-          entire_df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated(keep=False)]        
-          #Get list of indexes of duplicated rows
-          groups= entire_df_Dupl.groupby(list(df_Dupl_temp)).groups
-          listDupl =[list(groups[key]) for key in groups.keys()]
-          i = 0
-          error_List_Temp = []
-          for index, row in df_Dupl.iterrows():
-            if i<100:
-              valuesDupl = entire_df_Dupl.loc[listDupl[i]]
-              err = {
-                    "message": "La "+ str(row["NumPlac"]) +" avec l'azimut "+ str(row["Azimut"]) +" et la distance "+ str(row["Dist"])+" apparaît plusieurs fois dans la table Reperes",
-                    "table": "Reperes",
-                    "column": ["NumDisp", "NumPlac", "Azimut", "Dist"],
-                    "row": listDupl[i], 
-                    "value": valuesDupl.to_json(orient='records'),
-                }
-              error_List_Temp.append(err)
-            i = i + 1
-          verificationList.append({'errorName': "Duplication dans Reperes", 'errorText': 'Lignes dupliquées dans la table Reperes', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
+        # If repere hasmore that 0 rows
+        if Reperes.shape[0] >0:
+          df_Dupl_temp= Reperes[["NumDisp", "NumPlac", "Azimut", "Dist", "Diam"]].sort_values(by=["NumDisp", "NumPlac", "Azimut", "Dist", "Diam"])
+          Reperes= Reperes.sort_values(by=["NumDisp", "NumPlac", "Azimut", "Dist", "Diam"])
+          df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated()]
+          df_Dupl = df_Dupl.drop_duplicates()
+          if not df_Dupl.empty:
+            entire_df_Dupl = df_Dupl_temp[df_Dupl_temp.duplicated(keep=False)]        
+            #Get list of indexes of duplicated rows
+            groups= entire_df_Dupl.groupby(list(df_Dupl_temp)).groups
+            listDupl =[list(groups[key]) for key in groups.keys()]
+            i = 0
+            error_List_Temp = []
+            for index, row in df_Dupl.iterrows():
+              if i<100:
+                valuesDupl = entire_df_Dupl.loc[listDupl[i]]
+                err = {
+                      "message": "La "+ str(row["NumPlac"]) +" avec l'azimut "+ str(row["Azimut"]) +" et la distance "+ str(row["Dist"])+" apparaît plusieurs fois dans la table Reperes",
+                      "table": "Reperes",
+                      "column": ["NumDisp", "NumPlac", "Azimut", "Dist"],
+                      "row": listDupl[i], 
+                      "value": valuesDupl.to_json(orient='records'),
+                  }
+                error_List_Temp.append(err)
+              i = i + 1
+            verificationList.append({'errorName': "Duplication dans Reperes", 'errorText': 'Lignes dupliquées dans la table Reperes', 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
         # Contrôle de l'existence de la placette dans la table Placettes
-        list1, list2 = miss3(Reperes, Placettes, "Reperes")
+        if Reperes.shape[0] >0:
+          list1, list2 = miss3(Reperes, Placettes, "Reperes")
         # Test commented because not usefull
         # if not list1.empty:
         #   error = []
@@ -1947,20 +1953,21 @@ def data_verification(data):
         #     i = i + 1
         #   verificationList.append({'errorName': "Placette inexistante dans la table Repères mais existe dans la table Placette", 'errorText': 'Placette inexistante dans la table Reperes', 'errorList': error, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
-        if not list2.empty:
-          i = 0
-          error = []
-          for index, row in list2.iterrows():
-            err = {
-                  "message": "La placette "+ str(row["NumPlac"]) +" n'existe pas dans la table Placettes mais existe dans la table Repères",
-                  "table": "Reperes",
-                  "column": ["NumDisp", "NumPlac"],
-                  "row": [row["index_temp1"]], 
-                  "value": list2.loc[[index],:].to_json(orient='records'),
-              }
-            error.append(err)
-            i = i + 1
-          verificationList.append({'errorName': "Placette inexistante dans Placette mais existe dans la table Repères", 'errorText': 'Placette inexistante dans la table Placette', 'errorList': error, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
+        if Reperes.shape[0] >0:
+          if not list2.empty:
+            i = 0
+            error = []
+            for index, row in list2.iterrows():
+              err = {
+                    "message": "La placette "+ str(row["NumPlac"]) +" n'existe pas dans la table Placettes mais existe dans la table Repères",
+                    "table": "Reperes",
+                    "column": ["NumDisp", "NumPlac"],
+                    "row": [row["index_temp1"]], 
+                    "value": list2.loc[[index],:].to_json(orient='records'),
+                }
+              error.append(err)
+              i = i + 1
+            verificationList.append({'errorName': "Placette inexistante dans Placette mais existe dans la table Repères", 'errorText': 'Placette inexistante dans la table Placette', 'errorList': error, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
         # Conformité avec les codifications
         # CodeDureté
@@ -2044,6 +2051,7 @@ def data_verification(data):
   except Exception as e:
       # Rollback and print error
       print(e)
+      traceback.print_exc()
       tb_str = traceback.format_exception(Exception, e, e.__traceback__)
       message = ''.join(tb_str)
       return (json.dumps({'success': False, "message":"Une erreur inconnue a eu lieu. Veuillez contacter un administrateur.", "error_detail": message}), 500, {'ContentType':'application/json'})
