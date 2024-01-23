@@ -24,6 +24,7 @@ from .data_verification import data_verification
 from .data_integration import data_integration
 from .psdrf_list_update import psdrf_list_update
 from .disp_placette_liste import disp_placette_liste_add
+from .pr_psdrf_staging_functions.insert_or_update_disp_to_staging import insert_or_update_data
 from .bddToExcel import bddToExcel
 from .schemas.dispositifs import DispositifSchema
 from .schemas.cycles import ConciseCycleSchema
@@ -646,6 +647,25 @@ def get_PSDRF_t_nomenclatures():
         return t_nomenclatures
     except Exception:
         raise
+
+@blueprint.route('/export_dispositif_from_dendro3', methods=['POST'])
+@json_resp
+def export_dispositif():
+    """
+    Receives a dispositif entity
+
+    as JSON and exports it to the database.
+    """
+    data = request.get_json()
+    if not data:
+        return {"success": False, "message": "No data provided."}, 400
+    try:
+        # Assuming you have a function to handle the insertion or update
+        result = insert_or_update_data(data)
+        return {"success": True, "message": "Dispositif data exported successfully.", "result": result}, 200
+    except Exception as e:
+        return {"success": False, "message": str(e)}, 500
+
 
     # query = DB.session.query(
     #     ref_nomenclatures.bib_nomenclatures_types

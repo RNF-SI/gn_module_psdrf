@@ -1,0 +1,81 @@
+from ..models_staging import TTransectsStaging
+from geonature.utils.env import DB
+from sqlalchemy import func
+
+def insert_or_update_transect(category, cor_cycle_placette_category, cor_cycle_placette_id, transect_data):
+    try:
+        results = []
+
+        # Implement creation logic for transects
+        if category == 'created':          
+
+            max_id_transect= DB.session.query(func.max(TTransectsStaging.id_transect)).scalar()
+            new_id_transect = (max_id_transect or 0) + 1
+
+            new_transect = TTransectsStaging(
+                id_transect=new_id_transect,
+                id_cycle_placette=cor_cycle_placette_id,
+                id_transect_orig=transect_data.get('id_transect_orig'),
+                code_essence=transect_data.get('code_essence'),
+                ref_transect=transect_data.get('ref_transect'),
+                distance=transect_data.get('distance'),
+                orientation=transect_data.get('orientation'),
+                azimut_souche=transect_data.get('azimut_souche'),
+                distance_souche=transect_data.get('distance_souche'),
+                diametre=transect_data.get('diametre'),
+                diametre_130=transect_data.get('diametre_130'),
+                ratio_hauteur=transect_data.get('ratio_hauteur'),
+                contact=transect_data.get('contact'),
+                angle=transect_data.get('angle'),
+                chablis=transect_data.get('chablis'),
+                stade_durete=transect_data.get('stade_durete'),
+                stade_ecorce=transect_data.get('stade_ecorce'),
+                observation=transect_data.get('observation'), 
+            )
+            DB.session.add(new_transect)
+            DB.session.commit()
+            results.append({"message": "Transect created successfully.", "status": "created", "new_id": new_transect.id_transect})
+
+        # Implement update logic for transects
+        if category == 'updated':
+            existing_transect = DB.session.query(TTransectsStaging).filter_by(
+                id_transect=transect_data['id_transect']
+            ).first()
+            if existing_transect:
+                existing_transect.id_cycle_placette = transect_data.get('id_cycle_placette', existing_transect.id_cycle_placette)
+                existing_transect.id_transect_orig = transect_data.get('id_transect_orig', existing_transect.id_transect_orig)
+                existing_transect.code_essence = transect_data.get('code_essence', existing_transect.code_essence)
+                existing_transect.ref_transect = transect_data.get('ref_transect', existing_transect.ref_transect)
+                existing_transect.distance = transect_data.get('distance', existing_transect.distance)
+                existing_transect.orientation = transect_data.get('orientation', existing_transect.orientation)
+                existing_transect.azimut_souche = transect_data.get('azimut_souche', existing_transect.azimut_souche)
+                existing_transect.distance_souche = transect_data.get('distance_souche', existing_transect.distance_souche)
+                existing_transect.diametre = transect_data.get('diametre', existing_transect.diametre)
+                existing_transect.diametre_130 = transect_data.get('diametre_130', existing_transect.diametre_130)
+                existing_transect.ratio_hauteur = transect_data.get('ratio_hauteur', existing_transect.ratio_hauteur)
+                existing_transect.contact = transect_data.get('contact', existing_transect.contact)
+                existing_transect.angle = transect_data.get('angle', existing_transect.angle)
+                existing_transect.chablis = transect_data.get('chablis', existing_transect.chablis)
+                existing_transect.stade_durete = transect_data.get('stade_durete', existing_transect.stade_durete)
+                existing_transect.stade_ecorce = transect_data.get('stade_ecorce', existing_transect.stade_ecorce)
+                existing_transect.observation = transect_data.get('observation', existing_transect.observation)
+  
+                DB.session.commit()
+                results.append({"message": "Transect updated successfully.", "status": "updated", "id": existing_transect.id_transect})
+
+        # Implement deletion logic for transects
+        if category == 'deleted':
+            transect_to_delete = DB.session.query(TTransectsStaging).filter_by(
+                id_transect=transect_data['id_transect']
+            ).first()
+            if transect_to_delete:
+                DB.session.delete(transect_to_delete)
+                DB.session.commit()
+                results.append({"message": "Transect deleted successfully.", "status": "deleted", "id": transect_to_delete.id_transect})
+
+        return results
+
+    except Exception as e:
+        DB.session.rollback()
+        print("Error in insert_or_update_transect: ", str(e))
+        raise e
