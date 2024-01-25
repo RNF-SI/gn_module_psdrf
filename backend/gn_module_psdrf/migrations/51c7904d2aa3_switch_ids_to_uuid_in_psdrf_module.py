@@ -537,6 +537,9 @@ def downgrade():
     # Step 3: Drop the temporary UUID column in t_bm_sup_30_mesures
     op.drop_column('t_bm_sup_30_mesures', 'temp_id_bm_sup_30', schema=schema)
 
+    # Recreate the original foreign key constraint
+    op.create_foreign_key('fk_t_bm_sup_30_mesures_t_bm_sup_30', 't_bm_sup_30_mesures', 't_bm_sup_30', ['id_bm_sup_30'], ['id_bm_sup_30'], source_schema=schema, referent_schema=schema)
+
     # Step 1: Drop the temporary UUID column in t_bm_sup_30
     op.drop_column('t_bm_sup_30', 'new_id_bm_sup_30', schema=schema)
 
