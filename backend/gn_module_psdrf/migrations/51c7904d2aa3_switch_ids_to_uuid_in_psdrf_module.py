@@ -290,26 +290,51 @@ def upgrade():
 
 
 def downgrade():
+
+                                       
     # Repere
     # Reverse Step 4: Rename UUID column back to a temporary name
     op.alter_column('t_reperes', 'id_repere', new_column_name='new_id_repere', schema=schema)
+
     # Reverse Step 3: Recreate the original integer primary key column without a default value
     op.add_column('t_reperes', sa.Column('id_repere', sa.Integer, autoincrement=False, nullable=True), schema=schema)
+
     # Create an engine (or use an existing one)
     bind = op.get_bind()
     metadata = sa.MetaData(bind=bind)
     t_reperes = sa.Table('t_reperes', metadata, autoload=True, autoload_with=bind, schema=schema)
-    # Use a SQL statement to populate id_repere
-    # WARNING: This will assign new IDs starting from 1, and may not preserve original order
-    bind.execute(
-        sa.update(t_reperes).values(
-            id_repere=sa.select([sa.func.row_number().over(order_by='new_id_repere')]).as_scalar()
-        )
+
+    # Check if the primary key constraint 'pk_t_reperes' exists and drop it if it does
+    insp = sa.inspect(bind)
+    pk_constraint = insp.get_pk_constraint('t_reperes', schema=schema)
+    if pk_constraint and 'pk_t_reperes' in pk_constraint.get('name', []):
+        op.drop_constraint('pk_t_reperes', 't_reperes', type_='primary', schema=schema)
+
+    # Create a CTE that assigns row numbers to each row in t_reperes
+    row_number_cte = sa.select([
+        t_reperes.c.new_id_repere,
+        sa.func.row_number().over(order_by=t_reperes.c.new_id_repere).label('rn')
+    ]).cte('row_number_cte')
+
+    # Update t_reperes by joining it with the CTE on new_id_repere
+    update_stmt = t_reperes.update().values(
+        id_repere=row_number_cte.c.rn
+    ).where(
+        t_reperes.c.new_id_repere == row_number_cte.c.new_id_repere
     )
+
+    # Execute the update statement
+    bind.execute(update_stmt)
+
     op.alter_column('t_reperes', 'id_repere', existing_type=sa.Integer, nullable=False, schema=schema)
     op.create_primary_key('pk_t_reperes', 't_reperes', ['id_repere'], schema=schema)
-    # Reverse Step 1: Drop the UUID column after successful repopulation of integer IDs
+
+    # Drop the temporary UUID column
     op.drop_column('t_reperes', 'new_id_repere', schema=schema)
+
+
+
+
 
     # Arbres
     # Drop the dependent view
@@ -326,35 +351,50 @@ def downgrade():
     op.add_column('t_arbres_mesures', sa.Column('id_arbre', sa.Integer, nullable=True), schema=schema)
 
     # Now, reverse operations for t_arbres
+    # Get database connection and metadata
+    connection = op.get_bind()
+    metadata = sa.MetaData(bind=connection)
+
     # Step 8: Rename the UUID primary key column back to a temporary name
     op.alter_column('t_arbres', 'id_arbre', new_column_name='new_id_arbre', schema=schema)
 
     # Step 7: Recreate the original primary key column with integer type
     op.add_column('t_arbres', sa.Column('id_arbre', sa.Integer, primary_key=True, autoincrement=True, nullable=True), schema=schema)
 
-    # Step 2: Repopulate the integer primary key column in t_arbres
-    # This is complex and requires a custom strategy
-    connection = op.get_bind()
-    metadata = sa.MetaData(bind=connection)
+    # Load t_arbres table
     t_arbres = sa.Table('t_arbres', metadata, autoload=True, autoload_with=connection, schema=schema)
 
-    # Assign new sequential IDs
-    connection.execute(
-        sa.update(t_arbres).values(
-            id_arbre=sa.select([sa.func.row_number().over(order_by='new_id_arbre')]).as_scalar()
-        )
+    # Check if the primary key constraint 'pk_t_arbres' exists and drop it if it does
+    insp = sa.inspect(bind)
+    pk_constraint = insp.get_pk_constraint('t_arbres', schema=schema)
+    if pk_constraint and 'pk_t_arbres' in pk_constraint.get('name', []):
+        op.drop_constraint('pk_t_arbres', 't_arbres', type_='primary', schema=schema)
+
+    # Create a CTE for row numbers
+    row_number_cte = sa.select([
+        t_arbres.c.new_id_arbre,
+        sa.func.row_number().over(order_by=t_arbres.c.new_id_arbre).label('rn')
+    ]).cte('row_number_cte')
+
+    # Update statement
+    update_stmt = t_arbres.update().values(
+        id_arbre=row_number_cte.c.rn
+    ).where(
+        t_arbres.c.new_id_arbre == row_number_cte.c.new_id_arbre
     )
+
+    # Execute the update
+    connection.execute(update_stmt)
 
     # Set the column to NOT NULL and add primary key
     op.alter_column('t_arbres', 'id_arbre', existing_type=sa.Integer, nullable=False, schema=schema)
     op.create_primary_key('pk_t_arbres', 't_arbres', ['id_arbre'], schema=schema)
 
+
     # Step 4: Repopulate the integer foreign key column in t_arbres_mesures
     t_arbres_mesures = sa.Table('t_arbres_mesures', metadata, autoload=True, autoload_with=connection, schema=schema)
 
-
     # Update the foreign key in t_arbres_mesures
-    # Map the new integer IDs in t_arbres to the UUIDs in t_arbres_mesures
     connection.execute(
         t_arbres_mesures.update().values(
             id_arbre=sa.select([t_arbres.c.id_arbre]).where(t_arbres.c.new_id_arbre == t_arbres_mesures.c.temp_id_arbre)
@@ -365,7 +405,6 @@ def downgrade():
     op.drop_column('t_arbres_mesures', 'temp_id_arbre', schema=schema)
 
     # Recreate the original foreign key constraint
-    # Assuming the original constraint name and details
     op.create_foreign_key('fk_t_arbres_mesures_t_arbres', 't_arbres_mesures', 't_arbres', ['id_arbre'], ['id_arbre'], source_schema=schema, referent_schema=schema)
 
     # Step 1: Drop the temporary UUID column in t_arbres
@@ -389,26 +428,40 @@ def downgrade():
     """)
 
 
-
-    # Arbres mesures
+    # Arbres Mesures
     # Reverse Step 4: Rename UUID column back to a temporary name
     op.alter_column('t_arbres_mesures', 'id_arbre_mesure', new_column_name='new_id_arbre_mesure', schema=schema)
 
     # Reverse Step 3: Recreate the original integer primary key column without a default value
-    op.add_column('t_arbres_mesures', sa.Column('id_arbre_mesure', sa.Integer, autoincrement=True, nullable=True), schema=schema)
+    op.add_column('t_arbres_mesures', sa.Column('id_arbre_mesure', sa.Integer, nullable=True), schema=schema)
 
     # Create an engine (or use an existing one)
     bind = op.get_bind()
     metadata = sa.MetaData(bind=bind)
     t_arbres_mesures = sa.Table('t_arbres_mesures', metadata, autoload=True, autoload_with=bind, schema=schema)
 
-    # Use a SQL statement to populate id_arbre_mesure
-    # WARNING: This will assign new IDs starting from 1, and may not preserve original order
-    bind.execute(
-        sa.update(t_arbres_mesures).values(
-            id_arbre_mesure=sa.select([sa.func.row_number().over(order_by='new_id_arbre_mesure')]).as_scalar()
-        )
+    # Check if the primary key constraint exists and drop it
+    insp = sa.inspect(bind)
+    pk_constraint = insp.get_pk_constraint('t_arbres_mesures', schema=schema)
+    if pk_constraint and 'pk_t_arbres_mesures' in pk_constraint.get('name', []):
+        op.drop_constraint('pk_t_arbres_mesures', 't_arbres_mesures', type_='primary', schema=schema)
+
+
+    # Create a CTE for row numbers
+    row_number_cte = sa.select([
+        t_arbres_mesures.c.new_id_arbre_mesure,
+        sa.func.row_number().over(order_by=t_arbres_mesures.c.new_id_arbre_mesure).label('rn')
+    ]).cte('row_number_cte')
+
+    # Update statement
+    update_stmt = t_arbres_mesures.update().values(
+        id_arbre_mesure=row_number_cte.c.rn
+    ).where(
+        t_arbres_mesures.c.new_id_arbre_mesure == row_number_cte.c.new_id_arbre_mesure
     )
+
+    # Execute the update
+    bind.execute(update_stmt)
 
     # Set the column to NOT NULL and add primary key
     op.alter_column('t_arbres_mesures', 'id_arbre_mesure', existing_type=sa.Integer, nullable=False, schema=schema)
@@ -432,25 +485,40 @@ def downgrade():
     op.add_column('t_bm_sup_30_mesures', sa.Column('id_bm_sup_30', sa.Integer, nullable=True), schema=schema)
 
     # Now, reverse operations for t_bm_sup_30
+    # Get database connection and metadata
+    connection = op.get_bind()
+    metadata = sa.MetaData(bind=connection)
+
     # Step 8: Rename the UUID primary key column back to a temporary name
     op.alter_column('t_bm_sup_30', 'id_bm_sup_30', new_column_name='new_id_bm_sup_30', schema=schema)
 
     # Step 7: Recreate the original primary key column with integer type
-    op.add_column('t_bm_sup_30', sa.Column('id_bm_sup_30', sa.Integer, autoincrement=True, nullable=True), schema=schema)
+    op.add_column('t_bm_sup_30', sa.Column('id_bm_sup_30', sa.Integer, primary_key=True, autoincrement=True, nullable=True), schema=schema)
 
-    # Step 2: Repopulate the integer primary key column in t_bm_sup_30
-    connection = op.get_bind()
-    metadata = sa.MetaData(bind=connection)
+    # Load t_bm_sup_30 table
     t_bm_sup_30 = sa.Table('t_bm_sup_30', metadata, autoload=True, autoload_with=connection, schema=schema)
-    # Create a sequence for new IDs
-    new_id_seq = sa.Sequence('new_id_seq', metadata=metadata)
-    connection.execute(new_id_seq.create())
-    # Assign new sequential IDs
-    connection.execute(
-        t_bm_sup_30.update().values(
-            id_bm_sup_30=sa.select([sa.func.nextval(new_id_seq)])
-        )
+
+    # Check if the primary key constraint 'pk_t_bm_sup_30' exists and drop it if it does
+    insp = sa.inspect(connection)
+    pk_constraint = insp.get_pk_constraint('t_bm_sup_30', schema=schema)
+    if pk_constraint and 'pk_t_bm_sup_30' in pk_constraint.get('name', []):
+        op.drop_constraint('pk_t_bm_sup_30', 't_bm_sup_30', type_='primary', schema=schema)
+
+    # Create a CTE for row numbers
+    row_number_cte = sa.select([
+        t_bm_sup_30.c.new_id_bm_sup_30,
+        sa.func.row_number().over(order_by=t_bm_sup_30.c.new_id_bm_sup_30).label('rn')
+    ]).cte('row_number_cte')
+
+    # Update statement
+    update_stmt = t_bm_sup_30.update().values(
+        id_bm_sup_30=row_number_cte.c.rn
+    ).where(
+        t_bm_sup_30.c.new_id_bm_sup_30 == row_number_cte.c.new_id_bm_sup_30
     )
+
+    # Execute the update
+    connection.execute(update_stmt)
 
     # Set the column to NOT NULL and add primary key
     op.alter_column('t_bm_sup_30', 'id_bm_sup_30', existing_type=sa.Integer, nullable=False, schema=schema)
@@ -458,16 +526,13 @@ def downgrade():
 
     # Step 4: Repopulate the integer foreign key column in t_bm_sup_30_mesures
     t_bm_sup_30_mesures = sa.Table('t_bm_sup_30_mesures', metadata, autoload=True, autoload_with=connection, schema=schema)
+
     # Update the foreign key in t_bm_sup_30_mesures
     connection.execute(
         t_bm_sup_30_mesures.update().values(
             id_bm_sup_30=sa.select([t_bm_sup_30.c.id_bm_sup_30]).where(t_bm_sup_30.c.new_id_bm_sup_30 == t_bm_sup_30_mesures.c.temp_id_bm_sup_30)
         )
     )
-
-    # Set the column to NOT NULL and add foreign key
-    op.alter_column('t_bm_sup_30_mesures', 'id_bm_sup_30', existing_type=sa.Integer, nullable=False, schema=schema)
-    op.create_foreign_key('fk_t_bm_sup_30_mesures_t_bm_sup_30', 't_bm_sup_30_mesures', 't_bm_sup_30', ['id_bm_sup_30'], ['id_bm_sup_30'], source_schema=schema, referent_schema=schema)
 
     # Step 3: Drop the temporary UUID column in t_bm_sup_30_mesures
     op.drop_column('t_bm_sup_30_mesures', 'temp_id_bm_sup_30', schema=schema)
@@ -492,20 +557,34 @@ def downgrade():
     metadata = sa.MetaData(bind=bind)
     t_bm_sup_30_mesures = sa.Table('t_bm_sup_30_mesures', metadata, autoload=True, autoload_with=bind, schema=schema)
 
-    # Use a SQL statement to populate id_bm_sup_30_mesure
-    # WARNING: This will assign new IDs starting from 1, and may not preserve original order
-    bind.execute(
-        sa.update(t_bm_sup_30_mesures).values(
-            id_bm_sup_30_mesure=sa.select([sa.func.row_number().over(order_by='new_id_bm_sup_30_mesure')]).as_scalar()
-        )
+    # Check if the primary key constraint 'pk_t_bm_sup_30_mesures' exists and drop it if it does
+    insp = sa.inspect(bind)
+    pk_constraint = insp.get_pk_constraint('t_bm_sup_30_mesures', schema=schema)
+    if pk_constraint and 'pk_t_bm_sup_30_mesures' in pk_constraint.get('name', []):
+        op.drop_constraint('pk_t_bm_sup_30_mesures', 't_bm_sup_30_mesures', type_='primary', schema=schema)
+
+    # Create a CTE that assigns row numbers to each row in t_bm_sup_30_mesures
+    row_number_cte = sa.select([
+        t_bm_sup_30_mesures.c.new_id_bm_sup_30_mesure,
+        sa.func.row_number().over(order_by=t_bm_sup_30_mesures.c.new_id_bm_sup_30_mesure).label('rn')
+    ]).cte('row_number_cte')
+
+    # Update t_bm_sup_30_mesures by joining it with the CTE on new_id_bm_sup_30_mesure
+    update_stmt = t_bm_sup_30_mesures.update().values(
+        id_bm_sup_30_mesure=row_number_cte.c.rn
+    ).where(
+        t_bm_sup_30_mesures.c.new_id_bm_sup_30_mesure == row_number_cte.c.new_id_bm_sup_30_mesure
     )
 
-    # Set the column to NOT NULL and add primary key
+    # Execute the update statement
+    bind.execute(update_stmt)
+
     op.alter_column('t_bm_sup_30_mesures', 'id_bm_sup_30_mesure', existing_type=sa.Integer, nullable=False, schema=schema)
     op.create_primary_key('pk_t_bm_sup_30_mesures', 't_bm_sup_30_mesures', ['id_bm_sup_30_mesure'], schema=schema)
 
-    # Reverse Step 1: Drop the UUID column after successful repopulation of integer IDs
+    # Drop the temporary UUID column
     op.drop_column('t_bm_sup_30_mesures', 'new_id_bm_sup_30_mesure', schema=schema)
+
 
 
 
@@ -530,29 +609,40 @@ def downgrade():
     # Step 7: Recreate the original primary key column with integer type
     op.add_column('cor_cycles_placettes', sa.Column('id_cycle_placette', sa.Integer, autoincrement=False, nullable=True), schema=schema)
 
-    # Step 2: Repopulate the integer primary key column in cor_cycles_placettes
-    # This is complex and requires a custom strategy
+    # Get database connection and metadata
     connection = op.get_bind()
     metadata = sa.MetaData(bind=connection)
-    cor_cycles_placettes = sa.Table('cor_cycles_placettes', metadata, autoload=True, autoload_with=connection, schema=schema)
-    # Create a sequence for new IDs
-    new_id_seq = sa.Sequence('new_id_seq', metadata=metadata)
-    connection.execute(new_id_seq.create())
 
-    # Assign new sequential IDs
-    connection.execute(
-        cor_cycles_placettes.update().values(
-            id_cycle_placette=sa.select([sa.func.nextval(new_id_seq)])
-        )
+    # Load cor_cycles_placettes table
+    cor_cycles_placettes = sa.Table('cor_cycles_placettes', metadata, autoload=True, autoload_with=connection, schema=schema)
+
+    # Check if the primary key constraint 'pk_cor_cycles_placettes' exists and drop it if it does
+    insp = sa.inspect(bind)
+    pk_constraint = insp.get_pk_constraint('cor_cycles_placettes', schema=schema)
+    if pk_constraint and 'pk_cor_cycles_placettes' in pk_constraint.get('name', []):
+        op.drop_constraint('pk_cor_cycles_placettes', 'cor_cycles_placettes', type_='primary', schema=schema)
+
+    # Create a CTE for row numbers
+    row_number_cte = sa.select([
+        cor_cycles_placettes.c.new_id_cycle_placette,
+        sa.func.row_number().over(order_by=cor_cycles_placettes.c.new_id_cycle_placette).label('rn')
+    ]).cte('row_number_cte')
+
+    # Update statement
+    update_stmt = cor_cycles_placettes.update().values(
+        id_cycle_placette=row_number_cte.c.rn
+    ).where(
+        cor_cycles_placettes.c.new_id_cycle_placette == row_number_cte.c.new_id_cycle_placette
     )
+
+    # Execute the update
+    connection.execute(update_stmt)
 
     # Set the column to NOT NULL and add primary key
     op.alter_column('cor_cycles_placettes', 'id_cycle_placette', existing_type=sa.Integer, nullable=False, schema=schema)
     op.create_primary_key('pk_cor_cycles_placettes', 'cor_cycles_placettes', ['id_cycle_placette'], schema=schema)
 
     # Step 4: Repopulate the integer foreign key column in t_regenerations and t_transects
-    connection = op.get_bind()
-    metadata = sa.MetaData(bind=connection)
     t_regenerations = sa.Table('t_regenerations', metadata, autoload=True, autoload_with=connection, schema=schema)
     t_transects = sa.Table('t_transects', metadata, autoload=True, autoload_with=connection, schema=schema)
 
@@ -582,6 +672,7 @@ def downgrade():
 
 
 
+
     # Regeneration
     # Reverse Step 4: Rename UUID column back to a temporary name
     op.alter_column('t_regenerations', 'id_regeneration', new_column_name='new_id_regeneration', schema=schema)
@@ -594,20 +685,34 @@ def downgrade():
     metadata = sa.MetaData(bind=bind)
     t_regenerations = sa.Table('t_regenerations', metadata, autoload=True, autoload_with=bind, schema=schema)
 
-    # Use a SQL statement to populate id_regeneration
-    # WARNING: This will assign new IDs starting from 1, and may not preserve original order
-    bind.execute(
-        sa.update(t_regenerations).values(
-            id_regeneration=sa.select([sa.func.row_number().over(order_by='new_id_regeneration')]).as_scalar()
-        )
+    # Check if the primary key constraint 'pk_t_regenerations' exists and drop it if it does
+    insp = sa.inspect(bind)
+    pk_constraint = insp.get_pk_constraint('t_regenerations', schema=schema)
+    if pk_constraint and 'pk_t_regenerations' in pk_constraint.get('name', []):
+        op.drop_constraint('pk_t_regenerations', 't_regenerations', type_='primary', schema=schema)
+
+    # Create a CTE that assigns row numbers to each row in t_regenerations
+    row_number_cte = sa.select([
+        t_regenerations.c.new_id_regeneration,
+        sa.func.row_number().over(order_by=t_regenerations.c.new_id_regeneration).label('rn')
+    ]).cte('row_number_cte')
+
+    # Update t_regenerations by joining it with the CTE on new_id_regeneration
+    update_stmt = t_regenerations.update().values(
+        id_regeneration=row_number_cte.c.rn
+    ).where(
+        t_regenerations.c.new_id_regeneration == row_number_cte.c.new_id_regeneration
     )
 
-    # Set the column to NOT NULL and add primary key
+    # Execute the update statement
+    bind.execute(update_stmt)
+
     op.alter_column('t_regenerations', 'id_regeneration', existing_type=sa.Integer, nullable=False, schema=schema)
     op.create_primary_key('pk_t_regenerations', 't_regenerations', ['id_regeneration'], schema=schema)
 
-    # Reverse Step 1: Drop the UUID column after successful repopulation of integer IDs
+    # Drop the temporary UUID column
     op.drop_column('t_regenerations', 'new_id_regeneration', schema=schema)
+
 
     # Transect
     # Reverse Step 4: Rename UUID column back to a temporary name
@@ -621,19 +726,32 @@ def downgrade():
     metadata = sa.MetaData(bind=bind)
     t_transects = sa.Table('t_transects', metadata, autoload=True, autoload_with=bind, schema=schema)
 
-    # Use a SQL statement to populate id_transect
-    # WARNING: This will assign new IDs starting from 1, and may not preserve original order
-    bind.execute(
-        sa.update(t_transects).values(
-            id_transect=sa.select([sa.func.row_number().over(order_by='new_id_transect')]).as_scalar()
-        )
+    # Check if the primary key constraint 'pk_t_transects' exists and drop it if it does
+    insp = sa.inspect(bind)
+    pk_constraint = insp.get_pk_constraint('t_transects', schema=schema)
+    if pk_constraint and 'pk_t_transects' in pk_constraint.get('name', []):
+        op.drop_constraint('pk_t_transects', 't_transects', type_='primary', schema=schema)
+
+    # Create a CTE that assigns row numbers to each row in t_transects
+    row_number_cte = sa.select([
+        t_transects.c.new_id_transect,
+        sa.func.row_number().over(order_by=t_transects.c.new_id_transect).label('rn')
+    ]).cte('row_number_cte')
+
+    # Update t_transects by joining it with the CTE on new_id_transect
+    update_stmt = t_transects.update().values(
+        id_transect=row_number_cte.c.rn
+    ).where(
+        t_transects.c.new_id_transect == row_number_cte.c.new_id_transect
     )
 
-    # Set the column to NOT NULL and add primary key
+    # Execute the update statement
+    bind.execute(update_stmt)
+
     op.alter_column('t_transects', 'id_transect', existing_type=sa.Integer, nullable=False, schema=schema)
     op.create_primary_key('pk_t_transects', 't_transects', ['id_transect'], schema=schema)
 
-    # Reverse Step 1: Drop the UUID column after successful repopulation of integer IDs
+    # Drop the temporary UUID column
     op.drop_column('t_transects', 'new_id_transect', schema=schema)
 
 
