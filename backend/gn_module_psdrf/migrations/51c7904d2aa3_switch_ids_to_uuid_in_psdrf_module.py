@@ -84,7 +84,7 @@ def upgrade():
     op.create_primary_key('pk_t_arbres', 't_arbres', ['id_arbre'], schema=schema)
 
     # Step 11: Create the new foreign key constraint in t_arbres_mesures
-    op.create_foreign_key('fk_t_arbres_mesures_t_arbres', 't_arbres_mesures', 't_arbres', ['id_arbre'], ['id_arbre'], source_schema=schema, referent_schema=schema)
+    op.create_foreign_key('fk_t_arbres_mesures_t_arbres', 't_arbres_mesures', 't_arbres', ['id_arbre'], ['id_arbre'], ondelete='CASCADE', source_schema=schema, referent_schema=schema)
 
     # Recreate the view after modifications
     op.execute("""
@@ -169,7 +169,7 @@ def upgrade():
     op.create_primary_key('pk_t_bm_sup_30', 't_bm_sup_30', ['id_bm_sup_30'], schema=schema)
 
     # Step 11: Create the new foreign key constraint in t_bm_sup_30_mesures
-    op.create_foreign_key('fk_t_bm_sup_30_mesures_t_bm_sup_30', 't_bm_sup_30_mesures', 't_bm_sup_30', ['id_bm_sup_30'], ['id_bm_sup_30'], source_schema=schema, referent_schema=schema)
+    op.create_foreign_key('fk_t_bm_sup_30_mesures_t_bm_sup_30', 't_bm_sup_30_mesures', 't_bm_sup_30', ['id_bm_sup_30'], ['id_bm_sup_30'], ondelete='CASCADE', source_schema=schema, referent_schema=schema)
 
 
     # BMS mesures
@@ -248,8 +248,8 @@ def upgrade():
     op.create_primary_key('pk_cor_cycles_placettes', 'cor_cycles_placettes', ['id_cycle_placette'], schema=schema)
 
     # Step 11: Create the new foreign key constraint in t_regenerations and t_transects
-    op.create_foreign_key('fk_t_regenerations_cor_cycles_placettes', 't_regenerations', 'cor_cycles_placettes', ['id_cycle_placette'], ['id_cycle_placette'], source_schema=schema, referent_schema=schema)
-    op.create_foreign_key('fk_t_transects_cor_cycles_placettes', 't_transects', 'cor_cycles_placettes', ['id_cycle_placette'], ['id_cycle_placette'], source_schema=schema, referent_schema=schema)
+    op.create_foreign_key('fk_t_regenerations_cor_cycles_placettes', 't_regenerations', 'cor_cycles_placettes', ['id_cycle_placette'], ['id_cycle_placette'], ondelete='CASCADE', source_schema=schema, referent_schema=schema)
+    op.create_foreign_key('fk_t_transects_cor_cycles_placettes', 't_transects', 'cor_cycles_placettes', ['id_cycle_placette'], ['id_cycle_placette'], ondelete='CASCADE', source_schema=schema, referent_schema=schema)
 
 
     # Regeneration
@@ -405,7 +405,7 @@ def downgrade():
     op.drop_column('t_arbres_mesures', 'temp_id_arbre', schema=schema)
 
     # Recreate the original foreign key constraint
-    op.create_foreign_key('fk_t_arbres_mesures_t_arbres', 't_arbres_mesures', 't_arbres', ['id_arbre'], ['id_arbre'], source_schema=schema, referent_schema=schema)
+    op.create_foreign_key('fk_t_arbres_mesures_t_arbres', 't_arbres_mesures', 't_arbres', ['id_arbre'], ['id_arbre'], ondelete='CASCADE', source_schema=schema, referent_schema=schema)
 
     # Step 1: Drop the temporary UUID column in t_arbres
     op.drop_column('t_arbres', 'new_id_arbre', schema=schema)
@@ -538,7 +538,7 @@ def downgrade():
     op.drop_column('t_bm_sup_30_mesures', 'temp_id_bm_sup_30', schema=schema)
 
     # Recreate the original foreign key constraint
-    op.create_foreign_key('fk_t_bm_sup_30_mesures_t_bm_sup_30', 't_bm_sup_30_mesures', 't_bm_sup_30', ['id_bm_sup_30'], ['id_bm_sup_30'], source_schema=schema, referent_schema=schema)
+    op.create_foreign_key('fk_t_bm_sup_30_mesures_t_bm_sup_30', 't_bm_sup_30_mesures', 't_bm_sup_30', ['id_bm_sup_30'], ['id_bm_sup_30'],ondelete='CASCADE', source_schema=schema, referent_schema=schema)
 
     # Step 1: Drop the temporary UUID column in t_bm_sup_30
     op.drop_column('t_bm_sup_30', 'new_id_bm_sup_30', schema=schema)
@@ -666,8 +666,8 @@ def downgrade():
     op.drop_column('t_transects', 'temp_id_cycle_placette', schema=schema)
 
     # Recreate the original foreign key constraint
-    op.create_foreign_key('fk_t_regenerations_cor_cycles_placettes', 't_regenerations', 'cor_cycles_placettes', ['id_cycle_placette'], ['id_cycle_placette'], source_schema=schema, referent_schema=schema)
-    op.create_foreign_key('fk_t_transects_cor_cycles_placettes', 't_transects', 'cor_cycles_placettes', ['id_cycle_placette'], ['id_cycle_placette'], source_schema=schema, referent_schema=schema)
+    op.create_foreign_key('fk_t_regenerations_cor_cycles_placettes', 't_regenerations', 'cor_cycles_placettes', ['id_cycle_placette'], ['id_cycle_placette'],ondelete='CASCADE', source_schema=schema, referent_schema=schema)
+    op.create_foreign_key('fk_t_transects_cor_cycles_placettes', 't_transects', 'cor_cycles_placettes', ['id_cycle_placette'], ['id_cycle_placette'],ondelete='CASCADE', source_schema=schema, referent_schema=schema)
 
     # Step 1: Drop the temporary UUID column in cor_cycles_placettes
     op.drop_column('cor_cycles_placettes', 'new_id_cycle_placette', schema=schema)
