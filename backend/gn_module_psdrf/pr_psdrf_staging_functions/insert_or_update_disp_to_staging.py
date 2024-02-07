@@ -56,7 +56,8 @@ def insert_or_update_data(data):
 
 
         # ...
-        return result
+        print("id_mappings: ", id_mappings)
+        return id_mappings
     except Exception as e:
         print("Error in insert_or_update_data: ", str(e))
         raise e

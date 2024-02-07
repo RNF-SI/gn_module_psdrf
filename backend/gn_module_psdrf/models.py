@@ -218,7 +218,7 @@ class TRegenerations (DB.Model):
     __tablename__ = "t_regenerations"
     __table_args__ = {'schema': SCHEMA}
     id_regeneration = DB.Column('id_regeneration', UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    id_cycle_placette = DB.Column('id_cycle_placette', DB.Integer, DB.ForeignKey('pr_psdrf.cor_cycles_placettes.id_cycle_placette', ondelete='CASCADE'))
+    id_cycle_placette = DB.Column('id_cycle_placette', UUID(as_uuid=True), DB.ForeignKey('pr_psdrf.cor_cycles_placettes.id_cycle_placette', ondelete='CASCADE'))
     sous_placette = DB.Column('sous_placette', DB.Integer)
     code_essence = DB.Column('code_essence', DB.String)
     recouvrement = DB.Column('recouvrement', DB.Float)

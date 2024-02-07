@@ -71,7 +71,6 @@ def add_cycle(row):
     """
     Add new cycle to db if it doesn't exist, update it if it does
     """
-    print('a')
     try:
         # Check if primary key exists already in table
         cycleList = DB.session.query(TCycles).filter((TCycles.id_dispositif == row["NumDisp"]) & (TCycles.num_cycle == row["Cycle"]))
