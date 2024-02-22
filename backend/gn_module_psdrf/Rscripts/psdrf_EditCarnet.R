@@ -369,7 +369,8 @@ create_group <- function(
   )
   
   # detect multiple choices
-  tmp <- table %>% filter(variable %in% group_name)
+  tmp <- table %>% 
+  filter(variable %in% group_name)
   if (group_name != "Dispositif" & dim(tmp)[1] > 0) {
     # -- construction du checkboxgroup
     # frame
@@ -385,7 +386,7 @@ create_group <- function(
       container = group_frame, 
       pos = 1, horizontal = FALSE, visible = T
     )
-    
+
     # default value - hide frame
     delete(group_group, group_frame)
   } else {
@@ -475,22 +476,33 @@ psdrf_EditCarnet <- function(
     output <<- file.path(repOut, output_filename)
 
     # -- building tables needed for edition
-    build_tables(
-      results_by_plot_to_get, dispId, last_cycle, 
-      disp, Placettes, repPSDRF, repSav
-    )
+    tryCatch({
+      build_tables(
+        results_by_plot_to_get, dispId, last_cycle, 
+        disp, Placettes, repPSDRF, repSav
+      )
+    }, error = function(e) {
+      print(paste("Error in build_tables call:", e$message))
+    })
   # })
   ##### /\ #####
 
 
   ##### 3/ Edition du/des carnets PSDRF #####
   # # TODO : supprimer les messages de joining by
-  knit2pdf(
-    input = file.path("template", template),
-    output = output,
-    compiler = "pdflatex",
-    # quiet = TRUE,
-  )
+  tryCatch({
+    knit2pdf(
+      input = file.path("template", template),
+      output = output,
+      compiler = "pdflatex",
+      # quiet = TRUE,
+    )
+  }, error = function(e) {
+    print(paste("Error in knit2pdf call:", e$message))
+    print(paste("Error in template:", template))
+  })
+
+  Rprof(NULL)
 }
 ##### /\ #####
 
@@ -520,8 +532,20 @@ build_tables <- function(
 ) {
   # -- results : tree scale
   # Réalisation de l'étape de calcul des variables par arbre
-  psdrf_Calculs(repPSDRF, disp, last_cycle)
-  
+  # mem_before <- mem_used()
+
+  tryCatch({
+    psdrf_Calculs(repPSDRF, disp, last_cycle)
+  }, error = function(e) {
+      print(paste("Error in psdrf_Calculs call:", e$message))
+  })
+  # mem_after <- mem_used()
+  # mem_difference <- mem_after - mem_before
+  # print("mem difference :")
+  # print(mem_difference)
+  # print(mem_before)
+  # print(mem_after)
+
   # -- results : plot scale
   # setup (get "tables_list" via load("tables/psdrf_tables_livret.Rdata"))
   load("tables/psdrf_tables_livret.Rdata")
@@ -530,10 +554,14 @@ build_tables <- function(
 
   # psdrf_AgregArbres call
   # (pour le dispositif en cours d'analyse uniquement)
-  psdrf_AgregArbres(
-    repPSDRF, dispId, last_cycle,
-    results_by_plot_to_get
-    )
+  tryCatch({
+    psdrf_AgregArbres(
+      repPSDRF, dispId, last_cycle,
+      results_by_plot_to_get
+      )
+  }, error = function(e) {
+      print(paste("Error in psdrf_AgregArbres call:", e$message))
+  })
   
   # -- results : group scale
   # setup : table listant les ensembles à prendre en compte (individuellement) dans l'agrégation
