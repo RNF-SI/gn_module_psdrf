@@ -139,7 +139,10 @@ def data_integration(dispId, dispName, data):
                             annee = cycle["Ann\u00E9e"],
                             date_intervention = placette["Date_Intervention"],
                             nature_intervention = placette["Nature_Intervention"],
-                            gestion_placette = placette["Gestion"]
+                            gestion_placette = placette["Gestion"],
+                            coeff = int(cycle["Coeff"]) if cycle["Coeff"] else None,
+                            diam_lim = float(cycle["DiamLim"]) if cycle["DiamLim"] else None,
+
                         )
                         new_cor_cycle_placette_array.append(new_cor_cycle_placette)
             DB.session.bulk_save_objects(new_cor_cycle_placette_array)
