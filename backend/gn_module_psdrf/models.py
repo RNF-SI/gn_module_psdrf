@@ -104,10 +104,8 @@ class TCycles (DB.Model):
     id_cycle = DB.Column('id_cycle', DB.Integer, primary_key = True)
     id_dispositif = DB.Column('id_dispositif', DB.Integer, DB.ForeignKey('pr_psdrf.t_dispositifs.id_dispositif', ondelete='CASCADE'))
     num_cycle = DB.Column('num_cycle', DB.Integer)
-    coeff = DB.Column('coeff', DB.Integer)
     date_debut = DB.Column('date_debut', DB.Date)
     date_fin = DB.Column('date_fin', DB.Date)
-    diam_lim = DB.Column('diam_lim', DB.Float)
     monitor = DB.Column('monitor', DB.String)
 
     dispositif = DB.relationship('TDispositifs', foreign_keys=id_dispositif, back_populates='cycles')
@@ -144,6 +142,8 @@ class CorCyclesPlacettes (DB.Model):
     recouv_herbes_hautes = DB.Column('recouv_herbes_hautes', DB.Float)
     recouv_buissons = DB.Column('recouv_buissons', DB.Float)
     recouv_arbres = DB.Column('recouv_arbres', DB.Float)
+    coeff = DB.Column('coeff', DB.Integer)
+    diam_lim = DB.Column('diam_lim', DB.Float)
 
     cycle = DB.relationship('TCycles', foreign_keys=id_cycle, back_populates='corCyclesPlacettes')
     placette = DB.relationship('TPlacettes', foreign_keys=id_placette)
