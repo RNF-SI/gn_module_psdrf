@@ -67,15 +67,16 @@ export class PsdrfDataService {
   
   get_task_status(taskId: string) {
     const url = `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/analysis/status/` + taskId;
-    return this._http.get(url)
-      .pipe(
-        map((res: any) => {
-          return res;
-        })
-      )
-      .catch((err) => {
-        return Observable.throw(err);
-      });
+    return this._http.get(url).pipe(
+      map((response: any) => {
+        // Ensure response is properly formatted or extracted
+        return response;
+      }),
+      catchError((error) => {
+        // Handle error
+        return throwError(error);
+      })
+    );
   }
 
   get_task_result(taskId: string, dispId: number) {

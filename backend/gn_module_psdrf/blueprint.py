@@ -280,15 +280,28 @@ def psdrf_data_analysis(id_dispositif):
 
 @blueprint.route('/analysis/status/<task_id>', methods=['GET'])
 def get_task_status(task_id):
-    # Get the AsyncResult object for the task
-    task = celery_app.AsyncResult(task_id)
-    # Return the task status to the client
-    return jsonify({'status': task.status})
+    task_result = test_celery.AsyncResult(task_id)
+    
+    # raise Exception("Simulated task failure for debugging.")
+
+    if task_result.state == 'PENDING':
+        response = {'state': task_result.state, 'status': 'Task is pending'}
+    elif task_result.state == 'FAILURE':
+        # If the task failed, return the error message
+        response = {
+            'state': task_result.state,
+            'status': str(task_result.info),  # info property contains exception raised by task
+        }
+    else:
+        # For other states like SUCCESS, RETRY, etc.
+        response = {'state': task_result.state, 'status': 'Task is currently being processed or has finished'}
+
+    return jsonify(response)
 
 @blueprint.route('/analysis/result/<task_id>', methods=['GET'])
 def get_task_result(task_id):
     # Get the AsyncResult object for the task
-    task = celery_app.AsyncResult(task_id)
+    task = test_celery.AsyncResult(task_id)
     
     # Check if the task is finished
     if task.status == 'SUCCESS':
@@ -306,7 +319,13 @@ def get_task_result(task_id):
         else:
             return jsonify({"error": "File not found"}), 404
     elif task.status == 'FAILURE':
-        return jsonify({"error": "Task failed", "reason": str(task.result)}), 500
+        response = {
+            "status": "error",
+            "message": str(task.info),  # This should contain the error message
+        }
+        return jsonify(response), 500
+
+        # return jsonify({"error": "Task failed", "reason": str(task.result)}), 500
     else:
         return jsonify({'status': 'Task not finished'}), 400
 
