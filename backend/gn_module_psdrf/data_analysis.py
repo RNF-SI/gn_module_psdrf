@@ -187,8 +187,8 @@ def formatBdd2RData(r, dispId, lastCycle, dispName, isCarnetToDownload, isPlanDe
 
     cyclesQuery = DB.session.query(
         TPlacettes.id_dispositif, TPlacettes.id_placette_orig,
-        CorCyclesPlacettes.annee, TCycles.num_cycle, TCycles.coeff, 
-        TCycles.diam_lim
+        CorCyclesPlacettes.annee, TCycles.num_cycle, CorCyclesPlacettes.coeff, 
+        CorCyclesPlacettes.diam_lim
         ).filter(
             (TPlacettes.id_dispositif == dispId)
         ).join(
