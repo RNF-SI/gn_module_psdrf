@@ -979,7 +979,7 @@ pos <- with(
   CyclesCodes, 
   which(Monitor[NumDisp == disp_num] %in% c("PSDRF Alluvial", "PFA"))
 )
-Eval_PSDRFMA <- if (length(pos) > 0) TRUE else FALSE
+Eval_PSDRFMA <- if (length(pos) > 0) FALSE else FALSE
 
 # Evol <- T
 DetailGroupe <- ifelse("gfGroupeClasseEssRegDen" %in% ls(), 1, 0)
@@ -1098,10 +1098,13 @@ NbRN <-
       )
   )
 
-NbAutre <- 
-  Dispositifs %>% 
-  setdiff(union(NbRB, NbRN)) %>%
+NbAutre <- Dispositifs %>%
+  anti_join(NbRB, by = "NumDisp") %>%
+  anti_join(NbRN, by = "NumDisp") %>%
   filter(NumDisp %in% NbDisp)
+
+
+
 
 @
 
