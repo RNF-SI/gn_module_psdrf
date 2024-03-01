@@ -11,6 +11,7 @@ from utils_flask_sqla.serializers import serializable
 from utils_flask_sqla_geo.serializers import geoserializable
 import uuid
 from sqlalchemy.dialects.postgresql import UUID
+from datetime import datetime
 
 SCHEMA = 'pr_psdrf'
 
@@ -93,6 +94,12 @@ class TReperes (DB.Model):
     diametre = DB.Column('diametre', DB.Float)
     repere = DB.Column('repere', DB.String)
     observation = DB.deferred(DB.Column('observation', DB.Text))
+    created_by = DB.Column('created_by',DB.String)
+    created_on = DB.Column('created_on',DB.String)
+    created_at = DB.Column('created_at', DB.DateTime)
+    updated_by = DB.Column('updated_by',DB.String)
+    updated_on = DB.Column('updated_on',DB.String) 
+    updated_at = DB.Column('updated_at', DB.DateTime)
 
     placette = DB.relationship('TPlacettes', foreign_keys=id_placette, back_populates='reperes')
 
@@ -144,6 +151,12 @@ class CorCyclesPlacettes (DB.Model):
     recouv_arbres = DB.Column('recouv_arbres', DB.Float)
     coeff = DB.Column('coeff', DB.Integer)
     diam_lim = DB.Column('diam_lim', DB.Float)
+    created_by = DB.Column('created_by',DB.String)
+    created_on = DB.Column('created_on',DB.String)
+    created_at = DB.Column('created_at', DB.DateTime)
+    updated_by = DB.Column('updated_by',DB.String)
+    updated_on = DB.Column('updated_on',DB.String) 
+    updated_at = DB.Column('updated_at', DB.DateTime)
 
     cycle = DB.relationship('TCycles', foreign_keys=id_cycle, back_populates='corCyclesPlacettes')
     placette = DB.relationship('TPlacettes', foreign_keys=id_placette)
@@ -180,6 +193,12 @@ class TArbres (DB.Model):
     distance = DB.Column('distance', DB.Float)
     taillis = DB.Column('taillis', DB.Boolean)
     observation = DB.deferred(DB.Column('observation', DB.Text))
+    created_by = DB.Column('created_by',DB.String)
+    created_on = DB.Column('created_on',DB.String)
+    created_at = DB.Column('created_at', DB.DateTime)
+    updated_by = DB.Column('updated_by',DB.String)
+    updated_on = DB.Column('updated_on',DB.String) 
+    updated_at = DB.Column('updated_at', DB.DateTime)
 
     placette = DB.relationship('TPlacettes', foreign_keys=id_placette, back_populates='arbres')
     essence = DB.relationship('BibEssences', foreign_keys=code_essence)
@@ -208,6 +227,12 @@ class TArbresMesures (DB.Model):
     ref_code_ecolo = DB.Column('ref_code_ecolo', DB.String)
     ratio_hauteur = DB.Column('ratio_hauteur', DB.Boolean)
     observation = DB.deferred(DB.Column('observation', DB.Text))
+    created_by = DB.Column('created_by',DB.String)
+    created_on = DB.Column('created_on',DB.String)
+    created_at = DB.Column('created_at', DB.DateTime)
+    updated_by = DB.Column('updated_by',DB.String)
+    updated_on = DB.Column('updated_on',DB.String) 
+    updated_at = DB.Column('updated_at', DB.DateTime)
 
     arbre = DB.relationship('TArbres', foreign_keys=id_arbre, back_populates='arbres_mesures')
     cycle = DB.relationship('TCycles', foreign_keys=id_cycle)
@@ -229,6 +254,12 @@ class TRegenerations (DB.Model):
     abroutissement = DB.Column('abroutissement', DB.Boolean)
     id_nomenclature_abroutissement = DB.Column('id_nomenclature_abroutissement', DB.Integer)
     observation = DB.deferred(DB.Column('observation', DB.Text))
+    created_by = DB.Column('created_by',DB.String)
+    created_on = DB.Column('created_on',DB.String)
+    created_at = DB.Column('created_at', DB.DateTime)
+    updated_by = DB.Column('updated_by',DB.String)
+    updated_on = DB.Column('updated_on',DB.String) 
+    updated_at = DB.Column('updated_at', DB.DateTime)
 
     cor_cycles_placettes = DB.relationship('CorCyclesPlacettes', foreign_keys=id_cycle_placette, back_populates='regenerations')
 
@@ -262,6 +293,12 @@ class TBmSup30 (DB.Model):
     azimut_souche = DB.Column('azimut_souche', DB.Float)
     distance_souche = DB.Column('distance_souche', DB.Float)
     observation = DB.deferred(DB.Column('observation', DB.Text))
+    created_by = DB.Column('created_by',DB.String)
+    created_on = DB.Column('created_on',DB.String)
+    created_at = DB.Column('created_at', DB.DateTime)
+    updated_by = DB.Column('updated_by',DB.String)
+    updated_on = DB.Column('updated_on',DB.String) 
+    updated_at = DB.Column('updated_at', DB.DateTime)
 
     placette = DB.relationship('TPlacettes', foreign_keys=id_placette, back_populates='bmsSup30')
     essence = DB.relationship('BibEssences', foreign_keys=code_essence)
@@ -286,6 +323,12 @@ class TBmSup30Mesures (DB.Model):
     stade_durete = DB.Column('stade_durete', DB.Integer)
     stade_ecorce = DB.Column('stade_ecorce', DB.Integer)
     observation = DB.deferred(DB.Column('observation', DB.Text))
+    created_by = DB.Column('created_by',DB.String)
+    created_on = DB.Column('created_on',DB.String)
+    created_at = DB.Column('created_at', DB.DateTime)
+    updated_by = DB.Column('updated_by',DB.String)
+    updated_on = DB.Column('updated_on',DB.String) 
+    updated_at = DB.Column('updated_at', DB.DateTime)
 
     bm_sup_30 = DB.relationship('TBmSup30', foreign_keys=id_bm_sup_30, back_populates='bm_sup_30_mesures')
     cycle = DB.relationship('TCycles', foreign_keys=id_cycle)
@@ -313,6 +356,12 @@ class TTransects (DB.Model):
     stade_durete = DB.Column('stade_durete', DB.Integer)
     stade_ecorce = DB.Column('stade_ecorce', DB.Integer)
     observation = DB.deferred(DB.Column('observation', DB.Text))
+    created_by = DB.Column('created_by',DB.String)
+    created_on = DB.Column('created_on',DB.String)
+    created_at = DB.Column('created_at', DB.DateTime)
+    updated_by = DB.Column('updated_by',DB.String)
+    updated_on = DB.Column('updated_on',DB.String) 
+    updated_at = DB.Column('updated_at', DB.DateTime)
 
     cor_cycles_placettes = DB.relationship('CorCyclesPlacettes', foreign_keys=id_cycle_placette, back_populates='transects')
 
