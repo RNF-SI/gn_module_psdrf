@@ -16,24 +16,25 @@ def insert_update_or_delete_arbre(placette_data):
                     for arbre_data in arbres_data[category]:
                         if category == 'created':
 
-                            # get max id_arbre in arbres staging table
-                            max_id_arbre= DB.session.query(func.max(TArbresStaging.id_arbre)).scalar()
-                            new_id_arbre = (max_id_arbre or 0) + 1 
-
                             max_id_arbre_orig = DB.session.query(func.max(TArbresStaging.id_arbre_orig)).filter_by(
                                 id_placette=arbre_data.get('id_placette')
                             ).scalar()
                             new_id_arbre_orig = (max_id_arbre_orig or 0) + 1 
                             new_arbre = TArbresStaging(
-                                id_arbre = new_id_arbre,
+                                id_arbre = arbre_data.get('id_arbre'),
                                 id_arbre_orig=new_id_arbre_orig,
                                 id_placette=arbre_data.get('id_placette'),
                                 code_essence=arbre_data.get('code_essence'),
                                 azimut=arbre_data.get('azimut'),
                                 distance=arbre_data.get('distance'),
                                 taillis=arbre_data.get('taillis', False),
-                                observation=arbre_data.get('observation')
-                                # ... add any other fields as necessary ...
+                                observation=arbre_data.get('observation'),
+                                created_by= arbre_data.get('created_by'),
+                                updated_by= arbre_data.get('updated_by'),
+                                created_on= arbre_data.get('created_on'),
+                                updated_on= arbre_data.get('updated_on'),
+                                created_at= arbre_data.get('created_at'),
+                                updated_at= arbre_data.get('updated_at'),
                             )
                             DB.session.add(new_arbre)
                             DB.session.flush()  # Flush to get the auto-generated id_arbre
@@ -41,8 +42,7 @@ def insert_update_or_delete_arbre(placette_data):
                             results.append({
                                 "message": "Arbre created successfully.",
                                 "status": "created", 
-                                "old_id": arbre_data.get("id_arbre"),  # Assuming this is the old arbre ID
-                                "new_id": new_arbre.id_arbre, 
+                                "id": arbre_data.get("id_arbre"),  # Assuming this is the old arbre ID
                                 "new_id_arbre_orig": new_id_arbre_orig
                                 })
                             id_arbre = new_arbre.id_arbre
@@ -59,11 +59,13 @@ def insert_update_or_delete_arbre(placette_data):
                                 existing_arbre.distance = arbre_data.get('distance', existing_arbre.distance)
                                 existing_arbre.taillis = arbre_data.get('taillis', existing_arbre.taillis)
                                 existing_arbre.observation = arbre_data.get('observation', existing_arbre.observation)
+                                existing_arbre.updated_by = arbre_data.get('updated_by', existing_arbre.updated_by)
+                                existing_arbre.updated_on = arbre_data.get('updated_on', existing_arbre.updated_on)
+                                existing_arbre.updated_at = arbre_data.get('updated_at', existing_arbre.updated_at)
                                 DB.session.commit()
                                 results.append({
                                     "status": "updated",
-                                    "old_id": arbre_data.get("id_arbre"),
-                                    "new_id": existing_arbre.id_arbre  # Assuming this is the updated arbre ID
+                                    "id": existing_arbre.id_arbre ,
                                 })
                                 id_arbre = existing_arbre.id_arbre
                         # Handle deleted arbres
@@ -77,8 +79,7 @@ def insert_update_or_delete_arbre(placette_data):
                                 results.append({"message": "Arbre deleted successfully.", "status": "deleted", "id": arbre_to_delete.id_arbre})
                                 results.append({
                                     "status": "deleted",
-                                    "old_id": arbre_data.get("id_arbre"),
-                                    "new_id": None  # For deletions, new_id would typically be None
+                                    "id": arbre_data.get("id_arbre"),
                                 })
 
                         # Now process arbres_mesures within each arbre

@@ -9,8 +9,8 @@ def insert_or_update_cor_cycle_placette(placette_data):
         results = []
         # define id_cycle_placette
         id_cycle_placette = None
-        if 'corCyclesPlacettes' in placette_data:
-            cors_cycles_placettes_data = placette_data['corCyclesPlacettes']
+        if 'CorCyclesPlacettesStaging' in placette_data:
+            cors_cycles_placettes_data = placette_data['CorCyclesPlacettesStaging']
 
             # Process each category: 'created', 'updated', 'deleted'
             for category in ['created', 'updated', 'deleted']:
@@ -18,11 +18,9 @@ def insert_or_update_cor_cycle_placette(placette_data):
                     for cor_cycle_placette_item_data in cors_cycles_placettes_data[category]:
                         id_cycle_placette = None
                         if category == 'created':
-                            max_id_cycle_placette= DB.session.query(func.max(CorCyclesPlacettesStaging.id_cycle_placette)).scalar()
-                            new_id_cycle_placette = (max_id_cycle_placette or 0) + 1
 
                             new_cor_cycle_placette = CorCyclesPlacettesStaging(
-                                id_cycle_placette=new_id_cycle_placette,
+                                id_cycle_placette=cor_cycle_placette_item_data.get('id_cycle_placette'),
                                 id_cycle=cor_cycle_placette_item_data.get('id_cycle'),
                                 id_placette=cor_cycle_placette_item_data.get('id_placette'),
                                 date_releve=cor_cycle_placette_item_data.get('date_releve'),
@@ -30,15 +28,28 @@ def insert_or_update_cor_cycle_placette(placette_data):
                                 annee=cor_cycle_placette_item_data.get('annee'),
                                 nature_intervention=cor_cycle_placette_item_data.get('nature_intervention'),
                                 gestion_placette=cor_cycle_placette_item_data.get('gestion_placette'),
-                                # ... add any other fields as necessary ...
+                                id_nomenclature_castor=cor_cycle_placette_item_data.get('id_nomenclature_castor'),
+                                id_nomenclature_frottis=cor_cycle_placette_item_data.get('id_nomenclature_frottis'),
+                                id_nomenclature_boutis=cor_cycle_placette_item_data.get('id_nomenclature_boutis'),
+                                recouv_herbes_basses=cor_cycle_placette_item_data.get('recouv_herbes_basses'),
+                                recouv_herbes_hautes=cor_cycle_placette_item_data.get('recouv_herbes_hautes'),
+                                recouv_buissons=cor_cycle_placette_item_data.get('recouv_buissons'),
+                                recouv_arbres=cor_cycle_placette_item_data.get('recouv_arbres'),
+                                coeff=cor_cycle_placette_item_data.get('coeff'),
+                                diam_lim=cor_cycle_placette_item_data.get('diam_lim'),
+                                created_by= cor_cycle_placette_item_data.get('created_by'),
+                                updated_by= cor_cycle_placette_item_data.get('updated_by'),
+                                created_on= cor_cycle_placette_item_data.get('created_on'),
+                                updated_on= cor_cycle_placette_item_data.get('updated_on'),
+                                created_at= cor_cycle_placette_item_data.get('created_at'),
+                                updated_at= cor_cycle_placette_item_data.get('updated_at'),
                             )
                             DB.session.add(new_cor_cycle_placette)
                             DB.session.commit()
                             results.append({
                                 "message": "CorCyclePlacette created successfully.", 
                                 "status": "created", 
-                                "old_id": cor_cycle_placette_item_data.get("id_cycle_placette"),  # Assuming this is the old arbre ID
-                                "new_id": new_cor_cycle_placette.id_cycle_placette
+                                "id": cor_cycle_placette_item_data.get("id_cycle_placette"), 
                                 })
                             id_cycle_placette = new_cor_cycle_placette.id_cycle_placette
 
@@ -56,13 +67,25 @@ def insert_or_update_cor_cycle_placette(placette_data):
                                 existing_cor_cycle_placette.annee = cor_cycle_placette_item_data.get('annee', existing_cor_cycle_placette.annee)
                                 existing_cor_cycle_placette.nature_intervention = cor_cycle_placette_item_data.get('nature_intervention', existing_cor_cycle_placette.nature_intervention)
                                 existing_cor_cycle_placette.gestion_placette = cor_cycle_placette_item_data.get('gestion_placette', existing_cor_cycle_placette.gestion_placette)
+                                existing_cor_cycle_placette.id_nomenclature_castor = cor_cycle_placette_item_data.get('id_nomenclature_castor', existing_cor_cycle_placette.id_nomenclature_castor)
+                                existing_cor_cycle_placette.id_nomenclature_frottis = cor_cycle_placette_item_data.get('id_nomenclature_frottis', existing_cor_cycle_placette.id_nomenclature_frottis)
+                                existing_cor_cycle_placette.id_nomenclature_boutis = cor_cycle_placette_item_data.get('id_nomenclature_boutis', existing_cor_cycle_placette.id_nomenclature_boutis)
+                                existing_cor_cycle_placette.recouv_herbes_basses = cor_cycle_placette_item_data.get('recouv_herbes_basses', existing_cor_cycle_placette.recouv_herbes_basses)
+                                existing_cor_cycle_placette.recouv_herbes_hautes = cor_cycle_placette_item_data.get('recouv_herbes_hautes', existing_cor_cycle_placette.recouv_herbes_hautes)
+                                existing_cor_cycle_placette.recouv_buissons = cor_cycle_placette_item_data.get('recouv_buissons', existing_cor_cycle_placette.recouv_buissons)
+                                existing_cor_cycle_placette.recouv_arbres = cor_cycle_placette_item_data.get('recouv_arbres', existing_cor_cycle_placette.recouv_arbres)
+                                existing_cor_cycle_placette.coeff = cor_cycle_placette_item_data.get('coeff', existing_cor_cycle_placette.coeff)
+                                existing_cor_cycle_placette.diam_lim = cor_cycle_placette_item_data.get('diam_lim', existing_cor_cycle_placette.diam_lim)
+                                existing_cor_cycle_placette.updated_by = cor_cycle_placette_item_data.get('updated_by', existing_cor_cycle_placette.updated_by)
+                                existing_cor_cycle_placette.updated_on = cor_cycle_placette_item_data.get('updated_on', existing_cor_cycle_placette.updated_on)
+                                existing_cor_cycle_placette.updated_at = cor_cycle_placette_item_data.get('updated_at', existing_cor_cycle_placette.updated_at)
+
                     
                                 DB.session.commit()
                                 results.append({
                                     "message": "CorCyclePlacette updated successfully.", 
                                     "status": "updated", 
-                                    "old_id": cor_cycle_placette_item_data.get("id_arbre"),
-                                    "new_id": existing_cor_cycle_placette.id_arbre 
+                                    "id": cor_cycle_placette_item_data.get("id_cycle_placette"),
                                     })
                                 id_cycle_placette = existing_cor_cycle_placette.id_cycle_placette
 
@@ -76,8 +99,7 @@ def insert_or_update_cor_cycle_placette(placette_data):
                                 results.append({
                                     "message": "CorCyclePlacette deleted successfully.", 
                                     "status": "deleted", 
-                                    "old_id": cor_cycle_placette_item_data.get("id_arbre"),
-                                    "new_id": existing_cor_cycle_placette.id_arbre 
+                                    "id": cor_cycle_placette_item_data.get("id_cycle_placette"),
                                     
                                     })
                                 

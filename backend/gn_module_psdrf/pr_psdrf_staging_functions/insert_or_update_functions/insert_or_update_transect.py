@@ -9,11 +9,8 @@ def insert_or_update_transect(category, cor_cycle_placette_category, cor_cycle_p
         # Implement creation logic for transects
         if category == 'created':          
 
-            max_id_transect= DB.session.query(func.max(TTransectsStaging.id_transect)).scalar()
-            new_id_transect = (max_id_transect or 0) + 1
-
             new_transect = TTransectsStaging(
-                id_transect=new_id_transect,
+                id_transect=transect_data.get('id_transect'),
                 id_cycle_placette=cor_cycle_placette_id,
                 id_transect_orig=transect_data.get('id_transect_orig'),
                 code_essence=transect_data.get('code_essence'),
@@ -30,11 +27,17 @@ def insert_or_update_transect(category, cor_cycle_placette_category, cor_cycle_p
                 chablis=transect_data.get('chablis'),
                 stade_durete=transect_data.get('stade_durete'),
                 stade_ecorce=transect_data.get('stade_ecorce'),
-                observation=transect_data.get('observation'), 
+                observation=transect_data.get('observation'),
+                created_by=transect_data.get('created_by'),
+                created_on=transect_data.get('created_on'),
+                created_at=transect_data.get('created_at'),
+                updated_by=transect_data.get('updated_by'),
+                updated_on=transect_data.get('updated_on'),
+                updated_at=transect_data.get('updated_at'), 
             )
             DB.session.add(new_transect)
             DB.session.commit()
-            results.append({"message": "Transect created successfully.", "status": "created", "new_id": new_transect.id_transect})
+            results.append({"message": "Transect created successfully.", "status": "created", "id": new_transect.id_transect})
 
         # Implement update logic for transects
         if category == 'updated':
@@ -59,6 +62,9 @@ def insert_or_update_transect(category, cor_cycle_placette_category, cor_cycle_p
                 existing_transect.stade_durete = transect_data.get('stade_durete', existing_transect.stade_durete)
                 existing_transect.stade_ecorce = transect_data.get('stade_ecorce', existing_transect.stade_ecorce)
                 existing_transect.observation = transect_data.get('observation', existing_transect.observation)
+                existing_transect.updated_by = transect_data.get('updated_by', existing_transect.updated_by)
+                existing_transect.updated_on = transect_data.get('updated_on', existing_transect.updated_on)
+                existing_transect.updated_at = transect_data.get('updated_at', existing_transect.updated_at)
   
                 DB.session.commit()
                 results.append({"message": "Transect updated successfully.", "status": "updated", "id": existing_transect.id_transect})

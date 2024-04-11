@@ -8,12 +8,9 @@ def insert_or_update_regeneration(category, cor_cycle_placette_category, cor_cyc
 
         # Handle created regenerations
         if category == 'created':
-            
-            max_id_regeneration= DB.session.query(func.max(TRegenerationsStaging.id_regeneration)).scalar()
-            new_id_regeneration = (max_id_regeneration or 0) + 1
 
             new_regeneration = TRegenerationsStaging(
-                id_regeneration=new_id_regeneration,
+                id_regeneration=regeneration_data.get('id_regeneration'),
                 id_cycle_placette=cor_cycle_placette_id,
                 sous_placette=regeneration_data.get('sous_placette'),
                 code_essence=regeneration_data.get('code_essence'),
@@ -25,11 +22,16 @@ def insert_or_update_regeneration(category, cor_cycle_placette_category, cor_cyc
                 abroutissement=regeneration_data.get('abroutissement'),
                 id_nomenclature_abroutissement=regeneration_data.get('id_nomenclature_abroutissement'),
                 observation=regeneration_data.get('observation'),
-                # ... add any other fields as necessary ...
+                created_by=regeneration_data.get('created_by'),
+                created_on=regeneration_data.get('created_on'),
+                created_at=regeneration_data.get('created_at'),
+                updated_by=regeneration_data.get('updated_by'),
+                updated_on=regeneration_data.get('updated_on'),
+                updated_at=regeneration_data.get('updated_at'),
             )
             DB.session.add(new_regeneration)
             DB.session.commit()
-            results.append({"message": "Regeneration created successfully.", "status": "created", "new_id": new_regeneration.id_regeneration})
+            results.append({"message": "Regeneration created successfully.", "status": "created", "id": new_regeneration.id_regeneration})
 
         # Handle updated regenerations
         if category == 'updated': 
@@ -50,7 +52,9 @@ def insert_or_update_regeneration(category, cor_cycle_placette_category, cor_cyc
                 existing_regeneration.abroutissement = regeneration_data.get('abroutissement', existing_regeneration.abroutissement)
                 existing_regeneration.id_nomenclature_abroutissement = regeneration_data.get('id_nomenclature_abroutissement', existing_regeneration.id_nomenclature_abroutissement)
                 existing_regeneration.observation = regeneration_data.get('observation', existing_regeneration.observation)
-    
+                existing_regeneration.updated_by = regeneration_data.get('updated_by', existing_regeneration.updated_by)
+                existing_regeneration.updated_on = regeneration_data.get('updated_on', existing_regeneration.updated_on)
+                existing_regeneration.updated_at = regeneration_data.get('updated_at', existing_regeneration.updated_at)
                 DB.session.commit()
                 results.append({"message": "Regeneration updated successfully.", "status": "updated", "id": existing_regeneration.id_regeneration})
 

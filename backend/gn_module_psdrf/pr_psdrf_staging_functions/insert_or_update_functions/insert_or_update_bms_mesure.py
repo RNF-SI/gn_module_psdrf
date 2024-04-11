@@ -20,33 +20,32 @@ def insert_update_or_delete_bms_mesure(category, bm_category, id_bm, bm_data, bm
                 id_bm_sup_30_mesure=bm_data['id_bm_sup_30_mesure']
             ).first()
 
-            existing_bms_mesure.diametre_ini = bms_mesure_data.get('diametre_ini', existing_bms_mesure.diametre_ini)
-            existing_bms_mesure.diametre_med = bms_mesure_data.get('diametre_med', existing_bms_mesure.diametre_med)
-            existing_bms_mesure.diametre_fin = bms_mesure_data.get('diametre_fin', existing_bms_mesure.diametre_fin)
-            existing_bms_mesure.diametre_130 = bms_mesure_data.get('diametre_130', existing_bms_mesure.diametre_130)
-            existing_bms_mesure.longueur = bms_mesure_data.get('longueur', existing_bms_mesure.longueur)
-            existing_bms_mesure.ratio_hauteur = bms_mesure_data.get('ratio_hauteur', existing_bms_mesure.ratio_hauteur)
-            existing_bms_mesure.contact = bms_mesure_data.get('contact', existing_bms_mesure.contact)
-            existing_bms_mesure.chablis = bms_mesure_data.get('chablis', existing_bms_mesure.chablis)
-            existing_bms_mesure.stade_durete = bms_mesure_data.get('stade_durete', existing_bms_mesure.stade_durete)
-            existing_bms_mesure.stade_ecorce = bms_mesure_data.get('stade_ecorce', existing_bms_mesure.stade_ecorce)
-            existing_bms_mesure.observation = bms_mesure_data.get('observation', existing_bms_mesure.observation)
-
-            DB.session.commit()
-            results.append({
-                "message": "BMS mesure updated successfully.", 
-                "status": "updated", 
-                "old_id": existing_bms_mesure.id_bm_sup_30_mesure,
-                "new_id": existing_bms_mesure.id_bm_sup_30_mesure 
-                })
+            if existing_bms_mesure:
+                existing_bms_mesure.diametre_ini = bms_mesure_data.get('diametre_ini', existing_bms_mesure.diametre_ini)
+                existing_bms_mesure.diametre_med = bms_mesure_data.get('diametre_med', existing_bms_mesure.diametre_med)
+                existing_bms_mesure.diametre_fin = bms_mesure_data.get('diametre_fin', existing_bms_mesure.diametre_fin)
+                existing_bms_mesure.diametre_130 = bms_mesure_data.get('diametre_130', existing_bms_mesure.diametre_130)
+                existing_bms_mesure.longueur = bms_mesure_data.get('longueur', existing_bms_mesure.longueur)
+                existing_bms_mesure.ratio_hauteur = bms_mesure_data.get('ratio_hauteur', existing_bms_mesure.ratio_hauteur)
+                existing_bms_mesure.contact = bms_mesure_data.get('contact', existing_bms_mesure.contact)
+                existing_bms_mesure.chablis = bms_mesure_data.get('chablis', existing_bms_mesure.chablis)
+                existing_bms_mesure.stade_durete = bms_mesure_data.get('stade_durete', existing_bms_mesure.stade_durete)
+                existing_bms_mesure.stade_ecorce = bms_mesure_data.get('stade_ecorce', existing_bms_mesure.stade_ecorce)
+                existing_bms_mesure.observation = bms_mesure_data.get('observation', existing_bms_mesure.observation)
+                existing_bms_mesure.updated_by = bms_mesure_data.get('updated_by', existing_bms_mesure.updated_by)
+                existing_bms_mesure.updated_on = bms_mesure_data.get('updated_on', existing_bms_mesure.updated_on)
+                existing_bms_mesure.updated_at = bms_mesure_data.get('updated_at', existing_bms_mesure.updated_at)
+                DB.session.commit()
+                results.append({
+                    "message": "BMS mesure updated successfully.", 
+                    "status": "updated", 
+                    "id": existing_bms_mesure.id_bm_sup_30_mesure
+                    })
         elif category == 'created':
-
-            max_id_bm_sup_30_mesure= DB.session.query(func.max(TBmSup30MesuresStaging.id_bm_sup_30_mesure)).scalar()
-            new_id_bm_sup_30_mesure = (max_id_bm_sup_30_mesure or 0) + 1
 
             # Insert logic as before
             new_bms_mesure = TBmSup30MesuresStaging(
-                id_bm_sup_30_mesure=new_id_bm_sup_30_mesure,
+                id_bm_sup_30_mesure=bms_mesure_data.get('id_bm_sup_30_mesure'),
                 id_bm_sup_30=id_bm,
                 id_cycle=bms_mesure_data.get('id_cycle', None),
                 diametre_ini=bms_mesure_data.get('diametre_ini', None),
@@ -60,13 +59,19 @@ def insert_update_or_delete_bms_mesure(category, bm_category, id_bm, bm_data, bm
                 stade_durete=bms_mesure_data.get('stade_durete', None),
                 stade_ecorce=bms_mesure_data.get('stade_ecorce', None),
                 observation=bms_mesure_data.get('observation', None),
+                created_by=bms_mesure_data.get('created_by', None),
+                updated_by=bms_mesure_data.get('updated_by', None),
+                created_on=bms_mesure_data.get('created_on', None),
+                updated_on=bms_mesure_data.get('updated_on', None),
+                created_at=bms_mesure_data.get('created_at', None),
+                updated_at=bms_mesure_data.get('updated_at', None),
             )
             DB.session.add(new_bms_mesure)
             DB.session.commit()
             results.append({
                 "message": "BMS mesure created successfully.", 
                 "status": "created", 
-                "new_id": new_bms_mesure.id_bm_sup_30_mesure
+                "id": new_bms_mesure.id_bm_sup_30_mesure
                 })
 
         return results

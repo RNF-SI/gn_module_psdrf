@@ -16,26 +16,30 @@ def insert_update_or_delete_bms(placette_data):
                     for bms_data_item in bms_data[category]:
                         if category == 'created':
 
-                            max_id_bm_sup_30= DB.session.query(func.max(TBmSup30Staging.id_bm_sup_30)).scalar()
-                            new_id_bm_sup_30 = (max_id_bm_sup_30 or 0) + 1 
-
                             max_id_bm_orig = DB.session.query(func.max(TBmSup30Staging.id_bm_sup_30_orig)).filter_by(
                                 id_placette=bms_data_item.get('id_placette')
                             ).scalar()
                             new_id_bm_orig = (max_id_bm_orig or 0) + 1 
                             new_bm = TBmSup30Staging(
-                                id_bm_sup_30=new_id_bm_sup_30,
+                                id_bm_sup_30=bms_data_item.get('id_bm_sup_30'),
                                 id_bm_sup_30_orig=new_id_bm_orig,
                                 id_placette=bms_data_item.get('id_placette', None),
                                 code_essence=bms_data_item.get('code_essence', None),
                                 azimut=bms_data_item.get('azimut', None),
                                 distance=bms_data_item.get('distance', None),
+                                observation=bms_data_item.get('observation', None),
+                                created_by= bms_data_item.get('created_by', None),
+                                updated_by= bms_data_item.get('updated_by', None),
+                                created_on= bms_data_item.get('created_on', None),
+                                updated_on= bms_data_item.get('updated_on', None),
+                                created_at= bms_data_item.get('created_at', None),
+                                updated_at= bms_data_item.get('updated_at', None),
                                 # ... add other fields ...
                             )
                             DB.session.add(new_bm)
                             DB.session.flush()
                             DB.session.commit()
-                            results.append({"message": "BMS inserted successfully.", "status": "created", "new_id": new_bm.id_bm_sup_30, "new_id_bm_orig": new_id_bm_orig})
+                            results.append({"message": "BMS inserted successfully.", "status": "created", "id": new_bm.id_bm_sup_30, "new_id_bm_orig": new_id_bm_orig,})
                             id_bm = new_bm.id_bm_sup_30
 
 
@@ -50,12 +54,15 @@ def insert_update_or_delete_bms(placette_data):
                                 existing_bms.code_essence = bms_data_item.get('code_essence', existing_bms.code_essence)
                                 existing_bms.azimut = bms_data_item.get('azimut', existing_bms.azimut)
                                 existing_bms.distance = bms_data_item.get('distance', existing_bms.distance)
+                                existing_bms.observation = bms_data_item.get('observation', existing_bms.observation)
+                                existing_bms.updated_by = bms_data_item.get('updated_by', existing_bms.updated_by)
+                                existing_bms.updated_on = bms_data_item.get('updated_on', existing_bms.updated_on)
+                                existing_bms.updated_at = bms_data_item.get('updated_at', existing_bms.updated_at)
                                 DB.session.commit()
                                 results.append({
                                     "message": "BMS updated successfully.", 
                                     "status": "updated", 
-                                    "old_id": existing_bms.id_bm_sup_30,
-                                    "new_id": existing_bms.id_bm_sup_30 
+                                    "id": existing_bms.id_bm_sup_30,
                                 })
                                 id_bm = existing_bms.id_bm_sup_30
                                 

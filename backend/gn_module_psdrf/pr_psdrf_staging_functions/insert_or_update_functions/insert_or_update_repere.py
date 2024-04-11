@@ -13,23 +13,25 @@ def insert_update_or_delete_repere(placette_data):
                 if category in reperes_data:
                     for repere_data in reperes_data[category]:
                         if category == 'created':
-                            max_id_repere= DB.session.query(func.max(TReperesStaging.id_repere)).scalar()
-                            new_id_repere = (max_id_repere or 0) + 1
-
 
                             new_repere = TReperesStaging(
-                                id_repere=new_id_repere,
+                                id_repere=repere_data.get('id_repere'),
                                 id_placette=repere_data.get('id_placette'),
                                 azimut=repere_data.get('azimut'),
                                 distance=repere_data.get('distance'),
                                 diametre=repere_data.get('diametre'),
                                 repere=repere_data.get('repere'),
-                                observation=repere_data.get('observation')
-                                # ... add any other fields as necessary ...
+                                observation=repere_data.get('observation'),
+                                created_by=repere_data.get('created_by'),
+                                created_on=repere_data.get('created_on'),
+                                created_at=repere_data.get('created_at'),
+                                updated_by=repere_data.get('updated_by'),
+                                updated_on=repere_data.get('updated_on'),
+                                updated_at=repere_data.get('updated_at'),
                             )
                             DB.session.add(new_repere)
                             DB.session.commit()
-                            results.append({"message": "Repere created successfully.", "status": "created", "new_id": new_repere.id_repere})
+                            results.append({"message": "Repere created successfully.", "status": "created", "id": new_repere.id_repere})
 
                         if category == 'updated':
                             existing_repere = DB.session.query(TReperesStaging).filter_by(
@@ -41,12 +43,13 @@ def insert_update_or_delete_repere(placette_data):
                                 existing_repere.diametre = repere_data.get('diametre', existing_repere.diametre)
                                 existing_repere.repere = repere_data.get('repere', existing_repere.repere)
                                 existing_repere.observation = repere_data.get('observation', existing_repere.observation)
-                                # ... update any additional fields as necessary ...
+                                existing_repere.updated_by = repere_data.get('updated_by', existing_repere.updated_by)
+                                existing_repere.updated_on = repere_data.get('updated_on', existing_repere.updated_on)
+                                existing_repere.updated_at = repere_data.get('updated_at', existing_repere.updated_at)
                                 DB.session.commit()
                                 results.append({
                                     "status": "updated",
-                                    "old_id": repere_data.get("id_arbre"),
-                                    "new_id": existing_repere.id_arbre  # Assuming this is the updated arbre ID
+                                    "id": repere_data.get("id_arbre"),
                                 })
                         elif category == 'deleted':
                             repere_to_delete = DB.session.query(TReperesStaging).filter_by(

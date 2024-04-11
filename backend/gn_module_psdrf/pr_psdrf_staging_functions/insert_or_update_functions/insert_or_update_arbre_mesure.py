@@ -40,20 +40,19 @@ def insert_update_or_delete_arbre_mesure(category, arbre_category, id_arbre, arb
                 existing_arbre_mesure.ref_code_ecolo = arbre_mesure_data.get('ref_code_ecolo', existing_arbre_mesure.ref_code_ecolo)
                 existing_arbre_mesure.ratio_hauteur = arbre_mesure_data.get('ratio_hauteur', existing_arbre_mesure.ratio_hauteur)
                 existing_arbre_mesure.observation = arbre_mesure_data.get('observation', existing_arbre_mesure.observation)
+                existing_arbre_mesure.updated_by = arbre_mesure_data.get('updated_by', existing_arbre_mesure.updated_by)
+                existing_arbre_mesure.updated_on = arbre_mesure_data.get('updated_on', existing_arbre_mesure.updated_on)
+                existing_arbre_mesure.updated_at = arbre_mesure_data.get('updated_at', existing_arbre_mesure.updated_at)
                 DB.session.commit()
                 results.append({
                     "message": "Arbre mesure updated successfully.", 
                     "status": "updated", 
-                    "old_id": existing_arbre_mesure.id_arbre_mesure,
-                    "new_id": existing_arbre_mesure.id_arbre_mesure 
+                    "id": existing_arbre_mesure.id_arbre_mesure,
                 })
         elif category == 'created':
-                            
-            max_id_arbre_mesure= DB.session.query(func.max(TArbresMesuresStaging.id_arbre_mesure)).scalar()
-            new_id_arbre_mesure = (max_id_arbre_mesure or 0) + 1 
 
             new_arbre_mesure = TArbresMesuresStaging(
-                id_arbre_mesure = new_id_arbre_mesure,
+                id_arbre_mesure = arbre_mesure_data.get('id_arbre_mesure'),
                 id_arbre=id_arbre,
                 id_cycle=arbre_mesure_data.get('id_cycle', None),
                 diametre1=arbre_mesure_data.get('diametre1', None),
@@ -72,14 +71,19 @@ def insert_update_or_delete_arbre_mesure(category, arbre_category, id_arbre, arb
                 ref_code_ecolo=arbre_mesure_data.get('ref_code_ecolo', None),
                 ratio_hauteur=arbre_mesure_data.get('ratio_hauteur', None),
                 observation=arbre_mesure_data.get('observation', None),
+                created_by= arbre_mesure_data.get('created_by', None),
+                updated_by= arbre_mesure_data.get('updated_by', None),
+                created_on= arbre_mesure_data.get('created_on', None),
+                updated_on= arbre_mesure_data.get('updated_on', None),
+                created_at= arbre_mesure_data.get('created_at', None),
+                updated_at= arbre_mesure_data.get('updated_at', None)
             )
             DB.session.add(new_arbre_mesure)
             DB.session.commit()
             results.append({
                 "message": "Arbre mesure created successfully.", 
                 "status": "created", 
-                "old_id": arbre_mesure_data.get("id_arbre"),
-                "new_id": new_arbre_mesure.id_arbre_mesure,
+                "id": new_arbre_mesure.id_arbre_mesure,
                 })
 
         return results

@@ -8,7 +8,7 @@ from .insert_or_update_functions.insert_or_update_repere import insert_update_or
 
 def insert_or_update_data(data):
     id_mappings = []
-
+    print("start insert_or_update_data")
     try:
         if 'id_dispositif' in data:
             result = insert_or_update_dispositif(data)
@@ -26,8 +26,7 @@ def insert_or_update_data(data):
                         if arbre_result:
                             id_mappings.append({
                                 "type": "arbre",
-                                "old_id": arbre_result.get("old_id"),
-                                "new_id": arbre_result.get("new_id"),
+                                "id": arbre_result.get("id"),
                                 "new_id_arbre_orig": arbre_result.get("new_id_arbre_orig", None)  # Added None as default
                             })
 
@@ -36,8 +35,7 @@ def insert_or_update_data(data):
                         if bms_result:
                             id_mappings.append({
                                 "type": "bms",
-                                "old_id": bms_result.get("old_id"),
-                                "new_id": bms_result.get("new_id"),
+                                "id": bms_result.get("id"),
                                 "new_id_arbre_orig": bms_result.get("new_id_arbre_orig")
                             })
 
@@ -47,8 +45,7 @@ def insert_or_update_data(data):
                             for result in repere_result:
                                 id_mappings.append({
                                     "type": "repere",
-                                    "old_id": repere_result.get("id_repere"),  # Assuming id_repere is present in repere_data
-                                    "new_id": repere_result.get("new_id") if result.get("status") == "created" else result.get("id"),
+                                    "id": repere_result.get("id_repere"),  # Assuming id_repere is present in repere_data
                                     "status": result.get("status")
                                 })
 
