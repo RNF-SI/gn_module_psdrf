@@ -8,6 +8,15 @@ import zipfile
 import os
 import tempfile
 
+from .pr_psdrf_staging_functions.insert_or_update_functions.insert_or_update_dispositif import insert_or_update_dispositif
+from .pr_psdrf_staging_functions.insert_or_update_functions.insert_or_update_placette import insert_or_update_placette
+from .pr_psdrf_staging_functions.insert_or_update_functions.insert_or_update_arbre import insert_update_or_delete_arbre
+from .pr_psdrf_staging_functions.insert_or_update_functions.insert_or_update_bms import insert_update_or_delete_bms
+from .pr_psdrf_staging_functions.insert_or_update_functions.insert_or_update_cycle import insert_or_update_cycle
+from .pr_psdrf_staging_functions.insert_or_update_functions.insert_or_update_cor_cycle_placette import insert_or_update_cor_cycle_placette
+from .pr_psdrf_staging_functions.insert_or_update_functions.insert_or_update_repere import insert_update_or_delete_repere
+
+
 from celery.utils.log import get_task_logger
 from celery.exceptions import SoftTimeLimitExceeded
 
@@ -53,3 +62,127 @@ def test_celery(self, id_dispositif, isCarnetToDownload, isPlanDesArbresToDownlo
         raise e
 
     return {"file_path": temp_file.name if temp_file else "N/A", "file_name": zipName}
+
+
+
+
+@celery_app.task(bind=True, soft_time_limit=700, time_limit=900)
+def insert_or_update_data(self, data):
+    print('test')
+    # print(data)
+    print('celery task started')
+    logger.info(f"Inserting data un staging DB.")
+    created_arbres = []
+    created_arbres_temp = []
+    counts_arbre = {
+            'created': 0,
+            'updated': 0,
+            'deleted': 0
+        }
+    counts_arbre_temp = {}
+    counts_arbre_mesure = {
+            'created': 0,
+            'updated': 0,
+            'deleted': 0
+        }
+    counts_arbre_mesure_temp = {}
+    created_bms = []
+    created_bms_temp = []
+    counts_bm = {
+            'created': 0,
+            'updated': 0,
+            'deleted': 0
+        }
+    counts_bm_temp = {}
+    counts_bm_mesure = {
+            'created': 0,
+            'updated': 0,
+            'deleted': 0
+        }
+    counts_bm_mesure_temp = {}
+    id_mappings = []
+    # counts = {
+    #     'created': {'arbre': 0, 'repere': 0}, 
+    #     'updated': {'arbre': 0, 'repere': 0}, 
+    #     'deleted': {'arbre': 0, 'repere': 0}  
+    # }
+    print("start insert_or_update_data")
+    try:
+        if 'id_dispositif' in data:
+            result = insert_or_update_dispositif(data)
+            if 'cycles' in data:
+                for cycle_data in data['cycles']:
+                    cycle_result = insert_or_update_cycle(cycle_data)
+
+            if 'placettes' in data:
+                for placette_data in data['placettes']:
+                    placette_result = insert_or_update_placette(placette_data)
+                    
+                    created_arbres_temp, counts_arbre_temp, counts_arbre_mesure_temp = insert_update_or_delete_arbre(placette_data)
+                    created_arbres.extend(created_arbres_temp)
+                    counts_arbre["created"] += counts_arbre_temp["created"]
+                    counts_arbre["updated"] += counts_arbre_temp["updated"]
+                    counts_arbre["deleted"] += counts_arbre_temp["deleted"]
+                    counts_arbre_mesure["created"] += counts_arbre_mesure_temp["created"]
+                    counts_arbre_mesure["updated"] += counts_arbre_mesure_temp["updated"]
+                    counts_arbre_mesure["deleted"] += counts_arbre_mesure_temp["deleted"]
+
+                    # for arbre_result in arbre_results:
+                    #     if arbre_result:
+                    #         id_mappings.append({
+                    #             "type": "arbre",
+                    #             "id": arbre_result.get("id"),
+                    #             "new_id_arbre_orig": arbre_result.get("new_id_arbre_orig", None)  # Added None as default
+                    #         })
+
+                    # created_bms_temp, counts_bm_temp, counts_bm_mesure_temp = insert_update_or_delete_bms(placette_data)
+                    # created_bms.extend(created_bms_temp)
+                    # counts_bm["created"] += counts_bm_temp["created"]
+                    # counts_bm["updated"] += counts_bm_temp["updated"]
+                    # counts_bm["deleted"] += counts_bm_temp["deleted"]
+                    # counts_bm_mesure["created"] += counts_bm_mesure_temp["created"]
+                    # counts_bm_mesure["updated"] += counts_bm_mesure_temp["updated"]
+                    # counts_bm_mesure["deleted"] += counts_bm_mesure_temp["deleted"]
+
+                    # for bms_result in bms_results:
+                    #     if bms_result:
+                    #         id_mappings.append({
+                    #             "type": "bms",
+                    #             "id": bms_result.get("id"),
+                    #             "new_id_arbre_orig": bms_result.get("new_id_arbre_orig")
+                    #         })
+
+
+                    # repere_result = insert_update_or_delete_repere(placette_data)
+                    # if repere_result:
+                    #         for result in repere_result:
+                    #             id_mappings.append({
+                    #                 "type": "repere",
+                    #                 "id": repere_result.get("id_repere"),  # Assuming id_repere is present in repere_data
+                    #                 "status": result.get("status")
+                    #             })
+
+                    # cor_cycle_placette_results = insert_or_update_cor_cycle_placette(placette_data)
+                    # for cor_cycle_placette_result in cor_cycle_placette_results:
+                    #     if cor_cycle_placette_result:
+                    #         id_mappings.append({
+                    #             "type": "cor_cycle_placette",
+                    #             "id": cor_cycle_placette_result.get("id"),
+                    #             "status": cor_cycle_placette_result.get("status")
+                    #         })
+
+
+        # ...
+        # print("id_mappings: ", id_mappings)
+        self.update_state(state='SUCCESS', meta={'created_arbres': created_arbres, 'counts_arbre': counts_arbre, 'counts_arbre_mesure':counts_arbre_mesure, 'created_bms':created_bms, 'counts_bm': counts_bm, 'counts_bm_mesure': counts_bm_mesure,})
+
+        # return created_arbres, counts_arbre, counts_arbre_mesure, created_bms, counts_bm, counts_bm_mesure
+    except SoftTimeLimitExceeded as e:
+        logger.exception("Soft time limit exceed for task id %s", self.request.id)
+        self.update_state(state='FAILURE', meta={'exc_type': str(type(e).__name__), 'exc_message': str(e)})
+        raise e
+    except Exception as e:
+        print("Error in insert_or_update_data: ", str(e))
+        raise e
+    
+    return {'created_arbres': created_arbres, 'counts_arbre': counts_arbre, 'counts_arbre_mesure':counts_arbre_mesure, 'created_bms':created_bms, 'counts_bm': counts_bm, 'counts_bm_mesure': counts_bm_mesure,}

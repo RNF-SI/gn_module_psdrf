@@ -5,7 +5,18 @@ from .insert_or_update_arbre_mesure import insert_update_or_delete_arbre_mesure
 
 def insert_update_or_delete_arbre(placette_data):
     try:
-        results = []
+        counts_arbre = {
+            'created': 0,
+            'updated': 0,
+            'deleted': 0
+        }
+        counts_arbre_mesure = {
+            'created': 0,
+            'updated': 0,
+            'deleted': 0
+        }
+        created_arbres = []
+        arbres_to_process = []
 
         if 'arbres' in placette_data:
             arbres_data = placette_data['arbres']
@@ -36,15 +47,18 @@ def insert_update_or_delete_arbre(placette_data):
                                 created_at= arbre_data.get('created_at'),
                                 updated_at= arbre_data.get('updated_at'),
                             )
-                            DB.session.add(new_arbre)
-                            DB.session.flush()  # Flush to get the auto-generated id_arbre
-                            DB.session.commit()  # Commit the transaction
-                            results.append({
-                                "message": "Arbre created successfully.",
-                                "status": "created", 
-                                "id": arbre_data.get("id_arbre"),  # Assuming this is the old arbre ID
-                                "new_id_arbre_orig": new_id_arbre_orig
-                                })
+                            arbres_to_process.append(new_arbre)
+                            # DB.session.add(new_arbre)
+                            # DB.session.flush()  # Flush to get the auto-generated id_arbre
+                            # DB.session.commit()  # Commit the transaction
+                            created_arbres.append(
+                                {
+                                    "status": "created",
+                                    "id": new_arbre.id_arbre,
+                                    "new_id_arbre_orig": new_id_arbre_orig
+                                }
+                            )
+                            counts_arbre['created'] += 1
                             id_arbre = new_arbre.id_arbre
 
                         # Handle updated arbres
@@ -62,11 +76,8 @@ def insert_update_or_delete_arbre(placette_data):
                                 existing_arbre.updated_by = arbre_data.get('updated_by', existing_arbre.updated_by)
                                 existing_arbre.updated_on = arbre_data.get('updated_on', existing_arbre.updated_on)
                                 existing_arbre.updated_at = arbre_data.get('updated_at', existing_arbre.updated_at)
-                                DB.session.commit()
-                                results.append({
-                                    "status": "updated",
-                                    "id": existing_arbre.id_arbre ,
-                                })
+                                # DB.session.commit()
+                                counts_arbre['updated'] += 1
                                 id_arbre = existing_arbre.id_arbre
                         # Handle deleted arbres
                         elif category == 'deleted':
@@ -75,27 +86,27 @@ def insert_update_or_delete_arbre(placette_data):
                             ).first()
                             if arbre_to_delete:
                                 DB.session.delete(arbre_to_delete)
-                                DB.session.commit()
-                                results.append({"message": "Arbre deleted successfully.", "status": "deleted", "id": arbre_to_delete.id_arbre})
-                                results.append({
-                                    "status": "deleted",
-                                    "id": arbre_data.get("id_arbre"),
-                                })
-
+                                # DB.session.commit()
+                                counts_arbre['deleted'] += 1
+                                
                         # Now process arbres_mesures within each arbre
-                        if 'arbres_mesures' in arbre_data:
-                            for arbre_mesure_category in ['created', 'updated', 'deleted']:
-                                for arbre_mesure_data in arbre_data['arbres_mesures'][arbre_mesure_category]:
-                                    arbre_mesure_results = insert_update_or_delete_arbre_mesure(
-                                        category= arbre_mesure_category,
-                                        arbre_category=category,
-                                        id_arbre=id_arbre,
-                                        arbre_data=arbre_data,  # Pass the current arbre data
-                                        arbre_mesure_data=arbre_mesure_data
-                                    )
-                                    if arbre_mesure_results:
-                                        results.extend(arbre_mesure_results)
-        return results
+                        # if 'arbres_mesures' in arbre_data:
+                        #     for arbre_mesure_category in ['created', 'updated', 'deleted']:
+                        #         for arbre_mesure_data in arbre_data['arbres_mesures'][arbre_mesure_category]:
+                        #             arbre_mesure_results = insert_update_or_delete_arbre_mesure(
+                        #                 category= arbre_mesure_category,
+                        #                 arbre_category=category,
+                        #                 id_arbre=id_arbre,
+                        #                 arbre_data=arbre_data,  # Pass the current arbre data
+                        #                 arbre_mesure_data=arbre_mesure_data
+                        #             )
+                        #             if arbre_mesure_results:
+                        #                 counts_arbre_mesure[arbre_mesure_category] += arbre_mesure_results[arbre_mesure_category]
+            # Bulk insert or update arbres
+            if arbres_to_process:
+                DB.session.bulk_save_objects(arbres_to_process)
+        DB.session.commit()
+        return created_arbres, counts_arbre, counts_arbre_mesure
 
     except Exception as e:
         DB.session.rollback()

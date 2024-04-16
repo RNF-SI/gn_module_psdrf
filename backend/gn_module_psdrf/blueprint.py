@@ -24,12 +24,12 @@ from .data_verification import data_verification
 from .data_integration import data_integration
 from .psdrf_list_update import psdrf_list_update
 from .disp_placette_liste import disp_placette_liste_add
-from .pr_psdrf_staging_functions.insert_or_update_disp_to_staging import insert_or_update_data
+# from .pr_psdrf_staging_functions.insert_or_update_disp_to_staging import insert_or_update_data
 from .bddToExcel import bddToExcel
 from .schemas.dispositifs import DispositifSchema
 from .schemas.cycles import ConciseCycleSchema
 from .schemas.essences import EssenceSchema
-from .tasks import test_celery
+from .tasks import test_celery, insert_or_update_data
 
 
 
@@ -272,7 +272,6 @@ def psdrf_data_analysis(id_dispositif):
 
     outFilePath = "/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/out/"
     task = test_celery.delay(str(id_dispositif), isCarnetToDownload, isPlanDesArbresToDownload, carnetToDownloadParameters, outFilePath)
-
     # Return the task ID to the client
     return jsonify({'task_id': task.id})
 
@@ -668,22 +667,91 @@ def get_PSDRF_t_nomenclatures():
         raise
 
 @blueprint.route('/export_dispositif_from_dendro3', methods=['POST'])
-@json_resp
 def export_dispositif():
     """
     Receives a dispositif entity
 
     as JSON and exports it to the database.
+
+    Returns the number of added entities and that have updated
     """
     data = request.get_json()
+    # print(data)
     if not data:
         return {"success": False, "message": "No data provided."}, 400
-    try:
-        # Assuming you have a function to handle the insertion or update
-        result = insert_or_update_data(data)
-        return {"success": True, "message": "Dispositif data exported successfully.", "result": result}, 200
-    except Exception as e:
-        return {"success": False, "message": str(e)}, 500
+    # try:
+    print('celery task before')
+    task = insert_or_update_data.delay(data)
+    print('celery task after')
+    print(task.id)
+    # print(jsonify({'task_id': task.id}))
+    return jsonify({'task_id': task.id}), 202
+
+
+@blueprint.route('/export_dispositif_from_dendro3/status/<task_id>', methods=['GET'])
+def get_export_task_status(task_id):
+    print('celery task status before')
+    task = insert_or_update_data.AsyncResult(task_id)
+    print(task_id)
+    print(task.state)
+    print(task)
+    if task.state == 'PENDING':
+        return jsonify({'state': task.state, 'status': 'Task is pending'}), 202
+    elif task.state == 'FAILURE':
+        error_info = str(task.info)  # Get more details about the failure
+        print(f"Task failed due to: {error_info}") 
+        return jsonify({'state': task.state, 'status': str(task.info)}), 500
+    elif task.state == 'SUCCESS':
+        return jsonify({'state': task.state, 'result': task.result}), 200
+    else:
+        return jsonify({'state': task.state, 'status': 'Task is in progress'}), 102  # 102 Processing
+
+
+@blueprint.route('/export_dispositif_from_dendro3/result/<task_id>', methods=['GET'])
+def get_export_task_result(task_id):
+    print('celery task result before')
+    task = insert_or_update_data.AsyncResult(task_id)
+    print(task.state)
+    # Check if the task is finished
+    if task.status == 'SUCCESS':
+        export_results = task.result  # This is expected to be a dictionary
+        
+        # Return the results as JSON
+        return jsonify({
+            "status": "success",
+            "data": export_results
+        }), 200
+
+    elif task.status == 'FAILURE':
+        # Return the failure reason
+        response = {
+            "status": "error",
+            "message": str(task.info),  # This should contain the error message
+        }
+        return jsonify(response), 500
+
+    else:
+        # If the task is not finished yet
+        return jsonify({
+            "status": "incomplete",
+            "message": "Task is not finished yet."
+        }), 202
+
+
+
+    #     created_arbres, counts_arbre, counts_arbre_mesure, created_bms, counts_bm, counts_bm_mesure = insert_or_update_data(data)
+    #     result = {
+    #         "created_arbres": created_arbres,
+    #         "counts_arbre": counts_arbre,
+    #         "counts_arbre_mesure": counts_arbre_mesure,
+    #         "created_bms": created_bms,
+    #         "counts_bm": counts_bm,
+    #         "counts_bm_mesure": counts_bm_mesure
+    #     }
+    #     print("fin function")
+    #     return {"success": True, "message": "Dispositif data exported successfully.", "result": result}, 200
+    # except Exception as e:
+    #     return {"success": False, "message": str(e)}, 500
 
 
     # query = DB.session.query(
