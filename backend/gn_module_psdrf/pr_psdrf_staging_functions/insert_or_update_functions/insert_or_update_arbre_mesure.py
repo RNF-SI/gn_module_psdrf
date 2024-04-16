@@ -5,10 +5,12 @@ from sqlalchemy import func
 
 def insert_update_or_delete_arbre_mesure(category, arbre_category, id_arbre, arbre_data, arbre_mesure_data):
     try:
-        results = []
+        counts_arbre_mesure = {
+            'created': 0,
+            'updated': 0,
+            'deleted': 0
+        }
 
-        # for category in ['created', 'updated', 'deleted']:
-        #     for data in arbre_mesure_data[category]:
         if category == 'deleted':
             # Delete logic
             arbre_mesure_to_delete = DB.session.query(TArbresMesuresStaging).filter_by(
@@ -17,7 +19,8 @@ def insert_update_or_delete_arbre_mesure(category, arbre_category, id_arbre, arb
             if arbre_mesure_to_delete:
                 DB.session.delete(arbre_mesure_to_delete)
                 DB.session.commit()
-                results.append({"message": "Arbre mesure deleted successfully.", "status": "deleted", "id": arbre_mesure_to_delete.id_arbre_mesure})
+                counts_arbre_mesure['deleted'] += 1
+
         elif category == 'updated':
             existing_arbre_mesure = DB.session.query(TArbresMesuresStaging).filter_by(
                 id_arbre_mesure=arbre_data['id_arbre_mesure']
@@ -44,11 +47,7 @@ def insert_update_or_delete_arbre_mesure(category, arbre_category, id_arbre, arb
                 existing_arbre_mesure.updated_on = arbre_mesure_data.get('updated_on', existing_arbre_mesure.updated_on)
                 existing_arbre_mesure.updated_at = arbre_mesure_data.get('updated_at', existing_arbre_mesure.updated_at)
                 DB.session.commit()
-                results.append({
-                    "message": "Arbre mesure updated successfully.", 
-                    "status": "updated", 
-                    "id": existing_arbre_mesure.id_arbre_mesure,
-                })
+                counts_arbre_mesure['updated'] += 1
         elif category == 'created':
 
             new_arbre_mesure = TArbresMesuresStaging(
@@ -80,13 +79,9 @@ def insert_update_or_delete_arbre_mesure(category, arbre_category, id_arbre, arb
             )
             DB.session.add(new_arbre_mesure)
             DB.session.commit()
-            results.append({
-                "message": "Arbre mesure created successfully.", 
-                "status": "created", 
-                "id": new_arbre_mesure.id_arbre_mesure,
-                })
+            counts_arbre_mesure['created'] += 1
 
-        return results
+        return counts_arbre_mesure
 
     except Exception as e:
         DB.session.rollback()

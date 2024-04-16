@@ -90,18 +90,18 @@ def insert_update_or_delete_arbre(placette_data):
                                 counts_arbre['deleted'] += 1
                                 
                         # Now process arbres_mesures within each arbre
-                        # if 'arbres_mesures' in arbre_data:
-                        #     for arbre_mesure_category in ['created', 'updated', 'deleted']:
-                        #         for arbre_mesure_data in arbre_data['arbres_mesures'][arbre_mesure_category]:
-                        #             arbre_mesure_results = insert_update_or_delete_arbre_mesure(
-                        #                 category= arbre_mesure_category,
-                        #                 arbre_category=category,
-                        #                 id_arbre=id_arbre,
-                        #                 arbre_data=arbre_data,  # Pass the current arbre data
-                        #                 arbre_mesure_data=arbre_mesure_data
-                        #             )
-                        #             if arbre_mesure_results:
-                        #                 counts_arbre_mesure[arbre_mesure_category] += arbre_mesure_results[arbre_mesure_category]
+                        if 'arbres_mesures' in arbre_data:
+                            for arbre_mesure_category in ['created', 'updated', 'deleted']:
+                                for arbre_mesure_data in arbre_data['arbres_mesures'][arbre_mesure_category]:
+                                    arbre_mesure_results = insert_update_or_delete_arbre_mesure(
+                                        category= arbre_mesure_category,
+                                        arbre_category=category,
+                                        id_arbre=id_arbre,
+                                        arbre_data=arbre_data,  # Pass the current arbre data
+                                        arbre_mesure_data=arbre_mesure_data
+                                    )
+                                    if arbre_mesure_results:
+                                        counts_arbre_mesure[arbre_mesure_category] += arbre_mesure_results[arbre_mesure_category]
             # Bulk insert or update arbres
             if arbres_to_process:
                 DB.session.bulk_save_objects(arbres_to_process)
