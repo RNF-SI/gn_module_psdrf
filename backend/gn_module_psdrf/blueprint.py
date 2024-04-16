@@ -739,29 +739,6 @@ def get_export_task_result(task_id):
 
 
 
-    #     created_arbres, counts_arbre, counts_arbre_mesure, created_bms, counts_bm, counts_bm_mesure = insert_or_update_data(data)
-    #     result = {
-    #         "created_arbres": created_arbres,
-    #         "counts_arbre": counts_arbre,
-    #         "counts_arbre_mesure": counts_arbre_mesure,
-    #         "created_bms": created_bms,
-    #         "counts_bm": counts_bm,
-    #         "counts_bm_mesure": counts_bm_mesure
-    #     }
-    #     print("fin function")
-    #     return {"success": True, "message": "Dispositif data exported successfully.", "result": result}, 200
-    # except Exception as e:
-    #     return {"success": False, "message": str(e)}, 500
-
-
-    # query = DB.session.query(
-    #     ref_nomenclatures.bib_nomenclatures_types
-    # ).all()
-    # # schema = EssenceSchema(many=True)
-    # Obj = schema.dump(query)
-    # return make_response(jsonify(Obj), 200)
-
-
 # @blueprint.route('/arbres/<int:id_dispositif>', methods=['GET'])
 # @json_resp
 # def get_arbres(id_dispositif):

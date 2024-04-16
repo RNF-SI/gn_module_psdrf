@@ -127,23 +127,15 @@ def insert_or_update_data(self, data):
                     counts_arbre_mesure["updated"] += counts_arbre_mesure_temp["updated"]
                     counts_arbre_mesure["deleted"] += counts_arbre_mesure_temp["deleted"]
 
-                    # for arbre_result in arbre_results:
-                    #     if arbre_result:
-                    #         id_mappings.append({
-                    #             "type": "arbre",
-                    #             "id": arbre_result.get("id"),
-                    #             "new_id_arbre_orig": arbre_result.get("new_id_arbre_orig", None)  # Added None as default
-                    #         })
-
-                    # created_bms_temp, counts_bm_temp, counts_bm_mesure_temp = insert_update_or_delete_bms(placette_data)
-                    # created_bms.extend(created_bms_temp)
-                    # counts_bm["created"] += counts_bm_temp["created"]
-                    # counts_bm["updated"] += counts_bm_temp["updated"]
-                    # counts_bm["deleted"] += counts_bm_temp["deleted"]
-                    # counts_bm_mesure["created"] += counts_bm_mesure_temp["created"]
-                    # counts_bm_mesure["updated"] += counts_bm_mesure_temp["updated"]
-                    # counts_bm_mesure["deleted"] += counts_bm_mesure_temp["deleted"]
-
+                    created_bms_temp, counts_bm_temp, counts_bm_mesure_temp = insert_update_or_delete_bms(placette_data)
+                    created_bms.extend(created_bms_temp)
+                    counts_bm["created"] += counts_bm_temp["created"]
+                    counts_bm["updated"] += counts_bm_temp["updated"]
+                    counts_bm["deleted"] += counts_bm_temp["deleted"]
+                    counts_bm_mesure["created"] += counts_bm_mesure_temp["created"]
+                    counts_bm_mesure["updated"] += counts_bm_mesure_temp["updated"]
+                    counts_bm_mesure["deleted"] += counts_bm_mesure_temp["deleted"]
+                    
                     # for bms_result in bms_results:
                     #     if bms_result:
                     #         id_mappings.append({

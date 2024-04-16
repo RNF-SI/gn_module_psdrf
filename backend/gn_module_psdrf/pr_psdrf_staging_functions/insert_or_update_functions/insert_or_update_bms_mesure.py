@@ -4,7 +4,11 @@ from sqlalchemy import func
 
 def insert_update_or_delete_bms_mesure(category, bm_category, id_bm, bm_data, bms_mesure_data):
     try:
-        results = []
+        counts_bm_mesure = {
+            'created': 0,
+            'updated': 0,
+            'deleted': 0
+        }
 
         if category == 'deleted':
             # Delete logic
@@ -14,7 +18,7 @@ def insert_update_or_delete_bms_mesure(category, bm_category, id_bm, bm_data, bm
             if bms_mesure_to_delete:
                 DB.session.delete(bms_mesure_to_delete)
                 DB.session.commit()
-                results.append({"message": "BMS mesure deleted successfully.", "status": "deleted", "id": bms_mesure_to_delete.id_bm_sup_30_mesure})
+                counts_bm_mesure['deleted'] += 1
         elif category == 'updated':
             existing_bms_mesure = DB.session.query(TBmSup30MesuresStaging).filter_by(
                 id_bm_sup_30_mesure=bm_data['id_bm_sup_30_mesure']
@@ -36,11 +40,8 @@ def insert_update_or_delete_bms_mesure(category, bm_category, id_bm, bm_data, bm
                 existing_bms_mesure.updated_on = bms_mesure_data.get('updated_on', existing_bms_mesure.updated_on)
                 existing_bms_mesure.updated_at = bms_mesure_data.get('updated_at', existing_bms_mesure.updated_at)
                 DB.session.commit()
-                results.append({
-                    "message": "BMS mesure updated successfully.", 
-                    "status": "updated", 
-                    "id": existing_bms_mesure.id_bm_sup_30_mesure
-                    })
+                counts_bm_mesure['updated'] += 1
+                
         elif category == 'created':
 
             # Insert logic as before
@@ -68,13 +69,9 @@ def insert_update_or_delete_bms_mesure(category, bm_category, id_bm, bm_data, bm
             )
             DB.session.add(new_bms_mesure)
             DB.session.commit()
-            results.append({
-                "message": "BMS mesure created successfully.", 
-                "status": "created", 
-                "id": new_bms_mesure.id_bm_sup_30_mesure
-                })
+            counts_bm_mesure['created'] += 1
 
-        return results
+        return counts_bm_mesure
 
     except Exception as e:
         DB.session.rollback()
