@@ -4,7 +4,11 @@ from sqlalchemy import func
 
 def insert_update_or_delete_repere(placette_data):
     try:
-        results = []
+        counts_repere = {
+            'created': 0,
+            'updated': 0,
+            'deleted': 0
+        }
 
         if 'reperes' in placette_data:
             reperes_data = placette_data['reperes']
@@ -31,8 +35,7 @@ def insert_update_or_delete_repere(placette_data):
                             )
                             DB.session.add(new_repere)
                             DB.session.commit()
-                            results.append({"message": "Repere created successfully.", "status": "created", "id": new_repere.id_repere})
-
+                            counts_repere['created'] += 1
                         if category == 'updated':
                             existing_repere = DB.session.query(TReperesStaging).filter_by(
                                 id_repere=repere_data['id_repere']
@@ -47,10 +50,7 @@ def insert_update_or_delete_repere(placette_data):
                                 existing_repere.updated_on = repere_data.get('updated_on', existing_repere.updated_on)
                                 existing_repere.updated_at = repere_data.get('updated_at', existing_repere.updated_at)
                                 DB.session.commit()
-                                results.append({
-                                    "status": "updated",
-                                    "id": repere_data.get("id_arbre"),
-                                })
+                                counts_repere['updated'] += 1
                         elif category == 'deleted':
                             repere_to_delete = DB.session.query(TReperesStaging).filter_by(
                                 id_repere=repere_data['id_repere']
@@ -58,13 +58,9 @@ def insert_update_or_delete_repere(placette_data):
                             if repere_to_delete:
                                 DB.session.delete(repere_to_delete)
                                 DB.session.commit()
-                                results.append({
-                                    "message": "Repere deleted successfully.", 
-                                    "status": "deleted", 
-                                    "id": repere_to_delete.id_repere
-                                    })
+                                counts_repere['deleted'] += 1
 
-        return results
+        return counts_repere
 
     except Exception as e:
         DB.session.rollback()
