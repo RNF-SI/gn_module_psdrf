@@ -4,7 +4,11 @@ from sqlalchemy import func
 
 def insert_or_update_transect(category, cor_cycle_placette_category, cor_cycle_placette_id, transect_data):
     try:
-        results = []
+        counts_transect = {
+            'created': 0,
+            'updated': 0,
+            'deleted': 0
+        }
 
         # Implement creation logic for transects
         if category == 'created':          
@@ -37,7 +41,7 @@ def insert_or_update_transect(category, cor_cycle_placette_category, cor_cycle_p
             )
             DB.session.add(new_transect)
             DB.session.commit()
-            results.append({"message": "Transect created successfully.", "status": "created", "id": new_transect.id_transect})
+            counts_transect['created'] += 1
 
         # Implement update logic for transects
         if category == 'updated':
@@ -67,7 +71,7 @@ def insert_or_update_transect(category, cor_cycle_placette_category, cor_cycle_p
                 existing_transect.updated_at = transect_data.get('updated_at', existing_transect.updated_at)
   
                 DB.session.commit()
-                results.append({"message": "Transect updated successfully.", "status": "updated", "id": existing_transect.id_transect})
+                counts_transect['updated'] += 1
 
         # Implement deletion logic for transects
         if category == 'deleted':
@@ -77,9 +81,8 @@ def insert_or_update_transect(category, cor_cycle_placette_category, cor_cycle_p
             if transect_to_delete:
                 DB.session.delete(transect_to_delete)
                 DB.session.commit()
-                results.append({"message": "Transect deleted successfully.", "status": "deleted", "id": transect_to_delete.id_transect})
-
-        return results
+                counts_transect['deleted'] += 1
+        return counts_transect
 
     except Exception as e:
         DB.session.rollback()

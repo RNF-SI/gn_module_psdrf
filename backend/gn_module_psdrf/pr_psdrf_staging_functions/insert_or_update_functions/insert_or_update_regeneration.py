@@ -4,7 +4,11 @@ from sqlalchemy import func
 
 def insert_or_update_regeneration(category, cor_cycle_placette_category, cor_cycle_placette_id, regeneration_data):
     try:
-        results = []
+        counts_regeneration = {
+            'created': 0,
+            'updated': 0,
+            'deleted': 0
+        }
 
         # Handle created regenerations
         if category == 'created':
@@ -31,7 +35,7 @@ def insert_or_update_regeneration(category, cor_cycle_placette_category, cor_cyc
             )
             DB.session.add(new_regeneration)
             DB.session.commit()
-            results.append({"message": "Regeneration created successfully.", "status": "created", "id": new_regeneration.id_regeneration})
+            counts_regeneration['created'] += 1
 
         # Handle updated regenerations
         if category == 'updated': 
@@ -56,7 +60,7 @@ def insert_or_update_regeneration(category, cor_cycle_placette_category, cor_cyc
                 existing_regeneration.updated_on = regeneration_data.get('updated_on', existing_regeneration.updated_on)
                 existing_regeneration.updated_at = regeneration_data.get('updated_at', existing_regeneration.updated_at)
                 DB.session.commit()
-                results.append({"message": "Regeneration updated successfully.", "status": "updated", "id": existing_regeneration.id_regeneration})
+                counts_regeneration['updated'] += 1
 
         # Handle deleted regenerations
         if category == 'deleted':
@@ -66,9 +70,9 @@ def insert_or_update_regeneration(category, cor_cycle_placette_category, cor_cyc
             if regeneration_to_delete:
                 DB.session.delete(regeneration_to_delete)
                 DB.session.commit()
-                results.append({"message": "Regeneration deleted successfully.", "status": "deleted", "id": regeneration_to_delete.id_regeneration})
+                counts_regeneration['deleted'] += 1
 
-        return results
+        return counts_regeneration
 
     except Exception as e:
         DB.session.rollback()

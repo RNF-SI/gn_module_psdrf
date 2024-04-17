@@ -106,6 +106,24 @@ def insert_or_update_data(self, data):
         'deleted': 0
     }
     counts_repere_temp = {}
+    counts_cor_cycle_placette = {
+        'created': 0,
+        'updated': 0,
+        'deleted': 0
+    }
+    counts_cor_cycle_placette_temp = {}
+    counts_regeneration = {
+        'created': 0,
+        'updated': 0,
+        'deleted': 0
+    }
+    counts_regeneration_temp = {}
+    counts_transect = {
+        'created': 0,
+        'updated': 0,
+        'deleted': 0
+    }
+    counts_transect_temp = {}
     id_mappings = []
     # counts = {
     #     'created': {'arbre': 0, 'repere': 0}, 
@@ -149,7 +167,17 @@ def insert_or_update_data(self, data):
                     logger.info(f"Starting carnet d'analyse of dispositif {counts_repere['created']}.")
 
 
-                    # cor_cycle_placette_results = insert_or_update_cor_cycle_placette(placette_data)
+                    counts_cor_cycle_placette_temp, counts_regeneration_temp, counts_transect_temp = insert_or_update_cor_cycle_placette(placette_data)
+                    counts_cor_cycle_placette["created"] += counts_cor_cycle_placette_temp["created"]
+                    counts_cor_cycle_placette["updated"] += counts_cor_cycle_placette_temp["updated"]
+                    counts_cor_cycle_placette["deleted"] += counts_cor_cycle_placette_temp["deleted"]
+                    counts_regeneration["created"] += counts_regeneration_temp["created"]
+                    counts_regeneration["updated"] += counts_regeneration_temp["updated"]
+                    counts_regeneration["deleted"] += counts_regeneration_temp["deleted"]
+                    counts_transect["created"] += counts_transect_temp["created"]
+                    counts_transect["updated"] += counts_transect_temp["updated"]
+                    counts_transect["deleted"] += counts_transect_temp["deleted"]
+
                     # for cor_cycle_placette_result in cor_cycle_placette_results:
                     #     if cor_cycle_placette_result:
                     #         id_mappings.append({
@@ -161,7 +189,7 @@ def insert_or_update_data(self, data):
 
         # ...
         # print("id_mappings: ", id_mappings)
-        self.update_state(state='SUCCESS', meta={'created_arbres': created_arbres, 'counts_arbre': counts_arbre, 'counts_arbre_mesure':counts_arbre_mesure, 'created_bms':created_bms, 'counts_bm': counts_bm, 'counts_bm_mesure': counts_bm_mesure, 'counts_repere': counts_repere})
+        self.update_state(state='SUCCESS', meta={'created_arbres': created_arbres, 'counts_arbre': counts_arbre, 'counts_arbre_mesure':counts_arbre_mesure, 'created_bms':created_bms, 'counts_bm': counts_bm, 'counts_bm_mesure': counts_bm_mesure, 'counts_repere': counts_repere, 'counts_cor_cycle_placette': counts_cor_cycle_placette, 'counts_regeneration': counts_regeneration, 'counts_transect': counts_transect})
 
         # return created_arbres, counts_arbre, counts_arbre_mesure, created_bms, counts_bm, counts_bm_mesure
     except SoftTimeLimitExceeded as e:
@@ -172,4 +200,4 @@ def insert_or_update_data(self, data):
         print("Error in insert_or_update_data: ", str(e))
         raise e
     
-    return {'created_arbres': created_arbres, 'counts_arbre': counts_arbre, 'counts_arbre_mesure':counts_arbre_mesure, 'created_bms':created_bms, 'counts_bm': counts_bm, 'counts_bm_mesure': counts_bm_mesure,'counts_repere': counts_repere}
+    return {'created_arbres': created_arbres, 'counts_arbre': counts_arbre, 'counts_arbre_mesure':counts_arbre_mesure, 'created_bms':created_bms, 'counts_bm': counts_bm, 'counts_bm_mesure': counts_bm_mesure,'counts_repere': counts_repere, 'counts_cor_cycle_placette': counts_cor_cycle_placette, 'counts_regeneration': counts_regeneration, 'counts_transect': counts_transect}
