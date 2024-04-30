@@ -53,6 +53,11 @@
     .info {}
 }
 
+button > mat-icon {
+    // Add margin-right to mat-icon children of button
+    margin-right: 0;
+}
+
 .action-button-class {
     margin: 4px 8px;
 }

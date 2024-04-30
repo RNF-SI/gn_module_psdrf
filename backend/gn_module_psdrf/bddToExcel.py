@@ -33,7 +33,7 @@ def bddToExcel(dispId):
 
     cyclesQuery = DB.session.query(
         TPlacettes.id_dispositif, TPlacettes.id_placette_orig, TCycles.num_cycle,
-        TCycles.coeff, CorCyclesPlacettes.date_releve, TCycles.diam_lim, CorCyclesPlacettes.annee
+        CorCyclesPlacettes.coeff, CorCyclesPlacettes.date_releve, CorCyclesPlacettes.diam_lim, CorCyclesPlacettes.annee
         ).filter(
             (TPlacettes.id_dispositif == dispId)
         ).join(

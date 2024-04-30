@@ -6,6 +6,9 @@ import { MapListService } from '@geonature_common/map-list/map-list.service';
 import { PsdrfDataService } from "../services/route.service";
 import { ToastrService } from 'ngx-toastr';
 import { ExcelImportService } from "../services/excel.import.service";
+import { interval, EMPTY } from 'rxjs';
+import { switchMap, catchError, takeWhile, tap, first, timeout} from 'rxjs/operators';
+
 
 export interface Document {
   name: string;
@@ -140,34 +143,103 @@ export class InfoDispositifComponent implements OnInit {
       if(!this.analysisLoading){
         this.analysisLoading = true;
         this._toasterService.info("La génération des documents peut prendre plusieurs minutes", "Information");
+  
+        this.dataSrv.psdrf_data_analysis(this.id, isCarnetToDownload, isPlanDesArbresToDownload, parameters)
+        .subscribe(
+          taskId => {
+            this.analysisLoading = true;
+  
+            const statusCheck$ = interval(20000).pipe(
+              switchMap(() => this.dataSrv.get_task_status(taskId)),
+              tap(taskStatus => {
+                console.log(taskStatus);
 
+                console.log('Inside observable:', taskStatus.state);
+                // Check if the task state is 'FAILURE' and handle it
+                if (taskStatus.state === 'FAILURE') {
+                  this._toasterService.error("La génération du document a échoué.", "Échec de la génération", {
+                    closeButton: true,
+                    disableTimeOut: true,
+                  });
+                  this.analysisLoading = false;
+                  // Here you might want to throw an error to stop the observable
+                  throw new Error('Task failed');
+                }
+              }),
+              takeWhile(taskStatus => taskStatus.state !== 'SUCCESS', true), // Include the last emission; adjust condition as needed
+              timeout(1500000), // Set timeout to 1500 seconds
+              catchError(error => {
+                // This block will execute if the task times out, if there's an HTTP error, or if an error is thrown manually
+                this.analysisLoading = false;
+                if (error.name && error.name === 'TimeoutError') {
+                  this._toasterService.error("La génération du document a pris trop de temps et a été interrompue.", "Erreur de Délai", {
+                    closeButton: true,
+                    disableTimeOut: true,
+                  });
+                } else {
+                  this._toasterService.error("Une erreur est survenue lors de la vérification du statut de la tâche.", "Erreur", {
+                    closeButton: true,
+                    disableTimeOut: true,
+                  });
+                }
+                return EMPTY;
+              })
+            );
+  
+            statusCheck$.subscribe(
+              taskStatus => {
+                if (taskStatus.state === 'SUCCESS') {
+                  this.analysisLoading = false;
+                  // Success logic here
+                  this.dataSrv.get_task_result(taskId, this.id).subscribe(
+                    data => {
+                      var file = new Blob([data.zip], { type: 'octet/stream' });
+                      var fileURL = URL.createObjectURL(file);
+  
+                      var a = document.createElement('a');
+                      a.href = fileURL; 
+                      a.target = '_blank';
+                      a.download = data.filename;
+                      document.body.appendChild(a);
+                      a.click();
+                      this._toasterService.success("Les documents ont bien été générés.", "Génération des documents réussie");
+                    },
+                    error => {
+                      // This catch block is for handling errors thrown from within the subscription itself
+                      this.analysisLoading = false;
+                      this._toasterService.error("Une erreur est survenue.", "Erreur", {
+                        closeButton: true,
+                        disableTimeOut: true,
+                      });
+                    }
+                  );
+                } else if (taskStatus.state === 'FAILURE') {
+                  // Display error from the task state check
+                  this._toasterService.error("La génération du document a échoué.", "Échec de la génération", {
+                    closeButton: true,
+                    disableTimeOut: true,
+                  });
+                }
+              },
 
-        this.dataSrv
-          .psdrf_data_analysis(this.id, isCarnetToDownload, isPlanDesArbresToDownload, parameters)
-          .subscribe(
-            data => {
-              this.analysisLoading = false;
-              var file = new Blob([data.zip], { type: 'octet/stream' })
-              var fileURL = URL.createObjectURL(file);
-    
-              // if you want to open PDF in new tab
-              // window.open(fileURL); 
-              var a         = document.createElement('a');
-              a.href        = fileURL; 
-              a.target      = '_blank';
-              a.download    = data.filename;
-              document.body.appendChild(a);
-              a.click();
-              this._toasterService.success("Les documents ont bien étés générés.", "Génération des documents PSDRF");
-            },
-            (error) => {
-              this._toasterService.error(error.message, "Génération du rapport PSDRF", {
-                closeButton: true,
-                disableTimeOut: true,
-              });
-              this.analysisLoading = false;
-            }
-          );
+              error => {
+                console.error("Task failed with error:", error);
+                this._toasterService.error("Error: " + (error.error.message || "Unknown error"), "Task Failure", {
+                  closeButton: true,
+                  disableTimeOut: true,
+                });
+
+              }
+            );
+          },
+          error => {
+            this.analysisLoading = false;
+            this._toasterService.error("Une erreur est survenue lors de la demande de génération du document.", "Erreur", {
+              closeButton: true,
+              disableTimeOut: true,
+            });
+          }
+        );
       }
     }
   }

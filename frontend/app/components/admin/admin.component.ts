@@ -96,6 +96,12 @@ export interface Orga {
     private psdrfListUploading = false; 
     private isPSDRFListeLoaded= false;
 
+    // Placette file variables
+    private placetteFile: any = null;
+    public isPlacetteCharging: boolean = false;
+    private placetteUploading: boolean = false;
+    private isPlacetteLoaded: boolean = false;
+
 
     public disableSubmit = false;
     public disableSubmitUserDisp = false;
@@ -692,5 +698,72 @@ export interface Orga {
           }
         );
     }
+
+    // Placette File Part
+    // Add methods for handling Placette file events
+onPlacetteDropped(event: DragEvent): void {
+  let allowedFormats = [
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/vnd.ms-excel",
+  ];
+  let files = event.dataTransfer.files;
+  if (files.length !== 1) throw new Error("Cannot use multiple files");
+  const file = files[0];
+  if (!_.includes(allowedFormats, file.type)) {
+    alert("Only EXCEL Docs Allowed!");
+  } else {
+    this.placetteFile = file;
+    this.isPlacetteCharging = true;
+    // You might need to implement loadPlacette method similar to loadPSDRFListe
+  }
+}
+
+onPlacetteSelect(event): void {
+  const target: DataTransfer = <DataTransfer>event.target;
+  if (target.files.length !== 1) throw new Error("Cannot use multiple files");
+  this.placetteFile = target.files[0];
+  this.isPlacetteCharging = true;
+  // You might need to implement loadPlacette method similar to loadPSDRFListe
+}
+
+deletePlacetteFile(): void {
+  // Implement the logic for deleting the placette file
+  this.isPlacetteLoaded = false;
+  this.placetteFile = null;
+  this.isPlacetteCharging = false;
+}
+
+placetteUpdate(): void {
+  this.placetteUploading = true;
+  this.dataSrv.disp_placette_liste_update(this.placetteFile) // Change the method name as per your service
+    .subscribe(
+      response => {
+        this.placetteUploading = false;
+        if (response.success) {
+
+          this._toasterService.success(response.message, "Mise à jour de la liste de placettes", {
+            closeButton: true,
+            disableTimeOut: true,
+          });
+
+        } else {
+          this._toasterService.error("Error: " + response.message, "Mise à jour de la liste de placettes", {
+            closeButton: true,
+            disableTimeOut: true,
+          });
+        }
+      },
+      error => {
+        this._toasterService.error(error.message, "Mise à jour de la liste de placettes", {
+          closeButton: true,
+          disableTimeOut: true,
+        });
+        // Handle HTTP errors
+        this.placetteUploading = false;
+        this.isPlacetteLoaded = false;
+      }
+    );
+}
+
 
 }

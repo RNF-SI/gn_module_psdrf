@@ -22,13 +22,17 @@ import { MatTableModule } from '@angular/material/table';
 import { MatSnackBarModule } from '@angular/material/snack-bar'; 
 import { CdkStepperModule } from '@angular/cdk/stepper';
 import {MatCheckboxModule} from '@angular/material/checkbox'; 
+import { CustomToastComponent } from "./reusable-components/custom-toast/custom-toast.component"
+import { ToastrModule } from 'ngx-toastr';
+import { DendroDownloadComponent } from "./components/dendro-download.component";
 
 // my module routing
 const routes: Routes = [
   { path: "", component: DispositifsComponent },
   { path: "infodispositif/:id", component: InfoDispositifComponent },
   { path: "importdonnees", component: ImportDonneesComponent },
-  { path: "adminPage", component: AdminComponent }
+  { path: "adminPage", component: AdminComponent },
+  { path: 'download-mobile-app', component: DendroDownloadComponent }
 ];
 
 @NgModule({
@@ -43,7 +47,9 @@ const routes: Routes = [
     DndDirective,
     ErrorMainStepComponent,
     ErrorSubStepComponent,
-    AdminTableComponent
+    AdminTableComponent, 
+    CustomToastComponent,
+    DendroDownloadComponent
   ],
   imports: [
     GN2CommonModule,
@@ -53,7 +59,15 @@ const routes: Routes = [
     MatTableModule,
     MatSnackBarModule,
     CdkStepperModule,
-    MatCheckboxModule
+    MatCheckboxModule,
+    ToastrModule.forRoot({
+      toastComponent: CustomToastComponent,
+      positionClass: 'toast-top-center', // Position of toast
+      timeOut: 5000, // Duration of toast
+      progressBar: true, // Shows progress bar
+      progressAnimation: 'decreasing', // Animation type
+      preventDuplicates: true, 
+    })
   ],
   providers: [
     ExcelImportService,
@@ -62,6 +76,7 @@ const routes: Routes = [
     ErrorCorrectionService, 
     SharedService
   ],
-  bootstrap: []
+  bootstrap: [],
+  entryComponents: [CustomToastComponent]
 })
 export class GeonatureModule { }

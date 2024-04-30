@@ -25,12 +25,14 @@ import { StepperSelectionEvent } from "@angular/cdk/stepper";
 import { MatStepper } from "@angular/material/stepper";
 import { AuthService } from '@geonature/components/auth/auth.service';
 import { CommonService } from '@geonature/GN2CommonModule/service/common.service';
-import { ToastrService } from 'ngx-toastr';
+import { ToastrService, Toast, ToastPackage } from 'ngx-toastr';
 
 import { MatDialog } from "@angular/material/dialog";
 import { ConfirmationDialog } from "@geonature_common/others/modal-confirmation/confirmation.dialog";
 
+import { CustomToastComponent } from '../../reusable-components/custom-toast/custom-toast.component';
 
+import { ErrorDetailService } from '../../services/error-detail.service'; // replace with the actual path to your service
 
 @Component({
   selector: "rnf-psdrf-import-donnees",
@@ -129,6 +131,7 @@ export class ImportDonneesComponent  implements OnInit{
     private _commonService: CommonService,
     private sharedSrv: SharedService,
     private _toasterService: ToastrService,
+    private errorDetailService: ErrorDetailService,
     public dialog: MatDialog
   ) {}
 
@@ -210,6 +213,14 @@ export class ImportDonneesComponent  implements OnInit{
    * @param target DataTransfertObject
    */
   onFileLoad(target: DataTransfer): void {
+    // Reset application state
+    this.psdrfArray = [];
+    this.tableColumnsArray = [];
+    this.tableDataSourceArray = [];
+    this.isExcelLoaded = false;
+    this.isDataCharging = false;
+    this.isVerificationObjLoaded = false;
+
     let excelData;
     const reader: FileReader = new FileReader();
     this.excelFileName = target.files[0].name;
@@ -307,10 +318,25 @@ export class ImportDonneesComponent  implements OnInit{
               }, 0);
             },
             error => {
-              this._toasterService.error(error.message, "Vérification des données PSDRF", {
-                closeButton: true,
-                disableTimeOut: true,
-              });
+              console.log('aaa')
+              console.log(error.error)
+              this.errorDetailService.changeErrorDetail(error.error);
+
+              this._toasterService.show(
+                error.error.success + error.error.message,
+                "Vérification des données",
+                {
+                    closeButton: true,
+                    disableTimeOut: true,
+                    tapToDismiss: false,
+                    toastComponent: CustomToastComponent
+                },
+              );
+
+              // this._toasterService.error(error.message, "Vérification des données PSDRF", {
+              //   closeButton: true,
+              //   disableTimeOut: true,
+              // });
               this.isDataCharging = false;
               this.isExcelLoaded = false;
               this.isVerificationObjLoaded = false;
@@ -434,9 +460,10 @@ export class ImportDonneesComponent  implements OnInit{
    * @param tableName Table Name
    */
   getPaginatorFromTableName(tableName: string): MatPaginator {
-    return this.tableDataSourceArray[
+    const dataSource = this.tableDataSourceArray[
       this.indexLabelMatTabGroup.indexOf(tableName)
-    ].paginator;
+    ];
+    return (dataSource.paginator as MatPaginator);
   }
 
   /**
@@ -1153,10 +1180,18 @@ export class ImportDonneesComponent  implements OnInit{
           }
         }, 
         error => {
-          this._toasterService.error(error.error, "Intégration des données en BDD", {
-            closeButton: true,
-            disableTimeOut: true,
-          });
+          this.errorDetailService.changeErrorDetail(error.error);
+          this._toasterService.show(
+            error.error.success + error.error.message,
+            "Intégration des données en BDD",
+            {
+                closeButton: true,
+                disableTimeOut: true,
+                tapToDismiss: false,
+                toastComponent: CustomToastComponent
+            },
+          );
+
           this.integrationLoading = false;
         });
 

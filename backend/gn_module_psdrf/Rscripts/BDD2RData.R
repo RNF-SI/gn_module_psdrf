@@ -1,5 +1,5 @@
 editDocuments <- function(dispId, lastCycle, dispName, placettes, arbres, bms, reges, transects, reperes, cycles, isCarnetToDownload, isPlanDesArbresToDownload, Answer_Radar){
-  
+
     library(data.table)
     library("stringr")
     library("openxlsx") 
@@ -197,7 +197,15 @@ editDocuments <- function(dispId, lastCycle, dispName, placettes, arbres, bms, r
     encoding = 'UTF-8', echo = TRUE
     )
     if (isCarnetToDownload){
-      psdrf_EditCarnet(repPSDRF, dispId, lastCycle, dispName, results_by_plot_to_get, Answer_Radar)
+        print("About to launch psdrf_EditCarnet")
+        tryCatch({
+            psdrf_EditCarnet(repPSDRF, dispId, lastCycle, dispName, results_by_plot_to_get, Answer_Radar)
+        }, error = function(e) {
+            print(paste("Error in psdrf_EditCarnet call:", e$message))
+        })
+        print("psdrf_EditCarnet is finished")
+
+
     } 
     if (isPlanDesArbresToDownload){
         psdrf_EditPlansArbres(repPSDRF, dispId, lastCycle, dispName, results_by_plot_to_get)

@@ -1,4 +1,4 @@
-from flask import Blueprint, request, make_response, send_file, send_from_directory, Response
+from flask import Blueprint, request, make_response, send_file, send_from_directory, Response, jsonify
 from sqlalchemy.orm import subqueryload, joinedload
 from sqlalchemy.sql import func, distinct
 from sqlalchemy.exc import SQLAlchemyError
@@ -7,11 +7,9 @@ from sqlalchemy.sql.expression import false
 from geoalchemy2.shape import to_shape, from_shape
 from shapely.geometry import MultiPoint, Point
 import json
-import zipfile
-from io import BytesIO
 import time
-import os
 import logging
+import os
 
 from geonature.utils.env import DB
 # from geonature.utils.utilssqlalchemy import json_resp, get_geojson_feature
@@ -21,16 +19,24 @@ from pypnusershub.db.models import Organisme as BibOrganismes
 from pypnusershub.db.models import User
 from ref_geo.models import LiMunicipalities, LAreas, BibAreasTypes
 from .models import TDispositifs, TPlacettes, TArbres, TCycles, \
-    CorCyclesPlacettes, TArbresMesures, CorDispositifsRoles
+    CorCyclesPlacettes, TArbresMesures, CorDispositifsRoles, TBmSup30, TBmSup30Mesures, BibEssences
 from .data_verification import data_verification
 from .data_integration import data_integration
 from .psdrf_list_update import psdrf_list_update
-from .data_analysis import data_analysis
+from .disp_placette_liste import disp_placette_liste_add
+# from .pr_psdrf_staging_functions.insert_or_update_disp_to_staging import insert_or_update_data
 from .bddToExcel import bddToExcel
+from .schemas.dispositifs import DispositifSchema
+from .schemas.cycles import ConciseCycleSchema
+from .schemas.essences import EssenceSchema
+from .tasks import test_celery, insert_or_update_data
+
 
 
 from utils_flask_sqla.response import json_resp
 from utils_flask_sqla_geo.generic import get_geojson_feature
+
+from geonature.utils.celery import celery_app
 
 blueprint = Blueprint('psdrf', __name__)
 
@@ -265,42 +271,65 @@ def psdrf_data_analysis(id_dispositif):
     isPlanDesArbresToDownload = request.args.get('isPlanDesArbresToDownload')
 
     outFilePath = "/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/out/"
-    try:
-        data_analysis(str(id_dispositif), isCarnetToDownload, isPlanDesArbresToDownload, carnetToDownloadParameters)
-    except Exception as e:
-        logging.critical(e)
-        msg = json.dumps({"type": "bug", "msg": "Unkown error during analysis"})
-        logging.info(msg)
-        return Response(msg, status=500)
+    task = test_celery.delay(str(id_dispositif), isCarnetToDownload, isPlanDesArbresToDownload, carnetToDownloadParameters, outFilePath)
+    # Return the task ID to the client
+    return jsonify({'task_id': task.id})
 
-    memory_file = BytesIO()
-    with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zf:
 
-        for dirname, subdirs, files in os.walk(outFilePath):
-            for filename in files:
-                absname = os.path.abspath(os.path.join(dirname, filename))
-                arcname = absname[len(outFilePath) :]
-                if (arcname != '.gitignore') and (not arcname.endswith(('.log', '.tex'))):
-                    zf.write(absname, arcname)
 
-    memory_file.seek(0)
+@blueprint.route('/analysis/status/<task_id>', methods=['GET'])
+def get_task_status(task_id):
+    task_result = test_celery.AsyncResult(task_id)
+    
+    # raise Exception("Simulated task failure for debugging.")
 
-    zipName = 'documents_dispositif-'+str(id_dispositif)+'.zip'
+    if task_result.state == 'PENDING':
+        response = {'state': task_result.state, 'status': 'Task is pending'}
+    elif task_result.state == 'FAILURE':
+        # If the task failed, return the error message
+        response = {
+            'state': task_result.state,
+            'status': str(task_result.info),  # info property contains exception raised by task
+        }
+    else:
+        # For other states like SUCCESS, RETRY, etc.
+        response = {'state': task_result.state, 'status': 'Task is currently being processed or has finished'}
 
-    result = send_file(
-        memory_file, 
-        mimetype = 'zip',
-        attachment_filename= zipName,
-        as_attachment=True
-        )
+    return jsonify(response)
 
-    response = make_response(result)
-    response.headers["filename"]=zipName
-    response.headers['Access-Control-Expose-Headers'] = 'filename'   
-    try:
-        return response
-    except FileNotFoundError:
-        abort(404)
+@blueprint.route('/analysis/result/<task_id>', methods=['GET'])
+def get_task_result(task_id):
+    # Get the AsyncResult object for the task
+    task = test_celery.AsyncResult(task_id)
+    
+    # Check if the task is finished
+    if task.status == 'SUCCESS':
+        file_info = task.result
+        file_path = file_info["file_path"]
+        print(file_path)
+        print(file_info)
+        file_name = file_info["file_name"]
+        # Check if file exists and then send it
+        if os.path.exists(file_path):
+            with open(file_path, 'rb') as f:
+                response = Response(f.read(), content_type='application/zip')
+                response.headers["Content-Disposition"] = f"attachment; filename=\"{file_name}\""
+                return response
+        else:
+            return jsonify({"error": "File not found"}), 404
+    elif task.status == 'FAILURE':
+        response = {
+            "status": "error",
+            "message": str(task.info),  # This should contain the error message
+        }
+        return jsonify(response), 500
+
+        # return jsonify({"error": "Task failed", "reason": str(task.result)}), 500
+    else:
+        return jsonify({'status': 'Task not finished'}), 400
+
+
+
 
 @blueprint.route('/dispositifsList', methods=['GET'])
 @json_resp
@@ -549,4 +578,202 @@ def psdrf_update_psdrf_liste():
         msg = json.dumps({"type": "bug", "msg": "Unknown error during psdrf liste change"})
         logging.info(msg)
         return Response(msg, status=500)
+    
+# add Placette List request
+@blueprint.route('/disp_placette_liste', methods=['POST'])
+@json_resp
+def psdrf_update_disp_placette_liste():
+    disp_placette_liste_file = request.files.get('file_upload', 'disp_placette_liste')
+    try:
+        result_message = disp_placette_liste_add(disp_placette_liste_file)
+        return {"success": True, "message": result_message}
+    except Exception as e:
+        logging.critical(e)
+        msg = json.dumps({"type": "bug", "msg": "Unknown error during disp_placette_liste change"})
+        logging.info(msg)
+        return Response(msg, status=500)
 
+
+# Fonctions pour l'application de saisir PSDRF
+
+@blueprint.route('/user-dispositif-list/<int:userId>', methods=['GET'])
+@json_resp
+def get_user_dispositif_list(userId):
+    query = DB.session.query(
+        TDispositifs.id_dispositif, TDispositifs.name, TDispositifs.id_organisme, TDispositifs.alluvial, CorDispositifsRoles.id_role
+    ).join(
+        TDispositifs, TDispositifs.id_dispositif == CorDispositifsRoles.id_dispositif
+    ).filter(
+        CorDispositifsRoles.id_role == userId
+    ).all()
+    data = [{'id_dispositif': userDisp.id_dispositif, 'alluvial': userDisp.alluvial, 'name': userDisp.name, "id_organisme": userDisp.id_organisme} for userDisp in query]
+    return data
+
+@blueprint.route('/dispositif-complet/<int:id_dispositif>', methods=['GET'])
+def get_dispositif_complet(id_dispositif):
+    query = DB.session.query(
+        TDispositifs
+    ).filter(
+        TDispositifs.id_dispositif == id_dispositif
+    ).one()
+    schema = DispositifSchema(many=False)
+    Obj = schema.dump(query)
+    return make_response(jsonify(Obj), 200)
+
+@blueprint.route('/dispositif-cycles/<int:id_dispositif>', methods=['GET'])
+def get_dispositif_cycles(id_dispositif):
+    query = DB.session.query(
+        TCycles
+    ).filter(
+        TCycles.id_dispositif == id_dispositif
+    ).all()
+    schema = ConciseCycleSchema(many=True)
+    Obj = schema.dump(query)
+    return make_response(jsonify(Obj), 200)
+
+@blueprint.route('/essences', methods=['GET'])
+def get_essences():
+    query = DB.session.query(
+        BibEssences
+    ).all()
+    schema = EssenceSchema(many=True)
+    Obj = schema.dump(query)
+    return make_response(jsonify(Obj), 200)
+
+@blueprint.route('/bib_nomenclatures_types', methods=['GET'])
+def get_PSDRF_bib_nomenclatures():
+    try:
+        bib_nomenclatures_types = DB.session.execute("""
+            SELECT *
+            FROM ref_nomenclatures.bib_nomenclatures_types
+            WHERE source = 'PSDRF';
+            """
+        ).fetchall()
+        return bib_nomenclatures_types
+    except Exception:
+        raise
+
+@blueprint.route('/t_nomenclatures', methods=['GET'])
+def get_PSDRF_t_nomenclatures():
+    try:
+        t_nomenclatures = DB.session.execute("""
+            SELECT *
+            FROM ref_nomenclatures.t_nomenclatures
+            WHERE source = 'PSDRF';
+            """
+        ).fetchall()
+        return t_nomenclatures
+    except Exception:
+        raise
+
+@blueprint.route('/export_dispositif_from_dendro3', methods=['POST'])
+def export_dispositif():
+    """
+    Receives a dispositif entity
+
+    as JSON and exports it to the database.
+
+    Returns the number of added entities and that have updated
+    """
+    data = request.get_json()
+    # print(data)
+    if not data:
+        return {"success": False, "message": "No data provided."}, 400
+    # try:
+    print('celery task before')
+    task = insert_or_update_data.delay(data)
+    print('celery task after')
+    print(task.id)
+    # print(jsonify({'task_id': task.id}))
+    return jsonify({'task_id': task.id}), 202
+
+
+@blueprint.route('/export_dispositif_from_dendro3/status/<task_id>', methods=['GET'])
+def get_export_task_status(task_id):
+    print('celery task status before')
+    task = insert_or_update_data.AsyncResult(task_id)
+    print(task_id)
+    print(task.state)
+    print(task)
+    if task.state == 'PENDING':
+        return jsonify({'state': task.state, 'status': 'Task is pending'}), 202
+    elif task.state == 'FAILURE':
+        error_info = str(task.info)  # Get more details about the failure
+        print(f"Task failed due to: {error_info}") 
+        return jsonify({'state': task.state, 'status': str(task.info)}), 500
+    elif task.state == 'SUCCESS':
+        return jsonify({'state': task.state, 'result': task.result}), 200
+    else:
+        return jsonify({'state': task.state, 'status': 'Task is in progress'}), 102  # 102 Processing
+
+
+@blueprint.route('/export_dispositif_from_dendro3/result/<task_id>', methods=['GET'])
+def get_export_task_result(task_id):
+    print('celery task result before')
+    task = insert_or_update_data.AsyncResult(task_id)
+    print(task.state)
+    # Check if the task is finished
+    if task.status == 'SUCCESS':
+        export_results = task.result  # This is expected to be a dictionary
+        
+        # Return the results as JSON
+        return jsonify({
+            "status": "success",
+            "data": export_results
+        }), 200
+
+    elif task.status == 'FAILURE':
+        # Return the failure reason
+        response = {
+            "status": "error",
+            "message": str(task.info),  # This should contain the error message
+        }
+        return jsonify(response), 500
+
+    else:
+        # If the task is not finished yet
+        return jsonify({
+            "status": "incomplete",
+            "message": "Task is not finished yet."
+        }), 202
+
+
+
+# @blueprint.route('/arbres/<int:id_dispositif>', methods=['GET'])
+# @json_resp
+# def get_arbres(id_dispositif):
+#     """ Recherche tous les arbres d'un dispositif donné """
+#     pgs = DB.session.query(TArbres).filter(TArbres.placette.id_dispositif == id_dispositif).all()
+#     return [pg.as_dict() for pg in pgs]
+
+# @blueprint.route('/dendro_apk', methods=['GET'])
+# def get_dendro_apk():
+#     try:
+#         print('apk')
+#         print(os.getcwd())
+#         base_dir = os.path.dirname(os.path.abspath(__file__))
+#         outFilePath = os.path.join(base_dir, 'apk/app-release.apk')
+#         # backend/gn_module_psdrf/apk/app-release.apk
+#         # return send_file('dendro.apk', as_attachment=True)
+#         return send_file(outFilePath, as_attachment=True) 
+#     except Exception as e:
+#         print(e)
+#         return jsonify({"error": "File not found"}), 404
+    
+@blueprint.route('/dendro_apk', methods=['GET'])
+def get_dendro_apk():
+    try:
+        # Define the base directory where your APK is stored
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        apk_directory = os.path.join(base_dir, 'apk')  # APK is inside the 'downloads' folder
+        apk_path = 'app-release.apk'  # The path to your APK file
+
+        # Send file from the specified directory with the path
+        return send_from_directory(directory=apk_directory, 
+                                   path=apk_path, 
+                                   as_attachment=True,
+                                   )  # Suggests a filename for the download
+    except Exception as e:
+        print(e)
+        # Provide a JSON response in case of error
+        return jsonify({"error": "File not found"}), 404

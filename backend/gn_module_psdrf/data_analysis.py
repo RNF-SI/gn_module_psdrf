@@ -1,6 +1,7 @@
 from rpy2.robjects import pandas2ri
 from rpy2.robjects.conversion import localconverter
 import rpy2.robjects as ro
+from rpy2.rinterface_lib.embedded import RRuntimeError
 import os, shutil
 
 from sqlalchemy import select
@@ -55,6 +56,7 @@ def data_analysis(dispId, isCarnetToDownload, isPlanDesArbresToDownload, carnetT
         r_lastCycle = ro.conversion.py2rpy(lastCycledf)
 
     formatBdd2RData(r, dispId, r_lastCycle, dispName, isCarnetToDownload, isPlanDesArbresToDownload, carnetToDownloadParameters)
+    del r
 
 def formatBdd2RData(r, dispId, lastCycle, dispName, isCarnetToDownload, isPlanDesArbresToDownload, carnetToDownloadParameters):
 
@@ -185,8 +187,8 @@ def formatBdd2RData(r, dispId, lastCycle, dispName, isCarnetToDownload, isPlanDe
 
     cyclesQuery = DB.session.query(
         TPlacettes.id_dispositif, TPlacettes.id_placette_orig,
-        CorCyclesPlacettes.annee, TCycles.num_cycle, TCycles.coeff, 
-        TCycles.diam_lim
+        CorCyclesPlacettes.annee, TCycles.num_cycle, CorCyclesPlacettes.coeff, 
+        CorCyclesPlacettes.diam_lim
         ).filter(
             (TPlacettes.id_dispositif == dispId)
         ).join(
@@ -317,8 +319,15 @@ def formatBdd2RData(r, dispId, lastCycle, dispName, isCarnetToDownload, isPlanDe
     if carnetToDownloadParameters['Answer_Radar'] == None:
         Answer_Radar = ro.NULL
     else:
-        Answer_Radar = carnetToDownloadParameters['Answer_Radar']
-    BDD2Rdata.editDocuments(dispId, lastCycle, dispName, r_placettes, r_arbres, r_bmss, r_reges, r_transects, r_reperes, r_cycles, isCarnetToDownload, isPlanDesArbresToDownload, Answer_Radar)
+        try: 
+            Answer_Radar = carnetToDownloadParameters['Answer_Radar']
+        except RRuntimeError as e:
+            logger.error(f"R runtime error occurred: {e}")
+
+    try:  
+        BDD2Rdata.editDocuments(dispId, lastCycle, dispName, r_placettes, r_arbres, r_bmss, r_reges, r_transects, r_reperes, r_cycles, isCarnetToDownload, isPlanDesArbresToDownload, Answer_Radar)
+    except RRuntimeError as e:
+        logger.error(f"R runtime error occurred: {e}")
 
 def id_nomenclatureToMnemonique(obj,id_type_durete,id_type_ecorce, stadeDIdx, stadeEIdx):
     finalObjtemp = list(obj)

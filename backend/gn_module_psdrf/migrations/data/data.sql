@@ -857,3 +857,6 @@ INSERT INTO bib_essences (code_essence, cd_nom, nom, ess_reg, couleur, nom_latin
 INSERT INTO bib_essences (code_essence, cd_nom, nom, ess_reg, couleur, nom_latin) VALUES ('SUR', 445553, 'Sureau sp.', 'AF', 'azure2', 'Sambucus sp');
 INSERT INTO bib_essences (code_essence, cd_nom, nom, ess_reg, couleur, nom_latin) VALUES ('TIL', 198461, 'Tilleul sp.', 'AF', 'cyan4', 'Tilia sp');
 INSERT INTO bib_essences (code_essence, cd_nom, nom, ess_reg, couleur, nom_latin) VALUES ('TRO', 194125, 'Troëne', 'AF', 'azure2', 'Ligustrum sp');
+INSERT INTO bib_essences (code_essence, cd_nom, nom, ess_reg, couleur, nom_latin) VALUES ('FIG', 98653, 'Figuier', 'AF', 'azure2', 'Ficus carica');
+INSERT INTO bib_essences (code_essence, cd_nom, nom, ess_reg, couleur, nom_latin) VALUES ('MUR', 194913, 'Murier', 'AF', 'azure2', 'Morus sp');
+INSERT INTO bib_essences (code_essence, cd_nom, nom, ess_reg, couleur, nom_latin) VALUES ('MIC', 190439, 'Micocoulier', 'AF', 'azure2', 'Celtis sp');

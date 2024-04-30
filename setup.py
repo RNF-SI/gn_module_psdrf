@@ -30,6 +30,7 @@ setuptools.setup(
             'blueprint = gn_module_psdrf.blueprint:blueprint',
             "config_schema = gn_module_psdrf.conf_schema_toml:GnModuleSchemaConf",
             'migrations = gn_module_psdrf:migrations',
+            'tasks = gn_module_psdrf.tasks',
         ],
     },
     classifiers=['Development Status :: 1 - Planning',

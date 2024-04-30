@@ -122,17 +122,17 @@ config/settings.ini
 backend/test.py
 
 #data 
-data/CodeEssence
-data/CodeDurete
-data/Communes
-data/CyclesCodes
-data/Dispositifs
-data/EssReg
-data/Referents
-data/Tarifs
-data/CodeEcologie
-data/CodeEcorce
-data/CodeTypoArbres
+data/CodeEssence.csv
+data/CodeDurete.csv
+data/Communes.csv
+data/Cycles.csv
+data/Dispositifs.csv
+data/EssReg.csv
+data/Referents.csv
+data/Tarifs.csv
+data/CodeEcologie.csv
+data/CodeEcorce.csv
+data/CodeTypoArbres.csv
 .vscode/launch.json
 
 # Rdata
@@ -144,6 +144,8 @@ backend/gn_module_psdrf/Rscripts/template/psdrf_PlanArbres-concordance.tex
 backend/gn_module_psdrf/Rscripts/template/psdrf_PlanArbres.tex
 backend/gn_module_psdrf/Rscripts/psdrf_liste/PsdrfListes.xlsx
 
+#APK
+backend/gn_module_psdrf/apk/app-release.apk
 
 # Compare files in R scripts
 backend/gn_module_psdrf/Rscripts/template/compare

@@ -438,3 +438,51 @@
         </mat-card-content>
     </mat-card>
 </div>
+
+<div class="container-fluid p-2">
+    <mat-card>
+      <mat-card-title>Import de Placettes</mat-card-title>
+      <mat-card-content>
+        <div class="container" appDnd (fileDropped)="onPlacetteDropped($event)" *ngIf="!isPlacetteCharging">
+          <div class="importzone d-flex align-items-center justify-content-center">
+            <div class="h-25 text-center">
+              <input type="file" #placetteDropRef id="placetteDropRef" accept=".xlsx, .xls">
+              <h3>Déposer </h3>
+              <h3>ou</h3>
+              <div class="custom-file">
+                <input type="file" class="custom-file-input" id="placetteFile" name="placetteExcelFile" (change)="onPlacetteSelect($event)" #placetteUploadFileInput accept=".xlsx, .xls">
+                <label for="placetteFile">Choisir un fichier</label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div *ngIf="isPlacetteCharging">
+          <div class="d-flex justify-content-center">
+            <div class="d-flex justify-content-between single-file">
+              <img src="external_assets/psdrf/ms-excel.svg" width="30px" alt="file">
+              <div class="info ml-3">
+                <h4 class="name">
+                  {{ placetteFile?.name }}
+                </h4>
+              </div>
+            </div>
+          </div>
+  
+          <div class="mt-1 d-flex justify-content-center">
+            <button class="action-button-class" mat-raised-button matTooltip="Supprimer" (click)="deletePlacetteFile()">
+              <mat-icon> delete </mat-icon>
+            </button>
+            <div *ngIf="!isFileContainingFatalError">
+              <button *ngIf="!placetteUploading" class="action-button-class" mat-raised-button matTooltip="Intégrer les données à la base de données" (click)="placetteUpdate()">
+                <mat-icon> cloud_upload </mat-icon>
+              </button>
+              <button *ngIf="placetteUploading" class="action-button-class spinner-button" mat-raised-button matTooltip="Intégration des données en cours" disabled>
+                <mat-spinner diameter="22" color="primary"></mat-spinner>
+              </button>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+  
