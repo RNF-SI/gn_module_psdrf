@@ -22,6 +22,10 @@
                     </span>
                 </button>
 
+                <button class="m-1" mat-raised-button matTooltip="Télécharger Dendro3" (click)="goToDownloadPage()">
+                    <mat-icon> install_mobile  </mat-icon>
+                </button>
+
                 <button class="m-1" *ngIf="isAdmin" mat-raised-button matTooltip="Accès page admin PSDRF" (click)="openPSDRFAdminPage()">
                     <mat-icon> person_add </mat-icon>
                 </button>

@@ -259,4 +259,13 @@ export class PsdrfDataService {
       disp_placette_liste
     );
   }
+
+  getDendroApk(): Observable<Blob> {
+    const url = `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/dendro_apk`;
+    return this._http.get(url, {
+      responseType: 'blob'  // Important: Handle response as a blob
+    });
+  }
+
+
 }

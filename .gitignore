@@ -144,6 +144,8 @@ backend/gn_module_psdrf/Rscripts/template/psdrf_PlanArbres-concordance.tex
 backend/gn_module_psdrf/Rscripts/template/psdrf_PlanArbres.tex
 backend/gn_module_psdrf/Rscripts/psdrf_liste/PsdrfListes.xlsx
 
+#APK
+backend/gn_module_psdrf/apk/app-release.apk
 
 # Compare files in R scripts
 backend/gn_module_psdrf/Rscripts/template/compare

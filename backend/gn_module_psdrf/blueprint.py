@@ -745,3 +745,35 @@ def get_export_task_result(task_id):
 #     """ Recherche tous les arbres d'un dispositif donné """
 #     pgs = DB.session.query(TArbres).filter(TArbres.placette.id_dispositif == id_dispositif).all()
 #     return [pg.as_dict() for pg in pgs]
+
+# @blueprint.route('/dendro_apk', methods=['GET'])
+# def get_dendro_apk():
+#     try:
+#         print('apk')
+#         print(os.getcwd())
+#         base_dir = os.path.dirname(os.path.abspath(__file__))
+#         outFilePath = os.path.join(base_dir, 'apk/app-release.apk')
+#         # backend/gn_module_psdrf/apk/app-release.apk
+#         # return send_file('dendro.apk', as_attachment=True)
+#         return send_file(outFilePath, as_attachment=True) 
+#     except Exception as e:
+#         print(e)
+#         return jsonify({"error": "File not found"}), 404
+    
+@blueprint.route('/dendro_apk', methods=['GET'])
+def get_dendro_apk():
+    try:
+        # Define the base directory where your APK is stored
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        apk_directory = os.path.join(base_dir, 'apk')  # APK is inside the 'downloads' folder
+        apk_path = 'app-release.apk'  # The path to your APK file
+
+        # Send file from the specified directory with the path
+        return send_from_directory(directory=apk_directory, 
+                                   path=apk_path, 
+                                   as_attachment=True,
+                                   )  # Suggests a filename for the download
+    except Exception as e:
+        print(e)
+        # Provide a JSON response in case of error
+        return jsonify({"error": "File not found"}), 404

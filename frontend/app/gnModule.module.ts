@@ -24,13 +24,15 @@ import { CdkStepperModule } from '@angular/cdk/stepper';
 import {MatCheckboxModule} from '@angular/material/checkbox'; 
 import { CustomToastComponent } from "./reusable-components/custom-toast/custom-toast.component"
 import { ToastrModule } from 'ngx-toastr';
+import { DendroDownloadComponent } from "./components/dendro-download.component";
 
 // my module routing
 const routes: Routes = [
   { path: "", component: DispositifsComponent },
   { path: "infodispositif/:id", component: InfoDispositifComponent },
   { path: "importdonnees", component: ImportDonneesComponent },
-  { path: "adminPage", component: AdminComponent }
+  { path: "adminPage", component: AdminComponent },
+  { path: 'download-mobile-app', component: DendroDownloadComponent }
 ];
 
 @NgModule({
@@ -46,7 +48,8 @@ const routes: Routes = [
     ErrorMainStepComponent,
     ErrorSubStepComponent,
     AdminTableComponent, 
-    CustomToastComponent
+    CustomToastComponent,
+    DendroDownloadComponent
   ],
   imports: [
     GN2CommonModule,

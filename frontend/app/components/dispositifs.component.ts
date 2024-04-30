@@ -141,5 +141,9 @@ import { ToastrService } from 'ngx-toastr';
       this._router.navigate(["psdrf/adminPage"])
     }
 
+    goToDownloadPage() {
+      this._router.navigate(['psdrf/download-mobile-app']);
+    }
+
   }
 
