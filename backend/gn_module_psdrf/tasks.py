@@ -214,7 +214,7 @@ def insert_or_update_data(self, data):
 
 
 # Task to get all the data of a dispositif from the prod database
-@celery_app.task(bind=True, soft_time_limit=1000, time_limit=1200)
+@celery_app.task(bind=True, soft_time_limit=1500, time_limit=1800)
 def fetch_dispositif_data(self, id_dispositif):
     logger.info(f"Task started for dispositif ID: {id_dispositif}")
     try:
