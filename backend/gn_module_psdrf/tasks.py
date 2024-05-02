@@ -216,12 +216,16 @@ def insert_or_update_data(self, data):
 # Task to get all the data of a dispositif from the prod database
 @celery_app.task(bind=True, soft_time_limit=1000, time_limit=1200)
 def fetch_dispositif_data(self, id_dispositif):
+    logger.info(f"Task started for dispositif ID: {id_dispositif}")
     try:
-        logger.info("Starting to get Dispositif Complet for Dendro3")
+        logger.debug("Starting database query...")
         query = DB.session.query(TDispositifs).filter(TDispositifs.id_dispositif == id_dispositif).one()
+        logger.debug("Database query completed.")
         schema = DispositifSchema(many=False)
+        logger.debug("Starting serialization of data...")
         result = schema.dump(query)
-        logger.info("Finishing the download of Dispositif Complet for Dendro3")
+        logger.debug("Serialization completed.")
+        logger.info(f"Successfully fetched and serialized data for dispositif ID: {id_dispositif}")
         return {'status': 'SUCCESS', 'data': result}
     except Exception as e:
         logger.exception("Error during fetching dispositif data")
