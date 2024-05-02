@@ -217,9 +217,11 @@ def insert_or_update_data(self, data):
 @celery_app.task(bind=True, soft_time_limit=1000, time_limit=1200)
 def fetch_dispositif_data(self, id_dispositif):
     try:
+        logger.info("Starting to get Dispositif Complet for Dendro3")
         query = DB.session.query(TDispositifs).filter(TDispositifs.id_dispositif == id_dispositif).one()
         schema = DispositifSchema(many=False)
         result = schema.dump(query)
+        logger.info("Finishing the download of Dispositif Complet for Dendro3")
         return {'status': 'SUCCESS', 'data': result}
     except Exception as e:
         logger.exception("Error during fetching dispositif data")
