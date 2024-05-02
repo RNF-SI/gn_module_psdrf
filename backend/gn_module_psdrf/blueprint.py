@@ -36,6 +36,9 @@ from utils_flask_sqla.response import json_resp
 from utils_flask_sqla_geo.generic import get_geojson_feature
 
 from geonature.utils.celery import celery_app
+from celery.utils.log import get_task_logger
+
+logger = get_task_logger(__name__)
 
 blueprint = Blueprint('psdrf', __name__)
 
@@ -610,28 +613,41 @@ def get_user_dispositif_list(userId):
 
 @blueprint.route('/dispositif-complet/<int:id_dispositif>', methods=['GET'])
 def get_dispositif_complet(id_dispositif):
+    logger.info(f"Received request to start task for dispositif ID: {id_dispositif}")
     task = fetch_dispositif_data.delay(id_dispositif)
+    logger.info(f"Task {task.id} started for dispositif ID: {id_dispositif}")
     return jsonify({'task_id': task.id}), 202
+
 
 @blueprint.route('/dispositif-complet/status/<task_id>', methods=['GET'])
 def get_dispositif_status(task_id):
+    logger.info(f"Checking status of task ID: {task_id}")
     task = fetch_dispositif_data.AsyncResult(task_id)
     if task.state in ['PENDING', 'STARTED']:
+        logger.debug(f"Task {task_id} is {task.state}")
         return jsonify({'state': task.state}), 202
     elif task.state == 'FAILURE':
+        logger.error(f"Task {task_id} failed with error: {task.info}")
         return jsonify({'state': task.state, 'error': str(task.info)}), 500
     elif task.state == 'SUCCESS':
+        logger.info(f"Task {task_id} completed successfully")
         return jsonify({'state': task.state}), 200
+
 
 @blueprint.route('/dispositif-complet/result/<task_id>', methods=['GET'])
 def get_dispositif_result(task_id):
+    app.logger.info(f"Retrieving result for task ID: {task_id}")
     task = fetch_dispositif_data.AsyncResult(task_id)
     if task.status == 'SUCCESS':
+        app.logger.info(f"Successfully retrieved result for task ID: {task_id}")
         return jsonify(task.result), 200
     elif task.status == 'FAILURE':
+        app.logger.error(f"Retrieving result failed for task ID: {task_id}, Error: {task.info}")
         return jsonify({'error': str(task.info)}), 500
     else:
+        app.logger.debug(f"Task {task_id} is still processing")
         return jsonify({'status': 'incomplete', 'message': 'Task is not finished yet.'}), 202
+
 
 
 @blueprint.route('/dispositif-cycles/<int:id_dispositif>', methods=['GET'])
