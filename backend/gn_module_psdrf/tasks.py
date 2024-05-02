@@ -8,6 +8,10 @@ import zipfile
 import os
 import tempfile
 
+from geonature.utils.env import DB
+from .models import TDispositifs
+from .schemas.dispositifs import DispositifSchema
+
 from .pr_psdrf_staging_functions.insert_or_update_functions.insert_or_update_dispositif import insert_or_update_dispositif
 from .pr_psdrf_staging_functions.insert_or_update_functions.insert_or_update_placette import insert_or_update_placette
 from .pr_psdrf_staging_functions.insert_or_update_functions.insert_or_update_arbre import insert_update_or_delete_arbre
@@ -207,3 +211,22 @@ def insert_or_update_data(self, data):
         'counts_regeneration': counts_regeneration, 
         'counts_transect': counts_transect
         }
+
+
+# Task to get all the data of a dispositif from the prod database
+@celery_app.task(bind=True, soft_time_limit=1500, time_limit=1800)
+def fetch_dispositif_data(self, id_dispositif):
+    logger.info(f"Task started for dispositif ID: {id_dispositif}")
+    try:
+        logger.debug("Starting database query...")
+        query = DB.session.query(TDispositifs).filter(TDispositifs.id_dispositif == id_dispositif).one()
+        logger.debug("Database query completed.")
+        schema = DispositifSchema(many=False)
+        logger.debug("Starting serialization of data...")
+        result = schema.dump(query)
+        logger.debug("Serialization completed.")
+        logger.info(f"Successfully fetched and serialized data for dispositif ID: {id_dispositif}")
+        return {'status': 'SUCCESS', 'data': result}
+    except Exception as e:
+        logger.exception("Error during fetching dispositif data")
+        return {'status': 'FAILURE', 'data': str(e)}

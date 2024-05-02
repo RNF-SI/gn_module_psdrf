@@ -17,7 +17,9 @@ from .models import TDispositifs, TPlacettes, TArbres, TCycles, \
     CorCyclesPlacettes, TArbresMesures, TReperes, BibEssences, TRegenerations,\
     TBmSup30,TBmSup30Mesures, TTransects, dispositifs_area_assoc
 from .geonature_PSDRF_function import get_cd_nomenclature_from_id_type_and_id_nomenclature, get_id_type_from_mnemonique
+from celery.utils.log import get_task_logger
 
+logger = get_task_logger(__name__)
 
 def data_analysis(dispId, isCarnetToDownload, isPlanDesArbresToDownload, carnetToDownloadParameters):
 
