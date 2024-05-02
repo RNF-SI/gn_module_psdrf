@@ -218,13 +218,13 @@ def insert_or_update_data(self, data):
 def fetch_dispositif_data(self, id_dispositif):
     logger.info(f"Task started for dispositif ID: {id_dispositif}")
     try:
-        logger.debug("Starting database query...")
+        logger.info("Starting database query...")
         query = DB.session.query(TDispositifs).filter(TDispositifs.id_dispositif == id_dispositif).one()
-        logger.debug("Database query completed.")
+        logger.info("Database query completed.")
         schema = DispositifSchema(many=False)
-        logger.debug("Starting serialization of data...")
+        logger.info("Starting serialization of data...")
         result = schema.dump(query)
-        logger.debug("Serialization completed.")
+        logger.info("Serialization completed.")
         logger.info(f"Successfully fetched and serialized data for dispositif ID: {id_dispositif}")
         return {'status': 'SUCCESS', 'data': result}
     except Exception as e:
