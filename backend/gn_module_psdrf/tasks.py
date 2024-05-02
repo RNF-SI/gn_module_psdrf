@@ -214,7 +214,7 @@ def insert_or_update_data(self, data):
 
 
 # Task to get all the data of a dispositif from the prod database
-@celery_app.task(bind=True, soft_time_limit=700, time_limit=900)
+@celery_app.task(bind=True, soft_time_limit=1000, time_limit=1200)
 def fetch_dispositif_data(self, id_dispositif):
     try:
         query = DB.session.query(TDispositifs).filter(TDispositifs.id_dispositif == id_dispositif).one()
