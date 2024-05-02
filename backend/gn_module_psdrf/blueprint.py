@@ -26,10 +26,9 @@ from .psdrf_list_update import psdrf_list_update
 from .disp_placette_liste import disp_placette_liste_add
 # from .pr_psdrf_staging_functions.insert_or_update_disp_to_staging import insert_or_update_data
 from .bddToExcel import bddToExcel
-from .schemas.dispositifs import DispositifSchema
 from .schemas.cycles import ConciseCycleSchema
 from .schemas.essences import EssenceSchema
-from .tasks import test_celery, insert_or_update_data
+from .tasks import test_celery, insert_or_update_data, fetch_dispositif_data
 
 
 
@@ -611,14 +610,29 @@ def get_user_dispositif_list(userId):
 
 @blueprint.route('/dispositif-complet/<int:id_dispositif>', methods=['GET'])
 def get_dispositif_complet(id_dispositif):
-    query = DB.session.query(
-        TDispositifs
-    ).filter(
-        TDispositifs.id_dispositif == id_dispositif
-    ).one()
-    schema = DispositifSchema(many=False)
-    Obj = schema.dump(query)
-    return make_response(jsonify(Obj), 200)
+    task = fetch_dispositif_data.delay(id_dispositif)
+    return jsonify({'task_id': task.id}), 202
+
+@blueprint.route('/dispositif-complet/status/<task_id>', methods=['GET'])
+def get_dispositif_status(task_id):
+    task = fetch_dispositif_data.AsyncResult(task_id)
+    if task.state in ['PENDING', 'STARTED']:
+        return jsonify({'state': task.state}), 202
+    elif task.state == 'FAILURE':
+        return jsonify({'state': task.state, 'error': str(task.info)}), 500
+    elif task.state == 'SUCCESS':
+        return jsonify({'state': task.state}), 200
+
+@blueprint.route('/dispositif-complet/result/<task_id>', methods=['GET'])
+def get_dispositif_result(task_id):
+    task = fetch_dispositif_data.AsyncResult(task_id)
+    if task.status == 'SUCCESS':
+        return jsonify(task.result), 200
+    elif task.status == 'FAILURE':
+        return jsonify({'error': str(task.info)}), 500
+    else:
+        return jsonify({'status': 'incomplete', 'message': 'Task is not finished yet.'}), 202
+
 
 @blueprint.route('/dispositif-cycles/<int:id_dispositif>', methods=['GET'])
 def get_dispositif_cycles(id_dispositif):
