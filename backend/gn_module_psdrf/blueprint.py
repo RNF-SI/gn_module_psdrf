@@ -636,16 +636,16 @@ def get_dispositif_status(task_id):
 
 @blueprint.route('/dispositif-complet/result/<task_id>', methods=['GET'])
 def get_dispositif_result(task_id):
-    app.logger.info(f"Retrieving result for task ID: {task_id}")
+    logger.info(f"Retrieving result for task ID: {task_id}")
     task = fetch_dispositif_data.AsyncResult(task_id)
     if task.status == 'SUCCESS':
-        app.logger.info(f"Successfully retrieved result for task ID: {task_id}")
+        logger.info(f"Successfully retrieved result for task ID: {task_id}")
         return jsonify(task.result), 200
     elif task.status == 'FAILURE':
-        app.logger.error(f"Retrieving result failed for task ID: {task_id}, Error: {task.info}")
+        logger.error(f"Retrieving result failed for task ID: {task_id}, Error: {task.info}")
         return jsonify({'error': str(task.info)}), 500
     else:
-        app.logger.debug(f"Task {task_id} is still processing")
+        logger.debug(f"Task {task_id} is still processing")
         return jsonify({'status': 'incomplete', 'message': 'Task is not finished yet.'}), 202
 
 
