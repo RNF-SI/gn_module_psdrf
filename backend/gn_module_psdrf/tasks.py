@@ -70,7 +70,7 @@ def test_celery(self, id_dispositif, isCarnetToDownload, isPlanDesArbresToDownlo
 
 
 
-@celery_app.task(bind=True, soft_time_limit=700, time_limit=900)
+@celery_app.task(bind=True, soft_time_limit=2400, time_limit=2600)
 def insert_or_update_data(self, data):
 
     print('celery task started')
