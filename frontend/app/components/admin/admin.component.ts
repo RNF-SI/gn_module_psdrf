@@ -8,7 +8,8 @@ import { AuthService } from '@geonature/components/auth/auth.service';
 import * as _ from "lodash";
 import { MatDialog } from "@angular/material/dialog";
 import { ConfirmationDialog } from "@geonature_common/others/modal-confirmation/confirmation.dialog";
-
+import { Observable } from 'rxjs';
+import { map, startWith } from 'rxjs/operators';
 
 
 export interface UserDisp {
@@ -69,6 +70,9 @@ export interface Orga {
     dispositifList : Disp[] = [];
     dispositifs = new FormControl();
 
+    filteredUtilisateurs: Observable<User[]>;
+    filteredDispositifs: Observable<Disp[]>;
+
     utilisateurList : User[] = [];
     utilisateurs = new FormControl();
 
@@ -79,7 +83,6 @@ export interface Orga {
 
 
     userDispForm: FormGroup;
-    dynamicUserDispFormGroup: FormGroup;
     userDispList: UserDisp[];
 
     organismeForm: FormGroup;
@@ -133,6 +136,9 @@ export interface Orga {
         this.createUserDispForm();
         this.createDispForm();
         this.createOrganismeForm();
+
+        this.initFilter();
+
     }
 
     /**
@@ -162,7 +168,6 @@ export interface Orga {
         utilisateur: ['', Validators.required],
         dispositif: ['', Validators.required]
       });
-      this.dynamicUserDispFormGroup = this.fbUserDisp.group({});
     }
 
     createDispForm() {
@@ -227,6 +232,31 @@ export interface Orga {
         }
       );
     }
+
+    initFilter() {
+      this.filteredUtilisateurs = this.userDispForm.get('utilisateur').valueChanges
+        .pipe(
+          startWith(''),
+          map(value => typeof value === 'string' ? this.filter('utilisateur', value) : this.filter('utilisateur', ''))
+        );
+    
+      this.filteredDispositifs = this.userDispForm.get('dispositif').valueChanges
+        .pipe(
+          startWith(''),
+          map(value => typeof value === 'string' ? this.filter('dispositif', value) : this.filter('dispositif', ''))
+        );
+    }
+
+    filter(type: string, value: string): any[] {
+      const filterValue = value.toLowerCase();
+      return type === 'utilisateur' ?
+        this.utilisateurList.filter(option => (option.nom_utilisateur + ' ' + option.prenom_utilisateur).toLowerCase().includes(filterValue)) :
+        this.dispositifList.filter(option => option.nom_dispositif.toLowerCase().includes(filterValue));
+    }
+  
+    displayFn(userOrDisp: any): string {
+      return userOrDisp ? (userOrDisp.nom_utilisateur ? `${userOrDisp.nom_utilisateur} ${userOrDisp.prenom_utilisateur}` : userOrDisp.nom_dispositif) : '';
+    }
     
 
     save() {
@@ -289,15 +319,18 @@ export interface Orga {
     addRoleDisp() {
       if (this.userDispForm.valid) {
         this.disableSubmitUserDisp = true;
-        const finalForm = Object.assign({}, this.userDispForm.value);
-        this.dataSrv
-          .addCorDispRole(finalForm)
+        // Extracting IDs or necessary properties
+        const finalForm = {
+          utilisateur: this.userDispForm.value.utilisateur.id_utilisateur,  // Adjust 'id' based on actual property
+          dispositif: this.userDispForm.value.dispositif.id_dispositif    // Adjust 'id' based on actual property
+        };
+    
+        this.dataSrv.addCorDispRole(finalForm)
           .subscribe(
-            res => {          
-              this._toasterService.success("Le dispositif "+ finalForm.dispositif +" a bien été ajouté à la liste des dispositifs modifiables par le rôle "+ finalForm.utilisateur, '');
+            res => {
+              this._toasterService.success("Le dispositif " + finalForm.dispositif + " a bien été ajouté à la liste des dispositifs modifiables par le rôle " + finalForm.utilisateur, '');
               this.getUserDisps();
             },
-            // error callback
             error => {
               this._toasterService.error(error.error.msg, '');
             }
@@ -307,6 +340,7 @@ export interface Orga {
           });
       }
     }
+    
 
     updateRoleDisp() {
       if (this.userDispForm.valid) {
