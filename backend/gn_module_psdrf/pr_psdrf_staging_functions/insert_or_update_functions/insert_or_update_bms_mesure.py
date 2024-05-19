@@ -13,7 +13,7 @@ def insert_update_or_delete_bms_mesure(category, bm_category, id_bm, bm_data, bm
         if category == 'deleted':
             # Delete logic
             bms_mesure_to_delete = DB.session.query(TBmSup30MesuresStaging).filter_by(
-                id_bm_sup_30_mesure=bm_data['id_bm_sup_30_mesure']
+                id_bm_sup_30_mesure=bms_mesure_data['id_bm_sup_30_mesure']
             ).first()
             if bms_mesure_to_delete:
                 DB.session.delete(bms_mesure_to_delete)
@@ -21,7 +21,7 @@ def insert_update_or_delete_bms_mesure(category, bm_category, id_bm, bm_data, bm
                 counts_bm_mesure['deleted'] += 1
         elif category == 'updated':
             existing_bms_mesure = DB.session.query(TBmSup30MesuresStaging).filter_by(
-                id_bm_sup_30_mesure=bm_data['id_bm_sup_30_mesure']
+                id_bm_sup_30_mesure=bms_mesure_data['id_bm_sup_30_mesure']
             ).first()
 
             if existing_bms_mesure:

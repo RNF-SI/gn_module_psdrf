@@ -14,7 +14,7 @@ def insert_update_or_delete_arbre_mesure(category, arbre_category, id_arbre, arb
         if category == 'deleted':
             # Delete logic
             arbre_mesure_to_delete = DB.session.query(TArbresMesuresStaging).filter_by(
-                id_arbre_mesure=arbre_data['id_arbre_mesure']
+                id_arbre_mesure=arbre_mesure_data['id_arbre_mesure']
             ).first()
             if arbre_mesure_to_delete:
                 DB.session.delete(arbre_mesure_to_delete)
@@ -23,7 +23,7 @@ def insert_update_or_delete_arbre_mesure(category, arbre_category, id_arbre, arb
 
         elif category == 'updated':
             existing_arbre_mesure = DB.session.query(TArbresMesuresStaging).filter_by(
-                id_arbre_mesure=arbre_data['id_arbre_mesure']
+                id_arbre_mesure=arbre_mesure_data['id_arbre_mesure']
             ).first()
 
             if existing_arbre_mesure:
