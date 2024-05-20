@@ -251,8 +251,13 @@ def fetch_updated_data(self, id_dispositif, last_sync):
         dispositif = (
             DB.session.query(TDispositifsStaging)
             .filter(TDispositifsStaging.id_dispositif == id_dispositif)
-            .one()
+            .first()
         )
+
+        if not dispositif:
+            # Handle the no data case as a normal situation
+            logger.info(f"No data found for dispositif ID {id_dispositif}. No updates needed.")
+            return {'status': 'SUCCESS', 'data': None, 'message': 'No data available to update'}
 
         # Using the schema to serialize the data
         dispositif_schema = DispositifStagingSchema(many=False)
