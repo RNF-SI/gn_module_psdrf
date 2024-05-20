@@ -15,6 +15,7 @@ from .models import TDispositifs
 from .schemas.dispositifs import DispositifSchema
 from .staging_schemas.dispositifs import DispositifStagingSchema
 from .pr_psdrf_staging_functions.models_staging import TDispositifsStaging
+from .helpers.count_updates_and_creation import count_updates_and_creations
 
 from .pr_psdrf_staging_functions.insert_or_update_functions.insert_or_update_dispositif import insert_or_update_dispositif
 from .pr_psdrf_staging_functions.insert_or_update_functions.insert_or_update_placette import insert_or_update_placette
@@ -257,6 +258,8 @@ def fetch_updated_data(self, id_dispositif, last_sync):
         dispositif_schema = DispositifStagingSchema(many=False)
         full_data = dispositif_schema.dump(dispositif)
 
+        counts = count_updates_and_creations(full_data, last_sync_date)
+
         # Asserting that datetime fields are parsed correctly
         # remove in prod
         logger.info(full_data['cycles'][0]['corCyclesPlacettes'][0]['updated_at'])
@@ -311,7 +314,7 @@ def fetch_updated_data(self, id_dispositif, last_sync):
             ]
         }
 
-        return {'status': 'SUCCESS', 'data': filtered_data}
+        return {'status': 'SUCCESS', 'data': filtered_data, 'counts': counts}
     except Exception as e:
         logger.exception("Failed to fetch or serialize updated data", exc_info=e)
         return {'status': 'FAILURE', 'data': str(e)}
