@@ -7,10 +7,14 @@ from io import BytesIO
 import zipfile
 import os
 import tempfile
+from datetime import datetime
+from sqlalchemy.orm import joinedload, aliased
 
 from geonature.utils.env import DB
 from .models import TDispositifs
 from .schemas.dispositifs import DispositifSchema
+from .staging_schemas.dispositifs import DispositifStagingSchema
+from .pr_psdrf_staging_functions.models_staging import TDispositifsStaging
 
 from .pr_psdrf_staging_functions.insert_or_update_functions.insert_or_update_dispositif import insert_or_update_dispositif
 from .pr_psdrf_staging_functions.insert_or_update_functions.insert_or_update_placette import insert_or_update_placette
@@ -229,4 +233,85 @@ def fetch_dispositif_data(self, id_dispositif):
         return {'status': 'SUCCESS', 'data': result}
     except Exception as e:
         logger.exception("Error during fetching dispositif data")
+        return {'status': 'FAILURE', 'data': str(e)}
+    
+
+@celery_app.task(bind=True, soft_time_limit=2400, time_limit=2600)
+def fetch_updated_data(self, id_dispositif, last_sync):
+    logger.info(last_sync)
+    last_sync_date = datetime.fromisoformat(last_sync.rstrip('Z'))
+    logger.info(f"Fetching updated data for dispositif ID: {id_dispositif} since last sync: {last_sync}")
+
+    try:
+
+        logger.info("Starting database query...")
+        logger.error("Fetching data from staging DB")
+        # Fetch the entire dispositif including all related entities
+        dispositif = (
+            DB.session.query(TDispositifsStaging)
+            .filter(TDispositifsStaging.id_dispositif == id_dispositif)
+            .one()
+        )
+
+        # Using the schema to serialize the data
+        dispositif_schema = DispositifStagingSchema(many=False)
+        full_data = dispositif_schema.dump(dispositif)
+
+        # Asserting that datetime fields are parsed correctly
+        # remove in prod
+        logger.info(full_data['cycles'][0]['corCyclesPlacettes'][0]['updated_at'])
+        assert isinstance(full_data['cycles'][0]['corCyclesPlacettes'][0]['updated_at'], datetime), "updated_at must be a datetime object"
+
+        # Filtering the serialized data
+        filtered_data = {
+            'cycles': [
+                {
+                    **cycle,
+                    'corCyclesPlacettes': [
+                        {
+                            **cor_cycle,
+                            'regenerations': [
+                                reg for reg in cor_cycle['regenerations'] if reg['updated_at'] > last_sync_date
+                            ],
+                            'transects': [
+                                tran for tran in cor_cycle['transects'] if tran['updated_at'] > last_sync_date
+                            ]
+                        } 
+                        for cor_cycle in cycle['corCyclesPlacettes'] if cor_cycle['updated_at'] > last_sync_date
+                    ]
+                }
+                for cycle in full_data['cycles']
+            ],
+            'placettes': [
+                {
+                    **placette,
+                    'arbres': [
+                        {
+                            **arbre,
+                            'arbres_mesures': [
+                                mesure for mesure in arbre['arbres_mesures'] if mesure['updated_at'] > last_sync_date
+                            ]
+                        }
+                        for arbre in placette['arbres'] if arbre['updated_at'] > last_sync_date
+                    ],
+                    'bmsSup30': [
+                        {
+                            **bms,
+                            'bm_sup_30_mesures': [
+                                mesure for mesure in bms['bm_sup_30_mesures'] if mesure['updated_at'] > last_sync_date
+                            ]
+                        }
+                        for bms in placette['bmsSup30'] if bms['updated_at'] > last_sync_date
+                    ],
+                    'reperes': [
+                        rep for rep in placette['reperes'] if rep['updated_at'] > last_sync_date
+                    ]
+                }
+                for placette in full_data['placettes']
+            ]
+        }
+
+        return {'status': 'SUCCESS', 'data': filtered_data}
+    except Exception as e:
+        logger.exception("Failed to fetch or serialize updated data", exc_info=e)
         return {'status': 'FAILURE', 'data': str(e)}

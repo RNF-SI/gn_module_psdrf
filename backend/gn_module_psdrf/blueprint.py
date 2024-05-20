@@ -28,7 +28,8 @@ from .disp_placette_liste import disp_placette_liste_add
 from .bddToExcel import bddToExcel
 from .schemas.cycles import ConciseCycleSchema
 from .schemas.essences import EssenceSchema
-from .tasks import test_celery, insert_or_update_data, fetch_dispositif_data
+from .tasks import test_celery, insert_or_update_data, fetch_dispositif_data, fetch_updated_data
+from .helpers.parse_date import parse_iso_datetime
 
 
 
@@ -766,6 +767,66 @@ def get_export_task_result(task_id):
             "status": "incomplete",
             "message": "Task is not finished yet."
         }), 202
+
+
+
+@blueprint.route('/dispositif-synchronisation/<int:dispId>', methods=['GET'])
+def initiate_sync(dispId):
+    """
+    Initiates an asynchronous task to fetch updated data for a given dispositif.
+    """
+    last_sync_str = request.args.get('last_sync')
+    if not last_sync_str:
+        return jsonify({'success': False, 'message': 'Last sync timestamp required'}), 400
+    
+
+    try:
+        print(last_sync_str)
+        last_sync_date = parse_iso_datetime(last_sync_str)
+        print(f"Parsed date: {last_sync_date}")
+    except ValueError:
+        return jsonify({'success': False, 'message': 'Invalid date format'}), 400
+
+    print('Celery task before')
+    print(last_sync_date)
+    task = fetch_updated_data.delay(dispId, last_sync_date)
+    print('Celery task after')
+    print(task.id)
+    return jsonify({'task_id': task.id}), 202
+
+
+
+@blueprint.route('/dispositif-synchronisation/status/<task_id>', methods=['GET'])
+def get_sync_task_status(task_id):
+    """
+    Returns the current status of the synchronization task.
+    """
+    task = fetch_updated_data.AsyncResult(task_id)
+    print(task.state)
+    if task.state == 'PENDING':
+        return jsonify({'state': task.state, 'status': 'Task is pending'}), 202
+    elif task.state == 'FAILURE':
+        error_info = str(task.info)  # Detailed error info
+        return jsonify({'state': task.state, 'status': error_info}), 500
+    elif task.state == 'SUCCESS':
+        return jsonify({'state': task.state, 'result': task.result}), 200
+    else:
+        return jsonify({'state': task.state, 'status': 'Task is in progress'}), 102
+
+
+@blueprint.route('/dispositif-synchronisation/result/<task_id>', methods=['GET'])
+def get_sync_task_result(task_id):
+    """
+    Fetches the result of the synchronization task.
+    """
+    task = fetch_updated_data.AsyncResult(task_id)
+    if task.status == 'SUCCESS':
+        sync_results = task.result  # This should be a dictionary
+        return jsonify({'status': 'success', 'data': sync_results}), 200
+    elif task.status == 'FAILURE':
+        return jsonify({'status': 'error', 'message': str(task.info)}), 500
+    else:
+        return jsonify({'status': 'incomplete', 'message': 'Task is not finished yet.'}), 202
 
 
 
