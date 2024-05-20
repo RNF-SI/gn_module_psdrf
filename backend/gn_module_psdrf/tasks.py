@@ -265,11 +265,6 @@ def fetch_updated_data(self, id_dispositif, last_sync):
 
         counts = count_updates_and_creations(full_data, last_sync_date)
 
-        # Asserting that datetime fields are parsed correctly
-        # remove in prod
-        logger.info(full_data['cycles'][0]['corCyclesPlacettes'][0]['updated_at'])
-        assert isinstance(full_data['cycles'][0]['corCyclesPlacettes'][0]['updated_at'], datetime), "updated_at must be a datetime object"
-
         # Filtering the serialized data
         filtered_data = {
             'cycles': [
