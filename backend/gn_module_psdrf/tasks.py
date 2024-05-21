@@ -167,8 +167,6 @@ def insert_or_update_data(self, data):
                     counts_repere["created"] += counts_repere_temp["created"]
                     counts_repere["updated"] += counts_repere_temp["updated"]
                     counts_repere["deleted"] += counts_repere_temp["deleted"]
-                    logger.info(f"Starting carnet d'analyse of dispositif {counts_repere['created']}.")
-
 
                     counts_cor_cycle_placette_temp, counts_regeneration_temp, counts_transect_temp = insert_or_update_cor_cycle_placette(placette_data)
                     counts_cor_cycle_placette["created"] += counts_cor_cycle_placette_temp["created"]
