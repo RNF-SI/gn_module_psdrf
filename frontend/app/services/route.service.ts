@@ -2,7 +2,7 @@ import { Injectable } from "@angular/core";
 import { Observable, throwError, interval } from 'rxjs';
 import { HttpClient, HttpHeaders, HttpParams } from "@angular/common/http";
 import { HttpResponse } from '@angular/common/http';
-import { AppConfig } from "@geonature_config/app.config";
+import { ConfigService } from '@geonature/services/config.service';
 import { ModuleConfig } from "../module.config";
 import { map, switchMap, filter, take, catchError } from 'rxjs/operators';
 
@@ -14,6 +14,8 @@ interface TaskResponse {
 export class PsdrfDataService {
   constructor(
     private _http: HttpClient,
+    public config: ConfigService,
+
   ) {}
 
   psdrf_data_verification(data) {
@@ -21,7 +23,7 @@ export class PsdrfDataService {
       headers: { 'Content-Type': 'application/json' },
     };
     return this._http.post<any>(
-      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/validation`,
+      `${this.config.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/validation`,
       data,
       httpOptions
     );
@@ -29,14 +31,14 @@ export class PsdrfDataService {
 
   psdrf_data_verification_with_shape(excelAndShapeData) {
     return this._http.post<any>(
-      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/shapeValidation`,
+      `${this.config.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/shapeValidation`,
       excelAndShapeData
     );
   }
 
   psdrfIntegrationToDatabase(data){
     return this._http.post<any>(
-      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/integration`,
+      `${this.config.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/integration`,
       data
     ); 
   }
@@ -44,7 +46,7 @@ export class PsdrfDataService {
   psdrf_data_analysis(id: number, isCarnetToDownload: boolean, isPlanDesArbresToDownload: boolean, parameters: {name: string, text: string, value: any}[] ) {
     const headers = new HttpHeaders({ 'Content-Type': 'application/json', responseType : 'blob'});
   
-    let url = `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/analysis/`+ id
+    let url = `${this.config.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/analysis/`+ id
     let params = new HttpParams().set("isCarnetToDownload",isCarnetToDownload.toString()).set("isPlanDesArbresToDownload",isPlanDesArbresToDownload.toString())
     //Ajouter les paramètres relatifs à la génération des documents
     parameters.forEach(param => {
@@ -66,7 +68,7 @@ export class PsdrfDataService {
   }
   
   get_task_status(taskId: string) {
-    const url = `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/analysis/status/` + taskId;
+    const url = `${this.config.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/analysis/status/` + taskId;
     return this._http.get(url).pipe(
       map((response: any) => {
         // Ensure response is properly formatted or extracted
@@ -80,7 +82,7 @@ export class PsdrfDataService {
   }
 
   get_task_result(taskId: string, dispId: number) {
-    const url = `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/analysis/result/` + taskId;
+    const url = `${this.config.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/analysis/result/` + taskId;
     return this._http.get(url, { responseType: 'blob' })  // set responseType to 'blob' to handle files
       .pipe(
         map((blob: any) => {
@@ -97,53 +99,53 @@ export class PsdrfDataService {
 
   getDispositifList(){
     return this._http.get<any>(
-      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/dispositifsList`
+      `${this.config.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/dispositifsList`
     );
   }
 
   getUtilisateurAndGroupsList(){
     return this._http.get<any>(
-      `${AppConfig.API_ENDPOINT}/users/roles`
+      `${this.config.API_ENDPOINT}/users/roles`
 
       );
   }
 
   getUtilisateurList(){
     return this._http.get<any>(
-      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/users`
+      `${this.config.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/users`
       );
   }
 
   getGroupeList(){
     return this._http.get<any>(
-      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/groups`
+      `${this.config.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/groups`
       );
   }
 
   getOrganismeList(){
     return this._http.get<any>(
-      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/listOrganism`
+      `${this.config.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/listOrganism`
 
       );
   }
 
   getUserGroups(userId: number){
     return this._http.get<any>(
-      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/groupList/`+ userId
+      `${this.config.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/groupList/`+ userId
 
       );
   }
 
   addCorDispRole(data){
     return this._http.post<any>(
-      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/corDispositifRole`,
+      `${this.config.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/corDispositifRole`,
       data
     );
   }
 
   updateCorDispRole(data){
     return this._http.put<any>(
-      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/corDispositifRole`,
+      `${this.config.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/corDispositifRole`,
       data
     );
   }
@@ -160,33 +162,39 @@ export class PsdrfDataService {
     };
 
     return this._http.delete<any>(
-      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/corDispositifRole`,
+      `${this.config.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/corDispositifRole`,
       options
     );
   }
 
   getUserDisps(userId: number){
     return this._http.get<any>(
-      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/userDisps/`+ userId
+      `${this.config.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/userDisps/`+ userId
       );
   }
 
-  getExcelData(dispId: number){
+  getExcelProdData(dispId: number): Observable<any> {
     return this._http.get<any>(
-      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/excelData/`+ dispId
-      );
+      `${this.config.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/excelProdData/${dispId}`
+    );
+  }
+
+  getExcelStagingData(dispId: number): Observable<any> {
+    return this._http.get<any>(
+      `${this.config.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/excelStagingData/${dispId}`
+    );
   }
 
   addOrganisme(data){
     return this._http.post<any>(
-      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/organisme`,
+      `${this.config.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/organisme`,
       data
     );
   }
 
   updateOrganisme(data){
     return this._http.put<any>(
-      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/organisme`,
+      `${this.config.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/organisme`,
       data
     );
   }
@@ -201,21 +209,21 @@ export class PsdrfDataService {
      },
    };
    return this._http.delete<any>(
-     `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/organisme`,
+     `${this.config.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/organisme`,
      options
    );
   }
 
   addDispositif(data){
     return this._http.post<any>(
-      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/dispositif`,
+      `${this.config.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/dispositif`,
       data
     );
   }
 
   updateDispositif(data){
     return this._http.put<any>(
-      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/dispositif`,
+      `${this.config.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/dispositif`,
       data
     );
   }
@@ -231,14 +239,14 @@ export class PsdrfDataService {
    };
 
    return this._http.delete<any>(
-     `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/dispositif`,
+     `${this.config.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/dispositif`,
      options
    );
   }
 
   getCorDispositifRole(){
     return this._http.get<any>(
-      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/corDispositifRole`
+      `${this.config.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/corDispositifRole`
       );
   }
 
@@ -246,7 +254,7 @@ export class PsdrfDataService {
     let psdrf_liste:FormData = new FormData();
     psdrf_liste.append('file_upload', file, 'psdrfListe');
     return this._http.post<any>(
-      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/psdrfListe`,
+      `${this.config.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/psdrfListe`,
       psdrf_liste
     );
   }
@@ -255,13 +263,13 @@ export class PsdrfDataService {
     let disp_placette_liste:FormData = new FormData();
     disp_placette_liste.append('file_upload', file, 'disp_placette_liste');
     return this._http.post<any>(
-      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/disp_placette_liste`,
+      `${this.config.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/disp_placette_liste`,
       disp_placette_liste
     );
   }
 
   getDendroApk(): Observable<Blob> {
-    const url = `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/dendro_apk`;
+    const url = `${this.config.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/dendro_apk`;
     return this._http.get(url, {
       responseType: 'blob'  // Important: Handle response as a blob
     });

@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Router } from "@angular/router";
 import { FormControl, FormGroup } from "@angular/forms";
 import { MapService } from "@geonature_common/map/map.service";
-import { AppConfig } from '@geonature_config/app.config';
+import { ConfigService } from '@geonature/services/config.service';
 import { SharedService } from "../services/shared.service";
 import { PsdrfDataService } from "../services/route.service";
 import { ToastrService } from 'ngx-toastr';
@@ -62,12 +62,14 @@ import { ToastrService } from 'ngx-toastr';
       private mapservice: MapService,
       private dataSrv: PsdrfDataService, 
       private sharedSrv: SharedService,
-      private _toasterService: ToastrService
+      private _toasterService: ToastrService,
+      public config: ConfigService,
+
       ) { }
 
     ngOnInit() {
       // Chargement des statistiques
-      this._api.get<any>(`${AppConfig.API_ENDPOINT}/${this.statEndPoint}`)
+      this._api.get<any>(`${this.config.API_ENDPOINT}/${this.statEndPoint}`)
         .subscribe(data => {this.stats = data});
         
       this.sharedSrv
@@ -82,7 +84,7 @@ import { ToastrService } from 'ngx-toastr';
         )
 
 
-      this._api.get<any>(`${AppConfig.API_ENDPOINT}/psdrf/status_types`)
+      this._api.get<any>(`${this.config.API_ENDPOINT}/psdrf/status_types`)
         .subscribe(data => {this.statusList = data});
 
       this.loadData();
@@ -93,7 +95,7 @@ import { ToastrService } from 'ngx-toastr';
       const params = new HttpParams().set('region', this.searchForm.get('region').value)
         .set('alluvial', this.searchForm.get('alluvial').value)
         .set('status', this.searchForm.get('status').value);
-      this._api.get<any>(`${AppConfig.API_ENDPOINT}/${this.apiEndPoint}`, {params: params})
+      this._api.get<any>(`${this.config.API_ENDPOINT}/${this.apiEndPoint}`, {params: params})
           .subscribe(data => {
             this.layerDict = {};
             this.geojson = data.items;

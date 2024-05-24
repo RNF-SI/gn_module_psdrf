@@ -415,10 +415,16 @@ def get_user_disps(userId):
     data = [disp.id_dispositif for disp in query]
     return data
 
-@blueprint.route('/excelData/<int:dispId>', methods=['GET'])
+@blueprint.route('/excelProdData/<int:dispId>', methods=['GET'])
 @json_resp
-def get_excel_data(dispId):
-    data = bddToExcel(dispId)
+def get_excel_prod_data(dispId):
+    data = bddToExcel(dispId, database='production')
+    return data
+
+@blueprint.route('/excelStagingData/<int:dispId>', methods=['GET'])
+@json_resp
+def get_excel_staging_data(dispId):
+    data = bddToExcel(dispId, database='staging')
     return data
 
 @blueprint.route('/organisme', methods=['POST', 'PUT', 'DELETE'])
