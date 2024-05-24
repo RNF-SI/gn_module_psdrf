@@ -6,6 +6,8 @@ from sqlalchemy.sql.expression import false
 
 from geoalchemy2.shape import to_shape, from_shape
 from shapely.geometry import MultiPoint, Point
+from shapely.geometry import shape as to_shape
+from shapely.geometry import mapping as from_shape
 import json
 import time
 import logging
@@ -105,7 +107,7 @@ def get_disps():
             geom = pts.centroid
         else:
             geom = pts.convex_hull
-        if len(pts) > 0:
+        if len(pts.geoms) > 0:
             ft = get_geojson_feature(from_shape(geom))
         else:
             ft = {'geometry': None}
