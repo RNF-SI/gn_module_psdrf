@@ -171,10 +171,16 @@ export class PsdrfDataService {
       );
   }
 
-  getExcelData(dispId: number){
+  getExcelProdData(dispId: number): Observable<any> {
     return this._http.get<any>(
-      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/excelData/`+ dispId
-      );
+      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/excelProdData/${dispId}`
+    );
+  }
+
+  getExcelStagingData(dispId: number): Observable<any> {
+    return this._http.get<any>(
+      `${AppConfig.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/excelStagingData/${dispId}`
+    );
   }
 
   addOrganisme(data){

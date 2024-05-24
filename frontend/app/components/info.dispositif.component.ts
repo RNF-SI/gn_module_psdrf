@@ -36,7 +36,8 @@ export class InfoDispositifComponent implements OnInit {
   analysisLoading = false; 
 
   //Boolean du lancement de la génération du fichier excel (vrai si requête en cours)
-  excelLoading = false; 
+  excelProdLoading = false; 
+  excelStagingLoading = false; 
 
   documents: Document = {
       name: 'Tout',
@@ -244,33 +245,35 @@ export class InfoDispositifComponent implements OnInit {
     }
   }
 
-  importExcel(): void{
-    if(!this.excelLoading){
-      this.excelLoading = true;
-      this.dataSrv
-        .getExcelData(this.id)
-        .subscribe(
-          data => {
-            let psdrfArrayObj = JSON.parse(data)
-            this.exportTableToExcel(psdrfArrayObj.data)
-            this.excelLoading = false;
-            this._toasterService.success("Le fichier excel a bien été généré.", "Génération du fichier excel");
-          }, 
-          (error) => {
-            this._toasterService.error(error.message, "Génération du fichier excel", {
-              closeButton: true,
-              disableTimeOut: true,
-            });
-            this.excelLoading = false;
-          }
-        ) 
+  importExcelData(isProduction: boolean): void {
+    let loadingFlag = isProduction ? this.excelProdLoading : this.excelStagingLoading;
+    let dataSrvMethod = isProduction ? this.dataSrv.getExcelProdData : this.dataSrv.getExcelStagingData;
+    let excelType = isProduction ? "production" : "staging";
+
+    if (!loadingFlag) {
+      loadingFlag = true;
+      dataSrvMethod.call(this.dataSrv, this.id).subscribe(
+        data => {
+          let psdrfArrayObj = JSON.parse(data);
+          this.exportTableToExcel(psdrfArrayObj.data);
+          loadingFlag = false;
+          this._toasterService.success("Le fichier excel a bien été généré.", `Génération du fichier excel de ${excelType}`);
+        },
+        error => {
+          this._toasterService.error(error.message, "Génération du fichier excel", {
+            closeButton: true,
+            disableTimeOut: true,
+          });
+          loadingFlag = false;
+        }
+      );
     }
   }
 
   /**
    *  export all the modified data in a new PSDRF File
    */
-     exportTableToExcel(psdrfArray: any) {
+    exportTableToExcel(psdrfArray: any) {
       let excelData = [];
       let tableColumnsArray = ["Placettes", "Cycles", "Arbres", "Rege", "Transect", "BMSsup30", "Reperes"];
       let excelFileName = this.dispositif.id.toString() + "-"+ this.dispositif.name;
