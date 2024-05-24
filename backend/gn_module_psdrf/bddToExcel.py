@@ -4,132 +4,160 @@ import numpy as np
 from .models import TDispositifs, TPlacettes, TArbres, TCycles, \
     CorCyclesPlacettes, TArbresMesures, TReperes, BibEssences, TRegenerations,\
     TBmSup30,TBmSup30Mesures, TTransects, dispositifs_area_assoc
+from .pr_psdrf_staging_functions.models_staging import TDispositifsStaging, TPlacettesStaging, TArbresStaging, TCyclesStaging, \
+    CorCyclesPlacettesStaging, TArbresMesuresStaging, TReperesStaging, TRegenerationsStaging,\
+    TBmSup30Staging,TBmSup30MesuresStaging, TTransectsStaging, dispositifs_area_assoc
 from .geonature_PSDRF_function import get_id_type_from_mnemonique, get_cd_nomenclature_from_id_type_and_id_nomenclature
 from datetime import date, datetime
 
-
-def bddToExcel(dispId):
+def bddToExcel(dispId, database='production'):
+    if database == 'production':
+        db_session = DB.session
+        TDispositifsTemp = TDispositifs
+        TPlacettesTemp = TPlacettes
+        TReperesTemp = TReperes
+        TCyclesTemp = TCycles
+        CorCyclesPlacettesTemp = CorCyclesPlacettes
+        TArbresTemp = TArbres
+        TArbresMesuresTemp = TArbresMesures
+        TRegenerationsTemp = TRegenerations
+        TTransectsTemp = TTransects
+        TBmSup30Temp = TBmSup30
+        TBmSup30MesuresTemp = TBmSup30Mesures
+    else:
+        db_session = DB.session
+        TDispositifsTemp = TDispositifsStaging
+        TPlacettesTemp = TPlacettesStaging
+        TReperesTemp = TReperesStaging
+        TCyclesTemp = TCyclesStaging
+        CorCyclesPlacettesTemp = CorCyclesPlacettesStaging
+        TArbresTemp = TArbresStaging
+        TArbresMesuresTemp = TArbresMesuresStaging
+        TRegenerationsTemp = TRegenerationsStaging
+        TTransectsTemp = TTransectsStaging
+        TBmSup30Temp = TBmSup30Staging
+        TBmSup30MesuresTemp = TBmSup30MesuresStaging
 
     id_type_durete = get_id_type_from_mnemonique("PSDRF_DURETE")
     id_type_ecorce = get_id_type_from_mnemonique("PSDRF_ECORCE")
 
-    placettesQuery = DB.session.query(
-        TPlacettes.id_dispositif, TPlacettes.id_placette_orig, TCycles.num_cycle, TPlacettes.strate, TPlacettes.poids_placette,
-        TPlacettes.pente, TPlacettes.correction_pente, TPlacettes.exposition, TPlacettes.habitat,
-        TPlacettes.station, TPlacettes.typologie, TPlacettes.groupe,
-        TPlacettes.groupe1, TPlacettes.groupe2, TPlacettes.ref_habitat, TPlacettes.precision_habitat,
-        TPlacettes.ref_station, TPlacettes.ref_typologie, TPlacettes.descriptif_groupe, TPlacettes.descriptif_groupe1,
-        TPlacettes.descriptif_groupe2,
+    placettesQuery = db_session.query(
+        TPlacettesTemp.id_dispositif, TPlacettesTemp.id_placette_orig, TCycles.num_cycle, TPlacettesTemp.strate, TPlacettesTemp.poids_placette,
+        TPlacettesTemp.pente, TPlacettesTemp.correction_pente, TPlacettesTemp.exposition, TPlacettesTemp.habitat,
+        TPlacettesTemp.station, TPlacettesTemp.typologie, TPlacettesTemp.groupe,
+        TPlacettesTemp.groupe1, TPlacettesTemp.groupe2, TPlacettesTemp.ref_habitat, TPlacettesTemp.precision_habitat,
+        TPlacettesTemp.ref_station, TPlacettesTemp.ref_typologie, TPlacettesTemp.descriptif_groupe, TPlacettesTemp.descriptif_groupe1,
+        TPlacettesTemp.descriptif_groupe2,
         CorCyclesPlacettes.date_intervention, CorCyclesPlacettes.nature_intervention,
-        CorCyclesPlacettes.gestion_placette, TPlacettes.precision_gps, TPlacettes.cheminement
+        CorCyclesPlacettes.gestion_placette, TPlacettesTemp.precision_gps, TPlacettesTemp.cheminement
         ).filter(
-            (TPlacettes.id_dispositif == dispId)
+            (TPlacettesTemp.id_dispositif == dispId)
         ).join(
-            CorCyclesPlacettes, CorCyclesPlacettes.id_placette == TPlacettes.id_placette
+            CorCyclesPlacettes, CorCyclesPlacettes.id_placette == TPlacettesTemp.id_placette
         ).join(
             TCycles, TCycles.id_cycle == CorCyclesPlacettes.id_cycle
         )
     Placettes = [placette for placette in placettesQuery]
 
-    cyclesQuery = DB.session.query(
-        TPlacettes.id_dispositif, TPlacettes.id_placette_orig, TCycles.num_cycle,
-        CorCyclesPlacettes.coeff, CorCyclesPlacettes.date_releve, CorCyclesPlacettes.diam_lim, CorCyclesPlacettes.annee
-        ).filter(
-            (TPlacettes.id_dispositif == dispId)
-        ).join(
-            CorCyclesPlacettes, CorCyclesPlacettes.id_placette == TPlacettes.id_placette
-        ).join(
-            TCycles, TCycles.id_cycle == CorCyclesPlacettes.id_cycle
-        )
+    cyclesQuery = db_session.query(
+        TPlacettesTemp.id_dispositif, TPlacettesTemp.id_placette_orig, TCycles.num_cycle,
+        CorCyclesPlacettesTemp.coeff, CorCyclesPlacettesTemp.date_releve, CorCyclesPlacettesTemp.diam_lim, CorCyclesPlacettesTemp.annee
+                ).filter(
+                    (TPlacettesTemp.id_dispositif == dispId)
+                ).join(
+                    CorCyclesPlacettesTemp, CorCyclesPlacettesTemp.id_placette == TPlacettesTemp.id_placette
+                ).join(
+                    TCyclesTemp, TCyclesTemp.id_cycle == CorCyclesPlacettesTemp.id_cycle
+                )
     Cycles = [cycle for cycle in cyclesQuery]
 
 
-    arbresQuery = DB.session.query(
-        TPlacettes.id_dispositif, TPlacettes.id_placette_orig, 
-        TCycles.num_cycle, TArbres.id_arbre_orig, TArbres.code_essence, TArbres.azimut,
-        TArbres.distance, TArbresMesures.diametre1, TArbresMesures.diametre2, 
-        TArbresMesures.type, TArbresMesures.hauteur_totale, 
-        TArbresMesures.stade_durete, 
-        TArbresMesures.stade_ecorce,
-        TArbres.taillis, TArbresMesures.coupe, TArbresMesures.limite, 
-        TArbresMesures.code_ecolo, TArbresMesures.ref_code_ecolo, 
-        TArbresMesures.observation
+    arbresQuery = db_session.query(
+        TPlacettesTemp.id_dispositif, TPlacettesTemp.id_placette_orig, 
+        TCyclesTemp.num_cycle, TArbresTemp.id_arbre_orig, TArbresTemp.code_essence, TArbresTemp.azimut,
+        TArbresTemp.distance, TArbresMesuresTemp.diametre1, TArbresMesuresTemp.diametre2, 
+        TArbresMesuresTemp.type, TArbresMesuresTemp.hauteur_totale, 
+        TArbresMesuresTemp.stade_durete, 
+        TArbresMesuresTemp.stade_ecorce,
+        TArbresTemp.taillis, TArbresMesuresTemp.coupe, TArbresMesuresTemp.limite, 
+        TArbresMesuresTemp.code_ecolo, TArbresMesuresTemp.ref_code_ecolo, 
+        TArbresMesuresTemp.observation
         ).filter(
-            (TPlacettes.id_dispositif == dispId)
+            (TPlacettesTemp.id_dispositif == dispId)
         ).join(
-            TArbres, TArbres.id_placette == TPlacettes.id_placette
+            TArbresTemp, TArbresTemp.id_placette == TPlacettesTemp.id_placette
         ).join(
-            TArbresMesures
+            TArbresMesuresTemp
         ).join(
-            TCycles, TCycles.id_cycle == TArbresMesures.id_cycle
+            TCyclesTemp, TCyclesTemp.id_cycle == TArbresMesuresTemp.id_cycle
         )
     Arbres = [arbre for arbre in arbresQuery]
     Arbres = [cdNomemclatureEdition(arbre, 11, 12, id_type_durete, id_type_ecorce) for arbre in Arbres]
 
-    regesQuery = DB.session.query(
-        TPlacettes.id_dispositif, TPlacettes.id_placette_orig, TRegenerations.sous_placette,
-         TCycles.num_cycle, TRegenerations.code_essence, TRegenerations.recouvrement,
-         TRegenerations.classe1, TRegenerations.classe2, TRegenerations.classe3, 
-         TRegenerations.taillis, TRegenerations.abroutissement, TRegenerations.observation
+    regesQuery = db_session.query(
+        TPlacettesTemp.id_dispositif, TPlacettesTemp.id_placette_orig, TRegenerationsTemp.sous_placette,
+            TCyclesTemp.num_cycle, TRegenerationsTemp.code_essence, TRegenerationsTemp.recouvrement,
+            TRegenerationsTemp.classe1, TRegenerationsTemp.classe2, TRegenerationsTemp.classe3, 
+            TRegenerationsTemp.taillis, TRegenerationsTemp.abroutissement, TRegenerationsTemp.observation
         ).filter(
-            (TPlacettes.id_dispositif == dispId)
+            (TPlacettesTemp.id_dispositif == dispId)
         ).join(
-            CorCyclesPlacettes, CorCyclesPlacettes.id_placette == TPlacettes.id_placette
+            CorCyclesPlacettesTemp, CorCyclesPlacettesTemp.id_placette == TPlacettesTemp.id_placette
         ).join(
-            TCycles, TCycles.id_cycle == CorCyclesPlacettes.id_cycle
+            TCyclesTemp, TCyclesTemp.id_cycle == CorCyclesPlacettesTemp.id_cycle
         ).join(
-            TRegenerations, TRegenerations.id_cycle_placette == CorCyclesPlacettes.id_cycle_placette
+            TRegenerationsTemp, TRegenerationsTemp.id_cycle_placette == CorCyclesPlacettesTemp.id_cycle_placette
         )
     Regenerations = [rege for rege in regesQuery]
 
-    transectsQuery = DB.session.query(
-        TPlacettes.id_dispositif, TPlacettes.id_placette_orig, TTransects.id_transect_orig,
-        TCycles.num_cycle, TTransects.ref_transect, TTransects.code_essence, TTransects.distance,
-        TTransects.diametre, TTransects.angle, TTransects.contact,  TTransects.chablis, 
-        TTransects.stade_durete, 
-        TTransects.stade_ecorce,
-        TTransects.observation
+    transectsQuery = db_session.query(
+        TPlacettesTemp.id_dispositif, TPlacettesTemp.id_placette_orig, TTransectsTemp.id_transect_orig,
+        TCyclesTemp.num_cycle, TTransectsTemp.ref_transect, TTransectsTemp.code_essence, TTransectsTemp.distance,
+        TTransectsTemp.diametre, TTransectsTemp.angle, TTransectsTemp.contact,  TTransectsTemp.chablis, 
+        TTransectsTemp.stade_durete, 
+        TTransectsTemp.stade_ecorce,
+        TTransectsTemp.observation
         ).filter(
-            (TPlacettes.id_dispositif == dispId)
+            (TPlacettesTemp.id_dispositif == dispId)
         ).join(
-            CorCyclesPlacettes, CorCyclesPlacettes.id_placette == TPlacettes.id_placette
+            CorCyclesPlacettesTemp, CorCyclesPlacettesTemp.id_placette == TPlacettesTemp.id_placette
         ).join(
-            TCycles, TCycles.id_cycle == CorCyclesPlacettes.id_cycle
+            TCyclesTemp, TCyclesTemp.id_cycle == CorCyclesPlacettesTemp.id_cycle
         ).join(
-            TTransects, TTransects.id_cycle_placette == CorCyclesPlacettes.id_cycle_placette
+            TTransectsTemp, TTransectsTemp.id_cycle_placette == CorCyclesPlacettesTemp.id_cycle_placette
         )
     Transects = [transect for transect in transectsQuery]
     Transects = [cdNomemclatureEdition(transect, 11, 12, id_type_durete, id_type_ecorce) for transect in Transects]
 
-    bmsQuery = DB.session.query(
-        TPlacettes.id_dispositif, TPlacettes.id_placette_orig, TBmSup30.id_bm_sup_30_orig,
-        TBmSup30.id_arbre, TCycles.num_cycle, TBmSup30.code_essence, TBmSup30.azimut,
-        TBmSup30.distance, TBmSup30Mesures.diametre_ini, TBmSup30Mesures.diametre_med,
-        TBmSup30Mesures.diametre_fin, TBmSup30Mesures.longueur, TBmSup30Mesures.contact,
-        TBmSup30Mesures.chablis, 
-        TBmSup30Mesures.stade_durete,
-        TBmSup30Mesures.stade_ecorce,
-        TBmSup30Mesures.observation
+    bmsQuery = db_session.query(
+        TPlacettesTemp.id_dispositif, TPlacettesTemp.id_placette_orig, TBmSup30Temp.id_bm_sup_30_orig,
+        TBmSup30Temp.id_arbre, TCyclesTemp.num_cycle, TBmSup30Temp.code_essence, TBmSup30Temp.azimut,
+        TBmSup30Temp.distance, TBmSup30MesuresTemp.diametre_ini, TBmSup30MesuresTemp.diametre_med,
+        TBmSup30MesuresTemp.diametre_fin, TBmSup30MesuresTemp.longueur, TBmSup30MesuresTemp.contact,
+        TBmSup30MesuresTemp.chablis, 
+        TBmSup30MesuresTemp.stade_durete,
+        TBmSup30MesuresTemp.stade_ecorce,
+        TBmSup30MesuresTemp.observation
         ).filter(
-            (TPlacettes.id_dispositif == dispId)
+            (TPlacettesTemp.id_dispositif == dispId)
         ).join(
-            TBmSup30, TBmSup30.id_placette == TPlacettes.id_placette
+            TBmSup30Temp, TBmSup30Temp.id_placette == TPlacettesTemp.id_placette
         ).join(
-            TBmSup30Mesures
+            TBmSup30MesuresTemp
         ).join(
-            TCycles, TCycles.id_cycle == TBmSup30Mesures.id_cycle
+            TCyclesTemp, TCyclesTemp.id_cycle == TBmSup30MesuresTemp.id_cycle
         )
     BMSsup30 = [bms for bms in bmsQuery]
     BMSsup30 = [cdNomemclatureEdition(bms, 14, 15, id_type_durete, id_type_ecorce) for bms in BMSsup30]
 
 
-    reperesQuery = DB.session.query(
-        TPlacettes.id_dispositif, TPlacettes.id_placette_orig, TReperes.azimut,
-        TReperes.distance, TReperes.diametre, TReperes.repere, TReperes.observation
+    reperesQuery = db_session.query(
+        TPlacettesTemp.id_dispositif, TPlacettesTemp.id_placette_orig, TReperesTemp.azimut,
+        TReperesTemp.distance, TReperesTemp.diametre, TReperesTemp.repere, TReperesTemp.observation
         ).filter(
-            (TPlacettes.id_dispositif == dispId)
+            (TPlacettesTemp.id_dispositif == dispId)
         ).join(
-            TReperes, TReperes.id_placette == TPlacettes.id_placette
+            TReperesTemp, TReperesTemp.id_placette == TPlacettesTemp.id_placette
         )
     Reperes = [repere for repere in reperesQuery]
     data = []
@@ -143,8 +171,8 @@ def bddToExcel(dispId):
     data.append(convertToJsonObject("Reperes", Reperes))
 
     excelData = {"data": data}
-    excelJson = json.dumps(excelData, cls=NumpyEncoder,default=json_serial)
-   
+    excelJson = json.dumps(excelData, cls=NumpyEncoder, default=json_serial)
+    
     return excelJson 
 
 def convertToJsonObject(sheetName, tuples):
@@ -238,7 +266,7 @@ def getColumnObject(sheetName):
             "BooleanColumn": [  
             ]
         }
-      }
+        }
     return allColumnObject[sheetName]
 
 def cdNomemclatureEdition(obj, stadeDIdx, stadeEIdx, id_type_durete, id_type_ecorce):
