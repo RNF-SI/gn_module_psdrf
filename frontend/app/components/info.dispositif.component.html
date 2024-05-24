@@ -1,10 +1,10 @@
-<button class="m-1 float-left" mat-raised-button matTooltip="Revenir à la page d'accueil du module" (click)="returnToPreviousPage()">
-    <mat-icon> arrow_back </mat-icon>
+<button class="m-1 float-left action-button-class" mat-raised-button matTooltip="Revenir à la page d'accueil du module" (click)="returnToPreviousPage()">
+    <mat-icon>arrow_back</mat-icon>
 </button>
 <div class="container-fluid">
 
     <div>
-        <h2>Dispositif : {{dispositif.name}} </h2>
+        <h2 class="dispositif-title">Dispositif : {{dispositif.name}}</h2>
         <p>Organisme : {{ dispositif.organisme ? dispositif.organisme.nom_organisme : "&lt;inconnu&gt;" }}</p>
     </div>
     <div class="row" id="map-list-placettes">
@@ -15,56 +15,47 @@
 
         <div class="col-sm-5">
 
-            <div class="m-3 justify-content-center">
+            <div class="m-3 justify-content-center card">
                 <h3>Génération du carnet et des figures</h3>
-                    <section class="checkbox-section">
-                        <span class="checkbox-list-section">
-                        <mat-checkbox class="checkbox-margin"
-                                        [checked]="allToDownload"
-                                        
-                                        [indeterminate]="someToDownload()"
-                                        (change)="setAll($event.checked)">
+                <section class="checkbox-section">
+                    <span class="checkbox-list-section">
+                        <mat-checkbox class="checkbox-margin custom-checkbox" [checked]="allToDownload" [indeterminate]="someToDownload()" (change)="setAll($event.checked)">
                             {{documents.name}}
                         </mat-checkbox>
-                        </span>
-                        <span class="checkbox-list-section">
+                    </span>
+                    <span class="checkbox-list-section">
                         <ul>
                             <li *ngFor="let subdocument of documents.subdocuments">
-                                <mat-checkbox [(ngModel)]="subdocument.toDownload"
-                                    (ngModelChange)="updateAllToDownload()"
-                                    [disabled]="subdocument.activated? false : checkCheckboxDisabled()"
-                                    >
+                                <mat-checkbox class="custom-checkbox" [(ngModel)]="subdocument.toDownload" (ngModelChange)="updateAllToDownload()" [disabled]="subdocument.activated ? false : checkCheckboxDisabled()">
                                     {{subdocument.name}}
                                 </mat-checkbox>
-                                <p *ngIf="!subdocument.activated && checkCheckboxDisabled()" >
+                                <p *ngIf="!subdocument.activated && checkCheckboxDisabled()">
                                     <small class="unactive-text">
-                                        Au-delà de 150placettes la génération du plan des arbres est trop lourde. Veuillez nous contacter en attendant l'intégration d'un futur dévelopement.
+                                        Au-delà de 150 placettes la génération du plan des arbres est trop lourde. Veuillez nous contacter en attendant l'intégration d'un futur développement.
                                     </small>
                                 </p>
                                 <ul *ngIf="subdocument.toDownload">
                                     <li *ngFor="let parameter of subdocument.documentParameters">
-                                        <mat-checkbox [(ngModel)]="parameter.value">
+                                        <mat-checkbox class="custom-checkbox" [(ngModel)]="parameter.value">
                                             {{parameter.text}}
                                         </mat-checkbox>
                                     </li>
                                 </ul>
                             </li>
                         </ul>
-                        </span>
-                    </section>
-                    <div class="text-center">
-                        <button *ngIf="!analysisLoading" class="action-button-class" mat-raised-button matTooltip="Générer les éléments sélectionnés" (click)="launchAnalysis()">
-                            <mat-icon>bar_chart</mat-icon>
-                        </button>
-                        <button *ngIf="analysisLoading" class="action-button-class spinner-button" mat-raised-button matTooltip="Intégration des données en cours" disabled>
-                            <mat-spinner diameter="22" color="primary"></mat-spinner>
-                        </button>
-                    </div>
+                    </span>
+                </section>
+                <div class="text-center">
+                    <button *ngIf="!analysisLoading" class="action-button-class" mat-raised-button matTooltip="Générer les éléments sélectionnés" (click)="launchAnalysis()">
+                        <mat-icon>bar_chart</mat-icon>
+                    </button>
+                    <button *ngIf="analysisLoading" class="action-button-class spinner-button" mat-raised-button matTooltip="Intégration des données en cours" disabled>
+                        <mat-spinner diameter="22" color="primary"></mat-spinner>
+                    </button>
+                </div>
             </div>
 
-
-
-            <div class="mt-1 justify-content-center">
+            <div class="mt-1 justify-content-center card">
                 <h3>Génération du fichier excel de la base de données production</h3>
                 <div class="col-6">
                     <div class="text-center mt-4">
@@ -78,7 +69,7 @@
                 </div>
             </div>
 
-            <div class="mt-1 justify-content-center">
+            <div class="mt-1 justify-content-center card">
                 <h3>Génération du fichier excel de la base de données staging</h3>
                 <div class="col-6">
                     <div class="text-center mt-4">
@@ -99,51 +90,25 @@
                 [rowClass]="mapListService.getRowClass" [messages]="" (page)="mapListService.setTablePage($event, placettesEndPoint)" (select)="onRowSelect($event)">
 
                 <!-- ACTION COLUMNS -->
-                <!-- 
-                <ngx-datatable-column maxWidth="10">
-                    <ng-template ngx-datatable-header-template>
-                        <i (click)="openModalCol($event, modalCol)" class="fa fa-cog clickable" aria-hidden="true" matTooltip="{{'List.Columns' | translate}}" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></i>
-                    </ng-template>
-                    <ng-template let-row="row" ngx-datatable-cell-template>
-                        <button class="btn btn-outline-shadow btn-no-padding btn-ghost" [disabled]="!row.rights.U" (click)="onEditPlacette(row[mapListService.id_placette])">
-                            <i [ngClass]="{'disabled' : !row.rights.U}" matTooltip="{{'Placette.Edit' | translate}} {{row[mapListService.idName]}}"
-                            class="fa fa-pencil-square-o" aria-hidden="true"></i>
-                        </button>
-                    </ng-template>
-                </ngx-datatable-column> 
-                -->
-
                 <ngx-datatable-column maxWidth="10">
                     <ng-template let-row="row" ngx-datatable-cell-template>
                         <button class="btn btn-outline-shadow btn-no-padding btn-ghost" [disabled]="!row.rights.R" (click)="onDetailPlacette(row[mapListService.idName])">
-                    <i [ngClass]="{'disabled' : !row.rights.R}" matTooltip="{{ 'Placette.Info' | translate }} {{row[mapListService.idName]}}"
-                      class="fa fa-info-circle" aria-hidden="true"></i>
-                  </button>
+                            <i [ngClass]="{'disabled' : !row.rights.R}" matTooltip="{{ 'Placette.Info' | translate }} {{row[mapListService.idName]}}" class="fa fa-info-circle" aria-hidden="true"></i>
+                        </button>
                     </ng-template>
                 </ngx-datatable-column>
-
-                <!-- <ngx-datatable-column maxWidth="10">
-                    <ng-template let-row="row" ngx-datatable-cell-template>
-                        <button class="btn btn-outline-shadow btn-no-padding btn-ghost" [disabled]="!row.rights.D" (click)="openDeleteModal($event, modalConfirm, iElement, row)">
-                    <i [ngClass]="{'disabled' : !row.rights.D}" #iElement matTooltip="{{ 'Placette.Delete' | translate }} {{row[mapListService.idName]}}"
-                      class="fa fa-trash-o" aria-hidden="true"></i>
-                  </button>
-                    </ng-template>
-                </ngx-datatable-column> -->
-
 
                 <!-- DATA COLUMNS -->
                 <span *ngFor="let col of mapListService.displayColumns">
-                <ngx-datatable-column  [name]="col.name " [prop]="col.prop">
-                </ngx-datatable-column>
-              </span>
+                    <ngx-datatable-column [name]="col.name" [prop]="col.prop">
+                    </ngx-datatable-column>
+                </span>
                 <ngx-datatable-column name="code habitat">
                     <ng-template let-row="row" ngx-datatable-cell-template>
                         {{row.habitat}} ({{row.ref_habitat}})
                     </ng-template>
                 </ngx-datatable-column>
             </ngx-datatable>
-
         </div>
     </div>
 </div>
