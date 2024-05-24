@@ -2,7 +2,7 @@ import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 // import { ActivatedRoute, Router, ParamMap } from "@angular/router";
 import { HttpClient } from '@angular/common/http';
-import { AppConfig } from '@geonature_config/app.config';
+import { ConfigService } from '@geonature/services/config.service';
 
 
 @Component({
@@ -26,11 +26,13 @@ export class FormDispositifComponent implements OnInit {
     public organismsEndPoint: string = "users/organisms"
 
     constructor(
-        private _api: HttpClient
+        private _api: HttpClient,
+        public config: ConfigService,
+
       ) { }
 
     ngOnInit() {
-      this._api.get<any>(`${AppConfig.API_ENDPOINT}/${this.organismsEndPoint}`)
+      this._api.get<any>(`${this.config.API_ENDPOINT}/${this.organismsEndPoint}`)
           .subscribe(data => {
               this.organismes = data;
             });
@@ -52,7 +54,7 @@ export class FormDispositifComponent implements OnInit {
     onSubmit() {
         let data = this.dispositifForm.value as { name: string; id_organisme: any; id: any };
         data.id = this.dispositif.id;
-        this._api.post<any>(`${AppConfig.API_ENDPOINT}/${this.dispositifSaveEndPoint}`, data)
+        this._api.post<any>(`${this.config.API_ENDPOINT}/${this.dispositifSaveEndPoint}`, data)
           .subscribe(data => {
             if (data.success) {
               console.log("bien enregistré !");

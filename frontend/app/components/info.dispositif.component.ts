@@ -1,7 +1,7 @@
 import { Component, OnInit } from "@angular/core";
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router, ParamMap } from "@angular/router";
-import { AppConfig } from '@geonature_config/app.config';
+import { ConfigService } from '@geonature/services/config.service';
 import { MapListService } from '@geonature_common/map-list/map-list.service';
 import { PsdrfDataService } from "../services/route.service";
 import { ToastrService } from 'ngx-toastr';
@@ -73,7 +73,9 @@ export class InfoDispositifComponent implements OnInit {
     public mapListService: MapListService, 
     private dataSrv: PsdrfDataService,
     private _toasterService: ToastrService,
-    private excelSrv: ExcelImportService
+    private excelSrv: ExcelImportService,
+    public config: ConfigService,
+
   ) { }
 
   ngOnInit() {
@@ -92,7 +94,7 @@ export class InfoDispositifComponent implements OnInit {
       this.id = params.id;
       this.placettesEndPoint = "psdrf/placettes/" + this.id;
 
-      this._api.get<any>(`${AppConfig.API_ENDPOINT}/${this.apiEndPoint}/${this.id}`)
+      this._api.get<any>(`${this.config.API_ENDPOINT}/${this.apiEndPoint}/${this.id}`)
           .subscribe(data => {
             this.dispositif = data;
 
