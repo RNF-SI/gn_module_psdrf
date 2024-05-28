@@ -43,10 +43,10 @@ def add_dispositif(row):
     """
     try:
         # Check if primary key exists already in table
-        dispList = DB.session.query(TDispositifs.id_dispositif, TDispositifs.name).filter(TDispositifs.id_dispositif == row["NumDisp"])
+        dispList = DB.session.query(TDispositifs).filter(TDispositifs.id_dispositif == row["NumDisp"])
         dup_dispList = dispList.first()
         if dup_dispList:
-            # # Si le disp est déjà en bdd, update des valeurs
+            # Si le disp est déjà en bdd, update des valeurs
             dispList.update(
                 {
                     TDispositifs.name: row["Nom"],
