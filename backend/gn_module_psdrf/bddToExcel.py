@@ -42,25 +42,25 @@ def bddToExcel(dispId, database='production'):
     id_type_ecorce = get_id_type_from_mnemonique("PSDRF_ECORCE")
 
     placettesQuery = db_session.query(
-        TPlacettesTemp.id_dispositif, TPlacettesTemp.id_placette_orig, TCycles.num_cycle, TPlacettesTemp.strate, TPlacettesTemp.poids_placette,
+        TPlacettesTemp.id_dispositif, TPlacettesTemp.id_placette_orig, TCyclesTemp.num_cycle, TPlacettesTemp.strate, TPlacettesTemp.poids_placette,
         TPlacettesTemp.pente, TPlacettesTemp.correction_pente, TPlacettesTemp.exposition, TPlacettesTemp.habitat,
         TPlacettesTemp.station, TPlacettesTemp.typologie, TPlacettesTemp.groupe,
         TPlacettesTemp.groupe1, TPlacettesTemp.groupe2, TPlacettesTemp.ref_habitat, TPlacettesTemp.precision_habitat,
         TPlacettesTemp.ref_station, TPlacettesTemp.ref_typologie, TPlacettesTemp.descriptif_groupe, TPlacettesTemp.descriptif_groupe1,
         TPlacettesTemp.descriptif_groupe2,
-        CorCyclesPlacettes.date_intervention, CorCyclesPlacettes.nature_intervention,
-        CorCyclesPlacettes.gestion_placette, TPlacettesTemp.precision_gps, TPlacettesTemp.cheminement
+        CorCyclesPlacettesTemp.date_intervention, CorCyclesPlacettesTemp.nature_intervention,
+        CorCyclesPlacettesTemp.gestion_placette, TPlacettesTemp.precision_gps, TPlacettesTemp.cheminement
         ).filter(
             (TPlacettesTemp.id_dispositif == dispId)
         ).join(
-            CorCyclesPlacettes, CorCyclesPlacettes.id_placette == TPlacettesTemp.id_placette
+            CorCyclesPlacettesTemp, CorCyclesPlacettesTemp.id_placette == TPlacettesTemp.id_placette
         ).join(
-            TCycles, TCycles.id_cycle == CorCyclesPlacettes.id_cycle
+            TCyclesTemp, TCyclesTemp.id_cycle == CorCyclesPlacettesTemp.id_cycle
         )
     Placettes = [placette for placette in placettesQuery]
 
     cyclesQuery = db_session.query(
-        TPlacettesTemp.id_dispositif, TPlacettesTemp.id_placette_orig, TCycles.num_cycle,
+        TPlacettesTemp.id_dispositif, TPlacettesTemp.id_placette_orig, TCyclesTemp.num_cycle,
         CorCyclesPlacettesTemp.coeff, CorCyclesPlacettesTemp.date_releve, CorCyclesPlacettesTemp.diam_lim, CorCyclesPlacettesTemp.annee
                 ).filter(
                     (TPlacettesTemp.id_dispositif == dispId)
@@ -70,7 +70,6 @@ def bddToExcel(dispId, database='production'):
                     TCyclesTemp, TCyclesTemp.id_cycle == CorCyclesPlacettesTemp.id_cycle
                 )
     Cycles = [cycle for cycle in cyclesQuery]
-
 
     arbresQuery = db_session.query(
         TPlacettesTemp.id_dispositif, TPlacettesTemp.id_placette_orig, 
