@@ -414,6 +414,10 @@
                 </div>
 
                 <div class="mt-1 d-flex justify-content-center">
+                    <mat-checkbox [(ngModel)]="updateCodeEcologie">Mettre à jour CodeEcologie</mat-checkbox>
+                </div>
+
+                <div class="mt-1 d-flex justify-content-center">
                     <button class="action-button-class" mat-raised-button matTooltip="Supprimer" (click)="deleteFile()">
                         <mat-icon> delete </mat-icon>
                     </button>
@@ -431,6 +435,7 @@
         </mat-card-content>
     </mat-card>
 </div>
+
 
 <div class="container-fluid p-2">
     <mat-card>

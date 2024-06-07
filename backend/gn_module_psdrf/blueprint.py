@@ -581,14 +581,15 @@ def get_Groups():
 @json_resp
 def psdrf_update_psdrf_liste():
     psdrfListe_file = request.files.get('file_upload', 'psdrfListe')
+    update_code_ecologie = request.form.get('updateCodeEcologie', 'true').lower() == 'true'
     try:
-        psdrf_list_update(psdrfListe_file)
+        psdrf_list_update(psdrfListe_file, update_code_ecologie)
         return {"success": True, "message": "Les données administrateurs ont bien été mises à jour."}
     except Exception as e:
         logging.critical(e)
-        msg = json.dumps({"type": "bug", "msg": "Unknown error during psdrf liste change"})
+        msg = {"type": "bug", "msg": "Unknown error during psdrf liste change"}
         logging.info(msg)
-        return Response(msg, status=500)
+        return Response(json.dumps(msg), status=500, mimetype='application/json')
     
 # add Placette List request
 @blueprint.route('/disp_placette_liste', methods=['POST'])

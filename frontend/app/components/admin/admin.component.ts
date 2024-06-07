@@ -105,6 +105,8 @@ export interface Orga {
     private placetteUploading: boolean = false;
     private isPlacetteLoaded: boolean = false;
 
+    // Variable servant à update ou nom les données des codes ecologie lors de l'update de psdrfListe
+    updateCodeEcologie: boolean = false;
 
     public disableSubmit = false;
     public disableSubmitUserDisp = false;
@@ -701,39 +703,38 @@ export interface Orga {
       })
     }
 
-    psdrfListeUpdate(){
-      this.psdrfListUploading = true;   
-      this.dataSrv
-        .psdrf_liste_update(
-          this.psdrfListeFile
-        )
-        .subscribe(
-          integrationObj => {
-            this.psdrfListUploading = false;   
-            if(integrationObj.success){
-              this._toasterService.success("PSDRF liste a bien été actualisée", "Mise à jour de PSDRF liste", {
-                closeButton: true,
-                disableTimeOut: true,
-              });
-            } else {
-              this._toasterService.error("Une erreur s'est produite lors de l'actualisation de psdrf liste.", "Mise à jour de PSDRF liste", {
-                closeButton: true,
-                disableTimeOut: true,
-              });
-            }
+    psdrfListeUpdate() {
+      this.psdrfListUploading = true;
+      const formData = new FormData();
+      formData.append('file_upload', this.psdrfListeFile, 'psdrfListe');
+      formData.append('updateCodeEcologie', this.updateCodeEcologie.toString());
 
-          },
-          error => {
-            this._toasterService.error(error.message, "Mise à jour de PSDRF liste", {
-              closeButton: true,
-              disableTimeOut: true,
-            });
-            this.psdrfListUploading = false;
-            this.isPSDRFListeLoaded = false;
-            
-          }
-        );
-    }
+      this.dataSrv.psdrf_liste_update(formData)
+          .subscribe(
+              integrationObj => {
+                  this.psdrfListUploading = false;
+                  if (integrationObj.success) {
+                      this._toasterService.success("PSDRF liste a bien été actualisée", "Mise à jour de PSDRF liste", {
+                          closeButton: true,
+                          disableTimeOut: true,
+                      });
+                  } else {
+                      this._toasterService.error("Une erreur s'est produite lors de l'actualisation de psdrf liste.", "Mise à jour de PSDRF liste", {
+                          closeButton: true,
+                          disableTimeOut: true,
+                      });
+                  }
+              },
+              error => {
+                  this._toasterService.error(error.message, "Mise à jour de PSDRF liste", {
+                      closeButton: true,
+                      disableTimeOut: true,
+                  });
+                  this.psdrfListUploading = false;
+                  this.isPSDRFListeLoaded = false;
+              }
+          );
+  }
 
     // Placette File Part
     // Add methods for handling Placette file events
