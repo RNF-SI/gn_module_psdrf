@@ -2,6 +2,9 @@ import {Component, OnChanges, Input, Output, SimpleChanges, ChangeDetectorRef, E
 import { MatTableDataSource } from '@angular/material/table';
 import { MatDialog } from "@angular/material/dialog";
 import { ConfirmationDialog } from "@geonature_common/others/modal-confirmation/confirmation.dialog";
+import { MatPaginator } from '@angular/material/paginator';
+import { MatSort } from '@angular/material/sort';
+import { ViewChild, AfterViewInit } from '@angular/core';
 
 
 
@@ -22,6 +25,8 @@ export class AdminTableComponent implements OnChanges {
     @Output() updatingRow = new EventEmitter<any>();
     @Output() deletingRow = new EventEmitter<any>();
 
+    @ViewChild(MatPaginator) paginator: MatPaginator;
+    @ViewChild(MatSort) sort: MatSort;
 
     public datasource=new MatTableDataSource<any>();
 
@@ -33,9 +38,16 @@ export class AdminTableComponent implements OnChanges {
 
 
     ngOnChanges(changes: SimpleChanges){
-        this.data = changes.data.currentValue;
-        this.datasource = new MatTableDataSource<any>(this.data);
-        this.changeDetectorRefs.detectChanges();
+      this.datasource.data = changes.data.currentValue || [];
+    }
+
+    ngAfterViewInit() {
+      this.datasource.paginator = this.paginator;
+      this.datasource.sort = this.sort;
+    }
+
+    applyFilter(filterValue: string) {
+      this.datasource.filter = filterValue.trim().toLowerCase();
     }
 
     openUpdateForm(index, element){

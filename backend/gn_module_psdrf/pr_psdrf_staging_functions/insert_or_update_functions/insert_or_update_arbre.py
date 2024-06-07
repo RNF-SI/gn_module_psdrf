@@ -16,7 +16,6 @@ def insert_update_or_delete_arbre(placette_data):
             'deleted': 0
         }
         created_arbres = []
-        arbres_to_process = []
 
         if 'arbres' in placette_data:
             arbres_data = placette_data['arbres']
@@ -47,9 +46,8 @@ def insert_update_or_delete_arbre(placette_data):
                                 created_at= arbre_data.get('created_at'),
                                 updated_at= arbre_data.get('updated_at'),
                             )
-                            arbres_to_process.append(new_arbre)
-                            # DB.session.add(new_arbre)
-                            # DB.session.flush()  # Flush to get the auto-generated id_arbre
+                            DB.session.add(new_arbre)
+                            DB.session.flush()  # Flush to get the auto-generated id_arbre
                             # DB.session.commit()  # Commit the transaction
                             created_arbres.append(
                                 {
@@ -102,9 +100,6 @@ def insert_update_or_delete_arbre(placette_data):
                                     )
                                     if arbre_mesure_results:
                                         counts_arbre_mesure[arbre_mesure_category] += arbre_mesure_results[arbre_mesure_category]
-            # Bulk insert or update arbres
-            if arbres_to_process:
-                DB.session.bulk_save_objects(arbres_to_process)
         DB.session.commit()
         return created_arbres, counts_arbre, counts_arbre_mesure
 

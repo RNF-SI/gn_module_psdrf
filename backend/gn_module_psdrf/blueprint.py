@@ -6,6 +6,8 @@ from sqlalchemy.sql.expression import false
 
 from geoalchemy2.shape import to_shape, from_shape
 from shapely.geometry import MultiPoint, Point
+from shapely.geometry import shape as to_shape
+from shapely.geometry import mapping as from_shape
 import json
 import time
 import logging
@@ -28,7 +30,8 @@ from .disp_placette_liste import disp_placette_liste_add
 from .bddToExcel import bddToExcel
 from .schemas.cycles import ConciseCycleSchema
 from .schemas.essences import EssenceSchema
-from .tasks import test_celery, insert_or_update_data, fetch_dispositif_data
+from .tasks import test_celery, insert_or_update_data, fetch_dispositif_data, fetch_updated_data
+from .helpers.parse_date import parse_iso_datetime
 
 
 
@@ -104,7 +107,7 @@ def get_disps():
             geom = pts.centroid
         else:
             geom = pts.convex_hull
-        if len(pts) > 0:
+        if len(pts.geoms) > 0:
             ft = get_geojson_feature(from_shape(geom))
         else:
             ft = {'geometry': None}
@@ -412,10 +415,16 @@ def get_user_disps(userId):
     data = [disp.id_dispositif for disp in query]
     return data
 
-@blueprint.route('/excelData/<int:dispId>', methods=['GET'])
+@blueprint.route('/excelProdData/<int:dispId>', methods=['GET'])
 @json_resp
-def get_excel_data(dispId):
-    data = bddToExcel(dispId)
+def get_excel_prod_data(dispId):
+    data = bddToExcel(dispId, database='production')
+    return data
+
+@blueprint.route('/excelStagingData/<int:dispId>', methods=['GET'])
+@json_resp
+def get_excel_staging_data(dispId):
+    data = bddToExcel(dispId, database='staging')
     return data
 
 @blueprint.route('/organisme', methods=['POST', 'PUT', 'DELETE'])
@@ -572,14 +581,15 @@ def get_Groups():
 @json_resp
 def psdrf_update_psdrf_liste():
     psdrfListe_file = request.files.get('file_upload', 'psdrfListe')
+    update_code_ecologie = request.form.get('updateCodeEcologie', 'true').lower() == 'true'
     try:
-        psdrf_list_update(psdrfListe_file)
+        psdrf_list_update(psdrfListe_file, update_code_ecologie)
         return {"success": True, "message": "Les données administrateurs ont bien été mises à jour."}
     except Exception as e:
         logging.critical(e)
-        msg = json.dumps({"type": "bug", "msg": "Unknown error during psdrf liste change"})
+        msg = {"type": "bug", "msg": "Unknown error during psdrf liste change"}
         logging.info(msg)
-        return Response(msg, status=500)
+        return Response(json.dumps(msg), status=500, mimetype='application/json')
     
 # add Placette List request
 @blueprint.route('/disp_placette_liste', methods=['POST'])
@@ -636,16 +646,16 @@ def get_dispositif_status(task_id):
 
 @blueprint.route('/dispositif-complet/result/<task_id>', methods=['GET'])
 def get_dispositif_result(task_id):
-    app.logger.info(f"Retrieving result for task ID: {task_id}")
+    logger.info(f"Retrieving result for task ID: {task_id}")
     task = fetch_dispositif_data.AsyncResult(task_id)
     if task.status == 'SUCCESS':
-        app.logger.info(f"Successfully retrieved result for task ID: {task_id}")
+        logger.info(f"Successfully retrieved result for task ID: {task_id}")
         return jsonify(task.result), 200
     elif task.status == 'FAILURE':
-        app.logger.error(f"Retrieving result failed for task ID: {task_id}, Error: {task.info}")
+        logger.error(f"Retrieving result failed for task ID: {task_id}, Error: {task.info}")
         return jsonify({'error': str(task.info)}), 500
     else:
-        app.logger.debug(f"Task {task_id} is still processing")
+        logger.debug(f"Task {task_id} is still processing")
         return jsonify({'status': 'incomplete', 'message': 'Task is not finished yet.'}), 202
 
 
@@ -766,6 +776,66 @@ def get_export_task_result(task_id):
             "status": "incomplete",
             "message": "Task is not finished yet."
         }), 202
+
+
+
+@blueprint.route('/dispositif-synchronisation/<int:dispId>', methods=['GET'])
+def initiate_sync(dispId):
+    """
+    Initiates an asynchronous task to fetch updated data for a given dispositif.
+    """
+    last_sync_str = request.args.get('last_sync')
+    if not last_sync_str:
+        return jsonify({'success': False, 'message': 'Last sync timestamp required'}), 400
+    
+
+    try:
+        print(last_sync_str)
+        last_sync_date = parse_iso_datetime(last_sync_str)
+        print(f"Parsed date: {last_sync_date}")
+    except ValueError:
+        return jsonify({'success': False, 'message': 'Invalid date format'}), 400
+
+    print('Celery task before')
+    print(last_sync_date)
+    task = fetch_updated_data.delay(dispId, last_sync_date)
+    print('Celery task after')
+    print(task.id)
+    return jsonify({'task_id': task.id}), 202
+
+
+
+@blueprint.route('/dispositif-synchronisation/status/<task_id>', methods=['GET'])
+def get_sync_task_status(task_id):
+    """
+    Returns the current status of the synchronization task.
+    """
+    task = fetch_updated_data.AsyncResult(task_id)
+    print(task.state)
+    if task.state == 'PENDING':
+        return jsonify({'state': task.state, 'status': 'Task is pending'}), 202
+    elif task.state == 'FAILURE':
+        error_info = str(task.info)  # Detailed error info
+        return jsonify({'state': task.state, 'status': error_info}), 500
+    elif task.state == 'SUCCESS':
+        return jsonify({'state': task.state, 'result': task.result}), 200
+    else:
+        return jsonify({'state': task.state, 'status': 'Task is in progress'}), 102
+
+
+@blueprint.route('/dispositif-synchronisation/result/<task_id>', methods=['GET'])
+def get_sync_task_result(task_id):
+    """
+    Fetches the result of the synchronization task.
+    """
+    task = fetch_updated_data.AsyncResult(task_id)
+    if task.status == 'SUCCESS':
+        sync_results = task.result  # This should be a dictionary
+        return jsonify({'status': 'success', 'data': sync_results}), 200
+    elif task.status == 'FAILURE':
+        return jsonify({'status': 'error', 'message': str(task.info)}), 500
+    else:
+        return jsonify({'status': 'incomplete', 'message': 'Task is not finished yet.'}), 202
 
 
 

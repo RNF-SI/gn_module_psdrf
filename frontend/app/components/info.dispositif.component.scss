@@ -1,39 +1,80 @@
-h2 .fa {
-    font-size: 60%;
+:root {
+    --blue: #598979;
+    --lightGreen: #8AAC3E;
+    --teal: #7DAB9C;
+    --black: #1a1a18;
+    --beige: #F4F1E4;
+    --brown: #8B5500;
 }
 
-#map-list-placettes {
-    margin-top: 10px;
+h2 {
+    color: var(--blue);
+}
+
+.dispositif-title {
+    color: var(--black);
+}
+
+p {
+    color: var(--black);
+}
+
+.card {
+    background-color: var(--beige);
+    padding: 16px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 16px;
+}
+
+h3 {
+    color: var(--brown);
+}
+
+.unactive-text {
+    color: var(--black);
+    opacity: 0.54;
+}
+
+.button-primary {
+    background-color: var(--blue);
+    color: var(--beige);
 }
 
 .spinner-button {
     align-items: center;
     justify-content: center;
     height: 35px;
+    background-color: var(--blue);
 }
 
 .action-button-class {
     margin: 4px 8px;
+    background-color: var(--lightGreen);
+    color: var(--beige);
 }
 
 .checkbox-section {
     margin: 12px 0;
-  }
-  
+}
+
 .checkbox-margin {
-margin: 0 12px;
+    margin: 0 12px;
 }
 
 ul {
-list-style-type: none;
-margin-top: 4px;
-}
-
-.unactive-text{
-    color: rgba(0,0,0,.54);
+    list-style-type: none;
+    margin-top: 4px;
 }
 
 button > mat-icon {
-    // Add margin-right to mat-icon children of button
     margin-right: 0;
+}
+
+.custom-checkbox .mat-checkbox-frame {
+    border-color: var(--lightGreen);
+}
+
+.custom-checkbox .mat-checkbox-background {
+    background-color: var(--lightGreen);
 }

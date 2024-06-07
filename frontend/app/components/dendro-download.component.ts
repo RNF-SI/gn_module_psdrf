@@ -7,26 +7,35 @@ import { PsdrfDataService } from "../services/route.service";
   styleUrls: ["dendro-download.component.scss"]
 })
 export class DendroDownloadComponent implements OnInit {
-  constructor(
-    private dataSrv: PsdrfDataService, 
+  loading = false;  // Loading state
 
-  ) {}
+  constructor(private dataSrv: PsdrfDataService) {}
 
   ngOnInit() {}
 
   downloadDendro() {
+    this.loading = true;  // Set loading to true when download starts
     this.dataSrv.getDendroApk().subscribe(
       blob => {
-        const url = window.URL.createObjectURL(blob);
-        const anchor = document.createElement('a');
-        anchor.download = 'Dendro3.apk';
-        anchor.href = url;
-        anchor.click();
-        window.URL.revokeObjectURL(url);  // Clean up the URL object
+        this.saveFile(blob, 'Dendro3.apk');
+        this.loading = false;  // Set loading to false when download completes
       },
       error => {
         console.error('Erreur de Téléchargement:', error);
+        this.loading = false;  // Set loading to false if an error occurs
       }
     );
+  }
+
+  private saveFile(blob: Blob, filename: string) {
+    const url = window.URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.style.display = 'none';
+    document.body.appendChild(anchor);
+    anchor.href = url;
+    anchor.download = filename;
+    anchor.click();
+    window.URL.revokeObjectURL(url);  // Clean up the URL object
+    document.body.removeChild(anchor);
   }
 }

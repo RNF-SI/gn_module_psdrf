@@ -25,6 +25,7 @@ import {MatCheckboxModule} from '@angular/material/checkbox';
 import { CustomToastComponent } from "./reusable-components/custom-toast/custom-toast.component"
 import { ToastrModule } from 'ngx-toastr';
 import { DendroDownloadComponent } from "./components/dendro-download.component";
+import { MatSortModule } from '@angular/material/sort';
 
 // my module routing
 const routes: Routes = [
@@ -67,7 +68,8 @@ const routes: Routes = [
       progressBar: true, // Shows progress bar
       progressAnimation: 'decreasing', // Animation type
       preventDuplicates: true, 
-    })
+    }),
+    MatSortModule,
   ],
   providers: [
     ExcelImportService,

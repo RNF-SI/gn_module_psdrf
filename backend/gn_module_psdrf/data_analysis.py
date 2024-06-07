@@ -18,15 +18,17 @@ from .models import TDispositifs, TPlacettes, TArbres, TCycles, \
     TBmSup30,TBmSup30Mesures, TTransects, dispositifs_area_assoc
 from .geonature_PSDRF_function import get_cd_nomenclature_from_id_type_and_id_nomenclature, get_id_type_from_mnemonique
 from celery.utils.log import get_task_logger
+from sqlalchemy.orm import scoped_session
 
 logger = get_task_logger(__name__)
 
-def data_analysis(dispId, isCarnetToDownload, isPlanDesArbresToDownload, carnetToDownloadParameters):
+# from sqlalchemy.orm import scoped_session
 
+def data_analysis(dispId, isCarnetToDownload, isPlanDesArbresToDownload, carnetToDownloadParameters):
     # Suppression des fichiers de sortie 
     folder = '/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/out'
     for filename in os.listdir(folder):
-        if (filename != ".gitignore") :
+        if filename != ".gitignore":
             file_path = os.path.join(folder, filename)
             try:
                 if os.path.isfile(file_path) or os.path.islink(file_path):
@@ -34,31 +36,38 @@ def data_analysis(dispId, isCarnetToDownload, isPlanDesArbresToDownload, carnetT
                 elif os.path.isdir(file_path):
                     shutil.rmtree(file_path)
             except Exception as e:
-                print('Failed to delete %s. Reason: %s' % (file_path, e))
+                print(f'Failed to delete {file_path}. Reason: {e}')
 
     os.mkdir("/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/out/figures")
 
-    r = robjects.r
-    dispNameQuery = DB.session.query(
-        TDispositifs.name
-        ).filter(
-            (TDispositifs.id_dispositif == dispId)
-        )
-    dispName = pd.read_sql(dispNameQuery.statement, dispNameQuery.session.bind)
-    dispName=str(dispName.iloc[0]["name"])
+    r = ro.r
 
-    lastCycleQuery = DB.session.query(
-        func.max(TCycles.num_cycle)
-        ).filter(
-            (TCycles.id_dispositif == dispId)
-        )
-    lastCycledf = pd.read_sql(lastCycleQuery.statement, lastCycleQuery.session.bind)
+    # Use scoped_session to ensure thread-safe session handling
+    session = scoped_session(DB.session)
 
-    with localconverter(ro.default_converter + pandas2ri.converter):
-        r_lastCycle = ro.conversion.py2rpy(lastCycledf)
+    try:
+        dispNameQuery = session.query(TDispositifs.name).filter(TDispositifs.id_dispositif == dispId)
+        with DB.engine.connect() as conn:
+            dispName = pd.read_sql(dispNameQuery.statement, conn)
+            dispName = str(dispName.iloc[0]["name"])
 
-    formatBdd2RData(r, dispId, r_lastCycle, dispName, isCarnetToDownload, isPlanDesArbresToDownload, carnetToDownloadParameters)
+            lastCycleQuery = session.query(func.max(TCycles.num_cycle)).filter(TCycles.id_dispositif == dispId)
+            lastCycledf = pd.read_sql(lastCycleQuery.statement, conn)
+
+        with localconverter(ro.default_converter + pandas2ri.converter):
+            r_lastCycle = ro.conversion.py2rpy(lastCycledf)
+
+        formatBdd2RData(r, dispId, r_lastCycle, dispName, isCarnetToDownload, isPlanDesArbresToDownload, carnetToDownloadParameters)
+
+    except Exception as e:
+        print(f'Error in data_analysis: {e}')
+        raise
+    finally:
+        session.remove()
+
     del r
+
+
 
 def formatBdd2RData(r, dispId, lastCycle, dispName, isCarnetToDownload, isPlanDesArbresToDownload, carnetToDownloadParameters):
 
