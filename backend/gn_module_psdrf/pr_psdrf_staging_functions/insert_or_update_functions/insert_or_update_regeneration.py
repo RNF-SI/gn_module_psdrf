@@ -12,33 +12,37 @@ def insert_or_update_regeneration(category, cor_cycle_placette_category, cor_cyc
 
         # Handle created regenerations
         if category == 'created':
+            existing_regeneration = DB.session.query(TRegenerationsStaging).filter_by(
+                id_regeneration=regeneration_data.get('id_regeneration')
+            ).first()
 
-            new_regeneration = TRegenerationsStaging(
-                id_regeneration=regeneration_data.get('id_regeneration'),
-                id_cycle_placette=cor_cycle_placette_id,
-                sous_placette=regeneration_data.get('sous_placette'),
-                code_essence=regeneration_data.get('code_essence'),
-                recouvrement=regeneration_data.get('recouvrement'),
-                classe1=regeneration_data.get('classe1'),
-                classe2=regeneration_data.get('classe2'),
-                classe3=regeneration_data.get('classe3'),
-                taillis=regeneration_data.get('taillis'),
-                abroutissement=regeneration_data.get('abroutissement'),
-                id_nomenclature_abroutissement=regeneration_data.get('id_nomenclature_abroutissement'),
-                observation=regeneration_data.get('observation'),
-                created_by=regeneration_data.get('created_by'),
-                created_on=regeneration_data.get('created_on'),
-                created_at=regeneration_data.get('created_at'),
-                updated_by=regeneration_data.get('updated_by'),
-                updated_on=regeneration_data.get('updated_on'),
-                updated_at=regeneration_data.get('updated_at'),
-            )
-            DB.session.add(new_regeneration)
-            DB.session.commit()
-            counts_regeneration['created'] += 1
+            if existing_regeneration is None:
+                new_regeneration = TRegenerationsStaging(
+                    id_regeneration=regeneration_data.get('id_regeneration'),
+                    id_cycle_placette=cor_cycle_placette_id,
+                    sous_placette=regeneration_data.get('sous_placette'),
+                    code_essence=regeneration_data.get('code_essence'),
+                    recouvrement=regeneration_data.get('recouvrement'),
+                    classe1=regeneration_data.get('classe1'),
+                    classe2=regeneration_data.get('classe2'),
+                    classe3=regeneration_data.get('classe3'),
+                    taillis=regeneration_data.get('taillis'),
+                    abroutissement=regeneration_data.get('abroutissement'),
+                    id_nomenclature_abroutissement=regeneration_data.get('id_nomenclature_abroutissement'),
+                    observation=regeneration_data.get('observation'),
+                    created_by=regeneration_data.get('created_by'),
+                    created_on=regeneration_data.get('created_on'),
+                    created_at=regeneration_data.get('created_at'),
+                    updated_by=regeneration_data.get('updated_by'),
+                    updated_on=regeneration_data.get('updated_on'),
+                    updated_at=regeneration_data.get('updated_at'),
+                )
+                DB.session.add(new_regeneration)
+                DB.session.commit()
+                counts_regeneration['created'] += 1
 
         # Handle updated regenerations
-        if category == 'updated': 
+        elif category == 'updated':
             existing_regeneration = DB.session.query(TRegenerationsStaging).filter_by(
                 id_regeneration=regeneration_data['id_regeneration']
             ).first()
@@ -63,7 +67,7 @@ def insert_or_update_regeneration(category, cor_cycle_placette_category, cor_cyc
                 counts_regeneration['updated'] += 1
 
         # Handle deleted regenerations
-        if category == 'deleted':
+        elif category == 'deleted':
             regeneration_to_delete = DB.session.query(TRegenerationsStaging).filter_by(
                 id_regeneration=regeneration_data['id_regeneration']
             ).first()

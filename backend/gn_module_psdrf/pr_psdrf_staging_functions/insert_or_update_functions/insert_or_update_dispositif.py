@@ -1,5 +1,4 @@
 from geonature.utils.env import DB
-# import model relatively from parent of parent folder
 from ..models_staging import TDispositifsStaging
 
 def insert_or_update_dispositif(data):

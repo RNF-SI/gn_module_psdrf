@@ -11,40 +11,44 @@ def insert_or_update_transect(category, cor_cycle_placette_category, cor_cycle_p
         }
 
         # Implement creation logic for transects
-        if category == 'created':          
+        if category == 'created':
+            existing_transect = DB.session.query(TTransectsStaging).filter_by(
+                id_transect=transect_data.get('id_transect')
+            ).first()
 
-            new_transect = TTransectsStaging(
-                id_transect=transect_data.get('id_transect'),
-                id_cycle_placette=cor_cycle_placette_id,
-                id_transect_orig=transect_data.get('id_transect_orig'),
-                code_essence=transect_data.get('code_essence'),
-                ref_transect=transect_data.get('ref_transect'),
-                distance=transect_data.get('distance'),
-                orientation=transect_data.get('orientation'),
-                azimut_souche=transect_data.get('azimut_souche'),
-                distance_souche=transect_data.get('distance_souche'),
-                diametre=transect_data.get('diametre'),
-                diametre_130=transect_data.get('diametre_130'),
-                ratio_hauteur=transect_data.get('ratio_hauteur'),
-                contact=transect_data.get('contact'),
-                angle=transect_data.get('angle'),
-                chablis=transect_data.get('chablis'),
-                stade_durete=transect_data.get('stade_durete'),
-                stade_ecorce=transect_data.get('stade_ecorce'),
-                observation=transect_data.get('observation'),
-                created_by=transect_data.get('created_by'),
-                created_on=transect_data.get('created_on'),
-                created_at=transect_data.get('created_at'),
-                updated_by=transect_data.get('updated_by'),
-                updated_on=transect_data.get('updated_on'),
-                updated_at=transect_data.get('updated_at'), 
-            )
-            DB.session.add(new_transect)
-            DB.session.commit()
-            counts_transect['created'] += 1
+            if existing_transect is None:
+                new_transect = TTransectsStaging(
+                    id_transect=transect_data.get('id_transect'),
+                    id_cycle_placette=cor_cycle_placette_id,
+                    id_transect_orig=transect_data.get('id_transect_orig'),
+                    code_essence=transect_data.get('code_essence'),
+                    ref_transect=transect_data.get('ref_transect'),
+                    distance=transect_data.get('distance'),
+                    orientation=transect_data.get('orientation'),
+                    azimut_souche=transect_data.get('azimut_souche'),
+                    distance_souche=transect_data.get('distance_souche'),
+                    diametre=transect_data.get('diametre'),
+                    diametre_130=transect_data.get('diametre_130'),
+                    ratio_hauteur=transect_data.get('ratio_hauteur'),
+                    contact=transect_data.get('contact'),
+                    angle=transect_data.get('angle'),
+                    chablis=transect_data.get('chablis'),
+                    stade_durete=transect_data.get('stade_durete'),
+                    stade_ecorce=transect_data.get('stade_ecorce'),
+                    observation=transect_data.get('observation'),
+                    created_by=transect_data.get('created_by'),
+                    created_on=transect_data.get('created_on'),
+                    created_at=transect_data.get('created_at'),
+                    updated_by=transect_data.get('updated_by'),
+                    updated_on=transect_data.get('updated_on'),
+                    updated_at=transect_data.get('updated_at'), 
+                )
+                DB.session.add(new_transect)
+                DB.session.commit()
+                counts_transect['created'] += 1
 
         # Implement update logic for transects
-        if category == 'updated':
+        elif category == 'updated':
             existing_transect = DB.session.query(TTransectsStaging).filter_by(
                 id_transect=transect_data['id_transect']
             ).first()
@@ -74,7 +78,7 @@ def insert_or_update_transect(category, cor_cycle_placette_category, cor_cycle_p
                 counts_transect['updated'] += 1
 
         # Implement deletion logic for transects
-        if category == 'deleted':
+        elif category == 'deleted':
             transect_to_delete = DB.session.query(TTransectsStaging).filter_by(
                 id_transect=transect_data['id_transect']
             ).first()
@@ -82,6 +86,7 @@ def insert_or_update_transect(category, cor_cycle_placette_category, cor_cycle_p
                 DB.session.delete(transect_to_delete)
                 DB.session.commit()
                 counts_transect['deleted'] += 1
+
         return counts_transect
 
     except Exception as e:

@@ -19,6 +19,7 @@ def insert_update_or_delete_bms_mesure(category, bm_category, id_bm, bm_data, bm
                 DB.session.delete(bms_mesure_to_delete)
                 DB.session.commit()
                 counts_bm_mesure['deleted'] += 1
+
         elif category == 'updated':
             existing_bms_mesure = DB.session.query(TBmSup30MesuresStaging).filter_by(
                 id_bm_sup_30_mesure=bms_mesure_data['id_bm_sup_30_mesure']
@@ -41,35 +42,38 @@ def insert_update_or_delete_bms_mesure(category, bm_category, id_bm, bm_data, bm
                 existing_bms_mesure.updated_at = bms_mesure_data.get('updated_at', existing_bms_mesure.updated_at)
                 DB.session.commit()
                 counts_bm_mesure['updated'] += 1
-                
-        elif category == 'created':
 
-            # Insert logic as before
-            new_bms_mesure = TBmSup30MesuresStaging(
-                id_bm_sup_30_mesure=bms_mesure_data.get('id_bm_sup_30_mesure'),
-                id_bm_sup_30=id_bm,
-                id_cycle=bms_mesure_data.get('id_cycle', None),
-                diametre_ini=bms_mesure_data.get('diametre_ini', None),
-                diametre_med=bms_mesure_data.get('diametre_med', None),
-                diametre_fin=bms_mesure_data.get('diametre_fin', None),
-                diametre_130=bms_mesure_data.get('diametre_130', None),
-                longueur=bms_mesure_data.get('longueur', None),
-                ratio_hauteur=bms_mesure_data.get('ratio_hauteur', None),
-                contact=bms_mesure_data.get('contact', None),
-                chablis=bms_mesure_data.get('chablis', None),
-                stade_durete=bms_mesure_data.get('stade_durete', None),
-                stade_ecorce=bms_mesure_data.get('stade_ecorce', None),
-                observation=bms_mesure_data.get('observation', None),
-                created_by=bms_mesure_data.get('created_by', None),
-                updated_by=bms_mesure_data.get('updated_by', None),
-                created_on=bms_mesure_data.get('created_on', None),
-                updated_on=bms_mesure_data.get('updated_on', None),
-                created_at=bms_mesure_data.get('created_at', None),
-                updated_at=bms_mesure_data.get('updated_at', None),
-            )
-            DB.session.add(new_bms_mesure)
-            DB.session.commit()
-            counts_bm_mesure['created'] += 1
+        elif category == 'created':
+            existing_bms_mesure = DB.session.query(TBmSup30MesuresStaging).filter_by(
+                id_bm_sup_30_mesure=bms_mesure_data['id_bm_sup_30_mesure']
+            ).first()
+
+            if existing_bms_mesure is None:
+                new_bms_mesure = TBmSup30MesuresStaging(
+                    id_bm_sup_30_mesure=bms_mesure_data.get('id_bm_sup_30_mesure'),
+                    id_bm_sup_30=id_bm,
+                    id_cycle=bms_mesure_data.get('id_cycle', None),
+                    diametre_ini=bms_mesure_data.get('diametre_ini', None),
+                    diametre_med=bms_mesure_data.get('diametre_med', None),
+                    diametre_fin=bms_mesure_data.get('diametre_fin', None),
+                    diametre_130=bms_mesure_data.get('diametre_130', None),
+                    longueur=bms_mesure_data.get('longueur', None),
+                    ratio_hauteur=bms_mesure_data.get('ratio_hauteur', None),
+                    contact=bms_mesure_data.get('contact', None),
+                    chablis=bms_mesure_data.get('chablis', None),
+                    stade_durete=bms_mesure_data.get('stade_durete', None),
+                    stade_ecorce=bms_mesure_data.get('stade_ecorce', None),
+                    observation=bms_mesure_data.get('observation', None),
+                    created_by=bms_mesure_data.get('created_by', None),
+                    updated_by=bms_mesure_data.get('updated_by', None),
+                    created_on=bms_mesure_data.get('created_on', None),
+                    updated_on=bms_mesure_data.get('updated_on', None),
+                    created_at=bms_mesure_data.get('created_at', None),
+                    updated_at=bms_mesure_data.get('updated_at', None),
+                )
+                DB.session.add(new_bms_mesure)
+                DB.session.commit()
+                counts_bm_mesure['created'] += 1
 
         return counts_bm_mesure
 

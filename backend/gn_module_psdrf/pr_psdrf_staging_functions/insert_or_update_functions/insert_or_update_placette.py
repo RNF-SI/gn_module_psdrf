@@ -1,5 +1,4 @@
 from ..models_staging import TPlacettesStaging
-
 from geonature.utils.env import DB
 
 def insert_or_update_placette(data):
