@@ -236,7 +236,7 @@ def data_verification(data):
       correctionList['Type'].insert(0, None)
       correctionList['StadeE'] = CodeEcorce['Code'].tolist()
       correctionList['StadeE'].insert(0, None)
-      correctionList['Ref_CodeEcolo'] = ["prosilva", "efi", "irstea"]
+      correctionList['Ref_CodeEcolo'] = ["prosilva", "efi", "irstea", "2018"]
       correctionList['Ref_CodeEcolo'].insert(0, None)
 
       if not verificationList: 
@@ -866,6 +866,7 @@ def data_verification(data):
             (~(df_Codes["Ref_CodeEcolo"].str.lower()=="afi")) & 
             (~(df_Codes["Ref_CodeEcolo"].str.lower()=="engref")) & 
             (~(df_Codes["Ref_CodeEcolo"].str.lower()=="prosilva")) & 
+            (~(df_Codes["Ref_CodeEcolo"].str.lower()=="2018")) & 
             (~df_Codes["NumDisp"].isna()) & 
             (~df_Codes["NumPlac"].isna()) & 
             (~df_Codes["NumArbre"].isna()) & 
