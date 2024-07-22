@@ -31,6 +31,17 @@ from celery.exceptions import SoftTimeLimitExceeded
 
 logger = get_task_logger(__name__)
 
+import os
+import tempfile
+import zipfile
+from flask import current_app, jsonify, request, Response
+from celery import Celery
+from celery.exceptions import SoftTimeLimitExceeded
+from celery.utils.log import get_task_logger
+import logging
+
+logger = get_task_logger(__name__)
+
 @celery_app.task(bind=True, soft_time_limit=700, time_limit=900)
 def test_celery(self, id_dispositif, isCarnetToDownload, isPlanDesArbresToDownload, carnetToDownloadParameters, outFilePath):
     logger.info(f"Starting carnet d'analyse of dispositif {id_dispositif}.")
@@ -62,16 +73,30 @@ def test_celery(self, id_dispositif, isCarnetToDownload, isPlanDesArbresToDownlo
         self.update_state(state='SUCCESS', meta={'file_path': temp_file.name, "file_name": zipName})
 
     except SoftTimeLimitExceeded as e:
-        logger.exception("Soft time limit exceed for task id %s", self.request.id)
+        logger.exception("Soft time limit exceeded for task id %s", self.request.id)
+        self.update_state(state='FAILURE', meta={'exc_type': str(type(e).__name__), 'exc_message': str(e)})
+        raise e
+    except OSError as e:
+        logger.exception("OS error during processing task id %s", self.request.id)
+        self.update_state(state='FAILURE', meta={'exc_type': str(type(e).__name__), 'exc_message': str(e)})
+        raise e
+    except zipfile.BadZipFile as e:
+        logger.exception("Zip file error during processing task id %s", self.request.id)
         self.update_state(state='FAILURE', meta={'exc_type': str(type(e).__name__), 'exc_message': str(e)})
         raise e
     except Exception as e:
-        logger.exception("Error during processing task id %s", self.request.id)
-        logger.exception("Error message %s", str(e))
+        logger.exception("General error during processing task id %s", self.request.id)
         self.update_state(state='FAILURE', meta={'exc_type': str(type(e).__name__), 'exc_message': str(e)})
         raise e
+    finally:
+        if temp_file:
+            try:
+                os.remove(temp_file.name)
+            except OSError:
+                pass
 
     return {"file_path": temp_file.name if temp_file else "N/A", "file_name": zipName}
+
 
 @celery_app.task(bind=True, soft_time_limit=2400, time_limit=2600)
 def insert_or_update_data(self, data):
