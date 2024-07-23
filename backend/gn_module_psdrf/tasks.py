@@ -88,12 +88,6 @@ def test_celery(self, id_dispositif, isCarnetToDownload, isPlanDesArbresToDownlo
         logger.exception("General error during processing task id %s", self.request.id)
         self.update_state(state='FAILURE', meta={'exc_type': str(type(e).__name__), 'exc_message': str(e)})
         raise e
-    finally:
-        if temp_file:
-            try:
-                os.remove(temp_file.name)
-            except OSError:
-                pass
 
     return {"file_path": temp_file.name if temp_file else "N/A", "file_name": zipName}
 
