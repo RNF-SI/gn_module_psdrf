@@ -1,9 +1,9 @@
 from ..models_staging import TArbresStaging
-from geonature.utils.env import DB
 from sqlalchemy import func
 from .insert_or_update_arbre_mesure import insert_update_or_delete_arbre_mesure
+from sqlalchemy.exc import IntegrityError
 
-def insert_update_or_delete_arbre(placette_data):
+def insert_update_or_delete_arbre(placette_data, session):
     try:
         counts_arbre = {
             'created': 0,
@@ -24,18 +24,18 @@ def insert_update_or_delete_arbre(placette_data):
                 if category in arbres_data:
                     for arbre_data in arbres_data[category]:
                         id_arbre = arbre_data.get('id_arbre')
-                        existing_arbre = DB.session.query(TArbresStaging).filter_by(
+                        existing_arbre = session.query(TArbresStaging).filter_by(
                             id_arbre=id_arbre
                         ).first()
 
                         if category == 'created':
                             if existing_arbre is None:
-                                max_id_arbre_orig = DB.session.query(func.max(TArbresStaging.id_arbre_orig)).filter_by(
+                                max_id_arbre_orig = session.query(func.max(TArbresStaging.id_arbre_orig)).filter_by(
                                     id_placette=arbre_data.get('id_placette')
                                 ).scalar()
-                                new_id_arbre_orig = (max_id_arbre_orig or 0) + 1 
+                                new_id_arbre_orig = (max_id_arbre_orig or 0) + 1
                                 new_arbre = TArbresStaging(
-                                    id_arbre = id_arbre,
+                                    id_arbre=id_arbre,
                                     id_arbre_orig=new_id_arbre_orig,
                                     id_placette=arbre_data.get('id_placette'),
                                     code_essence=arbre_data.get('code_essence'),
@@ -43,24 +43,29 @@ def insert_update_or_delete_arbre(placette_data):
                                     distance=arbre_data.get('distance'),
                                     taillis=arbre_data.get('taillis', False),
                                     observation=arbre_data.get('observation'),
-                                    created_by= arbre_data.get('created_by'),
-                                    updated_by= arbre_data.get('updated_by'),
-                                    created_on= arbre_data.get('created_on'),
-                                    updated_on= arbre_data.get('updated_on'),
-                                    created_at= arbre_data.get('created_at'),
-                                    updated_at= arbre_data.get('updated_at'),
+                                    created_by=arbre_data.get('created_by'),
+                                    updated_by=arbre_data.get('updated_by'),
+                                    created_on=arbre_data.get('created_on'),
+                                    updated_on=arbre_data.get('updated_on'),
+                                    created_at=arbre_data.get('created_at'),
+                                    updated_at=arbre_data.get('updated_at'),
                                 )
-                                DB.session.add(new_arbre)
-                                DB.session.flush()  # Flush to get the auto-generated id_arbre
-                                created_arbres.append(
-                                    {
-                                        "status": "created",
-                                        "id": new_arbre.id_arbre,
-                                        "new_id_arbre_orig": new_id_arbre_orig
-                                    }
-                                )
-                                counts_arbre['created'] += 1
-                                id_arbre = new_arbre.id_arbre
+                                try:
+                                    session.add(new_arbre)
+                                    session.flush()  # Flush to get the auto-generated id_arbre
+                                    created_arbres.append(
+                                        {
+                                            "status": "created",
+                                            "id": new_arbre.id_arbre,
+                                            "new_id_arbre_orig": new_id_arbre_orig
+                                        }
+                                    )
+                                    counts_arbre['created'] += 1
+                                    id_arbre = new_arbre.id_arbre
+                                except IntegrityError:
+                                    session.rollback()
+                                    print("Duplicate entry found for id_arbre: ", id_arbre)
+                                    continue  # Skip this entry to avoid duplicate
 
                         elif category == 'updated':
                             if existing_arbre:
@@ -77,7 +82,7 @@ def insert_update_or_delete_arbre(placette_data):
 
                         elif category == 'deleted':
                             if existing_arbre:
-                                DB.session.delete(existing_arbre)
+                                session.delete(existing_arbre)
                                 counts_arbre['deleted'] += 1
 
                         if 'arbres_mesures' in arbre_data:
@@ -89,15 +94,16 @@ def insert_update_or_delete_arbre(placette_data):
                                             arbre_category=category,
                                             id_arbre=id_arbre,
                                             arbre_data=arbre_data,
-                                            arbre_mesure_data=arbre_mesure_data
+                                            arbre_mesure_data=arbre_mesure_data,
+                                            session=session
                                         )
                                         if arbre_mesure_results:
                                             counts_arbre_mesure[arbre_mesure_category] += arbre_mesure_results[arbre_mesure_category]
 
-        DB.session.commit()
+        session.commit()
         return created_arbres, counts_arbre, counts_arbre_mesure
 
     except Exception as e:
-        DB.session.rollback()
+        session.rollback()
         print("Error in insert_update_or_delete_arbre: ", str(e))
         raise e

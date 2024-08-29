@@ -1,10 +1,8 @@
 from ..models_staging import CorCyclesPlacettesStaging
-from geonature.utils.env import DB
-from sqlalchemy import func
 from .insert_or_update_regeneration import insert_or_update_regeneration
 from .insert_or_update_transect import insert_or_update_transect
 
-def insert_or_update_cor_cycle_placette(placette_data):
+def insert_or_update_cor_cycle_placette(placette_data, session):
     try:
         counts_cor_cycle_placette = {
             'created': 0,
@@ -21,17 +19,15 @@ def insert_or_update_cor_cycle_placette(placette_data):
             'updated': 0,
             'deleted': 0
         }
-        # define id_cycle_placette
         id_cycle_placette = None
         if 'corCyclesPlacettes' in placette_data:
             cors_cycles_placettes_data = placette_data['corCyclesPlacettes']
 
-            # Process each category: 'created', 'updated', 'deleted'
             for category in ['created', 'updated', 'deleted']:
                 if category in cors_cycles_placettes_data:
                     for cor_cycle_placette_item_data in cors_cycles_placettes_data[category]:
                         id_cycle_placette = cor_cycle_placette_item_data.get('id_cycle_placette')
-                        existing_cor_cycle_placette = DB.session.query(CorCyclesPlacettesStaging).filter_by(
+                        existing_cor_cycle_placette = session.query(CorCyclesPlacettesStaging).filter_by(
                             id_cycle_placette=id_cycle_placette
                         ).first()
 
@@ -62,14 +58,13 @@ def insert_or_update_cor_cycle_placette(placette_data):
                                     created_at=cor_cycle_placette_item_data.get('created_at'),
                                     updated_at=cor_cycle_placette_item_data.get('updated_at'),
                                 )
-                                DB.session.add(new_cor_cycle_placette)
-                                DB.session.commit()
+                                session.add(new_cor_cycle_placette)
+                                session.commit()
                                 counts_cor_cycle_placette['created'] += 1
                                 id_cycle_placette = new_cor_cycle_placette.id_cycle_placette
 
                         elif category == 'updated':
                             if existing_cor_cycle_placette:
-                                # ... update existing fields from cor_cycle_placette_data ...
                                 existing_cor_cycle_placette.id_cycle = cor_cycle_placette_item_data.get('id_cycle', existing_cor_cycle_placette.id_cycle)
                                 existing_cor_cycle_placette.id_placette = cor_cycle_placette_item_data.get('id_placette', existing_cor_cycle_placette.id_placette)
                                 existing_cor_cycle_placette.date_releve = cor_cycle_placette_item_data.get('date_releve', existing_cor_cycle_placette.date_releve)
@@ -89,17 +84,16 @@ def insert_or_update_cor_cycle_placette(placette_data):
                                 existing_cor_cycle_placette.updated_by = cor_cycle_placette_item_data.get('updated_by', existing_cor_cycle_placette.updated_by)
                                 existing_cor_cycle_placette.updated_on = cor_cycle_placette_item_data.get('updated_on', existing_cor_cycle_placette.updated_on)
                                 existing_cor_cycle_placette.updated_at = cor_cycle_placette_item_data.get('updated_at', existing_cor_cycle_placette.updated_at)
-                                DB.session.commit()
+                                session.commit()
                                 counts_cor_cycle_placette['updated'] += 1
                                 id_cycle_placette = existing_cor_cycle_placette.id_cycle_placette
 
                         elif category == 'deleted':
                             if existing_cor_cycle_placette:
-                                DB.session.delete(existing_cor_cycle_placette)
-                                DB.session.commit()
+                                session.delete(existing_cor_cycle_placette)
+                                session.commit()
                                 counts_cor_cycle_placette['deleted'] += 1
 
-                        # Now process regenerations within each cor_cycle_placette
                         if 'regenerations' in cor_cycle_placette_item_data:
                             for regeneration_category in ['created', 'updated', 'deleted']:
                                 if regeneration_category in cor_cycle_placette_item_data['regenerations']:
@@ -107,13 +101,13 @@ def insert_or_update_cor_cycle_placette(placette_data):
                                         regeneration_results = insert_or_update_regeneration(
                                             category=regeneration_category,
                                             cor_cycle_placette_category=category,
-                                            cor_cycle_placette_id=id_cycle_placette,  # Pass the current cor_cycle_placette data
-                                            regeneration_data=regeneration_data
+                                            cor_cycle_placette_id=id_cycle_placette,
+                                            regeneration_data=regeneration_data,
+                                            session=session
                                         )
                                         if regeneration_results:
                                             counts_regenerations[regeneration_category] += regeneration_results[regeneration_category]
 
-                        # Now process transects within each cor_cycle_placette
                         if 'transects' in cor_cycle_placette_item_data:
                             for transect_category in ['created', 'updated', 'deleted']:
                                 if transect_category in cor_cycle_placette_item_data['transects']:
@@ -121,8 +115,9 @@ def insert_or_update_cor_cycle_placette(placette_data):
                                         transect_results = insert_or_update_transect(
                                             category=transect_category,
                                             cor_cycle_placette_category=category,
-                                            cor_cycle_placette_id=id_cycle_placette,  # Pass the current cor_cycle_placette data
-                                            transect_data=transect_data
+                                            cor_cycle_placette_id=id_cycle_placette,
+                                            transect_data=transect_data,
+                                            session=session
                                         )
                                         if transect_results:
                                             counts_transects[transect_category] += transect_results[transect_category]
@@ -130,6 +125,6 @@ def insert_or_update_cor_cycle_placette(placette_data):
         return counts_cor_cycle_placette, counts_regenerations, counts_transects
 
     except Exception as e:
-        DB.session.rollback()
+        session.rollback()
         print("Error in insert_or_update_cor_cycle_placette: ", str(e))
         raise e

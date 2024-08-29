@@ -8,7 +8,7 @@ import zipfile
 import os
 import tempfile
 from datetime import datetime
-from sqlalchemy.orm import joinedload, aliased
+from sqlalchemy.orm import sessionmaker, joinedload, aliased
 
 from geonature.utils.env import DB
 from .models import TDispositifs
@@ -92,38 +92,41 @@ def test_celery(self, id_dispositif, isCarnetToDownload, isPlanDesArbresToDownlo
     return {"file_path": temp_file.name if temp_file else "N/A", "file_name": zipName}
 
 
+
 @celery_app.task(bind=True, soft_time_limit=2400, time_limit=2600)
 def insert_or_update_data(self, data):
+    Session = sessionmaker(bind=DB.engine)
+    session = Session()
 
     print('celery task started')
     logger.info(f"Inserting data on staging DB.")
     created_arbres = []
     created_arbres_temp = []
     counts_arbre = {
-            'created': 0,
-            'updated': 0,
-            'deleted': 0
-        }
+        'created': 0,
+        'updated': 0,
+        'deleted': 0
+    }
     counts_arbre_temp = {}
     counts_arbre_mesure = {
-            'created': 0,
-            'updated': 0,
-            'deleted': 0
-        }
+        'created': 0,
+        'updated': 0,
+        'deleted': 0
+    }
     counts_arbre_mesure_temp = {}
     created_bms = []
     created_bms_temp = []
     counts_bm = {
-            'created': 0,
-            'updated': 0,
-            'deleted': 0
-        }
+        'created': 0,
+        'updated': 0,
+        'deleted': 0
+    }
     counts_bm_temp = {}
     counts_bm_mesure = {
-            'created': 0,
-            'updated': 0,
-            'deleted': 0
-        }
+        'created': 0,
+        'updated': 0,
+        'deleted': 0
+    }
     counts_bm_mesure_temp = {}
     counts_repere = {
         'created': 0,
@@ -152,87 +155,92 @@ def insert_or_update_data(self, data):
 
     print("start insert_or_update_data")
     try:
-        with current_app.app_context():
-            if 'id_dispositif' in data:
-                result = insert_or_update_dispositif(data)
-                if 'cycles' in data:
-                    for cycle_data in data['cycles']:
-                        cycle_result = insert_or_update_cycle(cycle_data)
+        with session.begin():  # Start a transaction
+            with current_app.app_context():
+                if 'id_dispositif' in data:
+                    result = insert_or_update_dispositif(data, session)
+                    if 'cycles' in data:
+                        for cycle_data in data['cycles']:
+                            cycle_result = insert_or_update_cycle(cycle_data, session)
 
-                if 'placettes' in data:
-                    for placette_data in data['placettes']:
-                        placette_result = insert_or_update_placette(placette_data)
-                    
-                        created_arbres_temp, counts_arbre_temp, counts_arbre_mesure_temp = insert_update_or_delete_arbre(placette_data)
-                        created_arbres.extend(created_arbres_temp)
-                        counts_arbre["created"] += counts_arbre_temp["created"]
-                        counts_arbre["updated"] += counts_arbre_temp["updated"]
-                        counts_arbre["deleted"] += counts_arbre_temp["deleted"]
-                        counts_arbre_mesure["created"] += counts_arbre_mesure_temp["created"]
-                        counts_arbre_mesure["updated"] += counts_arbre_mesure_temp["updated"]
-                        counts_arbre_mesure["deleted"] += counts_arbre_mesure_temp["deleted"]
+                    if 'placettes' in data:
+                        for placette_data in data['placettes']:
+                            placette_result = insert_or_update_placette(placette_data, session)
 
-                        created_bms_temp, counts_bm_temp, counts_bm_mesure_temp = insert_update_or_delete_bms(placette_data)
-                        created_bms.extend(created_bms_temp)
-                        counts_bm["created"] += counts_bm_temp["created"]
-                        counts_bm["updated"] += counts_bm_temp["updated"]
-                        counts_bm["deleted"] += counts_bm_temp["deleted"]
-                        counts_bm_mesure["created"] += counts_bm_mesure_temp["created"]
-                        counts_bm_mesure["updated"] += counts_bm_mesure_temp["updated"]
-                        counts_bm_mesure["deleted"] += counts_bm_mesure_temp["deleted"]
+                            created_arbres_temp, counts_arbre_temp, counts_arbre_mesure_temp = insert_update_or_delete_arbre(placette_data, session)
+                            created_arbres.extend(created_arbres_temp)
+                            counts_arbre["created"] += counts_arbre_temp["created"]
+                            counts_arbre["updated"] += counts_arbre_temp["updated"]
+                            counts_arbre["deleted"] += counts_arbre_temp["deleted"]
+                            counts_arbre_mesure["created"] += counts_arbre_mesure_temp["created"]
+                            counts_arbre_mesure["updated"] += counts_arbre_mesure_temp["updated"]
+                            counts_arbre_mesure["deleted"] += counts_arbre_mesure_temp["deleted"]
 
-                        counts_repere_temp = insert_update_or_delete_repere(placette_data)
-                        counts_repere["created"] += counts_repere_temp["created"]
-                        counts_repere["updated"] += counts_repere_temp["updated"]
-                        counts_repere["deleted"] += counts_repere_temp["deleted"]
-                        logger.info(f"Starting carnet d'analyse of dispositif {counts_repere['created']}.")
+                            created_bms_temp, counts_bm_temp, counts_bm_mesure_temp = insert_update_or_delete_bms(placette_data, session)
+                            created_bms.extend(created_bms_temp)
+                            counts_bm["created"] += counts_bm_temp["created"]
+                            counts_bm["updated"] += counts_bm_temp["updated"]
+                            counts_bm["deleted"] += counts_bm_temp["deleted"]
+                            counts_bm_mesure["created"] += counts_bm_mesure_temp["created"]
+                            counts_bm_mesure["updated"] += counts_bm_mesure_temp["updated"]
+                            counts_bm_mesure["deleted"] += counts_bm_mesure_temp["deleted"]
 
-                        counts_cor_cycle_placette_temp, counts_regeneration_temp, counts_transect_temp = insert_or_update_cor_cycle_placette(placette_data)
-                        counts_cor_cycle_placette["created"] += counts_cor_cycle_placette_temp["created"]
-                        counts_cor_cycle_placette["updated"] += counts_cor_cycle_placette_temp["updated"]
-                        counts_cor_cycle_placette["deleted"] += counts_cor_cycle_placette_temp["deleted"]
-                        counts_regeneration["created"] += counts_regeneration_temp["created"]
-                        counts_regeneration["updated"] += counts_regeneration_temp["updated"]
-                        counts_regeneration["deleted"] += counts_regeneration_temp["deleted"]
-                        counts_transect["created"] += counts_transect_temp["created"]
-                        counts_transect["updated"] += counts_transect_temp["updated"]
-                        counts_transect["deleted"] += counts_transect_temp["deleted"]
+                            counts_repere_temp = insert_update_or_delete_repere(placette_data, session)
+                            counts_repere["created"] += counts_repere_temp["created"]
+                            counts_repere["updated"] += counts_repere_temp["updated"]
+                            counts_repere["deleted"] += counts_repere_temp["deleted"]
+                            logger.info(f"Starting carnet d'analyse of dispositif {counts_repere['created']}.")
+
+                            counts_cor_cycle_placette_temp, counts_regeneration_temp, counts_transect_temp = insert_or_update_cor_cycle_placette(placette_data, session)
+                            counts_cor_cycle_placette["created"] += counts_cor_cycle_placette_temp["created"]
+                            counts_cor_cycle_placette["updated"] += counts_cor_cycle_placette_temp["updated"]
+                            counts_cor_cycle_placette["deleted"] += counts_cor_cycle_placette_temp["deleted"]
+                            counts_regeneration["created"] += counts_regeneration_temp["created"]
+                            counts_regeneration["updated"] += counts_regeneration_temp["updated"]
+                            counts_regeneration["deleted"] += counts_regeneration_temp["deleted"]
+                            counts_transect["created"] += counts_transect_temp["created"]
+                            counts_transect["updated"] += counts_transect_temp["updated"]
+                            counts_transect["deleted"] += counts_transect_temp["deleted"]
 
             self.update_state(
                 state='SUCCESS', 
                 meta={
                     'created_arbres': created_arbres, 
                     'counts_arbre': counts_arbre, 
-                    'counts_arbre_mesure':counts_arbre_mesure, 
-                    'created_bms':created_bms, 
+                    'counts_arbre_mesure': counts_arbre_mesure, 
+                    'created_bms': created_bms, 
                     'counts_bm': counts_bm, 
                     'counts_bm_mesure': counts_bm_mesure, 
                     'counts_repere': counts_repere, 
                     'counts_cor_cycle_placette': counts_cor_cycle_placette, 
                     'counts_regeneration': counts_regeneration, 
                     'counts_transect': counts_transect,
-                    })
+                })
 
     except SoftTimeLimitExceeded as e:
+        session.rollback()
         logger.exception("Soft time limit exceed for task id %s", self.request.id)
         self.update_state(state='FAILURE', meta={'exc_type': str(type(e).__name__), 'exc_message': str(e)})
         raise e
     except Exception as e:
+        session.rollback()
         print("Error in insert_or_update_data: ", str(e))
         raise e
-    
+    finally:
+        session.close()  # Ensure the session is closed
+
     return {
         'created_arbres': created_arbres, 
         'counts_arbre': counts_arbre, 
-        'counts_arbre_mesure':counts_arbre_mesure, 
-        'created_bms':created_bms, 
+        'counts_arbre_mesure': counts_arbre_mesure, 
+        'created_bms': created_bms, 
         'counts_bm': counts_bm, 
         'counts_bm_mesure': counts_bm_mesure,
         'counts_repere': counts_repere, 
         'counts_cor_cycle_placette': counts_cor_cycle_placette, 
         'counts_regeneration': counts_regeneration, 
         'counts_transect': counts_transect
-        }
+    }
 
 
 # Task to get all the data of a dispositif from the prod database

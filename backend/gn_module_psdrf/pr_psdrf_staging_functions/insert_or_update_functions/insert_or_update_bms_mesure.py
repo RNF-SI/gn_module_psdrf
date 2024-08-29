@@ -1,8 +1,6 @@
 from ..models_staging import TBmSup30MesuresStaging
-from geonature.utils.env import DB
-from sqlalchemy import func
 
-def insert_update_or_delete_bms_mesure(category, bm_category, id_bm, bm_data, bms_mesure_data):
+def insert_update_or_delete_bms_mesure(category, bm_category, id_bm, bm_data, bms_mesure_data, session):
     try:
         counts_bm_mesure = {
             'created': 0,
@@ -12,16 +10,16 @@ def insert_update_or_delete_bms_mesure(category, bm_category, id_bm, bm_data, bm
 
         if category == 'deleted':
             # Delete logic
-            bms_mesure_to_delete = DB.session.query(TBmSup30MesuresStaging).filter_by(
+            bms_mesure_to_delete = session.query(TBmSup30MesuresStaging).filter_by(
                 id_bm_sup_30_mesure=bms_mesure_data['id_bm_sup_30_mesure']
             ).first()
             if bms_mesure_to_delete:
-                DB.session.delete(bms_mesure_to_delete)
-                DB.session.commit()
+                session.delete(bms_mesure_to_delete)
+                session.commit()
                 counts_bm_mesure['deleted'] += 1
 
         elif category == 'updated':
-            existing_bms_mesure = DB.session.query(TBmSup30MesuresStaging).filter_by(
+            existing_bms_mesure = session.query(TBmSup30MesuresStaging).filter_by(
                 id_bm_sup_30_mesure=bms_mesure_data['id_bm_sup_30_mesure']
             ).first()
 
@@ -40,11 +38,11 @@ def insert_update_or_delete_bms_mesure(category, bm_category, id_bm, bm_data, bm
                 existing_bms_mesure.updated_by = bms_mesure_data.get('updated_by', existing_bms_mesure.updated_by)
                 existing_bms_mesure.updated_on = bms_mesure_data.get('updated_on', existing_bms_mesure.updated_on)
                 existing_bms_mesure.updated_at = bms_mesure_data.get('updated_at', existing_bms_mesure.updated_at)
-                DB.session.commit()
+                session.commit()
                 counts_bm_mesure['updated'] += 1
 
         elif category == 'created':
-            existing_bms_mesure = DB.session.query(TBmSup30MesuresStaging).filter_by(
+            existing_bms_mesure = session.query(TBmSup30MesuresStaging).filter_by(
                 id_bm_sup_30_mesure=bms_mesure_data['id_bm_sup_30_mesure']
             ).first()
 
@@ -71,13 +69,13 @@ def insert_update_or_delete_bms_mesure(category, bm_category, id_bm, bm_data, bm
                     created_at=bms_mesure_data.get('created_at', None),
                     updated_at=bms_mesure_data.get('updated_at', None),
                 )
-                DB.session.add(new_bms_mesure)
-                DB.session.commit()
+                session.add(new_bms_mesure)
+                session.commit()
                 counts_bm_mesure['created'] += 1
 
         return counts_bm_mesure
 
     except Exception as e:
-        DB.session.rollback()
+        session.rollback()
         print("Error in insert_update_or_delete_bms_mesure: ", str(e))
         raise e

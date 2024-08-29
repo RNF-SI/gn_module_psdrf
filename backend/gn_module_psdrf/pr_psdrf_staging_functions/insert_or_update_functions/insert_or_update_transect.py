@@ -1,8 +1,6 @@
 from ..models_staging import TTransectsStaging
-from geonature.utils.env import DB
-from sqlalchemy import func
 
-def insert_or_update_transect(category, cor_cycle_placette_category, cor_cycle_placette_id, transect_data):
+def insert_or_update_transect(category, cor_cycle_placette_category, cor_cycle_placette_id, transect_data, session):
     try:
         counts_transect = {
             'created': 0,
@@ -10,9 +8,8 @@ def insert_or_update_transect(category, cor_cycle_placette_category, cor_cycle_p
             'deleted': 0
         }
 
-        # Implement creation logic for transects
         if category == 'created':
-            existing_transect = DB.session.query(TTransectsStaging).filter_by(
+            existing_transect = session.query(TTransectsStaging).filter_by(
                 id_transect=transect_data.get('id_transect')
             ).first()
 
@@ -43,13 +40,12 @@ def insert_or_update_transect(category, cor_cycle_placette_category, cor_cycle_p
                     updated_on=transect_data.get('updated_on'),
                     updated_at=transect_data.get('updated_at'), 
                 )
-                DB.session.add(new_transect)
-                DB.session.commit()
+                session.add(new_transect)
+                session.commit()
                 counts_transect['created'] += 1
 
-        # Implement update logic for transects
         elif category == 'updated':
-            existing_transect = DB.session.query(TTransectsStaging).filter_by(
+            existing_transect = session.query(TTransectsStaging).filter_by(
                 id_transect=transect_data['id_transect']
             ).first()
             if existing_transect:
@@ -74,22 +70,21 @@ def insert_or_update_transect(category, cor_cycle_placette_category, cor_cycle_p
                 existing_transect.updated_on = transect_data.get('updated_on', existing_transect.updated_on)
                 existing_transect.updated_at = transect_data.get('updated_at', existing_transect.updated_at)
   
-                DB.session.commit()
+                session.commit()
                 counts_transect['updated'] += 1
 
-        # Implement deletion logic for transects
         elif category == 'deleted':
-            transect_to_delete = DB.session.query(TTransectsStaging).filter_by(
+            transect_to_delete = session.query(TTransectsStaging).filter_by(
                 id_transect=transect_data['id_transect']
             ).first()
             if transect_to_delete:
-                DB.session.delete(transect_to_delete)
-                DB.session.commit()
+                session.delete(transect_to_delete)
+                session.commit()
                 counts_transect['deleted'] += 1
 
         return counts_transect
 
     except Exception as e:
-        DB.session.rollback()
+        session.rollback()
         print("Error in insert_or_update_transect: ", str(e))
         raise e
