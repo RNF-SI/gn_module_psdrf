@@ -1,4 +1,4 @@
-from flask import Blueprint, request, make_response, send_file, send_from_directory, Response, jsonify
+from flask import Blueprint, request, make_response, send_file, send_from_directory, Response, jsonify, current_app
 from sqlalchemy.orm import subqueryload, joinedload
 from sqlalchemy.sql import func, distinct
 from sqlalchemy.exc import SQLAlchemyError
@@ -12,6 +12,8 @@ import json
 import time
 import logging
 import os
+from datetime import datetime
+
 
 from geonature.utils.env import DB
 # from geonature.utils.utilssqlalchemy import json_resp, get_geojson_feature
@@ -706,27 +708,63 @@ def get_PSDRF_t_nomenclatures():
     except Exception:
         raise
 
+
 @blueprint.route('/export_dispositif_from_dendro3', methods=['POST'])
 def export_dispositif():
     """
-    Receives a dispositif entity
-
-    as JSON and exports it to the database.
-
+    Receives a dispositif entity as JSON and exports it to the database.
     Returns the number of added entities and that have updated
     """
     data = request.get_json()
-    # print(data)
+    
     if not data:
         return {"success": False, "message": "No data provided."}, 400
-    # try:
+
+    # Save the received JSON data to a file for debugging purposes
+    try:
+        save_json_data_for_debugging(data)
+    except Exception as e:
+        # Handle any errors that occur while saving the JSON file
+        return {"success": False, "message": f"Failed to save JSON data: {str(e)}"}, 500
+
     print('celery task before')
     task = insert_or_update_data.delay(data)
     print('celery task after')
     print(task.id)
-    # print(jsonify({'task_id': task.id}))
+
     return jsonify({'task_id': task.id}), 202
 
+def save_json_data_for_debugging(data):
+    """
+    Saves the incoming JSON data to a file for debugging.
+    The file is named using the dispositif ID and the current timestamp.
+    """
+    try:
+        # Get the directory of the current script file
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+
+        # Extract the dispositif ID from the data
+        dispositif_id = str(data.get('id_dispositif', 'unknown_dispositif'))
+
+        # Ensure the directory named after the dispositif ID exists within the current directory
+        dispositif_dir = os.path.join(current_dir, 'debug_data', dispositif_id)
+        os.makedirs(dispositif_dir, exist_ok=True)
+
+        # Generate the filename using the current timestamp
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f"{timestamp}.json"
+
+        # Full path to save the file
+        file_path = os.path.join(dispositif_dir, filename)
+
+        # Save the JSON data to the file
+        with open(file_path, 'w', encoding='utf-8') as json_file:
+            json.dump(data, json_file, ensure_ascii=False, indent=4)
+
+        print(f"Saved JSON data to {file_path}")
+
+    except Exception as e:
+        print(f"Failed to save JSON data for debugging: {e}")
 
 @blueprint.route('/export_dispositif_from_dendro3/status/<task_id>', methods=['GET'])
 def get_export_task_status(task_id):
