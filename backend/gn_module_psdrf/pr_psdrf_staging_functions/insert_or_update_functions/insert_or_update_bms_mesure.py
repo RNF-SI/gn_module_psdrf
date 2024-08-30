@@ -1,13 +1,13 @@
 from ..models_staging import TBmSup30MesuresStaging
 
 def insert_update_or_delete_bms_mesure(category, bm_category, id_bm, bm_data, bms_mesure_data, session):
-    try:
-        counts_bm_mesure = {
-            'created': 0,
-            'updated': 0,
-            'deleted': 0
-        }
+    counts_bm_mesure = {
+        'created': 0,
+        'updated': 0,
+        'deleted': 0
+    }
 
+    try:
         if category == 'deleted':
             # Delete logic
             bms_mesure_to_delete = session.query(TBmSup30MesuresStaging).filter_by(
@@ -15,7 +15,6 @@ def insert_update_or_delete_bms_mesure(category, bm_category, id_bm, bm_data, bm
             ).first()
             if bms_mesure_to_delete:
                 session.delete(bms_mesure_to_delete)
-                session.commit()
                 counts_bm_mesure['deleted'] += 1
 
         elif category == 'updated':
@@ -38,7 +37,6 @@ def insert_update_or_delete_bms_mesure(category, bm_category, id_bm, bm_data, bm
                 existing_bms_mesure.updated_by = bms_mesure_data.get('updated_by', existing_bms_mesure.updated_by)
                 existing_bms_mesure.updated_on = bms_mesure_data.get('updated_on', existing_bms_mesure.updated_on)
                 existing_bms_mesure.updated_at = bms_mesure_data.get('updated_at', existing_bms_mesure.updated_at)
-                session.commit()
                 counts_bm_mesure['updated'] += 1
 
         elif category == 'created':
@@ -70,12 +68,10 @@ def insert_update_or_delete_bms_mesure(category, bm_category, id_bm, bm_data, bm
                     updated_at=bms_mesure_data.get('updated_at', None),
                 )
                 session.add(new_bms_mesure)
-                session.commit()
                 counts_bm_mesure['created'] += 1
 
         return counts_bm_mesure
 
     except Exception as e:
-        session.rollback()
         print("Error in insert_update_or_delete_bms_mesure: ", str(e))
         raise e

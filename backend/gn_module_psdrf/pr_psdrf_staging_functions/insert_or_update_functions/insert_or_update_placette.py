@@ -13,7 +13,6 @@ def insert_or_update_placette(data, session):
             existing_placette.correction_pente = data.get('correction_pente', existing_placette.correction_pente)
             existing_placette.exposition = data.get('exposition', existing_placette.exposition)
 
-            session.commit()
             return "Placette updated successfully."
         else:
             new_placette = TPlacettesStaging(
@@ -27,9 +26,7 @@ def insert_or_update_placette(data, session):
                 exposition=data.get('exposition', None),
             )
             session.add(new_placette)
-            session.commit()
             return "Placette inserted successfully."
     except Exception as e:
-        session.rollback()
         print("Error in insert_or_update_placette: ", str(e))
         raise e

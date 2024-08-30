@@ -1,13 +1,13 @@
 from ..models_staging import TTransectsStaging
 
 def insert_or_update_transect(category, cor_cycle_placette_category, cor_cycle_placette_id, transect_data, session):
-    try:
-        counts_transect = {
-            'created': 0,
-            'updated': 0,
-            'deleted': 0
-        }
+    counts_transect = {
+        'created': 0,
+        'updated': 0,
+        'deleted': 0
+    }
 
+    try:
         if category == 'created':
             existing_transect = session.query(TTransectsStaging).filter_by(
                 id_transect=transect_data.get('id_transect')
@@ -41,7 +41,6 @@ def insert_or_update_transect(category, cor_cycle_placette_category, cor_cycle_p
                     updated_at=transect_data.get('updated_at'), 
                 )
                 session.add(new_transect)
-                session.commit()
                 counts_transect['created'] += 1
 
         elif category == 'updated':
@@ -69,8 +68,6 @@ def insert_or_update_transect(category, cor_cycle_placette_category, cor_cycle_p
                 existing_transect.updated_by = transect_data.get('updated_by', existing_transect.updated_by)
                 existing_transect.updated_on = transect_data.get('updated_on', existing_transect.updated_on)
                 existing_transect.updated_at = transect_data.get('updated_at', existing_transect.updated_at)
-  
-                session.commit()
                 counts_transect['updated'] += 1
 
         elif category == 'deleted':
@@ -79,12 +76,10 @@ def insert_or_update_transect(category, cor_cycle_placette_category, cor_cycle_p
             ).first()
             if transect_to_delete:
                 session.delete(transect_to_delete)
-                session.commit()
                 counts_transect['deleted'] += 1
 
         return counts_transect
 
     except Exception as e:
-        session.rollback()
         print("Error in insert_or_update_transect: ", str(e))
         raise e

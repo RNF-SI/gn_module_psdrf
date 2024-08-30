@@ -4,19 +4,19 @@ from .insert_or_update_arbre_mesure import insert_update_or_delete_arbre_mesure
 from sqlalchemy.exc import IntegrityError
 
 def insert_update_or_delete_arbre(placette_data, session):
-    try:
-        counts_arbre = {
-            'created': 0,
-            'updated': 0,
-            'deleted': 0
-        }
-        counts_arbre_mesure = {
-            'created': 0,
-            'updated': 0,
-            'deleted': 0
-        }
-        created_arbres = []
+    counts_arbre = {
+        'created': 0,
+        'updated': 0,
+        'deleted': 0
+    }
+    counts_arbre_mesure = {
+        'created': 0,
+        'updated': 0,
+        'deleted': 0
+    }
+    created_arbres = []
 
+    try:
         if 'arbres' in placette_data:
             arbres_data = placette_data['arbres']
 
@@ -100,10 +100,8 @@ def insert_update_or_delete_arbre(placette_data, session):
                                         if arbre_mesure_results:
                                             counts_arbre_mesure[arbre_mesure_category] += arbre_mesure_results[arbre_mesure_category]
 
-        session.commit()
         return created_arbres, counts_arbre, counts_arbre_mesure
 
     except Exception as e:
-        session.rollback()
         print("Error in insert_update_or_delete_arbre: ", str(e))
         raise e

@@ -1,13 +1,13 @@
 from ..models_staging import TReperesStaging
 
 def insert_update_or_delete_repere(placette_data, session):
-    try:
-        counts_repere = {
-            'created': 0,
-            'updated': 0,
-            'deleted': 0
-        }
+    counts_repere = {
+        'created': 0,
+        'updated': 0,
+        'deleted': 0
+    }
 
+    try:
         if 'reperes' in placette_data:
             reperes_data = placette_data['reperes']
 
@@ -37,7 +37,6 @@ def insert_update_or_delete_repere(placette_data, session):
                                     updated_at=repere_data.get('updated_at'),
                                 )
                                 session.add(new_repere)
-                                session.commit()
                                 counts_repere['created'] += 1
 
                         elif category == 'updated':
@@ -50,18 +49,15 @@ def insert_update_or_delete_repere(placette_data, session):
                                 existing_repere.updated_by = repere_data.get('updated_by', existing_repere.updated_by)
                                 existing_repere.updated_on = repere_data.get('updated_on', existing_repere.updated_on)
                                 existing_repere.updated_at = repere_data.get('updated_at', existing_repere.updated_at)
-                                session.commit()
                                 counts_repere['updated'] += 1
 
                         elif category == 'deleted':
                             if existing_repere:
                                 session.delete(existing_repere)
-                                session.commit()
                                 counts_repere['deleted'] += 1
 
         return counts_repere
 
     except Exception as e:
-        session.rollback()
         print("Error in insert_update_or_delete_repere: ", str(e))
         raise e

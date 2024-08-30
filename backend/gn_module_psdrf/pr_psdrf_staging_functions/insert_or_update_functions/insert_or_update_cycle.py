@@ -16,7 +16,6 @@ def insert_or_update_cycle(data, session):
             existing_cycle.date_debut = data.get('date_debut', existing_cycle.date_debut)
             existing_cycle.date_fin = data.get('date_fin', existing_cycle.date_fin)
             existing_cycle.monitor = data.get('monitor', existing_cycle.monitor)
-            session.commit()
             return "Cycle updated successfully."
         else:
             new_cycle = TCyclesStaging(
@@ -28,9 +27,7 @@ def insert_or_update_cycle(data, session):
                 monitor=data.get('monitor', None)
             )
             session.add(new_cycle)
-            session.commit()
             return "Cycle inserted successfully."
     except Exception as e:
-        session.rollback()
         print("Error in insert_or_update_cycle: ", str(e))
         raise e

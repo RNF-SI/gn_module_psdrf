@@ -14,7 +14,6 @@ def insert_or_update_dispositif(data, session):
             existing_dispositif.name = data.get('name', existing_dispositif.name)
             existing_dispositif.id_organisme = data.get('id_organisme', existing_dispositif.id_organisme)
             existing_dispositif.alluvial = data.get('alluvial', existing_dispositif.alluvial)
-            session.commit()
             return "Dispositif updated successfully."
         else:
             new_dispositif = TDispositifsStaging(
@@ -24,9 +23,7 @@ def insert_or_update_dispositif(data, session):
                 alluvial=data.get('alluvial', False)
             )
             session.add(new_dispositif)
-            session.commit()
             return "Dispositif inserted successfully."
     except Exception as e:
-        session.rollback()
         print("Error in insert_or_update_dispositif: ", str(e))
         raise e

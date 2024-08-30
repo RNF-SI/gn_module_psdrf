@@ -3,23 +3,22 @@ from sqlalchemy import func
 from .insert_or_update_bms_mesure import insert_update_or_delete_bms_mesure
 
 def insert_update_or_delete_bms(placette_data, session):
-    try:
-        counts_bm = {
-            'created': 0,
-            'updated': 0,
-            'deleted': 0
-        }
-        counts_bm_mesure = {
-            'created': 0,
-            'updated': 0,
-            'deleted': 0
-        }
-        created_bms = []
+    counts_bm = {
+        'created': 0,
+        'updated': 0,
+        'deleted': 0
+    }
+    counts_bm_mesure = {
+        'created': 0,
+        'updated': 0,
+        'deleted': 0
+    }
+    created_bms = []
 
+    try:
         if 'bms' in placette_data:
             bms_data = placette_data['bms']
 
-            # Process each category: 'created', 'updated', 'deleted'
             for category in ['created', 'updated', 'deleted']:
                 if category in bms_data:
                     for bms_data_item in bms_data[category]:
@@ -53,8 +52,7 @@ def insert_update_or_delete_bms(placette_data, session):
                                     updated_at=bms_data_item.get('updated_at', None),
                                 )
                                 session.add(new_bm)
-                                session.flush()
-                                session.commit()
+                                session.flush()  # Flush to get the auto-generated id_bm
                                 created_bms.append(
                                     {
                                         "status": "created",
@@ -78,14 +76,12 @@ def insert_update_or_delete_bms(placette_data, session):
                                 existing_bms.updated_by = bms_data_item.get('updated_by', existing_bms.updated_by)
                                 existing_bms.updated_on = bms_data_item.get('updated_on', existing_bms.updated_on)
                                 existing_bms.updated_at = bms_data_item.get('updated_at', existing_bms.updated_at)
-                                session.commit()
                                 counts_bm['updated'] += 1
                                 id_bm = existing_bms.id_bm_sup_30
 
                         elif category == 'deleted':
                             if existing_bms:
                                 session.delete(existing_bms)
-                                session.commit()
                                 counts_bm['deleted'] += 1
 
                         if 'bm_sup_30_mesures' in bms_data_item:
@@ -106,6 +102,5 @@ def insert_update_or_delete_bms(placette_data, session):
         return created_bms, counts_bm, counts_bm_mesure
 
     except Exception as e:
-        session.rollback()
         print("Error in insert_update_or_delete_bms: ", str(e))
         raise e

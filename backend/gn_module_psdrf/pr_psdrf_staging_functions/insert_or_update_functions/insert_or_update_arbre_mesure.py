@@ -1,13 +1,13 @@
 from ..models_staging import TArbresMesuresStaging
 
 def insert_update_or_delete_arbre_mesure(category, arbre_category, id_arbre, arbre_data, arbre_mesure_data, session):
-    try:
-        counts_arbre_mesure = {
-            'created': 0,
-            'updated': 0,
-            'deleted': 0
-        }
+    counts_arbre_mesure = {
+        'created': 0,
+        'updated': 0,
+        'deleted': 0
+    }
 
+    try:
         if category == 'deleted':
             # Delete logic
             arbre_mesure_to_delete = session.query(TArbresMesuresStaging).filter_by(
@@ -15,7 +15,6 @@ def insert_update_or_delete_arbre_mesure(category, arbre_category, id_arbre, arb
             ).first()
             if arbre_mesure_to_delete:
                 session.delete(arbre_mesure_to_delete)
-                session.commit()
                 counts_arbre_mesure['deleted'] += 1
 
         elif category == 'updated':
@@ -43,7 +42,6 @@ def insert_update_or_delete_arbre_mesure(category, arbre_category, id_arbre, arb
                 existing_arbre_mesure.updated_by = arbre_mesure_data.get('updated_by', existing_arbre_mesure.updated_by)
                 existing_arbre_mesure.updated_on = arbre_mesure_data.get('updated_on', existing_arbre_mesure.updated_on)
                 existing_arbre_mesure.updated_at = arbre_mesure_data.get('updated_at', existing_arbre_mesure.updated_at)
-                session.commit()
                 counts_arbre_mesure['updated'] += 1
 
         elif category == 'created':
@@ -80,12 +78,10 @@ def insert_update_or_delete_arbre_mesure(category, arbre_category, id_arbre, arb
                     updated_at=arbre_mesure_data.get('updated_at', None)
                 )
                 session.add(new_arbre_mesure)
-                session.commit()
                 counts_arbre_mesure['created'] += 1
 
         return counts_arbre_mesure
 
     except Exception as e:
-        session.rollback()
         print("Error in insert_update_or_delete_arbre_mesure: ", str(e))
         raise e
