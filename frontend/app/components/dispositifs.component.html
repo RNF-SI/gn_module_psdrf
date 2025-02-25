@@ -11,13 +11,13 @@
             Le Protocole de suivi Dendrométrique des Réserves Forestière (PSDRF)
             est un protocole de mesures dendrométriques réalisées sur des
             placettes permanentes de 20 m de rayon, mesurées tous les 10 ans.
-            L’intégralité du cycle de vie de l’arbre (de la régénération au bois
+            L'intégralité du cycle de vie de l'arbre (de la régénération au bois
             mort en décomposition) est mesuré et suivi.
           </p>
           <p>
             Le PSDRF est appliqué depuis 2005 en majorité dans les réserves
             naturelles et réserves biologiques. Mais certains sites en dehors de
-            ces réseaux l’appliquent aussi : dans les CEN, en zone Natura 2000,
+            ces réseaux l'appliquent aussi : dans les CEN, en zone Natura 2000,
             dans des forêts départementales, etc. En 2022, le réseau PSDRF
             compte 172 sites, et plus de 13000 placettes. 25 sites ont effectué
             des remesures, soit environ 3000 placettes.
@@ -40,7 +40,7 @@
           matTooltip="Importer des données"
           (click)="openImportPage()"
         >
-          <mat-icon> upload </mat-icon>
+          <mat-icon>file_upload</mat-icon>
           <span class="user-name">
             {{ currentUser?.user_login }}
           </span>
@@ -52,7 +52,8 @@
           matTooltip="Télécharger Dendro3"
           (click)="goToDownloadPage()"
         >
-          <mat-icon> install_mobile </mat-icon>
+          <mat-icon>get_app</mat-icon>
+          Dendro3
         </button>
 
         <button
@@ -62,7 +63,7 @@
           matTooltip="Accès page admin PSDRF"
           (click)="openPSDRFAdminPage()"
         >
-          <mat-icon> person_add </mat-icon>
+          <mat-icon>person_add</mat-icon>
         </button>
       </div>
 
