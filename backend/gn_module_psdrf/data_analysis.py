@@ -69,6 +69,7 @@ def data_analysis(dispId, isCarnetToDownload, isPlanDesArbresToDownload, carnetT
     
     del r
 
+
 def _clean_output_directory():
     """Clean the output directory by removing all files except .gitignore."""
     for filename in os.listdir(OUTPUT_DIR):
@@ -94,17 +95,14 @@ def _get_dispositif_info(session, dispId):
     """
     # Get dispositif name
     dispNameQuery = session.query(TDispositifs.name).filter(TDispositifs.id_dispositif == dispId)
-    dispName = pd.read_sql_query(str(dispNameQuery.statement), DB.engine)
-    dispName = str(dispName.iloc[0]["name"])
+    with DB.engine.connect() as conn:
+        dispName = dispNameQuery.scalar()
+        dispName = str(dispName)
 
-    # Get last cycle
-    lastCycleQuery = session.query(func.max(TCycles.num_cycle)).filter(TCycles.id_dispositif == dispId)
-    lastCycledf = pd.read_sql_query(str(lastCycleQuery.statement), DB.engine)
+        lastCycleQuery = session.query(func.max(TCycles.num_cycle)).filter(TCycles.id_dispositif == dispId)
+        lastCycle = lastCycleQuery.scalar()
 
-    with ro.default_converter + pandas2ri.converter:
-        r_lastCycle = ro.conversion.py2rpy(lastCycledf)
-        
-    return dispName, r_lastCycle
+    return dispName, lastCycle
 
 def formatBdd2RData(r, dispId, lastCycle, dispName, isCarnetToDownload, isPlanDesArbresToDownload, carnetToDownloadParameters):
     """Format database data for R processing.
@@ -335,9 +333,23 @@ def formatBdd2RData(r, dispId, lastCycle, dispName, isCarnetToDownload, isPlanDe
 
     # Convert to R dataframes
     r_dataframes = {}
-    with ro.default_converter + pandas2ri.converter:
-        for table in tableList:
-            r_dataframes[table['name']] = ro.conversion.py2rpy(table['table'])
+    for table in tableList:
+        df = table['table']
+        if len(df) > 0:  # Vérifier si le DataFrame n'est pas vide
+            # Créer un dictionnaire de colonnes pour R
+            r_dict = {}
+            for col in df.columns:
+                r_dict[col] = ro.StrVector(df[col].astype(str).values)
+            
+            # Créer le DataFrame R
+            with localconverter(ro.default_converter + pandas2ri.converter):
+                r_df = ro.r['data.frame'](**r_dict)
+        else:
+            # Créer un DataFrame R vide avec les bonnes colonnes
+            empty_dict = {col: ro.StrVector([]) for col in df.columns}
+            r_df = ro.r['data.frame'](**empty_dict)
+        
+        r_dataframes[table['name']] = r_df
 
     # Run R analysis
     with open(RSCRIPTS_DIR / 'BDD2RData.R', 'r') as f:
