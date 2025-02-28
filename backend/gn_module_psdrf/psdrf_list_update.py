@@ -1,20 +1,26 @@
-import logging
-from math import isnan
-import rpy2.robjects as robjects
-from rpy2.robjects.packages import STAP
-import pandas as pd
-from geonature.utils.env import DB
-from .models import TCycles, TDispositifs
 import datetime
+import logging
 import os
+from math import isnan
+
+import pandas as pd
+import rpy2.robjects as robjects
+from geonature.utils.env import DB
+from rpy2.robjects.packages import STAP
+
+from .models import TCycles, TDispositifs
+
 
 def psdrf_list_update(psdrf_list_file, update_code_ecologie):
     try:
+        data_dir = "/home/geonatureadmin/gn_module_psdrf/data"
+        
         with open('/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/psdrf_Codes.R', 'r') as f:
             string = f.read()
         psdrf_Codes = STAP(string, "psdrf_Codes")
 
-        psdrf_list_file.save("/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/psdrf_liste/PsdrfListes.xlsx")
+        excel_save_path = "/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/psdrf_liste/PsdrfListes.xlsx"
+        psdrf_list_file.save(excel_save_path)
         
         excel_file_path = "/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/psdrf_liste/PsdrfListes.xlsx"
         
@@ -22,11 +28,13 @@ def psdrf_list_update(psdrf_list_file, update_code_ecologie):
                        'Communes', 'Dispositifs', 'EssReg', 'Referents', 'Tarifs', 'Cycles']
         
         for sheet_name in sheet_names:
-            df = pd.read_excel(open(excel_file_path, 'rb'), sheet_name=sheet_name)
-            csv_file_path = os.path.join("/home/geonatureadmin/gn_module_psdrf/data", f"{sheet_name}.csv")
-            df.to_csv(csv_file_path, index=False) 
+            try:
+                df = pd.read_excel(open(excel_file_path, 'rb'), sheet_name=sheet_name)
+                csv_file_path = os.path.join(data_dir, f"{sheet_name}.csv")
+                df.to_csv(csv_file_path, index=False)
+            except Exception as e:
+                logging.error(f"Error processing sheet {sheet_name}: {e}")
 
-        # Conditionally process the 'CodeEcologie' sheet
         if update_code_ecologie:
             process_code_ecologie(excel_file_path)
         
