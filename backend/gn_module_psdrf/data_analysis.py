@@ -119,6 +119,17 @@ def formatBdd2RData(r, dispId, lastCycle, dispName, isCarnetToDownload, isPlanDe
     Raises:
         RRuntimeError: If there's an error during R processing
     """
+    # Convertir lastCycle en dataframe R pour éviter l'erreur 'nombre de dimensions incorrect'
+    try:
+        import numpy as np
+        # Créer une matrice NumPy avec une seule cellule contenant lastCycle
+        lastCycle_matrix = np.array([[lastCycle]])
+        # Convertir en matrice R
+        lastCycle = ro.r.matrix(ro.FloatVector(lastCycle_matrix.flatten()), nrow=1, ncol=1)
+        logger.info(f"lastCycle convertit en matrice R: {lastCycle}")
+    except Exception as e:
+        logger.warning(f"Échec de conversion de lastCycle en matrice R: {e}. Continuation avec la valeur originale.")
+    
     # Get nomenclature types
     id_type_durete = get_id_type_from_mnemonique("PSDRF_DURETE")
     id_type_ecorce = get_id_type_from_mnemonique("PSDRF_ECORCE")
@@ -336,14 +347,62 @@ def formatBdd2RData(r, dispId, lastCycle, dispName, isCarnetToDownload, isPlanDe
     for table in tableList:
         df = table['table']
         if len(df) > 0:  # Vérifier si le DataFrame n'est pas vide
-            # Créer un dictionnaire de colonnes pour R
-            r_dict = {}
-            for col in df.columns:
-                r_dict[col] = ro.StrVector(df[col].astype(str).values)
+            # Convertir numériquement les colonnes spécifiques qui doivent être numériques
+            if table['name'] == 'Arbres' and 'type' in df.columns:
+                # Convertir la colonne 'type' en numérique
+                df['type'] = pd.to_numeric(df['type'], errors='coerce')
+                logger.info(f"Converted 'type' column to numeric in {table['name']}: {df['type'].dtype}")
             
-            # Créer le DataFrame R
-            with localconverter(ro.default_converter + pandas2ri.converter):
+            # Méthode 1: Conversion manuelle via dictionnaire de colonnes
+            try:
+                # Créer un dictionnaire de colonnes pour R
+                r_dict = {}
+                for col in df.columns:
+                    # Pour certaines colonnes spécifiques, conserver le type numérique
+                    # Liste des colonnes à convertir en numériques
+                    numeric_cols = ['type', 'stade_durete', 'stade_ecorce', 'diametre1', 'diametre2', 
+                                   'azimut', 'distance', 'num_cycle']
+                    
+                    if col.lower() in [c.lower() for c in numeric_cols]:
+                        # Convertir explicitement en numérique
+                        try:
+                            numeric_values = pd.to_numeric(df[col], errors='coerce')
+                            r_dict[col] = ro.FloatVector(numeric_values.fillna(float('nan')).values)
+                            logger.info(f"Converted {col} to numeric in {table['name']}")
+                        except Exception as ne:
+                            logger.warning(f"Failed to convert {col} to numeric: {ne}, using string")
+                            r_dict[col] = ro.StrVector(df[col].astype(str).values)
+                    else:
+                        # Convertir en string pour éviter les problèmes de conversion
+                        r_dict[col] = ro.StrVector(df[col].astype(str).values)
+                
+                # Créer le DataFrame R
                 r_df = ro.r['data.frame'](**r_dict)
+                
+            except Exception as e:
+                logger.warning(f"Méthode 1 de conversion a échoué pour {table['name']}: {e}")
+                
+                # Méthode 2 (alternative): Utiliser pandas2ri.activate() 
+                try:
+                    # Initialiser l'activation de la conversion pandas à R
+                    pandas2ri.activate()
+                    
+                    # Assurer que les colonnes numériques sont converties correctement
+                    for col in df.columns:
+                        if col.lower() in ['type', 'stade_durete', 'stade_ecorce']:
+                            df[col] = pd.to_numeric(df[col], errors='coerce')
+                    
+                    # Convertir directement le DataFrame
+                    r_df = pandas2ri.py2rpy(df)
+                    
+                    # Désactiver ensuite pour éviter des effets secondaires
+                    pandas2ri.deactivate()
+                    
+                except Exception as e2:
+                    logger.error(f"Les deux méthodes de conversion ont échoué pour {table['name']}: {e2}")
+                    # Dernière solution: Créer un dataframe vide
+                    empty_dict = {col: ro.StrVector([]) for col in df.columns}
+                    r_df = ro.r['data.frame'](**empty_dict)
         else:
             # Créer un DataFrame R vide avec les bonnes colonnes
             empty_dict = {col: ro.StrVector([]) for col in df.columns}
@@ -359,7 +418,347 @@ def formatBdd2RData(r, dispId, lastCycle, dispName, isCarnetToDownload, isPlanDe
     Answer_Radar = (ro.NULL if carnetToDownloadParameters['Answer_Radar'] is None 
                    else carnetToDownloadParameters['Answer_Radar'])
 
+    # Activer la journalisation détaillée dans R avec des fonctions améliorées
+    r("""
+    # Définir le chemin des logs
+    log_dir <- "/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/out"
+    error_log_file <- file.path(log_dir, "r_error_log.txt")
+    debug_log_file <- file.path(log_dir, "r_debug_log.txt")
+    trace_log_file <- file.path(log_dir, "r_trace_log.txt")
+    
+    # Fonction pour récupérer le nom du fichier source actuel
+    get_current_filename <- function() {
+      calls <- sys.calls()
+      frames <- sys.frames()
+      
+      for (i in rev(seq_along(calls))) {
+        srcref <- attr(calls[[i]], "srcref")
+        if (!is.null(srcref)) {
+          srcfile <- attr(srcref, "srcfile")
+          if (!is.null(srcfile) && !is.null(srcfile$filename)) {
+            return(srcfile$filename)
+          }
+        }
+        
+        # Essayer de récupérer le fichier source de l'environnement
+        env <- frames[[i]]
+        if (exists("filename", envir = env, inherits = FALSE)) {
+          filename <- get("filename", envir = env)
+          if (is.character(filename) && length(filename) == 1) {
+            return(filename)
+          }
+        }
+      }
+      
+      # Si aucun nom de fichier n'est trouvé, essayer d'autres méthodes
+      if (exists(".current_source_file")) {
+        return(get(".current_source_file"))
+      }
+      
+      return("<unknown>")
+    }
+    
+    # Fonction pour récupérer le numéro de ligne actuel
+    get_current_line <- function() {
+      calls <- sys.calls()
+      for (i in rev(seq_along(calls))) {
+        srcref <- attr(calls[[i]], "srcref")
+        if (!is.null(srcref)) {
+          return(srcref[1])
+        }
+      }
+      return("<unknown>")
+    }
+    
+    # Fonction pour obtenir la pile d'appels formatée
+    get_formatted_call_stack <- function() {
+      calls <- sys.calls()
+      result <- character(length(calls))
+      
+      for (i in seq_along(calls)) {
+        # Récupérer les informations sur la source si disponibles
+        srcref <- attr(calls[[i]], "srcref")
+        file_info <- ""
+        
+        if (!is.null(srcref)) {
+          srcfile <- attr(srcref, "srcfile")
+          if (!is.null(srcfile) && !is.null(srcfile$filename)) {
+            file_path <- srcfile$filename
+            line_num <- srcref[1]
+            file_info <- paste0(" [", basename(file_path), ":", line_num, "]")
+          }
+        }
+        
+        # Formater l'appel
+        call_text <- trimws(deparse(calls[[i]], width.cutoff = 60)[1])
+        if (nchar(call_text) > 100) {
+          call_text <- paste0(substr(call_text, 1, 97), "...")
+        }
+        
+        result[i] <- paste0("  ", i, ": ", call_text, file_info)
+      }
+      
+      return(paste(result, collapse = "\n"))
+    }
+    
+    # Configurer les options d'erreur pour enregistrer la trace complète
+    options(error = function() {
+      err_msg <- geterrmessage()
+      current_file <- tryCatch(get_current_filename(), error = function(e) "<unknown>")
+      current_line <- tryCatch(get_current_line(), error = function(e) "<unknown>")
+      call_stack <- tryCatch(get_formatted_call_stack(), error = function(e) "<no stack available>")
+      
+      # Afficher dans la console
+      cat("\n========== R ERROR ==========\n")
+      cat("Time:", as.character(Sys.time()), "\n")
+      cat("File:", current_file, "Line:", current_line, "\n")
+      cat("Error:", err_msg, "\n")
+      cat("Call Stack:\n", call_stack, "\n")
+      
+      # Variables dans l'environnement d'erreur
+      if (exists("last.dump") && !is.null(last.dump)) {
+        cat("Variables in error environment:\n")
+        var_names <- names(last.dump)
+        # Limiter le nombre de variables affichées pour éviter un débordement
+        if (length(var_names) > 20) {
+          cat(paste(var_names[1:20], collapse = ", "), "... (and", length(var_names) - 20, "more)\n")
+        } else {
+          cat(paste(var_names, collapse = ", "), "\n")
+        }
+      }
+      
+      # Écrire dans le fichier journal
+      sink(file = error_log_file, append = TRUE, split = FALSE)
+      cat("\n\n========== R ERROR ==========\n")
+      cat("Time:", as.character(Sys.time()), "\n")
+      cat("File:", current_file, "Line:", current_line, "\n")
+      cat("Error:", err_msg, "\n")
+      cat("Call Stack:\n", call_stack, "\n")
+      
+      # Afficher plus de détails sur les variables dans le fichier
+      if (exists("last.dump") && !is.null(last.dump)) {
+        cat("Variables in error environment:\n")
+        var_names <- names(last.dump)
+        cat(paste(var_names, collapse = ", "), "\n")
+        
+        # Afficher les dimensions et classes des dataframes
+        for (var_name in var_names) {
+          tryCatch({
+            var_value <- last.dump[[var_name]]
+            if (is.data.frame(var_value)) {
+              cat(var_name, ": data.frame [", nrow(var_value), "x", ncol(var_value), "]\n")
+              cat("  Columns: ", paste(names(var_value), collapse = ", "), "\n")
+            } else if (is.vector(var_value) && length(var_value) < 10) {
+              cat(var_name, ": vector [", length(var_value), "] ", paste(var_value, collapse = ", "), "\n")
+            } else {
+              cat(var_name, ": ", class(var_value)[1], " [", length(var_value), "]\n")
+            }
+          }, error = function(e) {
+            cat(var_name, ": <cannot display>\n")
+          })
+        }
+      }
+      
+      cat("\n")
+      sink()
+    })
+    
+    # Fonction de journalisation améliorée qui inclut le fichier source et la ligne
+    log_debug <- function(message, level = "INFO") {
+      timestamp <- as.character(Sys.time())
+      current_file <- tryCatch(get_current_filename(), error = function(e) "<unknown>")
+      current_line <- tryCatch(get_current_line(), error = function(e) "<unknown>")
+      
+      # Formater le message avec des informations contextuelles
+      formatted_msg <- sprintf("[%s] [%s] %s:%s - %s", 
+                              timestamp, level, basename(current_file), current_line, message)
+      
+      # Écrire dans le fichier journal
+      sink(file = debug_log_file, append = TRUE, split = FALSE)
+      cat(formatted_msg, "\n")
+      sink()
+      
+      # Afficher également dans la console pour un retour immédiat
+      cat(formatted_msg, "\n")
+    }
+    
+    # Fonction pour tracer l'entrée et la sortie des fonctions importantes
+    trace_function <- function(func_name) {
+      timestamp <- as.character(Sys.time())
+      current_file <- tryCatch(get_current_filename(), error = function(e) "<unknown>")
+      current_line <- tryCatch(get_current_line(), error = function(e) "<unknown>")
+      
+      # Obtenir les arguments
+      parent_frame <- parent.frame()
+      args <- as.list(parent_frame)
+      args_str <- tryCatch({
+        args_names <- names(args)
+        if (length(args_names) > 0) {
+          args_info <- character(length(args_names))
+          for (i in seq_along(args_names)) {
+            arg_value <- args[[args_names[i]]]
+            if (is.data.frame(arg_value)) {
+              args_info[i] <- paste0(args_names[i], "=data.frame[", nrow(arg_value), "x", ncol(arg_value), "]")
+            } else if (is.atomic(arg_value) && length(arg_value) == 1) {
+              args_info[i] <- paste0(args_names[i], "=", toString(arg_value))
+            } else {
+              args_info[i] <- paste0(args_names[i], "=", class(arg_value)[1])
+            }
+          }
+          paste(args_info, collapse = ", ")
+        } else {
+          "no args"
+        }
+      }, error = function(e) "error getting args")
+      
+      # Formater le message
+      msg <- sprintf("[%s] [TRACE] %s:%s - ENTER %s(%s)", 
+                     timestamp, basename(current_file), current_line, func_name, args_str)
+      
+      # Écrire dans le fichier journal
+      sink(file = trace_log_file, append = TRUE, split = FALSE)
+      cat(msg, "\n")
+      sink()
+      
+      # Pour faciliter le débogage interactif
+      if (getOption("verbose", FALSE)) {
+        cat(msg, "\n")
+      }
+      
+      # Enregistrer l'heure d'entrée pour calculer la durée
+      enter_time <- Sys.time()
+      
+      # Retourner une fonction pour tracer la sortie
+      function(result = NULL) {
+        exit_time <- Sys.time()
+        duration <- difftime(exit_time, enter_time, units = "secs")
+        
+        result_str <- tryCatch({
+          if (is.null(result)) {
+            "NULL"
+          } else if (is.data.frame(result)) {
+            paste0("data.frame[", nrow(result), "x", ncol(result), "]")
+          } else if (is.atomic(result) && length(result) == 1) {
+            toString(result)
+          } else {
+            paste0(class(result)[1], "[length=", length(result), "]")
+          }
+        }, error = function(e) "error getting result")
+        
+        # Formater le message de sortie
+        msg <- sprintf("[%s] [TRACE] %s:%s - EXIT %s (duration: %.2f secs) => %s", 
+                       as.character(Sys.time()), basename(current_file), current_line,
+                       func_name, as.numeric(duration), result_str)
+        
+        # Écrire dans le fichier journal
+        sink(file = trace_log_file, append = TRUE, split = FALSE)
+        cat(msg, "\n")
+        sink()
+        
+        # Pour faciliter le débogage interactif
+        if (getOption("verbose", FALSE)) {
+          cat(msg, "\n")
+        }
+        
+        return(invisible(result))
+      }
+    }
+    
+    # Fonctions pour différents niveaux de log
+    log_info <- function(message) log_debug(message, "INFO")
+    log_warning <- function(message) log_debug(message, "WARNING")
+    log_error <- function(message) log_debug(message, "ERROR")
+    
+    # Créer un environnement pour stocker des variables globales utiles pour le débogage
+    .debug_env <- new.env()
+    
+    # Fonction pour sauvegarder l'état actuel (utile pour le débogage)
+    save_state <- function(name = paste0("state_", format(Sys.time(), "%H%M%S"))) {
+      state <- list(
+        timestamp = Sys.time(),
+        call_stack = sys.calls(),
+        frames = sys.frames()
+      )
+      
+      # Sauvegarder les variables locales du frame parent
+      parent_frame <- parent.frame()
+      state$variables <- as.list(parent_frame)
+      
+      # Stocker dans l'environnement de débogage
+      assign(name, state, envir = .debug_env)
+      
+      log_info(paste("State saved as", name))
+      return(invisible(name))
+    }
+    
+    # Fonction pour inspecter un objet
+    inspect <- function(obj, name = deparse(substitute(obj))) {
+      if (is.data.frame(obj)) {
+        log_info(paste0("INSPECT ", name, ": data.frame [", nrow(obj), "x", ncol(obj), "]"))
+        log_info(paste0("  Columns: ", paste(names(obj), collapse = ", ")))
+        
+        # Afficher quelques lignes si pas trop grand
+        if (nrow(obj) > 0 && nrow(obj) < 10) {
+          sink(file = debug_log_file, append = TRUE, split = FALSE)
+          cat("  First rows:\n")
+          print(head(obj, 5))
+          sink()
+        }
+      } else if (is.list(obj)) {
+        log_info(paste0("INSPECT ", name, ": list of length ", length(obj)))
+        log_info(paste0("  Names: ", paste(names(obj), collapse = ", ")))
+      } else if (is.vector(obj)) {
+        log_info(paste0("INSPECT ", name, ": vector [", length(obj), "]"))
+        if (length(obj) < 20) {
+          log_info(paste0("  Values: ", paste(obj, collapse = ", ")))
+        }
+      } else {
+        log_info(paste0("INSPECT ", name, ": ", class(obj)[1]))
+      }
+      
+      return(invisible(obj))
+    }
+    
+    # Initialiser les fichiers de log avec un en-tête
+    timestamp <- as.character(Sys.time())
+    header <- paste0("======== Session started at ", timestamp, " ========\n")
+    
+    # Initialiser ou vider les fichiers de logs si trop grands
+    for (file in c(error_log_file, debug_log_file, trace_log_file)) {
+      # Vérifier si le fichier existe et est trop grand (>5MB)
+      if (file.exists(file) && file.size(file) > 5*1024*1024) {
+        # Sauvegarder l'ancien fichier avec un timestamp
+        backup_file <- paste0(file, ".", format(Sys.time(), "%Y%m%d%H%M%S"), ".bak")
+        file.rename(file, backup_file)
+        log_info(paste("Log file", file, "rotated to", backup_file))
+      }
+      
+      # Écrire l'en-tête
+      sink(file = file, append = file.exists(file), split = FALSE)
+      cat(header)
+      sink()
+    }
+    
+    # Informer que le système de logging est prêt
+    log_info("Enhanced R logging system initialized")
+    """)
+    
     try:
+        # Activer l'impression des informations de débogage
+        r('log_debug("Starting R analysis with editDocuments function")')
+        
+        # Assigner les dataframes dans l'environnement R global
+        for name, df in r_dataframes.items():
+            # Assigner le dataframe à l'environnement R global
+            ro.globalenv[name] = df
+            # Maintenant on peut accéder à l'objet dans les expressions R
+            # Utiliser paste() au lieu de + pour concaténer des chaînes en R
+            r(f'log_debug(paste0("DataFrame {name}: ", toString(dim({name})), " rows/cols"))')
+            # Vérifier la structure des colonnes clés
+            if name in ['Placettes', 'Arbres', 'Cycles']:
+                r(f'log_debug(paste0("Types in {name}: NumDisp=", toString(class({name}$NumDisp)), ", Cycle=", toString(class({name}$Cycle))))')
+        
+        # Exécuter la fonction avec traçage
         BDD2Rdata.editDocuments(
             dispId, lastCycle, dispName,
             r_dataframes['Placettes'], r_dataframes['Arbres'],
@@ -368,8 +767,23 @@ def formatBdd2RData(r, dispId, lastCycle, dispName, isCarnetToDownload, isPlanDe
             r_dataframes['Cycles'], isCarnetToDownload,
             isPlanDesArbresToDownload, Answer_Radar
         )
+        r('log_debug("R analysis completed successfully")')
     except RRuntimeError as e:
         logger.error(f"R runtime error occurred: {e}")
+        
+        # Lire et afficher le fichier de log d'erreur R s'il existe
+        error_log_path = "/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/out/r_error_log.txt"
+        try:
+            with open(error_log_path, 'r') as f:
+                error_log = f.read()
+                logger.error(f"R error log:\n{error_log}")
+        except Exception as log_error:
+            logger.error(f"Could not read R error log: {log_error}")
+            
+        # Afficher le message d'erreur R complet
+        r_error_message = str(e)
+        logger.error(f"Full R error message: {r_error_message}")
+        
         raise
 
 def getBooleanColumnsByTable(tableName):
