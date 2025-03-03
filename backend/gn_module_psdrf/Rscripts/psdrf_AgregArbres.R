@@ -93,7 +93,8 @@ psdrf_AgregArbres <- function(
       ))) %>%
       as.data.frame()
     
-    if (dim(Codes)[1] > 0) {
+    # Vérifier si la variable Codes existe avant de l'utiliser
+    if (exists("Codes") && dim(Codes)[1] > 0) {
       tCodes <- 
         Codes %>% 
         select(one_of(c(
@@ -104,6 +105,26 @@ psdrf_AgregArbres <- function(
           "Nha", "Gha", "Vha", "VhaIFN"
         ))) %>%
         as.data.frame()
+    } else {
+      # Créer un dataframe vide mais avec la structure attendue
+      print("ATTENTION: Variable Codes manquante ou vide. Création d'un tCodes vide.")
+      tCodes <- data.frame(
+        NumDisp = numeric(0),
+        NumPlac = character(0),
+        NumArbre = numeric(0),
+        Cycle = numeric(0),
+        Essence = character(0),
+        EssReg = character(0),
+        EssRegPar = character(0),
+        Classe = numeric(0),
+        Cat = character(0),
+        CodeEcolo = character(0),
+        CodeSanit = character(0),
+        Nha = numeric(0),
+        Gha = numeric(0),
+        Vha = numeric(0),
+        VhaIFN = numeric(0)
+      )
     }
     
     if (last_cycle > 1) {
