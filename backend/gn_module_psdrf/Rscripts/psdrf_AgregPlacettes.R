@@ -1,3 +1,20 @@
+# Fonction pour convertir les colonnes Cycle et NumDisp en numérique
+convert_columns_to_numeric <- function(df) {
+  if (is.data.frame(df)) {
+    if ("Cycle" %in% colnames(df)) {
+      df$Cycle <- as.numeric(as.character(df$Cycle))
+    }
+    if ("NumDisp" %in% colnames(df)) {
+      df$NumDisp <- as.numeric(as.character(df$NumDisp))
+    }
+    if ("NumPlac" %in% colnames(df)) {
+      # On garde NumPlac comme chaîne car il peut contenir des lettres
+      df$NumPlac <- as.character(df$NumPlac)
+    }
+  }
+  return(df)
+}
+
 ##### fonction calcul de moyenne et d'ecart-type pour une table et un regroupement donnés  #####
 psdrf_AgregMoySdEr <- function(
   data_table = NULL, 
@@ -7,8 +24,20 @@ psdrf_AgregMoySdEr <- function(
   plot_table = NULL
 ) {
 
+  # Exclure explicitement la colonne 'type' si elle existe dans Regroup
+  if ("type" %in% Regroup) {
+    print("Attention: La colonne 'type' a été exclue des variables de regroupement dans psdrf_AgregMoySdEr.")
+    Regroup <- Regroup[Regroup != "type"]
+  }
+
+  # Sélectionner les colonnes nécessaires en utilisant all_of pour éviter les problèmes
+  select_cols <- c("NumDisp", "NumPlac", "Cycle", "PoidsPlacette")
+  if (length(Regroup) > 0) {
+    select_cols <- c(select_cols, Regroup)
+  }
+  
   df <-
-    plot_table[, c("NumDisp", Regroup, "NumPlac", "Cycle", "PoidsPlacette")] %>%
+    plot_table[, select_cols] %>%
     right_join(data_table, by = c("NumDisp", "NumPlac", "Cycle"))
   
   # --- Cas où table est vide
@@ -61,6 +90,11 @@ psdrf_AgregMoySdEr <- function(
   group_var <- 
     group_var[-match(c("NumPlac", "PoidsPlacette"), group_var)]
   
+  # Exclure explicitement la colonne 'type' des variables de regroupement si elle existe
+  if ("type" %in% group_var) {
+    print("Attention: La colonne 'type' a été exclue des variables de regroupement dans le calcul.")
+    group_var <- group_var[group_var != "type"]
+  }
   
   # --- Table de résultats
   df <-
@@ -72,15 +106,15 @@ psdrf_AgregMoySdEr <- function(
       value1 = PoidsPlacette * value,
       value2 = PoidsPlacette * value ^ 2
     ) %>% #
-    group_by_at(c(group_var, "Cycle", "var")) %>%
+    group_by_at(vars(all_of(c(group_var, "Cycle", "var")))) %>%
     summarise(
-      value1 = sum(value1),
-      value2 = sum(value2)
+      value1 = sum(value1, na.rm = TRUE),
+      value2 = sum(value2, na.rm = TRUE)
     ) %>%
     ungroup() %>%
     left_join(
       table_ponderation, 
-      by = c("NumDisp", Regroup, "Cycle")
+      by = c("NumDisp", "Cycle")
     ) %>% # joindre table_ponderation pour pondération juste
     mutate(
       poids = ifelse(
@@ -98,7 +132,7 @@ psdrf_AgregMoySdEr <- function(
       Er = qt(0.975, nbre) * CV / nbre ^ 0.5 # erreur relative
     ) %>%
     select(
-      group_var, "Cycle", "var", "Poids", "Nbre", "PoidsAcct", "NbreAcct",
+      all_of(group_var), "Cycle", "var", "Poids", "Nbre", "PoidsAcct", "NbreAcct",
       "Moy", "CV", "Er"
     ) %>%
     gather(var_result, value, Moy:Er) %>%
@@ -116,7 +150,7 @@ psdrf_AgregMoySdEr <- function(
     spread(var, value, drop = T, fill = 0) %>%
     left_join(
       table_ponderation, 
-      by = c("NumDisp", Regroup, "Cycle")
+      by = c("NumDisp", "Cycle")
     ) %>%
     rename(
       "PoidsPlacettes" = "Poids",
@@ -180,6 +214,42 @@ psdrf_AgregPlacettes <- function(
   # -- chargement des tables élaborées par placettes
   load("tables/psdrfTablesElaboreesPlac.Rdata")
   
+  # -- Conversion des colonnes en types compatibles pour les jointures
+  print("Conversion des colonnes en types compatibles...")
+  # Convertir les types dans toutes les tables pour éviter les problèmes de jointure
+  if (exists("Placettes")) Placettes <- convert_columns_to_numeric(Placettes)
+  if (exists("Dispositifs")) Dispositifs <- convert_columns_to_numeric(Dispositifs)
+  if (exists("BMSsup30")) BMSsup30 <- convert_columns_to_numeric(BMSsup30)
+  if (exists("BMP")) BMP <- convert_columns_to_numeric(BMP)
+  if (exists("BMSLineaires")) BMSLineaires <- convert_columns_to_numeric(BMSLineaires)
+  
+  # Traitement spécial pour la colonne "type" dans Arbres
+  if (exists("Arbres")) {
+    Arbres <- convert_columns_to_numeric(Arbres)
+    # S'assurer que la colonne 'type' est numérique quand nécessaire pour les calculs
+    if ("type" %in% colnames(Arbres)) {
+      print("Attention: Colonne 'type' détectée dans Arbres. Tentative de conversion en numérique...")
+      # Essayer de convertir en numérique, ou créer une colonne alternative
+      tryCatch({
+        Arbres$type_num <- as.numeric(as.character(Arbres$type))
+        if (all(is.na(Arbres$type_num[!is.na(Arbres$type)]))) {
+          print("La colonne 'type' ne contient pas de valeurs numériques!")
+        } else {
+          print("Conversion de 'type' en numérique réussie!")
+        }
+      }, error = function(e) {
+        print(paste("Erreur lors de la conversion de 'type' en numérique:", e))
+      })
+    }
+  }
+  
+  if (exists("Perches")) Perches <- convert_columns_to_numeric(Perches)
+  if (exists("Taillis")) Taillis <- convert_columns_to_numeric(Taillis)
+  if (exists("Codes")) Codes <- convert_columns_to_numeric(Codes)
+  if (exists("Cat")) Cat <- convert_columns_to_numeric(Cat)
+  if (exists("Cycles")) Cycles <- convert_columns_to_numeric(Cycles)
+  if (exists("CyclesCodes")) CyclesCodes <- convert_columns_to_numeric(CyclesCodes)
+  
   # -- list des tables pour le choix du dispositif/pour le calcul du dernier cycle/ à filtrer
   df_list <- load("tables/psdrfTablesElaboreesPlac.Rdata")
   
@@ -233,6 +303,12 @@ psdrf_AgregPlacettes <- function(
       "résultats groupés par : ", paste0(Regroup, collapse =", ")
     )) # debug
     
+    # Exclure explicitement la colonne 'type' des variables de regroupement
+    if ("type" %in% Regroup) {
+      print("Attention: La colonne 'type' a été exclue des variables de regroupement pour éviter des erreurs.")
+      Regroup <- Regroup[Regroup != "type"]
+    }
+    
     tempTableaux <- c()
     
     # ----- tables pondération - distinction stock et accroissement
@@ -254,14 +330,29 @@ psdrf_AgregPlacettes <- function(
     # table contenant les nombres et les poids des placettes des différents cycles
     # (importance de PoidsAcct et NbreAcct pour cycle > 1)
     if (i == 1) {
+      # Assurons-nous que NumDisp est du même type dans les deux dataframes
+      Placettes_copy <- Placettes
+      if ("NumDisp" %in% colnames(Placettes_copy)) {
+        Placettes_copy$NumDisp <- as.numeric(as.character(Placettes_copy$NumDisp))
+      }
+      
+      Dispositifs_copy <- Dispositifs
+      if ("NumDisp" %in% colnames(Dispositifs_copy)) {
+        Dispositifs_copy$NumDisp <- as.numeric(as.character(Dispositifs_copy$NumDisp))
+      }
+      
       Placettes <-
-        Placettes %>%
-        left_join(Dispositifs[, c("NumDisp", "Nom")], by = "NumDisp") %>%
+        Placettes_copy %>%
+        left_join(Dispositifs_copy[, c("NumDisp", "Nom")], by = "NumDisp") %>%
         rename(Disp = Nom)
     }
+    
+    # Sélectionner uniquement les colonnes nécessaires
+    placettes_select <- Placettes %>%
+      select("NumDisp", all_of(Regroup), "NumPlac", "Cycle", "PoidsPlacette")
+    
     ponderation_DF <-
-      Placettes %>%
-      select("NumDisp", Regroup, "NumPlac", "Cycle", "PoidsPlacette") %>%
+      placettes_select %>%
       rename(Poids = PoidsPlacette) %>%
       mutate(Nbre = 1) %>%
       # on complète les placettes qui seraient éventuellement absentes
@@ -293,9 +384,9 @@ psdrf_AgregPlacettes <- function(
       filter(!is.na(Nbre)) %>% 
       
       # agrégation :
-      group_by_at(c("NumDisp", Regroup, "Cycle")) %>%
+      group_by_at(vars(NumDisp, all_of(Regroup), Cycle)) %>%
       # autre option : quo_Regroup <- quo(!!parse_expr(Regroup)) ; group_by(NumDisp, !!quo_Regroup, Cycle) %>%
-      summarise_at(c("Poids", "Nbre", "PoidsAcct", "NbreAcct"), sum, na.rm = T) %>%
+      summarise_at(vars(Poids, Nbre, PoidsAcct, NbreAcct), sum, na.rm = TRUE) %>%
       ungroup() %>%
       data.frame()
 
