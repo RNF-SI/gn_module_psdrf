@@ -24,6 +24,11 @@
 #' @export
 
 psdrf_Xls2Rdata <- function(repPSDRF, RPlacettes, RArbres, Rbms, Rreges, Rtransects, Rreperes, Rcycles) {
+  # Tracer l'entrée dans cette fonction
+  trace_exit <- trace_function("psdrf_Xls2Rdata")
+  
+  log_info("Début de la fonction psdrf_Xls2Rdata")
+  
   # -- définition nulle des variables utilisées (cf règles de mise en forme des packages R)
   objects <- c(
     "Abroutis", "Angle", "Azimut", "Chablis", "Cheminement", "Class1", 
@@ -37,11 +42,36 @@ psdrf_Xls2Rdata <- function(repPSDRF, RPlacettes, RArbres, Rbms, Rreges, Rtranse
     "Ref_CodeEcolo", "Ref_Habitat", "Ref_Station", "Ref_Typologie", "Repere", 
     "SsPlac", "StadeD", "StadeE", "Station", "Strate", "Taillis", "Type", "Typologie"
   )
-    create_null(objects)
+  
+  log_debug(paste("Initialisation des objets nuls:", paste(objects, collapse=", ")))
+  create_null(objects)
     
   ##### 1/ Initialisation #####
   # -- choix du répertoire de travail
+  log_debug(paste("Répertoire de travail:", repPSDRF))
   setwd(repPSDRF)
+  
+  # Vérifier les données d'entrée
+  log_debug("Vérification des données d'entrée")
+  for (df_name in c("RPlacettes", "RArbres", "Rbms", "Rreges", "Rtransects", "Rreperes", "Rcycles")) {
+    df <- get(df_name)
+    if (is.data.frame(df)) {
+      log_debug(paste0("Input ", df_name, ": [", nrow(df), "x", ncol(df), "] rows/cols"))
+      if (nrow(df) > 0) {
+        # Vérifier les colonnes problématiques
+        if ("type" %in% tolower(names(df))) {
+          type_col <- names(df)[tolower(names(df)) == "type"]
+          type_values <- df[[type_col]]
+          log_debug(paste0("Column '", type_col, "' in ", df_name, ": class=", class(type_values)[1], 
+                         ", first values=", paste(head(type_values), collapse=", ")))
+        }
+      } else {
+        log_warning(paste0("DataFrame ", df_name, " est vide!"))
+      }
+    } else {
+      log_warning(paste0("Variable ", df_name, " n'est pas un DataFrame: ", class(df)[1]))
+    }
+  }
   
   
   # -- initialisation des tables d'import
@@ -464,14 +494,40 @@ psdrf_Xls2Rdata <- function(repPSDRF, RPlacettes, RArbres, Rbms, Rreges, Rtranse
   # ##### / \ #####
   
   # ##### 3/ Sauvegarde #####
+  log_info("Sauvegarde des données traitées")
   setwd(repPSDRF)
   file = file.path(repPSDRF,"tables", "psdrfDonneesBrutes.Rdata")
 
-  save(
-    Placettes, IdArbres, ValArbres, PCQM, Reges, 
-    Transect, BMSsup30, Reperes, Cycles, 
-    file = file
-  )
+  # Log des informations sur les dataframes avant sauvegarde
+  log_debug("Résumé des dataframes à sauvegarder:")
+  for (df_name in c("Placettes", "IdArbres", "ValArbres", "PCQM", "Reges", "Transect", "BMSsup30", "Reperes", "Cycles")) {
+    if (exists(df_name)) {
+      df <- get(df_name)
+      if (is.data.frame(df)) {
+        log_debug(paste0("DataFrame ", df_name, ": [", nrow(df), "x", ncol(df), "] rows/cols"))
+      } else {
+        log_warning(paste0("Variable ", df_name, " n'est pas un DataFrame: ", class(df)[1]))
+      }
+    } else {
+      log_error(paste0("DataFrame ", df_name, " n'existe pas!"))
+    }
+  }
 
+  # Utiliser tryCatch pour capturer les erreurs lors de la sauvegarde
+  tryCatch({
+    save(
+      Placettes, IdArbres, ValArbres, PCQM, Reges, 
+      Transect, BMSsup30, Reperes, Cycles, 
+      file = file
+    )
+    log_info(paste0("Données sauvegardées avec succès dans: ", file))
+  }, error = function(e) {
+    log_error(paste0("Erreur lors de la sauvegarde dans ", file, ": ", e$message))
+    stop(e)  # Relancer l'erreur pour que Python puisse la gérer
+  })
+  
+  log_info("Fonction psdrf_Xls2Rdata terminée avec succès")
+  # Tracer la sortie de la fonction
+  trace_exit()
 }
 
