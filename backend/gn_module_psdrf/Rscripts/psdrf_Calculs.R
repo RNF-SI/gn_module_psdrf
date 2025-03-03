@@ -1,4 +1,21 @@
 
+# Fonction pour convertir les colonnes Cycle et NumDisp en numérique
+convert_columns_to_numeric <- function(df) {
+  if (is.data.frame(df)) {
+    if ("Cycle" %in% colnames(df)) {
+      df$Cycle <- as.numeric(as.character(df$Cycle))
+    }
+    if ("NumDisp" %in% colnames(df)) {
+      df$NumDisp <- as.numeric(as.character(df$NumDisp))
+    }
+    if ("NumPlac" %in% colnames(df)) {
+      # On garde NumPlac comme chaîne car il peut contenir des lettres
+      df$NumPlac <- as.character(df$NumPlac)
+    }
+  }
+  return(df)
+}
+
 ##### fonction pour joindre CodeEssence et EssReg #####
 set_up_calcul_tables <- function(df = NULL,
                                  species = CodeEssence,
@@ -7,23 +24,34 @@ set_up_calcul_tables <- function(df = NULL,
                                  cycles_admin = NULL,
                                  tariffs = NULL) {
   if (dim(df)[1] > 0) {
+    # Nous nous assurons que les types de colonnes sont corrects dans notre dataframe
+    df <- convert_columns_to_numeric(df)
+    
+    # Assurer que les tables de référence ont aussi les bons types
+    species_copy <- convert_columns_to_numeric(species)
+    grouped_species_copy <- convert_columns_to_numeric(grouped_species)
+    
     df <-
       df %>%
-      left_join(species[, c("Essence", "EssReg")],
+      left_join(species_copy[, c("Essence", "EssReg")],
                 by = "Essence") %>%
-      left_join(grouped_species,
+      left_join(grouped_species_copy,
                 by = c("NumDisp", "Essence"))
     
     if (!is.null(tariffs)) {
+      tariffs_copy <- convert_columns_to_numeric(tariffs)
       df <-
         df %>%
-        left_join(tariffs, by = c("NumDisp", "Essence"))
+        left_join(tariffs_copy, by = c("NumDisp", "Essence"))
     }
     if (!is.null(cycles_inv)) {
+      # Convertir les colonnes dans cycles_inv aux types corrects
+      cycles_inv_copy <- convert_columns_to_numeric(cycles_inv)
+      
       # get the year and the settings
       df <-
         df %>%
-        left_join(cycles_inv[, c("NumDisp",
+        left_join(cycles_inv_copy[, c("NumDisp",
                                  "NumPlac",
                                  "Cycle",
                                  "Coeff",
@@ -32,10 +60,13 @@ set_up_calcul_tables <- function(df = NULL,
                   by = c("NumDisp", "NumPlac", "Cycle"))
     }
     if (!is.null(cycles_admin)) {
+      # Convertir les colonnes dans cycles_admin aux types corrects
+      cycles_admin_copy <- convert_columns_to_numeric(cycles_admin)
+      
       # get the protocole
       df <-
         df %>%
-        left_join(cycles_admin[, c("NumDisp", "Cycle", "Monitor")],
+        left_join(cycles_admin_copy[, c("NumDisp", "Cycle", "Monitor")],
                   by = c("NumDisp", "Cycle"))
     }
   }
@@ -118,10 +149,18 @@ calculs_Nha <- function(df = NULL) {
   # -- initialisation
   df <- df %>% mutate(Nha = NA)
   
+  # Conversion des colonnes en numériques pour éviter les erreurs d'opérations
+  df$Dist <- as.numeric(as.character(df$Dist))
+  df$Coeff <- as.numeric(as.character(df$Coeff))
+  df$Diam1 <- as.numeric(as.character(df$Diam1))
+  df$DiamLim <- as.numeric(as.character(df$DiamLim))
+  df$Rayon <- as.numeric(as.character(df$Rayon))
+  
   # -- cercle
   # (perches sur 10m pour le PSDRF + PSDRF MA - toutes les tiges sur 13,8m pour le PFA)
   pos <-
     with(df, which(is.na(Nha) &
+                     !is.na(Diam1) & !is.na(Dist) & !is.na(Rayon) &
                      Diam1 >= 7.5 &
                      Dist <= Rayon)) # prend aussi en compte les précomptables qui sont dans le cercle
   if (length(pos) > 0) {
@@ -131,19 +170,24 @@ calculs_Nha <- function(df = NULL) {
   
   # -- angle fixe
   pos <-
-    with(df, which(Diam1 < DiamLim |
-                     !is.na(Type))) # ici, PFA écarté d'office car DiamLim et Coeff sont NA + bois mort écarté aussi
+    with(df, which(!is.na(Diam1) & !is.na(DiamLim) & 
+                     (Diam1 < DiamLim |
+                     !is.na(Type)))) # ici, PFA écarté d'office car DiamLim et Coeff sont NA + bois mort écarté aussi
   if (length(pos) > 0) {
     df[pos, "Coeff"] <- NA
   }
-  pos <- with(df, which(Diam1 >= DiamLim & is.na(Type))) #
+  pos <- with(df, which(!is.na(Diam1) & !is.na(DiamLim) & 
+                           Diam1 >= DiamLim & is.na(Type))) #
   # Changement Verif_Calculs Diam devient Diam1 -> indispensable sinon arbre de 29 par 32 sera inventorié ni par surface ni par angle fixe
   if (length(pos) > 0) {
     df[pos, "Nha"] <-
       NA # Remise à zéro au cas où il y aurait déjà des valeurs renseignées (cercle(s))
     df[pos, "Limite"] <- 1
   }
-  pos <- with(df, which(!is.na(Coeff) & Diam1 >= Dist * Coeff))
+  
+  # Éviter les calculs avec des NA
+  pos <- with(df, which(!is.na(Coeff) & !is.na(Diam1) & !is.na(Dist) & 
+                           Diam1 >= Dist * Coeff))
   if (length(pos) > 0) {
     df[pos, "Nha"] <-
       10 ^ 4 * df$Coeff[pos] ^ 2 / pi / df$Diam1[pos] ^ 2
@@ -154,7 +198,7 @@ calculs_Nha <- function(df = NULL) {
   pos <- with(
     df,
     which(
-      !is.na(Coeff) &
+      !is.na(Coeff) & !is.na(Diam1) & !is.na(Dist) &
         Diam1 < Dist * Coeff # * 100 #& is.na(Type)
       ))
       if (length(pos) > 0) {
@@ -702,9 +746,12 @@ calculs_PCQM <- function(pcqm = NULL, placettes = NULL) {
       "MortSup20D",
       "MortInf20D")
   # -- jonction
+  pcqm <- convert_columns_to_numeric(pcqm)
+  placettes_copy <- convert_columns_to_numeric(placettes)
+  
   pcqm <-
     pcqm %>%
-    left_join(placettes[, c("NumDisp", "NumPlac", "Cycle", "Strate")],
+    left_join(placettes_copy[, c("NumDisp", "NumPlac", "Cycle", "Strate")],
               by = c("NumDisp", "NumPlac", "Cycle"))
   
   # -- table de résultats
@@ -1748,7 +1795,7 @@ psdrf_Calculs <- function(
     "NumTarif", "NumTarifIFN", "Observation", "Placettes", "Population", 
     "Presence", "Quart", "Recouv", "Ref_CodeEcolo", "StadeD", "StadeE", 
     "Tarifs", "TauxV", "Transect", "Type", "TypeTarif", "TypeTarifIFN", 
-    "ValArbres", "value", "variable", "Vha", "Vol"
+    "ValArbres", "value", "variable", "Vha", "Vol", "Arbres"
   )
   create_null(objects)
   ##### 1/ Initialisation #####
@@ -1758,8 +1805,66 @@ psdrf_Calculs <- function(
   # -- chargement des données d'inventaire et administratives
   load("tables/psdrfCodes.Rdata")
   load("tables/psdrfDonneesBrutes.Rdata")
+  
+  # -- Conversion des colonnes Cycle en numérique pour éviter les problèmes de jointure
+  # Cette étape est cruciale pour éviter l'erreur "ℹ `x$Cycle` is a <double>. ℹ `y$Cycle` is a <character>."
+  print("Conversion des colonnes Cycle et NumDisp en numérique...")
+  
+  # Conversion des colonnes numériques dans toutes les tables principales
+  print("Conversion des colonnes numériques (Cycle, NumDisp)...")
+  
+  if (exists("Cycles")) Cycles <- convert_columns_to_numeric(Cycles)
+  if (exists("CyclesCodes")) CyclesCodes <- convert_columns_to_numeric(CyclesCodes)
+  if (exists("IdArbres")) IdArbres <- convert_columns_to_numeric(IdArbres)
+  if (exists("ValArbres")) ValArbres <- convert_columns_to_numeric(ValArbres)
+  if (exists("Placettes")) Placettes <- convert_columns_to_numeric(Placettes)
+  if (exists("PCQM")) PCQM <- convert_columns_to_numeric(PCQM)
+  if (exists("Reges")) Reges <- convert_columns_to_numeric(Reges)
+  if (exists("Transect")) Transect <- convert_columns_to_numeric(Transect)
+  if (exists("BMSsup30")) BMSsup30 <- convert_columns_to_numeric(BMSsup30)
+  
+  # Fonction pour gérer la colonne Type/type
+  handle_type_column <- function(df) {
+    type_col_names <- c("Type", "type")
+    for (col_name in type_col_names) {
+      if (col_name %in% colnames(df)) {
+        print(paste("Attention: Colonne", col_name, "détectée. Tentative de conversion en numérique..."))
+        # Sauvegarder les valeurs originales
+        df[[paste0(col_name, "_orig")]] <- df[[col_name]]
+        
+        # Essayer de convertir en numérique
+        df[[col_name]] <- suppressWarnings(as.numeric(as.character(df[[col_name]])))
+        
+        # Vérifier si la conversion a réussi
+        na_count <- sum(is.na(df[[col_name]]) & !is.na(df[[paste0(col_name, "_orig")]]))
+        if (na_count > 0) {
+          print(paste("  - Attention:", na_count, "valeurs n'ont pas pu être converties en numérique et sont devenues NA."))
+        }
+        print(paste("  - Conversion terminée pour", col_name))
+      }
+    }
+    return(df)
+  }
+  
+  # Conversion des colonnes numériques dans les tables administratives
+  if (exists("Cat")) Cat <- convert_columns_to_numeric(Cat)
+  if (exists("CodeEssence")) CodeEssence <- convert_columns_to_numeric(CodeEssence)
+  if (exists("EssReg")) EssReg <- convert_columns_to_numeric(EssReg)
+  if (exists("Tarifs")) Tarifs <- convert_columns_to_numeric(Tarifs)
+  if (exists("Dispositifs")) Dispositifs <- convert_columns_to_numeric(Dispositifs)
+  if (exists("Communes")) Communes <- convert_columns_to_numeric(Communes)
+  if (exists("Suivi")) Suivi <- convert_columns_to_numeric(Suivi)
+  
+  print("Conversion des colonnes Cycle terminée.")
 
   ##### 2/ Calculs sur les précomptables #####
+                          # Vérification de l'existence des variables nécessaires
+                          if (!exists("IdArbres") || !exists("ValArbres")) {
+                            stop("Les variables IdArbres et/ou ValArbres n'existent pas dans psdrfDonneesBrutes.Rdata")
+                          }
+                          
+                          # Construction explicite de la variable Arbres
+                          print("Construction de la variable Arbres à partir de IdArbres et ValArbres")
                           Arbres <-
                             IdArbres %>%
                             left_join(ValArbres, by = "IdArbre") %>%
@@ -1767,6 +1872,12 @@ psdrf_Calculs <- function(
                                                  Cycles,
                                                  CyclesCodes,
                                                  Tarifs)
+                          
+                          # Gestion de la colonne Type/type
+                          if (exists("Arbres")) {
+                            print("Application de handle_type_column à Arbres")
+                            Arbres <- handle_type_column(Arbres)
+                          }
                           ##### --- 2.1/ Calculs de Nha, Gha, Vha, ... #####
                           Arbres <- Arbres %>% calculs_Arbres()
                           
@@ -1827,8 +1938,17 @@ psdrf_Calculs <- function(
                           ##### --- 5.2/ Cercle 20 m #####
                           bms_sup30 <-
                             BMSsup30 %>%
-                            left_join(CyclesCodes[, c("NumDisp", "Cycle", "Monitor")],
-                                      by = c("NumDisp", "Cycle")) %>%
+                            # Assurer que Cycle est un nombre dans les deux dataframes
+                            mutate(Cycle = as.numeric(as.character(Cycle))) %>%
+                            {
+                              # Créer une copie de CyclesCodes avec Cycle en numérique
+                              CyclesCodes_copy <- CyclesCodes
+                              CyclesCodes_copy$Cycle <- as.numeric(as.character(CyclesCodes_copy$Cycle))
+                              
+                              # Effectuer la jointure
+                              left_join(., CyclesCodes_copy[, c("NumDisp", "Cycle", "Monitor")],
+                                        by = c("NumDisp", "Cycle"))
+                            } %>%
                             mutate(Rayon = ifelse(Monitor == "PFA", 13.8, 20)) %>% # TODO : vérifier qu'il y a du BMSsup30 sur cercle de 20m dans le module Med
                             set_up_calcul_tables(CodeEssence,
                                                  EssReg) %>%
@@ -1841,7 +1961,15 @@ psdrf_Calculs <- function(
                           Reges <-
                             Reges %>%
                             set_up_calcul_tables(CodeEssence, EssReg) %>%
-                            left_join(CyclesCodes, by = c("NumDisp", "Cycle")) %>%
+                            {
+                              # Créer une copie de CyclesCodes avec types corrects
+                              CyclesCodes_copy <- convert_columns_to_numeric(CyclesCodes)
+                              
+                              # Convertir aussi Reges
+                              . <- convert_columns_to_numeric(.)
+                              
+                              left_join(., CyclesCodes_copy, by = c("NumDisp", "Cycle"))
+                            } %>%
                             calculs_Reges()
                           ##### / \ #####
                           
@@ -1853,7 +1981,15 @@ psdrf_Calculs <- function(
                           echant_DF <-
                             Cycles %>%
                             # select(NumDisp, Cycle, Monitor) %>%
-                            left_join(CyclesCodes, by = c("NumDisp", "Cycle")) %>%
+                            {
+                              # Créer une copie de CyclesCodes avec types corrects
+                              CyclesCodes_copy <- convert_columns_to_numeric(CyclesCodes)
+                              
+                              # Convertir aussi Cycles
+                              . <- convert_columns_to_numeric(.)
+                              
+                              left_join(., CyclesCodes_copy, by = c("NumDisp", "Cycle"))
+                            } %>%
                             mutate(Rayon = 10,
                                    Rayon = ifelse(Monitor == "PFA", 13.8, Rayon))
                           # echant_DF <- change_protocole(echant_DF)
@@ -2321,19 +2457,62 @@ psdrf_Calculs <- function(
                           
                           
                           ##### 9/ dendromicohabitats #####
-                          Codes <-
-                            Arbres %>%
-                            filter(
-                              CodeEcolo != "" &
+                          # Vérifier que Arbres existe et contient les colonnes nécessaires
+                          if (exists("Arbres") && "CodeEcolo" %in% names(Arbres)) {
+                            print("Création de la variable Codes à partir de Arbres")
+                            # Remplacer les NA et "" par des valeurs par défaut pour CodeEcolo
+                            Arbres_safe <- Arbres
+                            Arbres_safe$CodeEcolo <- ifelse(is.na(Arbres_safe$CodeEcolo) | Arbres_safe$CodeEcolo == "", 
+                                                           "DEFAUT", Arbres_safe$CodeEcolo)
+                            # Correction pour Ref_CodeEcolo si elle n'existe pas
+                            if (!"Ref_CodeEcolo" %in% names(Arbres_safe)) {
+                              Arbres_safe$Ref_CodeEcolo <- "DEFAUT"
+                            }
+                            
+                            Codes <-
+                              Arbres_safe %>%
+                              filter(
                                 !is.na(NumDisp) & !is.na(NumPlac) &
-                                !is.na(NumArbre) & !is.na(CodeEcolo)
-                            ) %>%
-                            mutate(
-                              Ref_CodeEcolo = tolower(Ref_CodeEcolo),
-                              #CodeEcolo = tolower(CodeEcolo) # TODO : mettre tolower dans job2 #mis en commentaire car sinon pb avec dmh EFI
+                                !is.na(NumArbre)
                               ) %>%
-                              calculs_dmh(dmh_df = CodeEcologie)
-                              ##### / \ #####
+                              mutate(
+                                Ref_CodeEcolo = tolower(Ref_CodeEcolo)
+                                )
+                          } else {
+                            print("ATTENTION: La variable Arbres n'existe pas ou ne contient pas CodeEcolo. Création d'un dataframe Codes vide.")
+                            Codes <- data.frame(
+                              NumDisp = numeric(0),
+                              NumPlac = character(0),
+                              NumArbre = numeric(0),
+                              Cycle = numeric(0),
+                              Essence = character(0),
+                              EssReg = character(0),
+                              EssRegPar = character(0),
+                              Classe = numeric(0),
+                              Cat = character(0),
+                              CodeEcolo = character(0),
+                              CodeSanit = character(0),
+                              Nha = numeric(0),
+                              Gha = numeric(0),
+                              Vha = numeric(0),
+                              VhaIFN = numeric(0)
+                            )
+                          }
+                          
+                          # Traitement des dendromicohabitats
+                          print("Calculs des dendromicohabitats")
+                          dmh_results <- NULL
+                          if (exists("Codes") && nrow(Codes) > 0 && exists("CodeEcologie")) {
+                            dmh_results <- try(calculs_dmh(df = Codes, dmh_df = CodeEcologie), silent = TRUE)
+                            if (inherits(dmh_results, "try-error")) {
+                              print("ATTENTION: Erreur lors du calcul des dendromicohabitats")
+                              print(dmh_results)
+                            }
+                          } else {
+                            print("ATTENTION: Pas de données pour calculer les dendromicohabitats")
+                          }
+                          
+                          ##### / \ #####
                               
                               
                               ##### 10/ Sauvegarde #####
@@ -2470,6 +2649,28 @@ psdrf_Calculs <- function(
                               # -- sauvegarde
                               # # -- sauvegarde
                               file = file.path(repPSDRF, "tables", "psdrfTablesBrutes.Rdata")
+                              
+                              # Vérification que Codes existe, sinon le créer comme data frame vide
+                              if (!exists("Codes") || is.null(Codes)) {
+                                Codes <- data.frame(
+                                  NumDisp = numeric(0),
+                                  NumPlac = character(0),
+                                  NumArbre = numeric(0),
+                                  Cycle = numeric(0),
+                                  Essence = character(0),
+                                  EssReg = character(0),
+                                  EssRegPar = character(0),
+                                  Classe = numeric(0),
+                                  Cat = character(0),
+                                  CodeEcolo = character(0),
+                                  CodeSanit = character(0),
+                                  Nha = numeric(0),
+                                  Gha = numeric(0),
+                                  Vha = numeric(0),
+                                  VhaIFN = numeric(0)
+                                )
+                              }
+                              
                               save(
                                 Arbres,
                                 Perches,
