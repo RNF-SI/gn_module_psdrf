@@ -1,5 +1,25 @@
-editDocuments <- function(dispId, lastCycle, dispName, placettes, arbres, bms, reges, transects, reperes, cycles, isCarnetToDownload, isPlanDesArbresToDownload, Answer_Radar){
+# Fonction pour convertir les colonnes Cycle et NumDisp en numérique
+convert_columns_to_numeric <- function(df) {
+  if (is.data.frame(df)) {
+    if ("Cycle" %in% colnames(df)) {
+      df$Cycle <- as.numeric(as.character(df$Cycle))
+    }
+    if ("NumDisp" %in% colnames(df)) {
+      df$NumDisp <- as.numeric(as.character(df$NumDisp))
+    }
+    if ("NumPlac" %in% colnames(df)) {
+      # On garde NumPlac comme chaîne car il peut contenir des lettres
+      df$NumPlac <- as.character(df$NumPlac)
+    }
+  }
+  return(df)
+}
 
+editDocuments <- function(dispId, lastCycle, dispName, placettes, arbres, bms, reges, transects, reperes, cycles, isCarnetToDownload, isPlanDesArbresToDownload, Answer_Radar){
+    # Tracer l'entrée dans cette fonction principale
+    trace_exit <- trace_function("editDocuments")
+    
+    log_info("Chargement des bibliothèques R nécessaires")
     library(data.table)
     library("stringr")
     library("openxlsx") 
@@ -25,8 +45,84 @@ editDocuments <- function(dispId, lastCycle, dispName, placettes, arbres, bms, r
     library("tcltk")
     library("reshape2")
     library("sf")
+    
+    # Fonction pour vérifier qu'un dataframe existe dans l'environnement global
+    check_df <- function(df_name, df) {
+      log_debug(paste("Vérification du dataframe", df_name))
+      if (!exists(df_name, envir = .GlobalEnv)) {
+        assign(df_name, df, envir = .GlobalEnv)
+        log_info(paste("Création de la variable globale:", df_name))
+        
+        # Log des dimensions et structure
+        if (is.data.frame(df)) {
+          log_info(paste0("DataFrame ", df_name, ": [", nrow(df), "x", ncol(df), "] colonnes: ", 
+                         paste(names(df), collapse=", ")))
+          
+          if (nrow(df) > 0) {
+            # Vérifier les types des colonnes importantes
+            col_types <- sapply(df, class)
+            log_debug(paste0("Types de données dans ", df_name, ": ", 
+                           paste(names(col_types), "=", col_types, collapse=", ")))
+          } else {
+            log_warning(paste0("Le DataFrame ", df_name, " est vide!"))
+          }
+        } else {
+          log_warning(paste0("Variable ", df_name, " n'est pas un DataFrame: ", class(df)[1]))
+        }
+      } else {
+        # Si le dataframe existe déjà, comparer et utiliser celui qui a des données
+        existing_df <- get(df_name, envir = .GlobalEnv)
+        if (is.data.frame(existing_df) && is.data.frame(df)) {
+          if (nrow(existing_df) == 0 && nrow(df) > 0) {
+            assign(df_name, df, envir = .GlobalEnv)
+            log_info(paste0("Remplacement du DataFrame vide ", df_name, " par un nouveau avec ", nrow(df), " lignes"))
+          } else {
+            log_debug(paste0("DataFrame ", df_name, " existe déjà avec ", nrow(existing_df), " lignes"))
+          }
+        }
+      }
+    }
+    
+    log_info("Vérification et chargement des dataframes dans l'environnement global")
+    # Vérifier que les dataframes sont bien dans l'environnement global
+    check_df("Arbres", arbres)
+    check_df("BMSsup30", bms)
+    check_df("Rege", reges)
+    check_df("Placettes", placettes)
+    check_df("Cycles", cycles)
+    check_df("Reperes", reperes)
+    check_df("Transects", transects)
+    
+    # Inspecter les dataframes pour le débogage
+    for (df_name in c("Arbres", "BMSsup30", "Rege", "Placettes", "Cycles", "Reperes", "Transects")) {
+      if (exists(df_name)) {
+        df <- get(df_name)
+        if (is.data.frame(df)) {
+          log_debug(paste0("Inspecting ", df_name, ": [", nrow(df), "x", ncol(df), "] rows/cols"))
+          if ("type" %in% names(df)) {
+            log_debug(paste0("Column 'type' in ", df_name, ": class=", class(df$type)[1], 
+                           ", first values=", paste(head(df$type), collapse=", ")))
+          }
+        }
+      }
+    }
 
-    lastCycle = lastCycle[1,1]
+    # Gestion sécurisée de lastCycle qui peut être un vecteur ou une matrice/dataframe
+    if (is.matrix(lastCycle) || is.data.frame(lastCycle)) {
+      if (nrow(lastCycle) > 0 && ncol(lastCycle) > 0) {
+        lastCycle = lastCycle[1,1]
+      }
+    }
+    print(paste("lastCycle:", lastCycle))
+    
+    # Conversion des dataframes en entrée pour éviter les problèmes de type
+    placettes <- convert_columns_to_numeric(placettes)
+    arbres <- convert_columns_to_numeric(arbres)
+    bms <- convert_columns_to_numeric(bms)
+    reges <- convert_columns_to_numeric(reges)
+    transects <- convert_columns_to_numeric(transects)
+    reperes <- convert_columns_to_numeric(reperes)
+    cycles <- convert_columns_to_numeric(cycles)
     setwd('/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts')
 
     repPSDRF <- '/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts'
@@ -47,8 +143,8 @@ editDocuments <- function(dispId, lastCycle, dispName, placettes, arbres, bms, r
     # TODO: prendre les documents administrateurs depuis la bdd
     # Conversion des données administrateur en df Rdata
     # source(
-    #     file.path("./psdrf_Codes.R"), 
-    #     encoding = 'UTF-8', echo = TRUE
+#     file.path("./psdrf_Codes.R"), 
+#     encoding = 'UTF-8', echo = TRUE
     # )
     # psdrf_Codes(repPSDRF, file)
 
@@ -208,8 +304,17 @@ editDocuments <- function(dispId, lastCycle, dispName, placettes, arbres, bms, r
 
     } 
     if (isPlanDesArbresToDownload){
-        psdrf_EditPlansArbres(repPSDRF, dispId, lastCycle, dispName, results_by_plot_to_get)
+        log_info("Lancement de psdrf_EditPlansArbres")
+        tryCatch({
+            psdrf_EditPlansArbres(repPSDRF, dispId, lastCycle, dispName, results_by_plot_to_get)
+            log_info("psdrf_EditPlansArbres terminé avec succès")
+        }, error = function(e) {
+            log_error(paste("Erreur dans psdrf_EditPlansArbres:", e$message))
+            stop(e)  # Relancer l'erreur pour que Python puisse la gérer
+        })
     }
     
-
+    log_info("Fonction editDocuments terminée avec succès")
+    # Tracer la sortie de la fonction principale
+    trace_exit()
 }
