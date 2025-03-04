@@ -29,13 +29,7 @@ logger = get_task_logger(__name__)
 # from sqlalchemy.orm import scoped_session
 
 def data_analysis(dispId, isCarnetToDownload, isPlanDesArbresToDownload, carnetToDownloadParameters):
-    # Gestion des erreurs probables lors de la mise à jour vers Ubuntu 24
-    logger.info(f"Starting data analysis for dispositif {dispId}")
-    logger.info(f"Python version: {pd.__version__}")
-    logger.info(f"rpy2 version: {rpy2.__version__}")
-    
     # Suppression des fichiers de sortie 
-    logger.info("Cleaning output directory")
     folder = '/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/out'
     for filename in os.listdir(folder):
         if filename != ".gitignore":
@@ -46,17 +40,9 @@ def data_analysis(dispId, isCarnetToDownload, isPlanDesArbresToDownload, carnetT
                 elif os.path.isdir(file_path):
                     shutil.rmtree(file_path)
             except Exception as e:
-                error_msg = f'Failed to delete {file_path}. Reason: {e}'
-                logger.error(error_msg)
-                print(error_msg)
+                print(f'Failed to delete {file_path}. Reason: {e}')
 
-    try:
-        os.mkdir("/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/out/figures")
-        logger.info("Created figures directory")
-    except Exception as e:
-        error_msg = f"Failed to create figures directory: {e}"
-        logger.error(error_msg)
-        print(error_msg)
+    os.mkdir("/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/out/figures")
 
     r = ro.r
 
@@ -64,14 +50,6 @@ def data_analysis(dispId, isCarnetToDownload, isPlanDesArbresToDownload, carnetT
     session = scoped_session(DB.session)
 
     try:
-        # Initialisation du système de traçage R
-        r_init_trace = """
-        source('/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/r_trace.R')
-        log_info('Data analysis started for dispositif {disp_id}')
-        """.format(disp_id=dispId)
-        r(r_init_trace)
-        
-        # Exécution des requêtes SQL et récupération des données
         dispNameQuery = session.query(TDispositifs.name).filter(TDispositifs.id_dispositif == dispId)
         with DB.engine.connect() as conn:
             dispName = pd.read_sql(dispNameQuery.statement, conn)
@@ -96,8 +74,6 @@ def data_analysis(dispId, isCarnetToDownload, isPlanDesArbresToDownload, carnetT
 
 
 def formatBdd2RData(r, dispId, lastCycle, dispName, isCarnetToDownload, isPlanDesArbresToDownload, carnetToDownloadParameters):
-    # Traçage de l'entrée dans la fonction
-    r("""log_info('Entering formatBdd2RData function for dispositif {disp_id}')""".format(disp_id=dispId))
 
     id_type_durete = get_id_type_from_mnemonique("PSDRF_DURETE")
     id_type_ecorce = get_id_type_from_mnemonique("PSDRF_ECORCE")
@@ -305,35 +281,20 @@ def formatBdd2RData(r, dispId, lastCycle, dispName, isCarnetToDownload, isPlanDe
             table['table'][bc] = table['table'][bc].map(noValueToNa)
 
     #--- Convertion du df Pandas en rdataframe
-    r("""log_info('Converting pandas dataframes to R objects')""")
-    
     with localconverter(ro.default_converter + pandas2ri.converter):
         r_placettes = ro.conversion.py2rpy(placettesPandas)
-        r("""log_info('Converted placettes dataframe with {n} rows')""".format(n=len(placettesPandas)))
-    
     with localconverter(ro.default_converter + pandas2ri.converter):
         r_arbres = ro.conversion.py2rpy(arbresPandas)
-        r("""log_info('Converted arbres dataframe with {n} rows')""".format(n=len(arbresPandas)))
-    
     with localconverter(ro.default_converter + pandas2ri.converter):
         r_bmss = ro.conversion.py2rpy(bmsPandas)
-        r("""log_info('Converted bms dataframe with {n} rows')""".format(n=len(bmsPandas)))
-    
     with localconverter(ro.default_converter + pandas2ri.converter):
         r_reges = ro.conversion.py2rpy(regesPandas)
-        r("""log_info('Converted rege dataframe with {n} rows')""".format(n=len(regesPandas)))
-    
     with localconverter(ro.default_converter + pandas2ri.converter):
         r_transects = ro.conversion.py2rpy(transectsPandas)
-        r("""log_info('Converted transects dataframe with {n} rows')""".format(n=len(transectsPandas)))
-    
     with localconverter(ro.default_converter + pandas2ri.converter):
-        r_reperes = ro.conversion.py2rpy(reperesPandas)
-        r("""log_info('Converted reperes dataframe with {n} rows')""".format(n=len(reperesPandas)))
-    
+        r_reperes = ro.conversion.py2rpy(reperesPandas)   
     with localconverter(ro.default_converter + pandas2ri.converter):
-        r_cycles = ro.conversion.py2rpy(cyclesPandas)
-        r("""log_info('Converted cycles dataframe with {n} rows')""".format(n=len(cyclesPandas)))
+        r_cycles = ro.conversion.py2rpy(cyclesPandas)             
 
     # Scripts pour le debuggage
     # robjects.r.assign("myplacettes", r_placettes)
@@ -366,34 +327,21 @@ def formatBdd2RData(r, dispId, lastCycle, dispName, isCarnetToDownload, isPlanDe
 
 
     # 2/ Formater dans le bon format en modifiant XLs2Rdata
-    r("""log_info('Loading BDD2RData.R script')""")
-    
     with open('/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/BDD2RData.R', 'r') as f:
         string = f.read()
     BDD2Rdata = STAP(string, "BDD2Rdata")
-    
-    r("""log_info('Processing parameters for R analysis')""")
     print(carnetToDownloadParameters)
-    
     if carnetToDownloadParameters['Answer_Radar'] == None:
         Answer_Radar = ro.NULL
-        r("""log_info('Using NULL for Answer_Radar parameter')""")
     else:
         try: 
             Answer_Radar = carnetToDownloadParameters['Answer_Radar']
-            r("""log_info('Using provided Answer_Radar parameter')""")
         except RRuntimeError as e:
-            error_msg = str(e)
-            r("""log_error('Error processing Answer_Radar parameter: {err}')""".format(err=error_msg))
             logger.error(f"R runtime error occurred: {e}")
 
-    try:
-        r("""log_info('Calling editDocuments function with data for processing')""")  
+    try:  
         BDD2Rdata.editDocuments(dispId, lastCycle, dispName, r_placettes, r_arbres, r_bmss, r_reges, r_transects, r_reperes, r_cycles, isCarnetToDownload, isPlanDesArbresToDownload, Answer_Radar)
-        r("""log_info('Successfully completed R data analysis')""")
     except RRuntimeError as e:
-        error_msg = str(e)
-        r("""log_error('R error in editDocuments function: {err}')""".format(err=error_msg))
         logger.error(f"R runtime error occurred: {e}")
 
 def id_nomenclatureToMnemonique(obj,id_type_durete,id_type_ecorce, stadeDIdx, stadeEIdx):
