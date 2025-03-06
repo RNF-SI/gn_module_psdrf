@@ -1,129 +1,233 @@
 <div class="container-fluid">
-    <div class="card">
-        <div class="card-body">
+  <div class="card">
+    <div class="card-body">
+      <h2 class="underlined">
+        Protocole de Suivi Dendrométrique des Réserves Forestières
+      </h2>
 
-            <h2 class="underlined">Protocole de Suivi Dendrométrique des Réserves Forestières</h2>
-
-            <div class="row">
-                <div class="dispositifs-intro col-9">
-                    <p>Le Protocole de suivi Dendrométrique des Réserves Forestière (PSDRF) est un protocole de mesures dendrométriques réalisées sur des placettes permanentes de 20 m de rayon, mesurées tous les 10 ans. L’intégralité du cycle de vie de l’arbre (de la régénération au bois mort en décomposition) est mesuré et suivi.</p>
-                    <p>Le PSDRF est appliqué depuis 2005 en majorité dans les réserves naturelles et réserves biologiques. Mais certains sites en dehors de ces réseaux l’appliquent aussi : dans les CEN, en zone Natura 2000, dans des forêts départementales, etc. En 2022, le réseau PSDRF compte 172 sites, et plus de 13000 placettes. 25 sites ont effectué des remesures, soit environ 3000 placettes.</p>
-                    <p>Le PSDRF est un outil de l'Observatoire des Forêts Sentinelles.</p>
-                </div>
-                <div class="col-3">
-                    <img class="mx-auto d-block" src="external_assets/psdrf/Logo_OFS_jpg.jpg" width="180px" alt="file">
-                </div>
-            </div>
-            <div class="btn-group-horizontal">
-                <button class="m-1" mat-raised-button matTooltip="Importer des données" (click)="openImportPage()">
-                    <mat-icon> upload </mat-icon>
-                    <span class="user-name">
-                        {{ currentUser?.user_login }}
-                    </span>
-                </button>
-
-                <button class="m-1" mat-raised-button matTooltip="Télécharger Dendro3" (click)="goToDownloadPage()">
-                    <mat-icon> install_mobile  </mat-icon>
-                </button>
-
-                <button class="m-1" *ngIf="isAdmin" mat-raised-button matTooltip="Accès page admin PSDRF" (click)="openPSDRFAdminPage()">
-                    <mat-icon> person_add </mat-icon>
-                </button>
-            </div>
-
-            <div class="dispositifs-nbre" *ngIf="stats">
-                <p><strong>{{stats.nb_dispositifs | formatnum}} dispositifs sur {{stats.nb_cycles}} cycles de mesures.</strong></p>
-            </div>
-            <div class="card-deck dispositifs-stats-cycles" *ngIf="stats">
-                <div class="card" *ngFor="let cycle of stats.cycles | keyvalue">
-                    <div class="card-header">
-                        <h3>Cycle {{cycle.key}}</h3>
-                    </div>
-                    <div class="card-body stats-content">
-                        <p>{{ cycle.value.nb_dispositifs | formatnum }} dispositifs</p>
-                        <p><span class="fa fa-square"></span> {{cycle.value.nb_placettes | formatnum}} placettes</p>
-                        <p><span class="fa fa-tree"></span> {{cycle.value.nb_arbres | formatnum}} arbres mesurés</p>
-                    </div>
-                </div>
-            </div>
+      <div class="row">
+        <div class="dispositifs-intro col-9">
+          <p>
+            Le Protocole de suivi Dendrométrique des Réserves Forestière (PSDRF)
+            est un protocole de mesures dendrométriques réalisées sur des
+            placettes permanentes de 20 m de rayon, mesurées tous les 10 ans.
+            L'intégralité du cycle de vie de l'arbre (de la régénération au bois
+            mort en décomposition) est mesuré et suivi.
+          </p>
+          <p>
+            Le PSDRF est appliqué depuis 2005 en majorité dans les réserves
+            naturelles et réserves biologiques. Mais certains sites en dehors de
+            ces réseaux l'appliquent aussi : dans les CEN, en zone Natura 2000,
+            dans des forêts départementales, etc. En 2022, le réseau PSDRF
+            compte 172 sites, et plus de 13000 placettes. 25 sites ont effectué
+            des remesures, soit environ 3000 placettes.
+          </p>
+          <p>Le PSDRF est un outil de l'Observatoire des Forêts Sentinelles.</p>
         </div>
-    </div>
-
-    <div class="card">
-        <div class="card-body">
-            <div class="row">
-                <div class="col-sm-2">
-                    <!-- Recherche -->
-                    <div class="card search-wrapper">
-                        <form [formGroup]="searchForm" (ngSubmit)="onSearch()">
-                            <div class="card-header">
-                                <h4>Filtrer les résultats</h4>
-                            </div>
-                            <div class="card-body">
-                                <div class="form-group">
-                                    <label for="region">Région</label>
-                                    <select id="region" class="form-control" formControlName="region">
-                      <option value=""></option>
-                      <option *ngFor="let reg of regions" [value]="reg.insee">{{reg.name}}</option>
-                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="alluvial">Module alluvial</label>
-                                    <select id="alluvial" class="form-control" formControlName="alluvial">
-                      <option value="">non filtré</option>
-                      <option value="true">Oui</option>
-                      <option value="false">Non</option>
-                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="status">Statut de l'espace</label>
-                                    <select id="status" class="form-control" formControlName="status">
-                      <option value=""></option>
-                      <option *ngFor="let status of statusList" [value]="status.id_type">{{status.name}}</option>
-                    </select>
-                                </div>
-                            </div>
-                            <div class="card-footer">
-                                <div class="search-btn">
-                                    <button type="reset" class="btn btn-sm btn-danger box-shadow"><span class="fa fa-trash-o"> </span></button>
-                                    <button type="submit" class="btn btn-sm btn-success box-shadow">Rechercher</button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-
-
-                </div>
-
-                <div class="col-sm-6">
-                    <pnx-map id="dispositifs-map" [center]="mapCenter" [zoom]="mapZoom" height="80vh">
-                        <pnx-geojson [geojson]="geojson" [onEachFeature]="onEachFeature.bind(this)"></pnx-geojson>
-                    </pnx-map>
-                </div>
-
-                <div class="col-sm-4">
-                    <ngx-datatable #table class="material striped margin-top-xs table-size expandable" [rows]="tableData" [loadingIndicator]="isLoading" [columnMode]="'force'" [headerHeight]="35" [footerHeight]="40" [rowHeight]="40" [draggable]="false"
-                        [selected]="[]" [externalPaging]="false" [scrollbarH]="false" [selectionType]="'single'" [limit]="20" [rowClass]="" [messages]="" (select)="onRowSelect($event)">
-
-                        <!-- ACTION COLUMNS -->
-                        <ngx-datatable-column maxWidth="10">
-                            <ng-template let-row="row" ngx-datatable-cell-template>
-                                <button class="btn btn-outline-shadow btn-no-padding btn-ghost" [disabled]="!row.rights.R" (click)="onDetailDispositif(row['id_dispositif'])">
-                                    <i [ngClass]="{'disabled' : !row.rights.R}" matTooltip="{{ 'Dispositif.Info' | translate }} {{row['id_dispositif']}}"
-                                    class="fa fa-info-circle" aria-hidden="true"></i>
-                                </button>
-                            </ng-template>
-                        </ngx-datatable-column>
-
-                        <ngx-datatable-column name="Nom du dispositif" [sortable]="false">
-                            <ng-template let-row="row" ngx-datatable-cell-template>
-                                {{row.name}}
-                            </ng-template>
-                        </ngx-datatable-column>
-
-                    </ngx-datatable>
-                </div>
-            </div>
+        <div class="col-3">
+          <img
+            class="mx-auto d-block"
+            src="./assets/psdrf/assets/Logo_OFS_jpg.jpg"
+            width="180px"
+            alt="file"
+          />
         </div>
+      </div>
+      <div class="btn-group-horizontal">
+        <button
+          class="m-1"
+          mat-raised-button
+          matTooltip="Importer des données"
+          (click)="openImportPage()"
+        >
+          <mat-icon>file_upload</mat-icon>
+          <span class="user-name">
+            {{ currentUser?.user_login }}
+          </span>
+        </button>
+
+        <button
+          class="m-1"
+          mat-raised-button
+          matTooltip="Télécharger Dendro3"
+          (click)="goToDownloadPage()"
+        >
+          <mat-icon>get_app</mat-icon>
+          Dendro3
+        </button>
+
+        <button
+          class="m-1"
+          *ngIf="isAdmin"
+          mat-raised-button
+          matTooltip="Accès page admin PSDRF"
+          (click)="openPSDRFAdminPage()"
+        >
+          <mat-icon>person_add</mat-icon>
+        </button>
+      </div>
+
+      <div class="dispositifs-nbre" *ngIf="stats">
+        <p>
+          <strong
+            >{{ stats.nb_dispositifs | formatnum }} dispositifs sur
+            {{ stats.nb_cycles }} cycles de mesures.</strong
+          >
+        </p>
+      </div>
+      <div class="card-deck dispositifs-stats-cycles" *ngIf="stats">
+        <div class="card" *ngFor="let cycle of stats.cycles | keyvalue">
+          <div class="card-header">
+            <h3>Cycle {{ cycle.key }}</h3>
+          </div>
+          <div class="card-body stats-content">
+            <p>{{ cycle.value.nb_dispositifs | formatnum }} dispositifs</p>
+            <p>
+              <span class="fa fa-square"></span>
+              {{ cycle.value.nb_placettes | formatnum }} placettes
+            </p>
+            <p>
+              <span class="fa fa-tree"></span>
+              {{ cycle.value.nb_arbres | formatnum }} arbres mesurés
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <div class="row">
+        <div class="col-sm-2">
+          <!-- Recherche -->
+          <div class="card search-wrapper">
+            <form [formGroup]="searchForm" (ngSubmit)="onSearch()">
+              <div class="card-header">
+                <h4>Filtrer les résultats</h4>
+              </div>
+              <div class="card-body">
+                <div class="form-group">
+                  <label for="region">Région</label>
+                  <select
+                    id="region"
+                    class="form-control"
+                    formControlName="region"
+                  >
+                    <option value=""></option>
+                    <option *ngFor="let reg of regions" [value]="reg.insee">
+                      {{ reg.name }}
+                    </option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="alluvial">Module alluvial</label>
+                  <select
+                    id="alluvial"
+                    class="form-control"
+                    formControlName="alluvial"
+                  >
+                    <option value="">non filtré</option>
+                    <option value="true">Oui</option>
+                    <option value="false">Non</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="status">Statut de l'espace</label>
+                  <select
+                    id="status"
+                    class="form-control"
+                    formControlName="status"
+                  >
+                    <option value=""></option>
+                    <option
+                      *ngFor="let status of statusList"
+                      [value]="status.id_type"
+                    >
+                      {{ status.name }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+              <div class="card-footer">
+                <div class="search-btn">
+                  <button type="reset" class="btn btn-sm btn-danger box-shadow">
+                    <span class="fa fa-trash-o"> </span>
+                  </button>
+                  <button
+                    type="submit"
+                    class="btn btn-sm btn-success box-shadow"
+                  >
+                    Rechercher
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div class="col-sm-6">
+          <pnx-map
+            id="dispositifs-map"
+            [center]="mapCenter"
+            [zoom]="mapZoom"
+            height="80vh"
+          >
+            <pnx-geojson
+              [geojson]="geojson"
+              [onEachFeature]="onEachFeature.bind(this)"
+            ></pnx-geojson>
+          </pnx-map>
+        </div>
+
+        <div class="col-sm-4">
+          <ngx-datatable
+            #table
+            class="material striped margin-top-xs table-size expandable"
+            [rows]="tableData"
+            [loadingIndicator]="isLoading"
+            [columnMode]="'force'"
+            [headerHeight]="35"
+            [footerHeight]="40"
+            [rowHeight]="40"
+            [draggable]="false"
+            [selected]="[]"
+            [externalPaging]="false"
+            [scrollbarH]="false"
+            [selectionType]="'single'"
+            [limit]="20"
+            [rowClass]=""
+            [messages]=""
+            (select)="onRowSelect($event)"
+          >
+            <!-- ACTION COLUMNS -->
+            <ngx-datatable-column maxWidth="10">
+              <ng-template let-row="row" ngx-datatable-cell-template>
+                <button
+                  class="btn btn-outline-shadow btn-no-padding btn-ghost"
+                  [disabled]="!row.rights.R"
+                  (click)="onDetailDispositif(row['id_dispositif'])"
+                >
+                  <i
+                    [ngClass]="{ disabled: !row.rights.R }"
+                    matTooltip="{{ 'Dispositif.Info' | translate }} {{
+                      row['id_dispositif']
+                    }}"
+                    class="fa fa-info-circle"
+                    aria-hidden="true"
+                  ></i>
+                </button>
+              </ng-template>
+            </ngx-datatable-column>
+
+            <ngx-datatable-column name="Nom du dispositif" [sortable]="false">
+              <ng-template let-row="row" ngx-datatable-cell-template>
+                {{ row.name }}
+              </ng-template>
+            </ngx-datatable-column>
+          </ngx-datatable>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

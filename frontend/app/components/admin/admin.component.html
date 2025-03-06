@@ -1,488 +1,893 @@
-<button class="m-2" mat-raised-button matTooltip="Revenir à l'écran d'accueil" (click)="returnToPreviousPage()">
-    <mat-icon> arrow_back </mat-icon>
-    <!-- <span class="user-name">
+<button
+  class="m-2"
+  mat-raised-button
+  matTooltip="Revenir à l'écran d'accueil"
+  (click)="returnToPreviousPage()"
+>
+  <mat-icon> arrow_back </mat-icon>
+  <!-- <span class="user-name">
         {{ currentUser?.user_login }}
     </span> -->
 </button>
 <div class="container-fluid p-2">
-    <mat-card>
-        <mat-card-title>Table des Utilisateurs</mat-card-title>
-        <mat-drawer-container class="p-5" autosize>
-            <mat-drawer #userDrawer class="request-sidenav" mode="side" position="end" [opened]="isUserDrawerShowing">
-                <button class="m-2" mat-raised-button matTooltip="Cacher le formulaire" (click)="toggleUserDrawer()">
-                    <mat-icon> arrow_forward </mat-icon>
-                </button>
-                <div class="panel-body ">
-                    <form [formGroup]="userForm">
-                        <h5>Utilisateur</h5>
-
-                        <div class="form-group row">
-                            <label for="prenom_role" class="col-md-3 col-form-label text-md-right">
-                                Prénom
-                                </label>
-                            <div class="col-md-9 col-lg-7">
-                                <input type="text" class="form-control" id="prenom_role" placeholder="Prénom" formControlName="prenom_role">
-                                <small *ngIf="
-                                    userForm.get('prenom_role').hasError('required') &&
-                                    userForm.get('prenom_role').touched
-                                    ">
-                                    Ce champ est nécessaire
-                                </small>
-                            </div>
-                        </div>
-
-                        <div class="form-group row">
-                            <label for="nom_role" class="col-md-3 col-form-label text-md-right">
-                                Nom
-                                </label>
-                            <div class="col-md-9 col-lg-7">
-                                <input type="text" class="form-control" id="nom_role" placeholder="Nom" formControlName="nom_role">
-                                <small *ngIf="
-                                    userForm.get('nom_role').hasError('required') && userForm.get('nom_role').touched
-                                    ">
-                                    Ce champ est nécessaire
-                                </small>
-                            </div>
-                        </div>
-
-                        <div class="form-group row">
-                            <label for="email" class="col-md-3 col-form-label text-md-right">
-                                Adresse email
-                                </label>
-                            <div class="col-md-9 col-lg-7">
-                                <input type="text" [ngClass]="userForm.disabled ? 'form-control-plaintext' : 'form-control'" id="email" placeholder="Email" formControlName="email">
-                            </div>
-                        </div>
-
-                        <h5>Compte</h5>
-
-                        <div class="form-group row">
-                            <label for="identifiant" class="col-md-3 col-form-label text-md-right">
-                                Identifiant
-                                </label>
-                            <div class="col-md-9 col-lg-7">
-                                <input type="text" class="form-control" id="identifiant" placeholder="Identifiant" formControlName="identifiant" matTooltipPosition="above" matTooltip="Cet identifiant vous sera demandé pour vous authentifier dans GeoNature." />
-                                <small *ngIf="
-                                    userForm.get('identifiant').hasError('required') &&
-                                    userForm.get('identifiant').touched
-                                    ">
-                                    Ce champ est nécessaire
-                                </small>
-                            </div>
-                        </div>
-
-                        <h5>Informations complémentaires</h5>
-
-                        <div class="form-group row">
-                            <label for="organisme" class="col-md-3 col-form-label text-md-right">
-                                Organisme
-                            </label>
-                            <div class="col-md-9 col-lg-7">
-                                <mat-select formControlName="organisme" placeholder="Organisme" [compareWith]="compareCategoryObjects">
-                                    <mat-option *ngFor="let organisme of organismeList" [value]="organisme.id">{{organisme.nom_organisme}}</mat-option>
-                                </mat-select>
-                            </div>
-                        </div>
-
-
-                        <div class="form-group row">
-                            <label for="remarques" class="col-md-3 col-form-label text-md-right">
-                                Remarques
-                                </label>
-                            <div class="col-md-9 col-lg-7">
-                                <textarea id="remarques" class="form-control" placeholder="Précisions diverses..." formControlName="remarques"></textarea>
-                            </div>
-                        </div>
-
-                        <pnx-dynamic-form-generator [autoGenerated]="true" [myFormGroup]="dynamicUserFormGroup" [formsDefinition]="FORM_CONFIG">
-                        </pnx-dynamic-form-generator>
-
-
-                        <div class="text-center">
-                            <button type="button" class="btn btn-success" [disabled]="!userForm.valid || !dynamicUserFormGroup.valid || disableSubmit" (click)="save()">
-                                Inscrire
-                            </button>
-                        </div>
-
-                    </form>
-                </div>
-
-            </mat-drawer>
-            <div class="example-sidenav-content">
-                <admin-table [tableName]="'user'" [displayedColumns]="displayedColumns['User']" [data]="utilisateurList" (updatingRow)="openUpdateForm($event, 'userDrawer')">
-                </admin-table>
-
-                <button type="button" class="btn btn-success ml-4 mt-4" (click)="toggleUserDrawer()">
-                Montrer le formulaire
-              </button>
-            </div>
-        </mat-drawer-container>
-    </mat-card>
-</div>
-
-<div class="container-fluid p-2">
-    <mat-card>
-        <mat-card-title>Table des dispositifs et des utilisateurs</mat-card-title>
-        <mat-drawer-container class="p-5" autosize>
-            <mat-drawer #userDispDrawer class="request-sidenav" mode="side" position="end" [opened]="isUserDispDrawerShowing">
-                <button class="m-2" mat-raised-button matTooltip="Cacher le formulaire" (click)="toggleUserDispDrawer()">
-                    <mat-icon> arrow_forward </mat-icon>
-                </button>
-                <div class="panel-body ">
-                    <form [formGroup]="userDispForm">
-
-                        <div class="form-group row">
-                            <label for="utilisateur" class="col-md-3 col-form-label text-md-right">
-                                Utilisateur
-                            </label>
-                            <div class="col-md-9 col-lg-7">
-                                <mat-select formControlName="utilisateur" placeholder="Utilisateur" [compareWith]="compareCategoryObjects">
-                                    <mat-option *ngFor="let utilisateur of utilisateurList" [value]="utilisateur.id_utilisateur">{{utilisateur.nom_utilisateur}} {{utilisateur.prenom_utilisateur}}</mat-option>
-                                </mat-select>
-                            </div>
-                        </div>
-
-                        <div class="form-group row">
-                            <label for="dispositif" class="col-md-3 col-form-label text-md-right">
-                                Dispositif
-                            </label>
-                            <div class="col-md-9 col-lg-7">
-                                <mat-select formControlName="dispositif" placeholder="Dispositif" [compareWith]="compareCategoryObjects">
-                                    <mat-option *ngFor="let dispositif of dispositifList" [value]="dispositif.id_dispositif">{{dispositif.nom_dispositif}}</mat-option>
-                                </mat-select>
-                            </div>
-                        </div>
-
-                        <pnx-dynamic-form-generator [autoGenerated]="true" [myFormGroup]="dynamicUserDispFormGroup" [formsDefinition]="FORM_CONFIG">
-                        </pnx-dynamic-form-generator>
-
-
-
-
-                        <div *ngIf="isUserDispDrawerMaj; else userElseBlock" class="text-center">
-                            <button type="button" class="btn btn-success" [disabled]="!userDispForm.valid || !dynamicUserDispFormGroup.valid || disableSubmitUserDisp" (click)="updateRoleDisp()">
-                                Mettre à jour
-                            </button>
-                        </div>
-                        <ng-template #userElseBlock>
-                            <div class="text-center">
-                                <button type="button" class="btn btn-success" [disabled]="!userDispForm.valid || !dynamicUserDispFormGroup.valid || disableSubmitUserDisp" (click)="addRoleDisp()">
-                                    Inscrire
-                                </button>
-                            </div>
-                        </ng-template>
-
-
-
-                        <!-- <div class="text-center m-4">
-                            <button type="button" class="btn btn-success" [disabled]="!userDispForm.valid || !dynamicUserDispFormGroup.valid || disableSubmitUserDisp" (click)="addRoleDisp()">
-                                Ajouter
-                                </button>
-                        </div> -->
-                    </form>
-                </div>
-
-            </mat-drawer>
-            <div class="example-sidenav-content">
-                <admin-table [tableName]="'userDisp'" [displayedColumns]="displayedColumns['UserDisp']" [data]="userDispList" (updatingRow)="openUpdateForm($event, 'userDispDrawer')" (deletingRow)="deleteRow($event, 'userDisp')">
-                </admin-table>
-
-                <button type="button" class="btn btn-success ml-4 mt-4" (click)="toggleUserDispDrawer()">
-                Montrer le formulaire
-              </button>
-            </div>
-        </mat-drawer-container>
-    </mat-card>
-</div>
-
-
-<div class="container-fluid p-2">
-    <mat-card>
-        <mat-card-title>Table des dispositifs</mat-card-title>
-        <mat-drawer-container class="p-5" autosize>
-            <mat-drawer #DispDrawer class="request-sidenav" mode="side" position="end" [opened]="isDispDrawerShowing">
-                <button class="m-2" mat-raised-button matTooltip="Cacher le formulaire" (click)="toggleDispDrawer()">
-                    <mat-icon> arrow_forward </mat-icon>
-                </button>
-                <div class="panel-body ">
-                    <form [formGroup]="dispForm">
-
-                        <div class="form-group row">
-                            <label for="idDispositif" class="col-md-3 col-form-label text-md-right">
-                                Id du Dispositif 
-                                </label>
-                            <div class="col-md-9 col-lg-7">
-                                <input type="number" id="idDispositif" class="form-control" placeholder="Id du Dispositif" formControlName="idDispositif">
-                            </div>
-                        </div>
-
-                        <div class="form-group row">
-                            <label for="newDispositif" class="col-md-3 col-form-label text-md-right">
-                                Nom du Dispositif 
-                                </label>
-                            <div class="col-md-9 col-lg-7">
-                                <input type="text" id="newDispositif" class="form-control" placeholder="Nom du Dispositif" formControlName="newDispositif">
-                            </div>
-                        </div>
-
-                        <div class="form-group row">
-                            <label for="dispOrganisme" class="col-md-3 col-form-label text-md-right">
-                                Organisme
-                            </label>
-                            <div class="col-md-9 col-lg-7">
-                                <mat-select formControlName="dispOrganisme" placeholder="Organisme">
-                                    <mat-option *ngFor="let dispOrganisme of organismeList" [value]="dispOrganisme.id">{{dispOrganisme.nom_organisme}}</mat-option>
-                                </mat-select>
-                            </div>
-                        </div>
-
-
-                        <div class="form-group row">
-                            <label for="alluvial" class="col-md-3 col-form-label text-md-right">
-                                Alluvial
-                                </label>
-                            <div class="col-md-9 col-lg-7">
-                                <input type="checkbox" class="align-bottom" id="alluvial" placeholder="Alluvial" formControlName="alluvial">
-                            </div>
-                        </div>
-
-                        <pnx-dynamic-form-generator [autoGenerated]="true" [myFormGroup]="dynamicDispFormGroup" [formsDefinition]="FORM_CONFIG">
-                        </pnx-dynamic-form-generator>
-
-
-
-                        <div *ngIf="isDispDrawerMaj; else dispElseBlock" class="text-center">
-                            <button type="button" class="btn btn-success" [disabled]="!dispForm.valid || !dynamicDispFormGroup.valid || disableSubmitDisp" (click)="updateDisp()">
-                                Mettre à jour
-                            </button>
-                        </div>
-                        <ng-template #dispElseBlock>
-                            <div class="text-center">
-                                <button type="button" class="btn btn-success" [disabled]="!dispForm.valid || !dynamicDispFormGroup.valid || disableSubmitDisp" (click)="addDisp()">
-                                    Ajouter
-                                </button>
-                            </div>
-                        </ng-template>
-
-
-
-
-
-                    </form>
-                </div>
-
-            </mat-drawer>
-            <div class="example-sidenav-content">
-                <admin-table [tableName]="'disp'" [displayedColumns]="displayedColumns['Disp']" [data]="dispositifList" (updatingRow)="openUpdateForm($event, 'dispDrawer')" (deletingRow)="deleteRow($event, 'disp')">
-                </admin-table>
-
-                <button type="button" class="btn btn-success ml-4 mt-4" (click)="toggleDispDrawer()">
-                Montrer le formulaire
-              </button>
-            </div>
-        </mat-drawer-container>
-    </mat-card>
-</div>
-
-
-<div class="container-fluid p-2">
-    <mat-card>
-        <mat-card-title>Table des Organismes</mat-card-title>
-        <mat-drawer-container class="p-5" autosize>
-            <mat-drawer #OrganismeDrawer class="request-sidenav" mode="side" position="end" [opened]="isOrganismeDrawerShowing">
-                <button class="m-2" mat-raised-button matTooltip="Cacher le formulaire" (click)="toggleOrganismeDrawer()">
-                    <mat-icon> arrow_forward </mat-icon>
-                </button>
-
-                <div class="panel-body ">
-                    <form [formGroup]="organismeForm">
-                        <div class="form-group row">
-                            <label for="newOrganisme" class="col-md-3 col-form-label text-md-right">
-                                Id de l'organisme
-                                </label>
-                            <div class="col-md-9 col-lg-7">
-                                {{majId}}
-                            </div>
-                        </div>
-                        <div class="form-group row">
-                            <label for="newOrganisme" class="col-md-3 col-form-label text-md-right">
-                                Nom de l'organisme
-                                </label>
-                            <div class="col-md-9 col-lg-7">
-                                <input type="text" id="newOrganisme" class="form-control" placeholder="Nom de l'organisme" formControlName="newOrganisme">
-                            </div>
-                        </div>
-
-                        <div class="form-group row">
-                            <label for="adresseOrga" class="col-md-3 col-form-label text-md-right">
-                                Adresse
-                                </label>
-                            <div class="col-md-9 col-lg-7">
-                                <input type="text" id="adresseOrga" class="form-control" placeholder="Adresse" formControlName="adresseOrga">
-                            </div>
-                        </div>
-
-                        <div class="form-group row">
-                            <label for="cpOrga" class="col-md-3 col-form-label text-md-right">
-                                Code Postal
-                                </label>
-                            <div class="col-md-9 col-lg-7">
-                                <input type="text" id="cpOrga" class="form-control" placeholder="Code Postal" formControlName="cpOrga">
-                            </div>
-                        </div>
-
-                        <div class="form-group row">
-                            <label for="villeOrga" class="col-md-3 col-form-label text-md-right">
-                                Ville
-                                </label>
-                            <div class="col-md-9 col-lg-7">
-                                <input type="text" id="villeOrga" class="form-control" placeholder="Ville" formControlName="villeOrga">
-                            </div>
-                        </div>
-
-                        <div class="form-group row">
-                            <label for="telOrga" class="col-md-3 col-form-label text-md-right">
-                                Téléphone
-                                </label>
-                            <div class="col-md-9 col-lg-7">
-                                <input type="text" id="telOrga" class="form-control" placeholder="Téléphone" formControlName="telOrga">
-                            </div>
-                        </div>
-
-                        <div class="form-group row">
-                            <label for="mailOrga" class="col-md-3 col-form-label text-md-right">
-                                Email
-                                </label>
-                            <div class="col-md-9 col-lg-7">
-                                <input type="text" id="mailOrga" class="form-control" placeholder="Email" formControlName="mailOrga">
-                            </div>
-                        </div>
-
-                        <pnx-dynamic-form-generator [autoGenerated]="true" [myFormGroup]="dynamicOrganismeFormGroup" [formsDefinition]="FORM_CONFIG">
-                        </pnx-dynamic-form-generator>
-
-                        <div *ngIf="isOrganismeDrawerMaj; else organismeElseBlock" class="text-center">
-                            <button type="button" class="btn btn-success" [disabled]="!organismeForm.valid || !dynamicOrganismeFormGroup.valid || disableSubmitOrganisme" (click)="updateOrganisme()">
-                                Mettre à jour
-                            </button>
-                        </div>
-                        <ng-template #organismeElseBlock>
-                            <div class="text-center">
-                                <button type="button" class="btn btn-success" [disabled]="!organismeForm.valid || !dynamicOrganismeFormGroup.valid || disableSubmitOrganisme" (click)="addOrganisme()">
-                                    Ajouter
-                                </button>
-                            </div>
-                        </ng-template>
-
-                    </form>
-                </div>
-
-            </mat-drawer>
-            <div class="example-sidenav-content">
-                <admin-table [tableName]="'organisme'" [displayedColumns]="displayedColumns['Orga']" [data]="organismeList" (updatingRow)="openUpdateForm($event, 'organismeDrawer')" (deletingRow)="deleteRow($event, 'organisme')">
-                </admin-table>
-
-                <button type="button" class="btn btn-success ml-4 mt-4" (click)="toggleOrganismeDrawer()">
-                Montrer le formulaire
-              </button>
-            </div>
-        </mat-drawer-container>
-    </mat-card>
-</div>
-
-
-<div class="container-fluid p-2">
-    <mat-card>
-        <mat-card-title>Import de PSDRF Listes</mat-card-title>
-        <mat-card-content>
-            <div class="container " appDnd (fileDropped)="onPSDRFListeDropped($event)" *ngIf="!isPsdrfListeCharging">
-                <div class="importzone d-flex align-items-center justify-content-center">
-                    <div class="h-25 text-center">
-                        <input type="file" #fileDropRef id="fileDropRef" accept=".xlsx, .xls">
-                        <h3>Déposer </h3>
-                        <h3>ou</h3>
-                        <div class="custom-file">
-                            <input type="file" class="custom-file-input" id="customFile" name="excelFile" (change)="onPSDRFListeSelect($event)" #UploadFileInput accept=".xlsx, .xls">
-                            <label>Choisir un fichier</label>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div *ngIf="isPsdrfListeCharging">
-                <div class="d-flex justify-content-center">
-                    <div class="d-flex justify-content-between single-file">
-                        <img src="external_assets/psdrf/ms-excel.svg" width="30px" alt="file">
-                        <div class="info ml-3">
-                            <h4 class="name">
-                                {{ psdrfListeFile?.name }}
-                            </h4>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="mt-1 d-flex justify-content-center">
-                    <button class="action-button-class" mat-raised-button matTooltip="Supprimer" (click)="deleteFile()">
-                        <mat-icon> delete </mat-icon>
-                    </button>
-                    <div *ngIf="!isFileContainingFatalError">
-                        <button *ngIf="!psdrfListUploading" class="action-button-class" mat-raised-button matTooltip="Intégrer les données à la base de données" (click)="psdrfListeUpdate()">
-                            <mat-icon > cloud_upload </mat-icon>
-                        </button>
-                        <button *ngIf="psdrfListUploading" class="action-button-class spinner-button" mat-raised-button matTooltip="Intégration des données en cours" disabled>
-                            <mat-spinner diameter="22" color="primary"></mat-spinner>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-        </mat-card-content>
-    </mat-card>
-</div>
-
-<div class="container-fluid p-2">
-    <mat-card>
-      <mat-card-title>Import de Placettes</mat-card-title>
-      <mat-card-content>
-        <div class="container" appDnd (fileDropped)="onPlacetteDropped($event)" *ngIf="!isPlacetteCharging">
-          <div class="importzone d-flex align-items-center justify-content-center">
-            <div class="h-25 text-center">
-              <input type="file" #placetteDropRef id="placetteDropRef" accept=".xlsx, .xls">
-              <h3>Déposer </h3>
-              <h3>ou</h3>
-              <div class="custom-file">
-                <input type="file" class="custom-file-input" id="placetteFile" name="placetteExcelFile" (change)="onPlacetteSelect($event)" #placetteUploadFileInput accept=".xlsx, .xls">
-                <label for="placetteFile">Choisir un fichier</label>
+  <mat-card>
+    <mat-card-title>Table des Utilisateurs</mat-card-title>
+    <mat-drawer-container class="p-5" autosize>
+      <mat-drawer
+        #userDrawer
+        class="request-sidenav"
+        mode="side"
+        position="end"
+        [opened]="isUserDrawerShowing"
+      >
+        <button
+          class="m-2"
+          mat-raised-button
+          matTooltip="Cacher le formulaire"
+          (click)="toggleUserDrawer()"
+        >
+          <mat-icon> arrow_forward </mat-icon>
+        </button>
+        <div class="panel-body">
+          <form [formGroup]="userForm">
+            <h5>Utilisateur</h5>
+
+            <div class="form-group row">
+              <label
+                for="prenom_role"
+                class="col-md-3 col-form-label text-md-right"
+              >
+                Prénom
+              </label>
+              <div class="col-md-9 col-lg-7">
+                <input
+                  type="text"
+                  class="form-control"
+                  id="prenom_role"
+                  placeholder="Prénom"
+                  formControlName="prenom_role"
+                />
+                <small
+                  *ngIf="
+                    userForm.get('prenom_role').hasError('required') &&
+                    userForm.get('prenom_role').touched
+                  "
+                >
+                  Ce champ est nécessaire
+                </small>
               </div>
+            </div>
+
+            <div class="form-group row">
+              <label
+                for="nom_role"
+                class="col-md-3 col-form-label text-md-right"
+              >
+                Nom
+              </label>
+              <div class="col-md-9 col-lg-7">
+                <input
+                  type="text"
+                  class="form-control"
+                  id="nom_role"
+                  placeholder="Nom"
+                  formControlName="nom_role"
+                />
+                <small
+                  *ngIf="
+                    userForm.get('nom_role').hasError('required') &&
+                    userForm.get('nom_role').touched
+                  "
+                >
+                  Ce champ est nécessaire
+                </small>
+              </div>
+            </div>
+
+            <div class="form-group row">
+              <label for="email" class="col-md-3 col-form-label text-md-right">
+                Adresse email
+              </label>
+              <div class="col-md-9 col-lg-7">
+                <input
+                  type="text"
+                  [ngClass]="
+                    userForm.disabled
+                      ? 'form-control-plaintext'
+                      : 'form-control'
+                  "
+                  id="email"
+                  placeholder="Email"
+                  formControlName="email"
+                />
+              </div>
+            </div>
+
+            <h5>Compte</h5>
+
+            <div class="form-group row">
+              <label
+                for="identifiant"
+                class="col-md-3 col-form-label text-md-right"
+              >
+                Identifiant
+              </label>
+              <div class="col-md-9 col-lg-7">
+                <input
+                  type="text"
+                  class="form-control"
+                  id="identifiant"
+                  placeholder="Identifiant"
+                  formControlName="identifiant"
+                  matTooltipPosition="above"
+                  matTooltip="Cet identifiant vous sera demandé pour vous authentifier dans GeoNature."
+                />
+                <small
+                  *ngIf="
+                    userForm.get('identifiant').hasError('required') &&
+                    userForm.get('identifiant').touched
+                  "
+                >
+                  Ce champ est nécessaire
+                </small>
+              </div>
+            </div>
+
+            <h5>Informations complémentaires</h5>
+
+            <div class="form-group row">
+              <label
+                for="organisme"
+                class="col-md-3 col-form-label text-md-right"
+              >
+                Organisme
+              </label>
+              <div class="col-md-9 col-lg-7">
+                <mat-select
+                  formControlName="organisme"
+                  placeholder="Organisme"
+                  [compareWith]="compareCategoryObjects"
+                >
+                  <mat-option
+                    *ngFor="let organisme of organismeList"
+                    [value]="organisme.id"
+                    >{{ organisme.nom_organisme }}</mat-option
+                  >
+                </mat-select>
+              </div>
+            </div>
+
+            <div class="form-group row">
+              <label
+                for="remarques"
+                class="col-md-3 col-form-label text-md-right"
+              >
+                Remarques
+              </label>
+              <div class="col-md-9 col-lg-7">
+                <textarea
+                  id="remarques"
+                  class="form-control"
+                  placeholder="Précisions diverses..."
+                  formControlName="remarques"
+                ></textarea>
+              </div>
+            </div>
+
+            <pnx-dynamic-form-generator
+              [autoGenerated]="true"
+              [myFormGroup]="dynamicUserFormGroup"
+              [formsDefinition]="FORM_CONFIG"
+            >
+            </pnx-dynamic-form-generator>
+
+            <div class="text-center">
+              <button
+                type="button"
+                class="btn btn-success"
+                [disabled]="
+                  !userForm.valid ||
+                  !dynamicUserFormGroup.valid ||
+                  disableSubmit
+                "
+                (click)="save()"
+              >
+                Inscrire
+              </button>
+            </div>
+          </form>
+        </div>
+      </mat-drawer>
+      <div class="example-sidenav-content">
+        <admin-table
+          [tableName]="'user'"
+          [displayedColumns]="displayedColumns['User']"
+          [data]="utilisateurList"
+          (updatingRow)="openUpdateForm($event, 'userDrawer')"
+        >
+        </admin-table>
+
+        <button
+          type="button"
+          class="btn btn-success ml-4 mt-4"
+          (click)="toggleUserDrawer()"
+        >
+          Montrer le formulaire
+        </button>
+      </div>
+    </mat-drawer-container>
+  </mat-card>
+</div>
+
+<div class="container-fluid p-2">
+  <mat-card>
+    <mat-card-title>Table des dispositifs et des utilisateurs</mat-card-title>
+    <mat-drawer-container class="p-5" autosize>
+      <mat-drawer
+        #userDispDrawer
+        class="request-sidenav"
+        mode="side"
+        position="end"
+        [opened]="isUserDispDrawerShowing"
+      >
+        <button
+          class="m-2"
+          mat-raised-button
+          matTooltip="Cacher le formulaire"
+          (click)="toggleUserDispDrawer()"
+        >
+          <mat-icon> arrow_forward </mat-icon>
+        </button>
+        <div class="panel-body">
+          <form [formGroup]="userDispForm">
+            <div class="form-group row">
+              <label
+                for="utilisateur"
+                class="col-md-3 col-form-label text-md-right"
+                >Utilisateur</label
+              >
+              <div class="col-md-9 col-lg-7">
+                <input
+                  type="text"
+                  matInput
+                  formControlName="utilisateur"
+                  [matAutocomplete]="autoUser"
+                />
+                <mat-autocomplete
+                  #autoUser="matAutocomplete"
+                  [displayWith]="displayFn"
+                >
+                  <mat-option
+                    *ngFor="let utilisateur of filteredUtilisateurs | async"
+                    [value]="utilisateur"
+                  >
+                    {{ utilisateur.nom_utilisateur }}
+                    {{ utilisateur.prenom_utilisateur }}
+                  </mat-option>
+                </mat-autocomplete>
+              </div>
+            </div>
+
+            <!-- Dispositif Autocomplete -->
+            <div class="form-group row">
+              <label
+                for="dispositif"
+                class="col-md-3 col-form-label text-md-right"
+                >Dispositif</label
+              >
+              <div class="col-md-9 col-lg-7">
+                <input
+                  type="text"
+                  matInput
+                  formControlName="dispositif"
+                  [matAutocomplete]="autoDisp"
+                />
+                <mat-autocomplete
+                  #autoDisp="matAutocomplete"
+                  [displayWith]="displayFn"
+                >
+                  <mat-option
+                    *ngFor="let dispositif of filteredDispositifs | async"
+                    [value]="dispositif"
+                  >
+                    {{ dispositif.nom_dispositif }}
+                  </mat-option>
+                </mat-autocomplete>
+              </div>
+            </div>
+
+            <div
+              *ngIf="isUserDispDrawerMaj; else userElseBlock"
+              class="text-center"
+            >
+              <button
+                type="button"
+                class="btn btn-success"
+                [disabled]="!userDispForm.valid || disableSubmitUserDisp"
+                (click)="updateRoleDisp()"
+              >
+                Mettre à jour
+              </button>
+            </div>
+            <ng-template #userElseBlock>
+              <div class="text-center">
+                <button
+                  type="button"
+                  class="btn btn-success"
+                  [disabled]="!userDispForm.valid || disableSubmitUserDisp"
+                  (click)="addRoleDisp()"
+                >
+                  Inscrire
+                </button>
+              </div>
+            </ng-template>
+          </form>
+        </div>
+      </mat-drawer>
+      <div class="example-sidenav-content">
+        <admin-table
+          [tableName]="'userDisp'"
+          [displayedColumns]="displayedColumns['UserDisp']"
+          [data]="userDispList"
+          (updatingRow)="openUpdateForm($event, 'userDispDrawer')"
+          (deletingRow)="deleteRow($event, 'userDisp')"
+        >
+        </admin-table>
+
+        <button
+          type="button"
+          class="btn btn-success ml-4 mt-4"
+          (click)="toggleUserDispDrawer()"
+        >
+          Montrer le formulaire
+        </button>
+      </div>
+    </mat-drawer-container>
+  </mat-card>
+</div>
+
+<div class="container-fluid p-2">
+  <mat-card>
+    <mat-card-title>Table des dispositifs</mat-card-title>
+    <mat-drawer-container class="p-5" autosize>
+      <mat-drawer
+        #DispDrawer
+        class="request-sidenav"
+        mode="side"
+        position="end"
+        [opened]="isDispDrawerShowing"
+      >
+        <button
+          class="m-2"
+          mat-raised-button
+          matTooltip="Cacher le formulaire"
+          (click)="toggleDispDrawer()"
+        >
+          <mat-icon> arrow_forward </mat-icon>
+        </button>
+        <div class="panel-body">
+          <form [formGroup]="dispForm">
+            <div class="form-group row">
+              <label
+                for="idDispositif"
+                class="col-md-3 col-form-label text-md-right"
+              >
+                Id du Dispositif
+              </label>
+              <div class="col-md-9 col-lg-7">
+                <input
+                  type="number"
+                  id="idDispositif"
+                  class="form-control"
+                  placeholder="Id du Dispositif"
+                  formControlName="idDispositif"
+                />
+              </div>
+            </div>
+
+            <div class="form-group row">
+              <label
+                for="newDispositif"
+                class="col-md-3 col-form-label text-md-right"
+              >
+                Nom du Dispositif
+              </label>
+              <div class="col-md-9 col-lg-7">
+                <input
+                  type="text"
+                  id="newDispositif"
+                  class="form-control"
+                  placeholder="Nom du Dispositif"
+                  formControlName="newDispositif"
+                />
+              </div>
+            </div>
+
+            <div class="form-group row">
+              <label
+                for="dispOrganisme"
+                class="col-md-3 col-form-label text-md-right"
+              >
+                Organisme
+              </label>
+              <div class="col-md-9 col-lg-7">
+                <mat-select
+                  formControlName="dispOrganisme"
+                  placeholder="Organisme"
+                >
+                  <mat-option
+                    *ngFor="let dispOrganisme of organismeList"
+                    [value]="dispOrganisme.id"
+                    >{{ dispOrganisme.nom_organisme }}</mat-option
+                  >
+                </mat-select>
+              </div>
+            </div>
+
+            <div class="form-group row">
+              <label
+                for="alluvial"
+                class="col-md-3 col-form-label text-md-right"
+              >
+                Alluvial
+              </label>
+              <div class="col-md-9 col-lg-7">
+                <input
+                  type="checkbox"
+                  class="align-bottom"
+                  id="alluvial"
+                  placeholder="Alluvial"
+                  formControlName="alluvial"
+                />
+              </div>
+            </div>
+
+            <pnx-dynamic-form-generator
+              [autoGenerated]="true"
+              [myFormGroup]="dynamicDispFormGroup"
+              [formsDefinition]="FORM_CONFIG"
+            >
+            </pnx-dynamic-form-generator>
+
+            <div
+              *ngIf="isDispDrawerMaj; else dispElseBlock"
+              class="text-center"
+            >
+              <button
+                type="button"
+                class="btn btn-success"
+                [disabled]="
+                  !dispForm.valid ||
+                  !dynamicDispFormGroup.valid ||
+                  disableSubmitDisp
+                "
+                (click)="updateDisp()"
+              >
+                Mettre à jour
+              </button>
+            </div>
+            <ng-template #dispElseBlock>
+              <div class="text-center">
+                <button
+                  type="button"
+                  class="btn btn-success"
+                  [disabled]="
+                    !dispForm.valid ||
+                    !dynamicDispFormGroup.valid ||
+                    disableSubmitDisp
+                  "
+                  (click)="addDisp()"
+                >
+                  Ajouter
+                </button>
+              </div>
+            </ng-template>
+          </form>
+        </div>
+      </mat-drawer>
+      <div class="example-sidenav-content">
+        <admin-table
+          [tableName]="'disp'"
+          [displayedColumns]="displayedColumns['Disp']"
+          [data]="dispositifList"
+          (updatingRow)="openUpdateForm($event, 'dispDrawer')"
+          (deletingRow)="deleteRow($event, 'disp')"
+        >
+        </admin-table>
+
+        <button
+          type="button"
+          class="btn btn-success ml-4 mt-4"
+          (click)="toggleDispDrawer()"
+        >
+          Montrer le formulaire
+        </button>
+      </div>
+    </mat-drawer-container>
+  </mat-card>
+</div>
+
+<div class="container-fluid p-2">
+  <mat-card>
+    <mat-card-title>Table des Organismes</mat-card-title>
+    <mat-drawer-container class="p-5" autosize>
+      <mat-drawer
+        #OrganismeDrawer
+        class="request-sidenav"
+        mode="side"
+        position="end"
+        [opened]="isOrganismeDrawerShowing"
+      >
+        <button
+          class="m-2"
+          mat-raised-button
+          matTooltip="Cacher le formulaire"
+          (click)="toggleOrganismeDrawer()"
+        >
+          <mat-icon> arrow_forward </mat-icon>
+        </button>
+
+        <div class="panel-body">
+          <form [formGroup]="organismeForm">
+            <div class="form-group row">
+              <label
+                for="newOrganisme"
+                class="col-md-3 col-form-label text-md-right"
+              >
+                Id de l'organisme
+              </label>
+              <div class="col-md-9 col-lg-7">
+                {{ majId }}
+              </div>
+            </div>
+            <div class="form-group row">
+              <label
+                for="newOrganisme"
+                class="col-md-3 col-form-label text-md-right"
+              >
+                Nom de l'organisme
+              </label>
+              <div class="col-md-9 col-lg-7">
+                <input
+                  type="text"
+                  id="newOrganisme"
+                  class="form-control"
+                  placeholder="Nom de l'organisme"
+                  formControlName="newOrganisme"
+                />
+              </div>
+            </div>
+
+            <div class="form-group row">
+              <label
+                for="adresseOrga"
+                class="col-md-3 col-form-label text-md-right"
+              >
+                Adresse
+              </label>
+              <div class="col-md-9 col-lg-7">
+                <input
+                  type="text"
+                  id="adresseOrga"
+                  class="form-control"
+                  placeholder="Adresse"
+                  formControlName="adresseOrga"
+                />
+              </div>
+            </div>
+
+            <div class="form-group row">
+              <label for="cpOrga" class="col-md-3 col-form-label text-md-right">
+                Code Postal
+              </label>
+              <div class="col-md-9 col-lg-7">
+                <input
+                  type="text"
+                  id="cpOrga"
+                  class="form-control"
+                  placeholder="Code Postal"
+                  formControlName="cpOrga"
+                />
+              </div>
+            </div>
+
+            <div class="form-group row">
+              <label
+                for="villeOrga"
+                class="col-md-3 col-form-label text-md-right"
+              >
+                Ville
+              </label>
+              <div class="col-md-9 col-lg-7">
+                <input
+                  type="text"
+                  id="villeOrga"
+                  class="form-control"
+                  placeholder="Ville"
+                  formControlName="villeOrga"
+                />
+              </div>
+            </div>
+
+            <div class="form-group row">
+              <label
+                for="telOrga"
+                class="col-md-3 col-form-label text-md-right"
+              >
+                Téléphone
+              </label>
+              <div class="col-md-9 col-lg-7">
+                <input
+                  type="text"
+                  id="telOrga"
+                  class="form-control"
+                  placeholder="Téléphone"
+                  formControlName="telOrga"
+                />
+              </div>
+            </div>
+
+            <div class="form-group row">
+              <label
+                for="mailOrga"
+                class="col-md-3 col-form-label text-md-right"
+              >
+                Email
+              </label>
+              <div class="col-md-9 col-lg-7">
+                <input
+                  type="text"
+                  id="mailOrga"
+                  class="form-control"
+                  placeholder="Email"
+                  formControlName="mailOrga"
+                />
+              </div>
+            </div>
+
+            <pnx-dynamic-form-generator
+              [autoGenerated]="true"
+              [myFormGroup]="dynamicOrganismeFormGroup"
+              [formsDefinition]="FORM_CONFIG"
+            >
+            </pnx-dynamic-form-generator>
+
+            <div
+              *ngIf="isOrganismeDrawerMaj; else organismeElseBlock"
+              class="text-center"
+            >
+              <button
+                type="button"
+                class="btn btn-success"
+                [disabled]="
+                  !organismeForm.valid ||
+                  !dynamicOrganismeFormGroup.valid ||
+                  disableSubmitOrganisme
+                "
+                (click)="updateOrganisme()"
+              >
+                Mettre à jour
+              </button>
+            </div>
+            <ng-template #organismeElseBlock>
+              <div class="text-center">
+                <button
+                  type="button"
+                  class="btn btn-success"
+                  [disabled]="
+                    !organismeForm.valid ||
+                    !dynamicOrganismeFormGroup.valid ||
+                    disableSubmitOrganisme
+                  "
+                  (click)="addOrganisme()"
+                >
+                  Ajouter
+                </button>
+              </div>
+            </ng-template>
+          </form>
+        </div>
+      </mat-drawer>
+      <div class="example-sidenav-content">
+        <admin-table
+          [tableName]="'organisme'"
+          [displayedColumns]="displayedColumns['Orga']"
+          [data]="organismeList"
+          (updatingRow)="openUpdateForm($event, 'organismeDrawer')"
+          (deletingRow)="deleteRow($event, 'organisme')"
+        >
+        </admin-table>
+
+        <button
+          type="button"
+          class="btn btn-success ml-4 mt-4"
+          (click)="toggleOrganismeDrawer()"
+        >
+          Montrer le formulaire
+        </button>
+      </div>
+    </mat-drawer-container>
+  </mat-card>
+</div>
+
+<div class="container-fluid p-2">
+  <mat-card>
+    <mat-card-title>Import de PSDRF Listes</mat-card-title>
+    <mat-card-content>
+      <div
+        class="container"
+        appDnd
+        (fileDropped)="onPSDRFListeDropped($event)"
+        *ngIf="!isPsdrfListeCharging"
+      >
+        <div
+          class="importzone d-flex align-items-center justify-content-center"
+        >
+          <div class="h-25 text-center">
+            <input
+              type="file"
+              #fileDropRef
+              id="fileDropRef"
+              accept=".xlsx, .xls"
+            />
+            <h3>Déposer</h3>
+            <h3>ou</h3>
+            <div class="custom-file">
+              <input
+                type="file"
+                class="custom-file-input"
+                id="customFile"
+                name="excelFile"
+                (change)="onPSDRFListeSelect($event)"
+                #UploadFileInput
+                accept=".xlsx, .xls"
+              />
+              <label>Choisir un fichier</label>
             </div>
           </div>
         </div>
-        <div *ngIf="isPlacetteCharging">
-          <div class="d-flex justify-content-center">
-            <div class="d-flex justify-content-between single-file">
-              <img src="external_assets/psdrf/ms-excel.svg" width="30px" alt="file">
-              <div class="info ml-3">
-                <h4 class="name">
-                  {{ placetteFile?.name }}
-                </h4>
-              </div>
+      </div>
+      <div *ngIf="isPsdrfListeCharging">
+        <div class="d-flex justify-content-center">
+          <div class="d-flex justify-content-between single-file">
+            <img
+              src="./assets/psdrf/assets/ms-excel.svg"
+              width="30px"
+              alt="file"
+            />
+            <div class="info ml-3">
+              <h4 class="name">
+                {{ psdrfListeFile?.name }}
+              </h4>
             </div>
           </div>
-  
-          <div class="mt-1 d-flex justify-content-center">
-            <button class="action-button-class" mat-raised-button matTooltip="Supprimer" (click)="deletePlacetteFile()">
-              <mat-icon> delete </mat-icon>
+        </div>
+
+        <div class="mt-1 d-flex justify-content-center">
+          <mat-checkbox [(ngModel)]="updateCodeEcologie"
+            >Mettre à jour CodeEcologie</mat-checkbox
+          >
+        </div>
+
+        <div class="mt-1 d-flex justify-content-center">
+          <button
+            class="action-button-class"
+            mat-raised-button
+            matTooltip="Supprimer"
+            (click)="deleteFile()"
+          >
+            <mat-icon> delete </mat-icon>
+          </button>
+          <div *ngIf="!isFileContainingFatalError">
+            <button
+              *ngIf="!psdrfListUploading"
+              class="action-button-class"
+              mat-raised-button
+              matTooltip="Intégrer les données à la base de données"
+              (click)="psdrfListeUpdate()"
+            >
+              <mat-icon> cloud_upload </mat-icon>
             </button>
-            <div *ngIf="!isFileContainingFatalError">
-              <button *ngIf="!placetteUploading" class="action-button-class" mat-raised-button matTooltip="Intégrer les données à la base de données" (click)="placetteUpdate()">
-                <mat-icon> cloud_upload </mat-icon>
-              </button>
-              <button *ngIf="placetteUploading" class="action-button-class spinner-button" mat-raised-button matTooltip="Intégration des données en cours" disabled>
-                <mat-spinner diameter="22" color="primary"></mat-spinner>
-              </button>
+            <button
+              *ngIf="psdrfListUploading"
+              class="action-button-class spinner-button"
+              mat-raised-button
+              matTooltip="Intégration des données en cours"
+              disabled
+            >
+              <mat-spinner diameter="22" color="primary"></mat-spinner>
+            </button>
+          </div>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>
+
+<div class="container-fluid p-2">
+  <mat-card>
+    <mat-card-title>Import de Placettes</mat-card-title>
+    <mat-card-content>
+      <div
+        class="container"
+        appDnd
+        (fileDropped)="onPlacetteDropped($event)"
+        *ngIf="!isPlacetteCharging"
+      >
+        <div
+          class="importzone d-flex align-items-center justify-content-center"
+        >
+          <div class="h-25 text-center">
+            <input
+              type="file"
+              #placetteDropRef
+              id="placetteDropRef"
+              accept=".xlsx, .xls"
+            />
+            <h3>Déposer</h3>
+            <h3>ou</h3>
+            <div class="custom-file">
+              <input
+                type="file"
+                class="custom-file-input"
+                id="placetteFile"
+                name="placetteExcelFile"
+                (change)="onPlacetteSelect($event)"
+                #placetteUploadFileInput
+                accept=".xlsx, .xls"
+              />
+              <label for="placetteFile">Choisir un fichier</label>
             </div>
           </div>
         </div>
-      </mat-card-content>
-    </mat-card>
-  </div>
-  
+      </div>
+      <div *ngIf="isPlacetteCharging">
+        <div class="d-flex justify-content-center">
+          <div class="d-flex justify-content-between single-file">
+            <img
+              src="./assets/psdrf/assets/ms-excel.svg"
+              width="30px"
+              alt="file"
+            />
+            <div class="info ml-3">
+              <h4 class="name">
+                {{ placetteFile?.name }}
+              </h4>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-1 d-flex justify-content-center">
+          <button
+            class="action-button-class"
+            mat-raised-button
+            matTooltip="Supprimer"
+            (click)="deletePlacetteFile()"
+          >
+            <mat-icon> delete </mat-icon>
+          </button>
+          <div *ngIf="!isFileContainingFatalError">
+            <button
+              *ngIf="!placetteUploading"
+              class="action-button-class"
+              mat-raised-button
+              matTooltip="Intégrer les données à la base de données"
+              (click)="placetteUpdate()"
+            >
+              <mat-icon> cloud_upload </mat-icon>
+            </button>
+            <button
+              *ngIf="placetteUploading"
+              class="action-button-class spinner-button"
+              mat-raised-button
+              matTooltip="Intégration des données en cours"
+              disabled
+            >
+              <mat-spinner diameter="22" color="primary"></mat-spinner>
+            </button>
+          </div>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

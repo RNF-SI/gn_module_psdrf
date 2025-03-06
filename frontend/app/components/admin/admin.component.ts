@@ -2,13 +2,14 @@ import {Component, Input, Output, EventEmitter, OnInit} from '@angular/core';
 import { FormGroup, FormBuilder, Validators, FormControl } from '@angular/forms';
 import { Router } from "@angular/router";
 import { PsdrfDataService } from "../../services/route.service";
-import { AppConfig } from '@geonature_config/app.config';
+import { ConfigService } from '@geonature/services/config.service';
 import { ToastrService } from 'ngx-toastr';
 import { AuthService } from '@geonature/components/auth/auth.service';
 import * as _ from "lodash";
 import { MatDialog } from "@angular/material/dialog";
 import { ConfirmationDialog } from "@geonature_common/others/modal-confirmation/confirmation.dialog";
-
+import { Observable } from 'rxjs';
+import { map, startWith } from 'rxjs/operators';
 
 
 export interface UserDisp {
@@ -69,6 +70,9 @@ export interface Orga {
     dispositifList : Disp[] = [];
     dispositifs = new FormControl();
 
+    filteredUtilisateurs: Observable<User[]>;
+    filteredDispositifs: Observable<Disp[]>;
+
     utilisateurList : User[] = [];
     utilisateurs = new FormControl();
 
@@ -79,7 +83,6 @@ export interface Orga {
 
 
     userDispForm: FormGroup;
-    dynamicUserDispFormGroup: FormGroup;
     userDispList: UserDisp[];
 
     organismeForm: FormGroup;
@@ -102,13 +105,15 @@ export interface Orga {
     private placetteUploading: boolean = false;
     private isPlacetteLoaded: boolean = false;
 
+    // Variable servant à update ou nom les données des codes ecologie lors de l'update de psdrfListe
+    updateCodeEcologie: boolean = false;
 
     public disableSubmit = false;
     public disableSubmitUserDisp = false;
     public disableSubmitOrganisme = false;
     public disableSubmitDisp = false;
     public formControlBuilded = false;
-    public FORM_CONFIG = AppConfig.ACCOUNT_MANAGEMENT.ACCOUNT_FORM;
+    public FORM_CONFIG = this.config.ACCOUNT_MANAGEMENT.ACCOUNT_FORM;
 
     constructor(
         private fb: FormBuilder,
@@ -119,7 +124,9 @@ export interface Orga {
         private _router: Router,
         private _toasterService: ToastrService,
         private dataSrv: PsdrfDataService,
-        public dialog: MatDialog
+        public dialog: MatDialog,
+        public config: ConfigService,
+
     ) {
     }
 
@@ -133,6 +140,9 @@ export interface Orga {
         this.createUserDispForm();
         this.createDispForm();
         this.createOrganismeForm();
+
+        this.initFilter();
+
     }
 
     /**
@@ -162,7 +172,6 @@ export interface Orga {
         utilisateur: ['', Validators.required],
         dispositif: ['', Validators.required]
       });
-      this.dynamicUserDispFormGroup = this.fbUserDisp.group({});
     }
 
     createDispForm() {
@@ -227,6 +236,31 @@ export interface Orga {
         }
       );
     }
+
+    initFilter() {
+      this.filteredUtilisateurs = this.userDispForm.get('utilisateur').valueChanges
+        .pipe(
+          startWith(''),
+          map(value => typeof value === 'string' ? this.filter('utilisateur', value) : this.filter('utilisateur', ''))
+        );
+    
+      this.filteredDispositifs = this.userDispForm.get('dispositif').valueChanges
+        .pipe(
+          startWith(''),
+          map(value => typeof value === 'string' ? this.filter('dispositif', value) : this.filter('dispositif', ''))
+        );
+    }
+
+    filter(type: string, value: string): any[] {
+      const filterValue = value.toLowerCase();
+      return type === 'utilisateur' ?
+        this.utilisateurList.filter(option => (option.nom_utilisateur + ' ' + option.prenom_utilisateur).toLowerCase().includes(filterValue)) :
+        this.dispositifList.filter(option => option.nom_dispositif.toLowerCase().includes(filterValue));
+    }
+  
+    displayFn(userOrDisp: any): string {
+      return userOrDisp ? (userOrDisp.nom_utilisateur ? `${userOrDisp.nom_utilisateur} ${userOrDisp.prenom_utilisateur}` : userOrDisp.nom_dispositif) : '';
+    }
     
 
     save() {
@@ -237,7 +271,7 @@ export interface Orga {
         const finalForm = Object.assign({}, this.userForm.value);
         console.log(finalForm)
         // concatenate two forms
-        if (AppConfig.ACCOUNT_MANAGEMENT.ACCOUNT_FORM.length > 0) {
+        if (this.config.ACCOUNT_MANAGEMENT.ACCOUNT_FORM.length > 0) {
           finalForm['champs_addi'] = this.dynamicUserFormGroup.value;
         }
         this._authService
@@ -265,7 +299,7 @@ export interface Orga {
         this.userForm.value.password_confirmation = "psdrf_mdp";
         const finalForm = Object.assign({}, this.userForm.value);
         // concatenate two forms
-        if (AppConfig.ACCOUNT_MANAGEMENT.ACCOUNT_FORM.length > 0) {
+        if (this.config.ACCOUNT_MANAGEMENT.ACCOUNT_FORM.length > 0) {
           finalForm['champs_addi'] = this.dynamicUserFormGroup.value;
         }
         this._authService
@@ -289,15 +323,18 @@ export interface Orga {
     addRoleDisp() {
       if (this.userDispForm.valid) {
         this.disableSubmitUserDisp = true;
-        const finalForm = Object.assign({}, this.userDispForm.value);
-        this.dataSrv
-          .addCorDispRole(finalForm)
+        // Extracting IDs or necessary properties
+        const finalForm = {
+          utilisateur: this.userDispForm.value.utilisateur.id_utilisateur,  // Adjust 'id' based on actual property
+          dispositif: this.userDispForm.value.dispositif.id_dispositif    // Adjust 'id' based on actual property
+        };
+    
+        this.dataSrv.addCorDispRole(finalForm)
           .subscribe(
-            res => {          
-              this._toasterService.success("Le dispositif "+ finalForm.dispositif +" a bien été ajouté à la liste des dispositifs modifiables par le rôle "+ finalForm.utilisateur, '');
+            res => {
+              this._toasterService.success("Le dispositif " + finalForm.dispositif + " a bien été ajouté à la liste des dispositifs modifiables par le rôle " + finalForm.utilisateur, '');
               this.getUserDisps();
             },
-            // error callback
             error => {
               this._toasterService.error(error.error.msg, '');
             }
@@ -307,6 +344,7 @@ export interface Orga {
           });
       }
     }
+    
 
     updateRoleDisp() {
       if (this.userDispForm.valid) {
@@ -665,39 +703,38 @@ export interface Orga {
       })
     }
 
-    psdrfListeUpdate(){
-      this.psdrfListUploading = true;   
-      this.dataSrv
-        .psdrf_liste_update(
-          this.psdrfListeFile
-        )
-        .subscribe(
-          integrationObj => {
-            this.psdrfListUploading = false;   
-            if(integrationObj.success){
-              this._toasterService.success("PSDRF liste a bien été actualisée", "Mise à jour de PSDRF liste", {
-                closeButton: true,
-                disableTimeOut: true,
-              });
-            } else {
-              this._toasterService.error("Une erreur s'est produite lors de l'actualisation de psdrf liste.", "Mise à jour de PSDRF liste", {
-                closeButton: true,
-                disableTimeOut: true,
-              });
-            }
+    psdrfListeUpdate() {
+      this.psdrfListUploading = true;
+      const formData = new FormData();
+      formData.append('file_upload', this.psdrfListeFile, 'psdrfListe');
+      formData.append('updateCodeEcologie', this.updateCodeEcologie.toString());
 
-          },
-          error => {
-            this._toasterService.error(error.message, "Mise à jour de PSDRF liste", {
-              closeButton: true,
-              disableTimeOut: true,
-            });
-            this.psdrfListUploading = false;
-            this.isPSDRFListeLoaded = false;
-            
-          }
-        );
-    }
+      this.dataSrv.psdrf_liste_update(formData)
+          .subscribe(
+              integrationObj => {
+                  this.psdrfListUploading = false;
+                  if (integrationObj.success) {
+                      this._toasterService.success("PSDRF liste a bien été actualisée", "Mise à jour de PSDRF liste", {
+                          closeButton: true,
+                          disableTimeOut: true,
+                      });
+                  } else {
+                      this._toasterService.error("Une erreur s'est produite lors de l'actualisation de psdrf liste.", "Mise à jour de PSDRF liste", {
+                          closeButton: true,
+                          disableTimeOut: true,
+                      });
+                  }
+              },
+              error => {
+                  this._toasterService.error(error.message, "Mise à jour de PSDRF liste", {
+                      closeButton: true,
+                      disableTimeOut: true,
+                  });
+                  this.psdrfListUploading = false;
+                  this.isPSDRFListeLoaded = false;
+              }
+          );
+  }
 
     // Placette File Part
     // Add methods for handling Placette file events
