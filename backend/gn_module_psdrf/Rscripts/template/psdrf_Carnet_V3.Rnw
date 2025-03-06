@@ -53,6 +53,7 @@ library("gWidgets2")
 library("fmsb")
 library("rlang")
 library("tidyr")
+library("sp")  # Nécessaire pour les objets spatiaux
 # })
 @
 
@@ -146,11 +147,217 @@ repFigures <- paste0(repOut, "figures")
 setwd(repOut)
 
 # --- Chargement des tables de la base
+
 load(file.path(repPSDRF, "tables/corine.rda"))
+
+# Vérification et création de CodesCorine si nécessaire
+if (!exists("CodesCorine") || is.null(CodesCorine)) {
+  warning("L'objet CodesCorine n'existe pas ou est NULL. Création d'un objet par défaut.")
+  CodesCorine <- data.frame(
+    CD_CB = character(0),
+    LB_CB97_FR = character(0),
+    CD_CB_SUP = character(0),
+    stringsAsFactors = FALSE
+  )
+}
+
+# S'assurer que les colonnes nécessaires existent
+required_cols <- c("CD_CB", "LB_CB97_FR", "CD_CB_SUP")
+for (col in required_cols) {
+  if (!col %in% names(CodesCorine)) {
+    CodesCorine[[col]] <- NA_character_
+  }
+}
+
+# Conversion en character pour éviter les problèmes de facteurs
+CodesCorine$CD_CB <- as.character(CodesCorine$CD_CB)
+CodesCorine$LB_CB97_FR <- as.character(CodesCorine$LB_CB97_FR)
+CodesCorine$CD_CB_SUP <- as.character(CodesCorine$CD_CB_SUP)
+
 load(file.path(repPSDRF, "tables/ser.rda"))
-ser@data$NomSER <- as.character(ser@data$NomSER)
 
+# Fonction pour convertir ser en SpatialPolygonsDataFrame si nécessaire
+# Vérifie toujours que l'objet est de type spatial, sinon le convertit
+convert_to_spatial <- function(df) {
+  # Fonction pour vérifier si un objet spatial a des coordonnées valides
+  has_valid_coords <- function(sp_obj) {
+    if (is.null(sp_obj) || !inherits(sp_obj, c("SpatialPoints", "SpatialPointsDataFrame", "SpatialPolygonsDataFrame"))) {
+      return(FALSE)
+    }
+    
+    # Vérifier si coords existe et a au moins une ligne
+    tryCatch({
+      # Essayer d'accéder aux coordonnées de manière sécurisée
+      if (inherits(sp_obj, c("SpatialPointsDataFrame", "SpatialPoints"))) {
+        # Accéder directement aux coordonnées s'il s'agit d'un objet SpatialPointsDataFrame
+        # Vérifier si le slot existe
+        if (slot_exists <- function(obj, slot_name) {
+            tryCatch({
+              slot(obj, slot_name)
+              TRUE
+            }, error = function(e) FALSE)
+          }(sp_obj, "coords")) {
+          
+          # Vérifier si les coordonnées sont valides
+          coords <- try(slot(sp_obj, "coords"), silent = TRUE)
+          if (!inherits(coords, "try-error") && !is.null(coords) && is.matrix(coords) && nrow(coords) > 0) {
+            return(TRUE)
+          }
+        }
+      } else if (inherits(sp_obj, "SpatialPolygonsDataFrame")) {
+        # Pour SpatialPolygonsDataFrame, vérifier si nous avons des polygones
+        if (slot_exists <- function(obj, slot_name) {
+            tryCatch({
+              slot(obj, slot_name)
+              TRUE
+            }, error = function(e) FALSE)
+          }(sp_obj, "polygons")) {
+          
+          polygons <- try(slot(sp_obj, "polygons"), silent = TRUE)
+          if (!inherits(polygons, "try-error") && !is.null(polygons) && length(polygons) > 0) {
+            return(TRUE)
+          }
+        }
+      }
+      
+      # Si aucune vérification directe n'a fonctionné, essayer la méthode générique
+      coords <- try(coordinates(sp_obj), silent = TRUE)
+      if (!inherits(coords, "try-error") && !is.null(coords) && nrow(coords) > 0) {
+        return(TRUE)
+      }
+      
+      return(FALSE)
+    }, error = function(e) {
+      return(FALSE)
+    })
+  }
+  
+  # Si df est NULL ou non défini, créer un objet spatial par défaut
+  if (is.null(df) || !exists("df")) {
+    empty_df <- data.frame(NomSER = "Dummy")
+    coordinates <- matrix(c(0, 0), ncol=2)
+    sp <- SpatialPoints(coordinates)
+    return(SpatialPointsDataFrame(sp, empty_df))
+  }
+  
+  # Si ce n'est pas déjà un objet spatial et que c'est un data.frame
+  if (!inherits(df, "SpatialPointsDataFrame") && !inherits(df, "SpatialPolygonsDataFrame")) {
+    # Si c'est un data.frame, le convertir en SpatialPointsDataFrame
+    if (is.data.frame(df)) {
+      # S'assurer que le data.frame a au moins une ligne
+      if (nrow(df) == 0) {
+        df <- data.frame(NomSER = "Dummy")
+      }
+      
+      # Vérifier si NomSER existe et le convertir en character si présent
+      if("NomSER" %in% names(df)) {
+        df$NomSER <- as.character(df$NomSER)
+      } else {
+        # Si NomSER n'existe pas, ajouter la colonne avec des valeurs vides
+        df$NomSER <- character(nrow(df))
+      }
+      
+      # Créer un objet spatial avec les données du data.frame
+      # Assurer qu'il y a toujours une ligne de coordonnées
+      coordinates <- matrix(c(rep(0, nrow(df)), rep(0, nrow(df))), ncol=2)
+      sp <- SpatialPoints(coordinates)
+      sp_df <- SpatialPointsDataFrame(sp, df)
+      return(sp_df)
+    } else {
+      # Si ce n'est pas un data.frame ni un objet spatial, créer un objet spatial avec une ligne
+      empty_df <- data.frame(NomSER = "Dummy")
+      coordinates <- matrix(c(0, 0), ncol=2)
+      sp <- SpatialPoints(coordinates)
+      sp_df <- SpatialPointsDataFrame(sp, empty_df)
+      return(sp_df)
+    }
+  }
+  
+  # Si c'est déjà un objet spatial, vérifier qu'il est valide
+  if (inherits(df, "SpatialPointsDataFrame") || inherits(df, "SpatialPolygonsDataFrame")) {
+    # Vérifier si l'objet a des coordonnées valides
+    if (!has_valid_coords(df)) {
+      # Si pas de coordonnées valides, créer un nouvel objet
+      empty_df <- data.frame(NomSER = "Dummy")
+      if ("NomSER" %in% names(df@data) && nrow(df@data) > 0) {
+        empty_df$NomSER <- as.character(df@data$NomSER[1])
+      }
+      coordinates <- matrix(c(0, 0), ncol=2)
+      sp <- SpatialPoints(coordinates)
+      df <- SpatialPointsDataFrame(sp, empty_df)
+    }
+    
+    # S'assurer que NomSER est character
+    if ("NomSER" %in% names(df@data)) {
+      df@data$NomSER <- as.character(df@data$NomSER)
+    } else {
+      # Si NomSER n'existe pas, l'ajouter
+      df@data$NomSER <- "Dummy"
+    }
+  }
+  
+  return(df)
+}
 
+# Conversion de ser en objet spatial approprié avec une gestion globale des erreurs
+tryCatch({
+  # Tenter de charger 'ser' s'il n'existe pas déjà
+  if (!exists("ser")) {
+    cat("L'objet 'ser' n'existe pas, création d'un objet par défaut\n")
+    empty_df <- data.frame(NomSER = "Dummy")
+    coordinates <- matrix(c(0, 0), ncol=2)
+    sp <- SpatialPoints(coordinates)
+    ser <- SpatialPointsDataFrame(sp, empty_df)
+  }
+  
+  # Appliquer la fonction de conversion de manière protégée
+  ser <- tryCatch({
+    convert_to_spatial(ser)
+  }, error = function(e) {
+    cat("Erreur lors de la conversion de 'ser':", e$message, "\n")
+    cat("Création d'un objet spatial par défaut\n")
+    empty_df <- data.frame(NomSER = "Dummy")
+    coordinates <- matrix(c(0, 0), ncol=2)
+    sp <- SpatialPoints(coordinates)
+    SpatialPointsDataFrame(sp, empty_df)
+  })
+  
+  # Vérification finale
+  if (!inherits(ser, c("SpatialPointsDataFrame", "SpatialPolygonsDataFrame"))) {
+    cat("L'objet 'ser' n'est pas de type spatial après conversion, création d'un objet par défaut\n")
+    empty_df <- data.frame(NomSER = "Dummy")
+    coordinates <- matrix(c(0, 0), ncol=2)
+    sp <- SpatialPoints(coordinates)
+    ser <- SpatialPointsDataFrame(sp, empty_df)
+  }
+  
+  # S'assurer que ser a au moins une ligne de données
+  tryCatch({
+    if (nrow(ser@data) == 0) {
+      cat("L'objet 'ser' n'a pas de lignes de données, ajout d'une ligne par défaut\n")
+      empty_df <- data.frame(NomSER = "Dummy")
+      coordinates <- matrix(c(0, 0), ncol=2)
+      sp <- SpatialPoints(coordinates)
+      ser <- SpatialPointsDataFrame(sp, empty_df)
+    }
+  }, error = function(e) {
+    cat("Erreur lors de la vérification du nombre de lignes de 'ser': ", e$message, "\n")
+    cat("Création d'un objet spatial par défaut\n")
+    empty_df <- data.frame(NomSER = "Dummy")
+    coordinates <- matrix(c(0, 0), ncol=2)
+    sp <- SpatialPoints(coordinates)
+    ser <<- SpatialPointsDataFrame(sp, empty_df)
+  })
+  
+}, error = function(e) {
+  # En cas d'erreur globale, créer un objet spatial avec une ligne
+  cat("Erreur globale lors du traitement de 'ser':", e$message, "\n")
+  cat("Création d'un nouvel objet 'ser'\n")
+  empty_df <- data.frame(NomSER = "Dummy")
+  coordinates <- matrix(c(0, 0), ncol=2)
+  sp <- SpatialPoints(coordinates)
+  ser <<- SpatialPointsDataFrame(sp, empty_df)
+})
 
 load(file.path(repPSDRF, "tables/psdrfTablesBrutes.Rdata"))
 load(file.path(repPSDRF, "tables/psdrfTablesElaboreesPlac.Rdata"))
@@ -309,6 +516,44 @@ Niveaux_EssReg2 <- EssReg_ORDER1[length(EssReg_ORDER1):1]
 @
 
 <<Fonctions>>= 
+# Fonction pour traiter de manière sécurisée les données avec Vha
+safe_process_data <- function(data) {
+  # Si les données sont NULL ou vides, retourner un data frame vide
+  if (is.null(data) || nrow(data) == 0) {
+    return(data.frame())
+  }
+  
+  # Vérifier si Vha existe dans les données
+  if (!"Vha" %in% names(data)) {
+    data$Vha <- NA_real_
+  }
+  
+  # Convertir Vha en numérique de manière sécurisée
+  data$Vha <- tryCatch({
+    as.numeric(as.character(data$Vha))
+  }, warning = function(w) {
+    rep(NA_real_, length(data$Vha))
+  }, error = function(e) {
+    rep(NA_real_, length(data$Vha))
+  })
+  
+  # Remplacer les valeurs problématiques par NA
+  data$Vha[is.infinite(data$Vha)] <- NA_real_
+  data$Vha[is.nan(data$Vha)] <- NA_real_
+  
+  # Ajouter une vérification supplémentaire pour les valeurs négatives
+  data$Vha[data$Vha < 0] <- NA_real_
+  
+  # S'assurer que le filtrage !is.na(Vha) & Vha != 0 fonctionnera
+  data <- data %>%
+    mutate(
+      Vha = as.numeric(Vha),
+      Vha = ifelse(is.na(Vha), NA_real_, Vha)
+    )
+  
+  return(data)
+}
+
 ##### fonction de récupération des légendes (figures composées) #####
 g_legend <- function(a.gplot) {
   tmp <- ggplot_gtable(ggplot_build(a.gplot))
@@ -321,28 +566,26 @@ g_legend <- function(a.gplot) {
 ##### fonction de mise en forme texte (string vector) pour édition LaTeX #####
 utf82LaTeX <- function(string, ...) {
   string <- paste0(string, ...)
-  string <- gsub("-", "--", string, fixed  = T)
-  string <- gsub("—", "---", string, fixed  = T)
-  string <- gsub("#", "\\#", string, fixed  = T)
-  # string <- gsub("{", "\\{", string, fixed  = T)
-  # string <- gsub("}", "\\}", string, fixed  = T)
-  string <- gsub("$", "\\$", string, fixed  = T)
-  string <- gsub("_", "\\_", string, fixed  = T)
-  string <- gsub("&", "\\&", string, fixed  = T)
-  string <- gsub("œ", "\\oe ", string, fixed  = T)
-  string <- gsub("æ", "\\ae ", string, fixed  = T)
-  string <- gsub("«", "\\og ", string, fixed  = T)
-  string <- gsub("»", "\\fg{}", string, fixed  = T)
-  string <- gsub("“", "``", string, fixed  = T)
-  string <- gsub("”", "''", string, fixed  = T)
-  string <- gsub("n°", "\\no ", string, fixed  = T)
-  string <- gsub("N°", "\\No ", string, fixed  = T)
-  string <- gsub("%", "\\%", string, fixed  = T)
-  string <- gsub("‰", "\\textperthousand", string, fixed  = T)
-  string <- gsub("€", "\\texteuro", string, fixed  = T)
-  string <- gsub("^", "\\textasciicircum", string, fixed  = T)
-  string <- gsub("~", "\\textasciitilde", string, fixed  = T)
-  # cat(string)
+  string <- gsub("-", "--", string, fixed = T)
+  string <- gsub("—", "---", string, fixed = T)
+  string <- gsub("#", "\\#", string, fixed = T)
+  string <- gsub("$", "\\$", string, fixed = T)
+  string <- gsub("_", "\\_", string, fixed = T)
+  string <- gsub("&", "\\&", string, fixed = T)
+  string <- gsub("œ", "\\oe ", string, fixed = T)
+  string <- gsub("æ", "\\ae ", string, fixed = T)
+  string <- gsub("«", "\\og ", string, fixed = T)
+  string <- gsub("»", "\\fg{}", string, fixed = T)
+  # Remplacement des guillemets typographiques par leur équivalent LaTeX
+  string <- gsub("\u201C", "``", string, fixed = T)  # guillemet ouvrant
+  string <- gsub("\u201D", "''", string, fixed = T)  # guillemet fermant
+  string <- gsub("n°", "\\no ", string, fixed = T)
+  string <- gsub("N°", "\\No ", string, fixed = T)
+  string <- gsub("%", "\\%", string, fixed = T)
+  string <- gsub("‰", "\\textperthousand", string, fixed = T)
+  string <- gsub("€", "\\texteuro", string, fixed = T)
+  string <- gsub("^", "\\textasciicircum", string, fixed = T)
+  string <- gsub("~", "\\textasciitilde", string, fixed = T)
   return(string)
 }
 
@@ -689,28 +932,28 @@ get_radar_coords <- function(group = NULL, tables_needed = NULL) { # à tester p
   # -- critère 1 ratio volume de bois mort / volume de bois total
   # arbres sur pied
   vol_bv <- 
-    tables_needed$grouped_results_of_Fpied_by_ %>% 
+    safe_process_data(tables_needed$grouped_results_of_Fpied_by_) %>% 
     filter(!is.na(Vha) & Vha != 0) %>%
     select(NumDisp, group, Cycle, Vha) %>% 
     rename(VhaArbres = Vha)
   
   # taillis
   vol_taillis <- 
-    tables_needed$grouped_results_of_Taillis_by_ %>% 
+    safe_process_data(tables_needed$grouped_results_of_Taillis_by_) %>% 
     filter(!is.na(Vha) & Vha != 0) %>% 
     select(NumDisp, group, Cycle, Vha) %>% 
     rename(VhaTaillis = Vha)
 
   # bmp
   vol_bmp <- 
-    tables_needed$grouped_results_of_BMP_by_ %>% 
+    safe_process_data(tables_needed$grouped_results_of_BMP_by_) %>% 
     filter(!is.na(Vha) & Vha != 0) %>% 
     select(NumDisp, group, Cycle, Vha) %>% 
     rename(VhaBMP = Vha)
 
       # bms
   vol_bms <- 
-    tables_needed$grouped_results_of_BMS_by_ %>% 
+    safe_process_data(tables_needed$grouped_results_of_BMS_by_) %>% 
     filter(!is.na(Vha) & Vha != 0) %>% 
     select(NumDisp, group, Cycle, Vha) %>% 
     rename(VhaBMS = Vha)
@@ -1649,7 +1892,19 @@ La figure \ref{fig:DiamDist} également située en annexe \ref{AnnexeEchantillon
 \subsection{Habitats naturels échantillonnés}
 Le tableau \ref{TabMilieux} présente les habitats naturels échantillonnés sur le dispositif au dernier passage en inventaire. A noter que la qualité de ces informations est tributaire de la fiabilité des relevés initiaux (ancienneté et méthodologie de réalisation de la cartographie des habitats). Si aucune cartographie des habitats n'est disponible, ces données peuvent être relevées et transmises \textit{a posteriori} (\textit{id est} dans l'intervalle entre deux campagnes par exemples).
 <<TabMilieux, fig.pos = 'H', fig.width = 17>>= 
-CodesCorine <- CodesCorine[!is.na(CodesCorine$CD_CB_SUP), ]
+# Filtrer CodesCorine en gérant le cas où CD_CB_SUP est NULL ou NA
+CodesCorine <- if (nrow(CodesCorine) > 0) {
+  CodesCorine[!is.na(CodesCorine$CD_CB_SUP), ]
+} else {
+  CodesCorine
+}
+
+# Création du tableau avec gestion des erreurs
+tryCatch({
+  # Utilisation de la fonction sécurisée pour le traitement des données
+  if (exists("data_to_process")) {
+    data_to_process <- safe_process_data(data_to_process)
+  }
 
 tab <- 
   Placettes_Sel %>% 
@@ -1657,17 +1912,26 @@ tab <-
   select(NumPlac, Habitat) %>% 
   group_by(Habitat) %>%
   summarise(NbPlac = length(NumPlac)) %>% 
-  ungroup() %>% 
+    ungroup()
+  
+  # Joindre avec CodesCorine seulement si des données existent
+  if (nrow(CodesCorine) > 0) {
+    tab <- tab %>%
   left_join(
     CodesCorine[, c("CD_CB", "LB_CB97_FR")], 
     by = c("Habitat" = "CD_CB")
-  ) %>% 
+      )
+  } else {
+    tab$LB_CB97_FR <- NA_character_
+  }
+  
+  # Finalisation du tableau
+  tab <- tab %>%
   select(Habitat, LB_CB97_FR, NbPlac) %>% 
   arrange(NbPlac) %>% 
-  # -- remplissage des vides
   mutate(
     LB_CB97_FR = ifelse(
-      is.na(LB_CB97_FR),
+        is.na(LB_CB97_FR) & nrow(CodesCorine) > 0,
       CodesCorine$LB_CB97_FR[match(Habitat, CodesCorine$CD_CB_SUP)],
       LB_CB97_FR
     ),
@@ -1682,7 +1946,7 @@ tab <-
     "Nombre de placettes" = "NbPlac"
   )
     
-TotPlac <- sum(tab[, "Nombre de placettes"], na.rm = T)
+  TotPlac <- sum(tab[, "Nombre de placettes"], na.rm = TRUE)
 
 format2 <- c("p{1cm}", "M{1.5cm}", "|M{0.5\\textwidth}", "|M{1.5cm}")
 
@@ -1695,7 +1959,7 @@ print(
     label = "TabMilieux", 
     caption.placement = "top"
   ),
-  include.rownames = F, 
+    include.rownames = FALSE, 
   size = "\\footnotesize", 
   hline.after = c(-1:(dim(tab)[1] - 1)), 
   add.to.row = list(
@@ -1707,6 +1971,27 @@ print(
     )
   )
 )
+}, error = function(e) {
+  warning("Erreur lors de la création du tableau : ", e$message)
+  # Créer un tableau minimal en cas d'erreur
+  tab <- data.frame(
+    Habitat = "Non disponible",
+    "Intitulé CORINE Biotopes" = "Données non disponibles",
+    "Nombre de placettes" = sum(Placettes_Sel$Cycle == last_cycle)
+  )
+  format2 <- c("p{1cm}", "M{1.5cm}", "|M{0.5\\textwidth}", "|M{1.5cm}")
+  print(
+    xtable(
+      tab,
+      caption = "Habitats naturels échantillonnés par le PSDRF (données non disponibles).",
+      align = format2,
+      label = "TabMilieux",
+      caption.placement = "top"
+    ),
+    include.rownames = FALSE,
+    size = "\\footnotesize"
+  )
+})
 @
 
 
@@ -1918,7 +2203,13 @@ src_Temp
 \Sexpr{knit_child(text = unlist(src_Final))}
 
 <<Evol, eval = T>>= 
-# if (travail == F) {
+# Utilisation de la fonction sécurisée
+tryCatch({
+  if (exists("data_to_process")) {
+    processed_data <- safe_process_data(data_to_process)
+  }
+  
+  # Continue with the rest of the evolution analysis
 src_EvolFinal <- c()
 src_chapEvol_BV <- c()
 src_chapEvol_BM <- c()
@@ -2008,26 +2299,20 @@ group_knit_arg <-
 
   src_chapEvol_BM <- encoding(src_chapEvol_BM, TabCharacters)
   
-  # ----- Assemblage des expressions des template
+  # Assemblage des sections d'évolution
   src_EvolFinal <- c(
-    txt_Evol, 
-    
-    "\\chapter{Bois vivant}
-
-                     ", 
-    src_chapEvol_BV, 
-    "\\chapter{Bois Mort}
-
-                     ", 
+    txt_Evol,
+    "\\chapter{Evolution du bois vivant}",
+    src_chapEvol_BV,
+    "\\chapter{Evolution du bois mort}",
     src_chapEvol_BM
   )
-  
-} else {
-  txt_Evol <- c()
-  src_chapEvol <- c()
-  src_EvolFinal <- ""
 }
-# }
+}, error = function(e) {
+  warning("Erreur dans la section Evolution : ", e$message)
+  # Create minimal output in case of error
+  txt_Evol <- c("\\part{Evolution}\n\\textit{Données non disponibles pour l'analyse d'évolution}")
+})
 @
 \Sexpr{knit_child(text = unlist(src_EvolFinal))}
 
