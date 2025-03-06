@@ -73,6 +73,9 @@ library("sp")  # Nécessaire pour les objets spatiaux
 @
 
 <<Import>>= 
+# Rediriger tous les messages d'erreur et warnings vers le fichier de log
+sink(file=debug_file, append=TRUE, type="output")
+cat("\n\n=== DÉBUT IMPORT DES DONNÉES ===\n", file=debug_file, append=TRUE)
 
 ### Lancement manuel de l'édition du livret PSDRF #####
 # --- Choix du répertoire de travail
@@ -80,10 +83,21 @@ library("sp")  # Nécessaire pour les objets spatiaux
 repPSDRF <- "/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts"
 
 # --- Chargement des données administrateurs
-load(file.path(repPSDRF, "tables/psdrfCodes.Rdata"))
+tryCatch({
+  load(file.path(repPSDRF, "tables/psdrfCodes.Rdata"))
+}, error = function(e) {
+  cat("ERREUR chargement psdrfCodes.Rdata:", e$message, "\n", file=debug_file, append=TRUE)
+})
 
 # --- Chargement des données d'inventaire
-load(file.path(repPSDRF, "tables/psdrfDonneesBrutes.Rdata"))
+tryCatch({
+  load(file.path(repPSDRF, "tables/psdrfDonneesBrutes.Rdata"))
+}, error = function(e) {
+  cat("ERREUR chargement psdrfDonneesBrutes.Rdata:", e$message, "\n", file=debug_file, append=TRUE)
+})
+
+# Arrêter la redirection
+sink()
 
 # --- Identification du dispositif
 # ----- numéro du dispositif
@@ -318,7 +332,8 @@ convert_to_spatial <- function(df) {
 tryCatch({
   # Tenter de charger 'ser' s'il n'existe pas déjà
   if (!exists("ser")) {
-    cat("L'objet 'ser' n'existe pas, création d'un objet par défaut\n")
+    # Rediriger vers le fichier de log
+    cat("L'objet 'ser' n'existe pas, création d'un objet par défaut\n", file=debug_file, append=TRUE)
     empty_df <- data.frame(NomSER = "Dummy")
     coordinates <- matrix(c(0, 0), ncol=2)
     sp <- SpatialPoints(coordinates)
@@ -329,8 +344,9 @@ tryCatch({
   ser <- tryCatch({
     convert_to_spatial(ser)
   }, error = function(e) {
-    cat("Erreur lors de la conversion de 'ser':", e$message, "\n")
-    cat("Création d'un objet spatial par défaut\n")
+    # Rediriger vers le fichier de log
+    cat("Erreur lors de la conversion de 'ser':", e$message, "\n", file=debug_file, append=TRUE)
+    cat("Création d'un objet spatial par défaut\n", file=debug_file, append=TRUE)
     empty_df <- data.frame(NomSER = "Dummy")
     coordinates <- matrix(c(0, 0), ncol=2)
     sp <- SpatialPoints(coordinates)
@@ -339,7 +355,10 @@ tryCatch({
   
   # Vérification finale
   if (!inherits(ser, c("SpatialPointsDataFrame", "SpatialPolygonsDataFrame"))) {
-    cat("L'objet 'ser' n'est pas de type spatial après conversion, création d'un objet par défaut\n")
+    # Rediriger vers le fichier de log au lieu de cat() direct
+    message <- "L'objet 'ser' n'est pas de type spatial après conversion, création d'un objet par défaut"
+    cat(message, "\n", file=debug_file, append=TRUE)
+    
     empty_df <- data.frame(NomSER = "Dummy")
     coordinates <- matrix(c(0, 0), ncol=2)
     sp <- SpatialPoints(coordinates)
@@ -349,15 +368,20 @@ tryCatch({
   # S'assurer que ser a au moins une ligne de données
   tryCatch({
     if (nrow(ser@data) == 0) {
-      cat("L'objet 'ser' n'a pas de lignes de données, ajout d'une ligne par défaut\n")
+      # Rediriger vers le fichier de log
+      message <- "L'objet 'ser' n'a pas de lignes de données, ajout d'une ligne par défaut"
+      cat(message, "\n", file=debug_file, append=TRUE)
+      
       empty_df <- data.frame(NomSER = "Dummy")
       coordinates <- matrix(c(0, 0), ncol=2)
       sp <- SpatialPoints(coordinates)
       ser <- SpatialPointsDataFrame(sp, empty_df)
     }
   }, error = function(e) {
-    cat("Erreur lors de la vérification du nombre de lignes de 'ser': ", e$message, "\n")
-    cat("Création d'un objet spatial par défaut\n")
+    # Rediriger vers le fichier de log
+    cat("Erreur lors de la vérification du nombre de lignes de 'ser': ", e$message, "\n", file=debug_file, append=TRUE)
+    cat("Création d'un objet spatial par défaut\n", file=debug_file, append=TRUE)
+    
     empty_df <- data.frame(NomSER = "Dummy")
     coordinates <- matrix(c(0, 0), ncol=2)
     sp <- SpatialPoints(coordinates)
@@ -366,19 +390,51 @@ tryCatch({
   
 }, error = function(e) {
   # En cas d'erreur globale, créer un objet spatial avec une ligne
-  cat("Erreur globale lors du traitement de 'ser':", e$message, "\n")
-  cat("Création d'un nouvel objet 'ser'\n")
+  # Rediriger vers le fichier de log
+  cat("Erreur globale lors du traitement de 'ser':", e$message, "\n", file=debug_file, append=TRUE)
+  cat("Création d'un nouvel objet 'ser'\n", file=debug_file, append=TRUE)
+  
   empty_df <- data.frame(NomSER = "Dummy")
   coordinates <- matrix(c(0, 0), ncol=2)
   sp <- SpatialPoints(coordinates)
   ser <<- SpatialPointsDataFrame(sp, empty_df)
 })
 
-load(file.path(repPSDRF, "tables/psdrfTablesBrutes.Rdata"))
-load(file.path(repPSDRF, "tables/psdrfTablesElaboreesPlac.Rdata"))
-for(i in 1:length(TabPla)) {assign(names(TabPla)[i], TabPla[[i]])}
-load(file.path(repPSDRF, "tables/psdrfTablesElaborees.Rdata"))
-for(i in 1:length(Tableaux)) {assign(names(Tableaux)[i], Tableaux[[i]])}
+# Rediriger les messages d'erreur vers le fichier de log
+sink(file=debug_file, append=TRUE, type="output")
+cat("\n\n=== CHARGEMENT DES FICHIERS RDATA ===\n", file=debug_file, append=TRUE)
+
+# Charger de manière sécurisée avec tryCatch
+tryCatch({
+  load(file.path(repPSDRF, "tables/psdrfTablesBrutes.Rdata"))
+}, error = function(e) {
+  cat("ERREUR chargement psdrfTablesBrutes.Rdata:", e$message, "\n", file=debug_file, append=TRUE)
+})
+
+tryCatch({
+  load(file.path(repPSDRF, "tables/psdrfTablesElaboreesPlac.Rdata"))
+  if (exists("TabPla")) {
+    for(i in 1:length(TabPla)) {assign(names(TabPla)[i], TabPla[[i]])}
+  } else {
+    cat("AVERTISSEMENT: TabPla n'existe pas\n", file=debug_file, append=TRUE)
+  }
+}, error = function(e) {
+  cat("ERREUR chargement ou traitement psdrfTablesElaboreesPlac.Rdata:", e$message, "\n", file=debug_file, append=TRUE)
+})
+
+tryCatch({
+  load(file.path(repPSDRF, "tables/psdrfTablesElaborees.Rdata"))
+  if (exists("Tableaux")) {
+    for(i in 1:length(Tableaux)) {assign(names(Tableaux)[i], Tableaux[[i]])}
+  } else {
+    cat("AVERTISSEMENT: Tableaux n'existe pas\n", file=debug_file, append=TRUE)
+  }
+}, error = function(e) {
+  cat("ERREUR chargement ou traitement psdrfTablesElaborees.Rdata:", e$message, "\n", file=debug_file, append=TRUE)
+})
+
+# Arrêter la redirection
+sink()
 @
 
 <<Extraction>>=
@@ -2387,21 +2443,43 @@ src_Temp
 @
 <<process_src_final, echo=FALSE>>=
 process_src_final <- function() {
-  options(warn = 1)
+  # Désactiver des messages d'erreur et warnings qui pourraient interrompre la compilation
+  old_options <- options(show.error.messages = FALSE, warn = -1)
+  on.exit(options(old_options))  # Restaurer options originales à la sortie
   
-  if(!exists("src_Final") || is.null(src_Final)) {
-    return("\\textbf{Erreur: Variable src\\_Final manquante ou NULL}")
-  }
-  
-  safe_src <- unlist(src_Final)
-  if(length(safe_src) == 0) {
-    return("\\textbf{Erreur: src\\_Final est vide après unlist()}")
+  # Vérifier l'existence de src_Final
+  if (!exists("src_Final") || is.null(src_Final) || length(src_Final) == 0) {
+    cat("AVERTISSEMENT: src_Final manquant ou vide\n", file=debug_file, append=TRUE)
+    return("% Problème avec src_Final: section omise")
   }
   
   result <- tryCatch({
-    suppressWarnings(knit_child(text = safe_src))
+    # Traiter toute la chaîne
+    safe_src <- unlist(src_Final)
+    
+    # Vérifier si le résultat a du contenu
+    if (length(safe_src) == 0) {
+      cat("AVERTISSEMENT: src_Final vide après unlist\n", file=debug_file, append=TRUE)
+      return("% src_Final vide après traitement")
+    }
+    
+    # Essayer de générer le contenu
+    content <- tryCatch({
+      suppressWarnings(knit_child(text = safe_src))
+    }, error = function(e) {
+      cat("ERREUR dans knit_child:", e$message, "\n", file=debug_file, append=TRUE)
+      "% Erreur lors du traitement du contenu"
+    })
+    
+    # Sanitiser la sortie pour éviter d'injecter des erreurs dans le LaTeX
+    if (exists("sanitize_latex_output")) {
+      content <- sanitize_latex_output(content)
+    }
+    
+    return(content)
   }, error = function(e) {
-    paste0("\\textbf{Erreur lors de la génération: ", gsub("_", "\\\\_", e$message), "}")
+    cat("ERREUR GLOBALE:", e$message, "\n", file=debug_file, append=TRUE)
+    return("% Section omise à cause d'une erreur")
   })
   
   return(result)
@@ -2524,21 +2602,43 @@ group_knit_arg <-
 @
 <<process_src_evolfinal, echo=FALSE>>=
 process_src_evolfinal <- function() {
-  options(warn = 1)
+  # Désactiver des messages d'erreur et warnings qui pourraient interrompre la compilation
+  old_options <- options(show.error.messages = FALSE, warn = -1)
+  on.exit(options(old_options))  # Restaurer options originales à la sortie
   
-  if(!exists("src_EvolFinal") || is.null(src_EvolFinal)) {
-    return("\\textbf{Erreur: Variable src\\_EvolFinal manquante ou NULL}")
-  }
-  
-  safe_src <- unlist(src_EvolFinal)
-  if(length(safe_src) == 0) {
-    return("\\textbf{Erreur: src\\_EvolFinal est vide après unlist()}")
+  # Vérifier l'existence de src_EvolFinal
+  if (!exists("src_EvolFinal") || is.null(src_EvolFinal) || length(src_EvolFinal) == 0) {
+    cat("AVERTISSEMENT: src_EvolFinal manquant ou vide\n", file=debug_file, append=TRUE)
+    return("% Problème avec src_EvolFinal: section omise")
   }
   
   result <- tryCatch({
-    suppressWarnings(knit_child(text = safe_src))
+    # Traiter toute la chaîne
+    safe_src <- unlist(src_EvolFinal)
+    
+    # Vérifier si le résultat a du contenu
+    if (length(safe_src) == 0) {
+      cat("AVERTISSEMENT: src_EvolFinal vide après unlist\n", file=debug_file, append=TRUE)
+      return("% src_EvolFinal vide après traitement")
+    }
+    
+    # Essayer de générer le contenu
+    content <- tryCatch({
+      suppressWarnings(knit_child(text = safe_src))
+    }, error = function(e) {
+      cat("ERREUR dans knit_child (evolution):", e$message, "\n", file=debug_file, append=TRUE)
+      "% Erreur lors du traitement du contenu de l'évolution"
+    })
+    
+    # Sanitiser la sortie pour éviter d'injecter des erreurs dans le LaTeX
+    if (exists("sanitize_latex_output")) {
+      content <- sanitize_latex_output(content)
+    }
+    
+    return(content)
   }, error = function(e) {
-    paste0("\\textbf{Erreur lors de la génération de l'évolution: ", gsub("_", "\\\\_", e$message), "}")
+    cat("ERREUR GLOBALE (evolution):", e$message, "\n", file=debug_file, append=TRUE)
+    return("% Section évolution omise à cause d'une erreur")
   })
   
   return(result)
