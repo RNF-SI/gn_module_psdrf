@@ -149,6 +149,8 @@ backend/gn_module_psdrf/apk/app-release.apk
 
 # Compare files in R scripts
 backend/gn_module_psdrf/Rscripts/template/compare
+# ajouter les fichier dans  le folder debug_data
+backend/gn_module_psdrf/debug_data
 
 # debug_data
 backend/gn_module_psdrf/debug_data/
