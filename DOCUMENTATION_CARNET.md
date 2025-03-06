@@ -198,11 +198,56 @@ def generate_carnet(disp_id, is_carnet=True, is_plan=False):
 3. **Protection contre les NA** : Toujours utiliser les fonctions sécurisées comme `safe_filter_vha()`
 4. **Sanitisation LaTeX** : Utiliser `sanitize_latex_output()` pour les chaînes qui pourraient contenir des caractères spéciaux
 
+### 3. Exécution autonome sans GeoNature
+
+Pour faciliter les tests en dehors de l'environnement GeoNature complet, le script `generate_carnet_standalone.py` permet de générer des carnets directement depuis la base de données :
+
+```bash
+python generate_carnet_standalone.py <dispositif_id> [--nocarnet] [--plan]
+```
+
+Ce script :
+- Utilise la configuration dans `config/settings.ini` pour la connexion à la base de données
+- Fonctionne indépendamment de l'environnement GeoNature
+- Utilise directement SQLAlchemy pour les requêtes SQL
+- Produit exactement les mêmes résultats que l'interface web
+
+Configuration nécessaire dans `config/settings.ini` :
+```ini
+[standalone]
+# URI de connexion complète à la base de données
+db_uri = postgresql://user:password@host:port/database
+
+# Chemins vers les répertoires importants
+module_path = /chemin/vers/gn_module_psdrf
+geonature_path = /chemin/vers/geonature
+output_path = ${module_path}/backend/gn_module_psdrf/Rscripts/out
+scripts_path = ${module_path}/backend/gn_module_psdrf/Rscripts
+
+# Activer le mode debug
+debug_mode = false
+```
+
+## Script de nettoyage et test
+
+Le script `clean_and_test.sh` facilite le cycle de développement :
+
+```bash
+bash clean_and_test.sh <dispositif_id>
+```
+
+Ce script :
+1. Nettoie tous les fichiers temporaires de précédentes exécutions
+2. Initialise les fichiers de log pour un suivi propre
+3. Lance automatiquement la génération du carnet via `test_carnet.sh`
+
+Utile pour itérer rapidement sur les modifications du template sans avoir à nettoyer manuellement les fichiers.
+
 ## Workflow recommandé pour les modifications
 
-1. **Génération initiale** via l'interface web ou `generate_carnet_adapted.py` pour créer tous les fichiers nécessaires
+1. **Génération initiale** via l'interface web ou `generate_carnet_standalone.py` pour créer tous les fichiers nécessaires
 2. **Modifications du template** en utilisant `test_carnet_only.R` pour des itérations rapides
-3. **Test complet** en utilisant `test_carnet.sh` ou l'interface web
+3. **Test complet** en utilisant `clean_and_test.sh` pour nettoyer et régénérer
 4. **Debug** en consultant les fichiers de log en cas d'erreur
 
 ## Conclusion
