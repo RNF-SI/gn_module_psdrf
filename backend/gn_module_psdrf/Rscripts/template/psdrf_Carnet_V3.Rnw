@@ -84,14 +84,14 @@ repPSDRF <- "/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscrip
 
 # --- Chargement des données administrateurs
 tryCatch({
-  load(file.path(repPSDRF, "tables/psdrfCodes.Rdata"))
+load(file.path(repPSDRF, "tables/psdrfCodes.Rdata"))
 }, error = function(e) {
   cat("ERREUR chargement psdrfCodes.Rdata:", e$message, "\n", file=debug_file, append=TRUE)
 })
 
 # --- Chargement des données d'inventaire
 tryCatch({
-  load(file.path(repPSDRF, "tables/psdrfDonneesBrutes.Rdata"))
+load(file.path(repPSDRF, "tables/psdrfDonneesBrutes.Rdata"))
 }, error = function(e) {
   cat("ERREUR chargement psdrfDonneesBrutes.Rdata:", e$message, "\n", file=debug_file, append=TRUE)
 })
@@ -406,15 +406,15 @@ cat("\n\n=== CHARGEMENT DES FICHIERS RDATA ===\n", file=debug_file, append=TRUE)
 
 # Charger de manière sécurisée avec tryCatch
 tryCatch({
-  load(file.path(repPSDRF, "tables/psdrfTablesBrutes.Rdata"))
+load(file.path(repPSDRF, "tables/psdrfTablesBrutes.Rdata"))
 }, error = function(e) {
   cat("ERREUR chargement psdrfTablesBrutes.Rdata:", e$message, "\n", file=debug_file, append=TRUE)
 })
 
 tryCatch({
-  load(file.path(repPSDRF, "tables/psdrfTablesElaboreesPlac.Rdata"))
+load(file.path(repPSDRF, "tables/psdrfTablesElaboreesPlac.Rdata"))
   if (exists("TabPla")) {
-    for(i in 1:length(TabPla)) {assign(names(TabPla)[i], TabPla[[i]])}
+for(i in 1:length(TabPla)) {assign(names(TabPla)[i], TabPla[[i]])}
   } else {
     cat("AVERTISSEMENT: TabPla n'existe pas\n", file=debug_file, append=TRUE)
   }
@@ -423,9 +423,9 @@ tryCatch({
 })
 
 tryCatch({
-  load(file.path(repPSDRF, "tables/psdrfTablesElaborees.Rdata"))
+load(file.path(repPSDRF, "tables/psdrfTablesElaborees.Rdata"))
   if (exists("Tableaux")) {
-    for(i in 1:length(Tableaux)) {assign(names(Tableaux)[i], Tableaux[[i]])}
+for(i in 1:length(Tableaux)) {assign(names(Tableaux)[i], Tableaux[[i]])}
   } else {
     cat("AVERTISSEMENT: Tableaux n'existe pas\n", file=debug_file, append=TRUE)
   }
@@ -1128,7 +1128,7 @@ get_radar_coords <- function(group = NULL, tables_needed = NULL) { # à tester p
     select(NumDisp, group, Cycle, Vha) %>% 
     rename(VhaBMP = Vha)
 
-  # bms
+      # bms
   temp_data <- safe_process_data(tables_needed$grouped_results_of_BMS_by_)
   cat("\n[DEBUG BMS] Avant filtre:", dim(temp_data), "\n", file=debug_file, append=TRUE)
   if ("Vha" %in% names(temp_data)) {
@@ -2587,9 +2587,9 @@ group_knit_arg <-
   
   # Assemblage des sections d'évolution
   src_EvolFinal <- c(
-    txt_Evol,
+    txt_Evol, 
     "\\chapter{Evolution du bois vivant}",
-    src_chapEvol_BV,
+    src_chapEvol_BV, 
     "\\chapter{Evolution du bois mort}",
     src_chapEvol_BM
   )
