@@ -152,3 +152,8 @@ backend/gn_module_psdrf/Rscripts/template/compare
 
 # debug_data
 backend/gn_module_psdrf/debug_data/
+
+# Fichiers générés
+output_files/
+# Fichiers de log
+*.log
