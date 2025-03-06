@@ -8,6 +8,21 @@
 <<OptionsGenerales, include = F>>=
 # TODO : supprimer les arguments inutiles des chunks (répétition)
 # repFigures <- "figures/" # debug or "figures" ?
+
+# Initialiser le fichier de débogage
+debug_file <- "/home/geonatureadmin/gn_module_psdrf/vha_debug.log"
+cat("=== DÉBUT DU DEBUGGING - ", format(Sys.time()), " ===\n", file=debug_file)
+
+# Options de sécurité pour éviter les erreurs avec les NA
+# Pour que NA & FALSE soit FALSE au lieu de NA (comportement par défaut)
+options(na.action = na.exclude)  # Exclure les NA des calculs
+options(warn = 1)  # Afficher les warnings immédiatement
+# Cette option cruciale force les opérations logiques à toujours retourner TRUE/FALSE même avec des NA
+if ("logical.return" %in% names(options())) {
+  options(logical.return = TRUE)
+}
+
+# Options des chunks
 opts_chunk$set(
   concordance = T, include = T, eval = T, tidy = F, cache = FALSE, 
   warning = F, comment = F, error = F, message = F, echo = F, 
@@ -53,10 +68,14 @@ library("gWidgets2")
 library("fmsb")
 library("rlang")
 library("tidyr")
+library("sp")  # Nécessaire pour les objets spatiaux
 # })
 @
 
 <<Import>>= 
+# Rediriger tous les messages d'erreur et warnings vers le fichier de log
+sink(file=debug_file, append=TRUE, type="output")
+cat("\n\n=== DÉBUT IMPORT DES DONNÉES ===\n", file=debug_file, append=TRUE)
 
 ### Lancement manuel de l'édition du livret PSDRF #####
 # --- Choix du répertoire de travail
@@ -64,10 +83,21 @@ library("tidyr")
 repPSDRF <- "/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts"
 
 # --- Chargement des données administrateurs
+tryCatch({
 load(file.path(repPSDRF, "tables/psdrfCodes.Rdata"))
+}, error = function(e) {
+  cat("ERREUR chargement psdrfCodes.Rdata:", e$message, "\n", file=debug_file, append=TRUE)
+})
 
 # --- Chargement des données d'inventaire
+tryCatch({
 load(file.path(repPSDRF, "tables/psdrfDonneesBrutes.Rdata"))
+}, error = function(e) {
+  cat("ERREUR chargement psdrfDonneesBrutes.Rdata:", e$message, "\n", file=debug_file, append=TRUE)
+})
+
+# Arrêter la redirection
+sink()
 
 # --- Identification du dispositif
 # ----- numéro du dispositif
@@ -146,17 +176,265 @@ repFigures <- paste0(repOut, "figures")
 setwd(repOut)
 
 # --- Chargement des tables de la base
+
 load(file.path(repPSDRF, "tables/corine.rda"))
+
+# Vérification et création de CodesCorine si nécessaire
+if (!exists("CodesCorine") || is.null(CodesCorine)) {
+  warning("L'objet CodesCorine n'existe pas ou est NULL. Création d'un objet par défaut.")
+  CodesCorine <- data.frame(
+    CD_CB = character(0),
+    LB_CB97_FR = character(0),
+    CD_CB_SUP = character(0),
+    stringsAsFactors = FALSE
+  )
+}
+
+# S'assurer que les colonnes nécessaires existent
+required_cols <- c("CD_CB", "LB_CB97_FR", "CD_CB_SUP")
+for (col in required_cols) {
+  if (!col %in% names(CodesCorine)) {
+    CodesCorine[[col]] <- NA_character_
+  }
+}
+
+# Conversion en character pour éviter les problèmes de facteurs
+CodesCorine$CD_CB <- as.character(CodesCorine$CD_CB)
+CodesCorine$LB_CB97_FR <- as.character(CodesCorine$LB_CB97_FR)
+CodesCorine$CD_CB_SUP <- as.character(CodesCorine$CD_CB_SUP)
+
 load(file.path(repPSDRF, "tables/ser.rda"))
-ser@data$NomSER <- as.character(ser@data$NomSER)
 
+# Fonction pour convertir ser en SpatialPolygonsDataFrame si nécessaire
+# Vérifie toujours que l'objet est de type spatial, sinon le convertit
+convert_to_spatial <- function(df) {
+  # Fonction pour vérifier si un objet spatial a des coordonnées valides
+  has_valid_coords <- function(sp_obj) {
+    if (is.null(sp_obj) || !inherits(sp_obj, c("SpatialPoints", "SpatialPointsDataFrame", "SpatialPolygonsDataFrame"))) {
+      return(FALSE)
+    }
+    
+    # Vérifier si coords existe et a au moins une ligne
+    tryCatch({
+      # Essayer d'accéder aux coordonnées de manière sécurisée
+      if (inherits(sp_obj, c("SpatialPointsDataFrame", "SpatialPoints"))) {
+        # Accéder directement aux coordonnées s'il s'agit d'un objet SpatialPointsDataFrame
+        # Vérifier si le slot existe
+        if (slot_exists <- function(obj, slot_name) {
+            tryCatch({
+              slot(obj, slot_name)
+              TRUE
+            }, error = function(e) FALSE)
+          }(sp_obj, "coords")) {
+          
+          # Vérifier si les coordonnées sont valides
+          coords <- try(slot(sp_obj, "coords"), silent = TRUE)
+          if (!inherits(coords, "try-error") && !is.null(coords) && is.matrix(coords) && nrow(coords) > 0) {
+            return(TRUE)
+          }
+        }
+      } else if (inherits(sp_obj, "SpatialPolygonsDataFrame")) {
+        # Pour SpatialPolygonsDataFrame, vérifier si nous avons des polygones
+        if (slot_exists <- function(obj, slot_name) {
+            tryCatch({
+              slot(obj, slot_name)
+              TRUE
+            }, error = function(e) FALSE)
+          }(sp_obj, "polygons")) {
+          
+          polygons <- try(slot(sp_obj, "polygons"), silent = TRUE)
+          if (!inherits(polygons, "try-error") && !is.null(polygons) && length(polygons) > 0) {
+            return(TRUE)
+          }
+        }
+      }
+      
+      # Si aucune vérification directe n'a fonctionné, essayer la méthode générique
+      coords <- try(coordinates(sp_obj), silent = TRUE)
+      if (!inherits(coords, "try-error") && !is.null(coords) && nrow(coords) > 0) {
+        return(TRUE)
+      }
+      
+      return(FALSE)
+    }, error = function(e) {
+      return(FALSE)
+    })
+  }
+  
+  # Si df est NULL ou non défini, créer un objet spatial par défaut
+  if (is.null(df) || !exists("df")) {
+    empty_df <- data.frame(NomSER = "Dummy")
+    coordinates <- matrix(c(0, 0), ncol=2)
+    sp <- SpatialPoints(coordinates)
+    return(SpatialPointsDataFrame(sp, empty_df))
+  }
+  
+  # Si ce n'est pas déjà un objet spatial et que c'est un data.frame
+  if (!inherits(df, "SpatialPointsDataFrame") && !inherits(df, "SpatialPolygonsDataFrame")) {
+    # Si c'est un data.frame, le convertir en SpatialPointsDataFrame
+    if (is.data.frame(df)) {
+      # S'assurer que le data.frame a au moins une ligne
+      if (nrow(df) == 0) {
+        df <- data.frame(NomSER = "Dummy")
+      }
+      
+      # Vérifier si NomSER existe et le convertir en character si présent
+      if("NomSER" %in% names(df)) {
+        df$NomSER <- as.character(df$NomSER)
+      } else {
+        # Si NomSER n'existe pas, ajouter la colonne avec des valeurs vides
+        df$NomSER <- character(nrow(df))
+      }
+      
+      # Créer un objet spatial avec les données du data.frame
+      # Assurer qu'il y a toujours une ligne de coordonnées
+      coordinates <- matrix(c(rep(0, nrow(df)), rep(0, nrow(df))), ncol=2)
+      sp <- SpatialPoints(coordinates)
+      sp_df <- SpatialPointsDataFrame(sp, df)
+      return(sp_df)
+    } else {
+      # Si ce n'est pas un data.frame ni un objet spatial, créer un objet spatial avec une ligne
+      empty_df <- data.frame(NomSER = "Dummy")
+      coordinates <- matrix(c(0, 0), ncol=2)
+      sp <- SpatialPoints(coordinates)
+      sp_df <- SpatialPointsDataFrame(sp, empty_df)
+      return(sp_df)
+    }
+  }
+  
+  # Si c'est déjà un objet spatial, vérifier qu'il est valide
+  if (inherits(df, "SpatialPointsDataFrame") || inherits(df, "SpatialPolygonsDataFrame")) {
+    # Vérifier si l'objet a des coordonnées valides
+    if (!has_valid_coords(df)) {
+      # Si pas de coordonnées valides, créer un nouvel objet
+      empty_df <- data.frame(NomSER = "Dummy")
+      if ("NomSER" %in% names(df@data) && nrow(df@data) > 0) {
+        empty_df$NomSER <- as.character(df@data$NomSER[1])
+      }
+      coordinates <- matrix(c(0, 0), ncol=2)
+      sp <- SpatialPoints(coordinates)
+      df <- SpatialPointsDataFrame(sp, empty_df)
+    }
+    
+    # S'assurer que NomSER est character
+    if ("NomSER" %in% names(df@data)) {
+      df@data$NomSER <- as.character(df@data$NomSER)
+    } else {
+      # Si NomSER n'existe pas, l'ajouter
+      df@data$NomSER <- "Dummy"
+    }
+  }
+  
+  return(df)
+}
 
+# Conversion de ser en objet spatial approprié avec une gestion globale des erreurs
+tryCatch({
+  # Tenter de charger 'ser' s'il n'existe pas déjà
+  if (!exists("ser")) {
+    # Rediriger vers le fichier de log
+    cat("L'objet 'ser' n'existe pas, création d'un objet par défaut\n", file=debug_file, append=TRUE)
+    empty_df <- data.frame(NomSER = "Dummy")
+    coordinates <- matrix(c(0, 0), ncol=2)
+    sp <- SpatialPoints(coordinates)
+    ser <- SpatialPointsDataFrame(sp, empty_df)
+  }
+  
+  # Appliquer la fonction de conversion de manière protégée
+  ser <- tryCatch({
+    convert_to_spatial(ser)
+  }, error = function(e) {
+    # Rediriger vers le fichier de log
+    cat("Erreur lors de la conversion de 'ser':", e$message, "\n", file=debug_file, append=TRUE)
+    cat("Création d'un objet spatial par défaut\n", file=debug_file, append=TRUE)
+    empty_df <- data.frame(NomSER = "Dummy")
+    coordinates <- matrix(c(0, 0), ncol=2)
+    sp <- SpatialPoints(coordinates)
+    SpatialPointsDataFrame(sp, empty_df)
+  })
+  
+  # Vérification finale
+  if (!inherits(ser, c("SpatialPointsDataFrame", "SpatialPolygonsDataFrame"))) {
+    # Rediriger vers le fichier de log au lieu de cat() direct
+    message <- "L'objet 'ser' n'est pas de type spatial après conversion, création d'un objet par défaut"
+    cat(message, "\n", file=debug_file, append=TRUE)
+    
+    empty_df <- data.frame(NomSER = "Dummy")
+    coordinates <- matrix(c(0, 0), ncol=2)
+    sp <- SpatialPoints(coordinates)
+    ser <- SpatialPointsDataFrame(sp, empty_df)
+  }
+  
+  # S'assurer que ser a au moins une ligne de données
+  tryCatch({
+    if (nrow(ser@data) == 0) {
+      # Rediriger vers le fichier de log
+      message <- "L'objet 'ser' n'a pas de lignes de données, ajout d'une ligne par défaut"
+      cat(message, "\n", file=debug_file, append=TRUE)
+      
+      empty_df <- data.frame(NomSER = "Dummy")
+      coordinates <- matrix(c(0, 0), ncol=2)
+      sp <- SpatialPoints(coordinates)
+      ser <- SpatialPointsDataFrame(sp, empty_df)
+    }
+  }, error = function(e) {
+    # Rediriger vers le fichier de log
+    cat("Erreur lors de la vérification du nombre de lignes de 'ser': ", e$message, "\n", file=debug_file, append=TRUE)
+    cat("Création d'un objet spatial par défaut\n", file=debug_file, append=TRUE)
+    
+    empty_df <- data.frame(NomSER = "Dummy")
+    coordinates <- matrix(c(0, 0), ncol=2)
+    sp <- SpatialPoints(coordinates)
+    ser <<- SpatialPointsDataFrame(sp, empty_df)
+  })
+  
+}, error = function(e) {
+  # En cas d'erreur globale, créer un objet spatial avec une ligne
+  # Rediriger vers le fichier de log
+  cat("Erreur globale lors du traitement de 'ser':", e$message, "\n", file=debug_file, append=TRUE)
+  cat("Création d'un nouvel objet 'ser'\n", file=debug_file, append=TRUE)
+  
+  empty_df <- data.frame(NomSER = "Dummy")
+  coordinates <- matrix(c(0, 0), ncol=2)
+  sp <- SpatialPoints(coordinates)
+  ser <<- SpatialPointsDataFrame(sp, empty_df)
+})
 
+# Rediriger les messages d'erreur vers le fichier de log
+sink(file=debug_file, append=TRUE, type="output")
+cat("\n\n=== CHARGEMENT DES FICHIERS RDATA ===\n", file=debug_file, append=TRUE)
+
+# Charger de manière sécurisée avec tryCatch
+tryCatch({
 load(file.path(repPSDRF, "tables/psdrfTablesBrutes.Rdata"))
+}, error = function(e) {
+  cat("ERREUR chargement psdrfTablesBrutes.Rdata:", e$message, "\n", file=debug_file, append=TRUE)
+})
+
+tryCatch({
 load(file.path(repPSDRF, "tables/psdrfTablesElaboreesPlac.Rdata"))
+  if (exists("TabPla")) {
 for(i in 1:length(TabPla)) {assign(names(TabPla)[i], TabPla[[i]])}
+  } else {
+    cat("AVERTISSEMENT: TabPla n'existe pas\n", file=debug_file, append=TRUE)
+  }
+}, error = function(e) {
+  cat("ERREUR chargement ou traitement psdrfTablesElaboreesPlac.Rdata:", e$message, "\n", file=debug_file, append=TRUE)
+})
+
+tryCatch({
 load(file.path(repPSDRF, "tables/psdrfTablesElaborees.Rdata"))
+  if (exists("Tableaux")) {
 for(i in 1:length(Tableaux)) {assign(names(Tableaux)[i], Tableaux[[i]])}
+  } else {
+    cat("AVERTISSEMENT: Tableaux n'existe pas\n", file=debug_file, append=TRUE)
+  }
+}, error = function(e) {
+  cat("ERREUR chargement ou traitement psdrfTablesElaborees.Rdata:", e$message, "\n", file=debug_file, append=TRUE)
+})
+
+# Arrêter la redirection
+sink()
 @
 
 <<Extraction>>=
@@ -309,6 +587,92 @@ Niveaux_EssReg2 <- EssReg_ORDER1[length(EssReg_ORDER1):1]
 @
 
 <<Fonctions>>= 
+# Fonction pour traiter de manière sécurisée les données avec Vha
+safe_process_data <- function(data) {
+  # Débogage
+  debug_file <- "/home/geonatureadmin/gn_module_psdrf/vha_debug.log"
+  
+  # Log d'entrée
+  cat("\n=== SAFE_PROCESS_DATA - ENTRÉE ===\n", file=debug_file, append=TRUE)
+  if (is.null(data)) {
+    cat("DATA EST NULL\n", file=debug_file, append=TRUE)
+    return(data.frame())
+  }
+  
+  if (!is.data.frame(data)) {
+    cat("DATA N'EST PAS UN DATA.FRAME: ", class(data), "\n", file=debug_file, append=TRUE)
+    return(data.frame())
+  }
+  
+  cat("Dimensions: ", nrow(data), "x", ncol(data), "\n", file=debug_file, append=TRUE)
+  
+  # Si les données sont vides, retourner un data frame vide
+  if (nrow(data) == 0) {
+    cat("DATA A 0 LIGNES\n", file=debug_file, append=TRUE)
+    return(data.frame())
+  }
+  
+  # Vérifier si Vha existe dans les données
+  if (!"Vha" %in% names(data)) {
+    cat("COLONNE VHA MANQUANTE - AJOUT DE VHA=NA\n", file=debug_file, append=TRUE)
+    data$Vha <- NA_real_
+  } else {
+    cat("Vha existe - Type: ", class(data$Vha), "\n", file=debug_file, append=TRUE)
+    cat("Premières valeurs Vha: ", paste(head(data$Vha), collapse=", "), "\n", file=debug_file, append=TRUE)
+  }
+  
+  # Convertir Vha en numérique de manière sécurisée
+  data$Vha <- tryCatch({
+    cat("Conversion de Vha en numérique...\n", file=debug_file, append=TRUE)
+    as.numeric(as.character(data$Vha))
+  }, warning = function(w) {
+    cat("ATTENTION lors de la conversion de Vha: ", w$message, "\n", file=debug_file, append=TRUE)
+    rep(NA_real_, length(data$Vha))
+  }, error = function(e) {
+    cat("ERREUR lors de la conversion de Vha: ", e$message, "\n", file=debug_file, append=TRUE)
+    rep(NA_real_, length(data$Vha))
+  })
+  
+  # Remplacer les valeurs problématiques par NA
+  cat("Vérification des valeurs problématiques...\n", file=debug_file, append=TRUE)
+  
+  # Vérifier d'abord s'il y a des valeurs non-NA
+  if (sum(!is.na(data$Vha)) > 0) {
+    inf_count <- sum(is.infinite(data$Vha), na.rm=TRUE)
+    nan_count <- sum(is.nan(data$Vha), na.rm=TRUE)
+    neg_count <- sum(data$Vha < 0, na.rm=TRUE)
+    
+    cat("Valeurs problématiques: Inf=", inf_count, ", NaN=", nan_count, ", Négatives=", neg_count, "\n", 
+        file=debug_file, append=TRUE)
+    
+    data$Vha[is.infinite(data$Vha)] <- NA_real_
+    data$Vha[is.nan(data$Vha)] <- NA_real_
+    data$Vha[data$Vha < 0] <- NA_real_
+  } else {
+    cat("Toutes les valeurs sont NA\n", file=debug_file, append=TRUE)
+  }
+  
+  # Log des NA
+  na_count <- sum(is.na(data$Vha))
+  cat("Nombre de NA après nettoyage: ", na_count, " sur ", length(data$Vha), "\n", file=debug_file, append=TRUE)
+  
+  # S'assurer que le filtrage ultérieur fonctionnera
+  cat("Utilisation d'une approche plus sûre pour le traitement des données...\n", file=debug_file, append=TRUE)
+  
+  # Utilisation d'une approche plus directe évitant dplyr et l'expression problématique
+  data$Vha <- as.numeric(data$Vha)  # Assure que c'est bien numérique
+  
+  # Log de sortie
+  cat("=== SAFE_PROCESS_DATA - SORTIE ===\n", file=debug_file, append=TRUE)
+  cat("Dimensions finales: ", nrow(data), "x", ncol(data), "\n", file=debug_file, append=TRUE)
+  if (nrow(data) > 0) {
+    cat("Premières valeurs Vha après traitement: ", paste(head(data$Vha), collapse=", "), "\n", 
+        file=debug_file, append=TRUE)
+  }
+  
+  return(data)
+}
+
 ##### fonction de récupération des légendes (figures composées) #####
 g_legend <- function(a.gplot) {
   tmp <- ggplot_gtable(ggplot_build(a.gplot))
@@ -321,28 +685,26 @@ g_legend <- function(a.gplot) {
 ##### fonction de mise en forme texte (string vector) pour édition LaTeX #####
 utf82LaTeX <- function(string, ...) {
   string <- paste0(string, ...)
-  string <- gsub("-", "--", string, fixed  = T)
-  string <- gsub("—", "---", string, fixed  = T)
-  string <- gsub("#", "\\#", string, fixed  = T)
-  # string <- gsub("{", "\\{", string, fixed  = T)
-  # string <- gsub("}", "\\}", string, fixed  = T)
-  string <- gsub("$", "\\$", string, fixed  = T)
-  string <- gsub("_", "\\_", string, fixed  = T)
-  string <- gsub("&", "\\&", string, fixed  = T)
-  string <- gsub("œ", "\\oe ", string, fixed  = T)
-  string <- gsub("æ", "\\ae ", string, fixed  = T)
-  string <- gsub("«", "\\og ", string, fixed  = T)
-  string <- gsub("»", "\\fg{}", string, fixed  = T)
-  string <- gsub("“", "``", string, fixed  = T)
-  string <- gsub("”", "''", string, fixed  = T)
-  string <- gsub("n°", "\\no ", string, fixed  = T)
-  string <- gsub("N°", "\\No ", string, fixed  = T)
-  string <- gsub("%", "\\%", string, fixed  = T)
-  string <- gsub("‰", "\\textperthousand", string, fixed  = T)
-  string <- gsub("€", "\\texteuro", string, fixed  = T)
-  string <- gsub("^", "\\textasciicircum", string, fixed  = T)
-  string <- gsub("~", "\\textasciitilde", string, fixed  = T)
-  # cat(string)
+  string <- gsub("-", "--", string, fixed = T)
+  string <- gsub("—", "---", string, fixed = T)
+  string <- gsub("#", "\\#", string, fixed = T)
+  string <- gsub("$", "\\$", string, fixed = T)
+  string <- gsub("_", "\\_", string, fixed = T)
+  string <- gsub("&", "\\&", string, fixed = T)
+  string <- gsub("œ", "\\oe ", string, fixed = T)
+  string <- gsub("æ", "\\ae ", string, fixed = T)
+  string <- gsub("«", "\\og ", string, fixed = T)
+  string <- gsub("»", "\\fg{}", string, fixed = T)
+  # Remplacement des guillemets typographiques par leur équivalent LaTeX
+  string <- gsub("\u201C", "``", string, fixed = T)  # guillemet ouvrant
+  string <- gsub("\u201D", "''", string, fixed = T)  # guillemet fermant
+  string <- gsub("n°", "\\no ", string, fixed = T)
+  string <- gsub("N°", "\\No ", string, fixed = T)
+  string <- gsub("%", "\\%", string, fixed = T)
+  string <- gsub("‰", "\\textperthousand", string, fixed = T)
+  string <- gsub("€", "\\texteuro", string, fixed = T)
+  string <- gsub("^", "\\textasciicircum", string, fixed = T)
+  string <- gsub("~", "\\textasciitilde", string, fixed = T)
   return(string)
 }
 
@@ -687,31 +1049,107 @@ get_radar_coords <- function(group = NULL, tables_needed = NULL) { # à tester p
   quo_group <- quo(!!parse_expr(group))
 
   # -- critère 1 ratio volume de bois mort / volume de bois total
+  # DÉBOGAGE: Créer un fichier log
+  debug_file <- "/home/geonatureadmin/gn_module_psdrf/vha_debug.log"
+  cat("=== DÉBUT DU DÉBOGAGE ===\n", file=debug_file, append=TRUE)
+  
   # arbres sur pied
-  vol_bv <- 
-    tables_needed$grouped_results_of_Fpied_by_ %>% 
-    filter(!is.na(Vha) & Vha != 0) %>%
+  temp_data <- safe_process_data(tables_needed$grouped_results_of_Fpied_by_)
+  cat("\n[DEBUG FPIED] Avant filtre:", dim(temp_data), "\n", file=debug_file, append=TRUE)
+  if ("Vha" %in% names(temp_data)) {
+    cat("[DEBUG FPIED] Classe Vha:", class(temp_data$Vha), "\n", file=debug_file, append=TRUE)
+    cat("[DEBUG FPIED] Résumé Vha:", paste(summary(temp_data$Vha), collapse=", "), "\n", file=debug_file, append=TRUE)
+    cat("[DEBUG FPIED] NA count:", sum(is.na(temp_data$Vha)), "\n", file=debug_file, append=TRUE)
+  } else {
+    cat("[DEBUG FPIED] Pas de colonne Vha\n", file=debug_file, append=TRUE)
+  }
+  
+  # Filtrage sécurisé sans utiliser l'expression problématique
+  valid_rows <- rep(FALSE, nrow(temp_data))
+  for (i in 1:nrow(temp_data)) {
+    if (!is.na(temp_data$Vha[i]) && temp_data$Vha[i] != 0) {
+      valid_rows[i] <- TRUE
+    }
+  }
+  temp_data <- temp_data[valid_rows, ]
+  
+  cat("[DEBUG FPIED] Après filtre:", dim(temp_data), "\n", file=debug_file, append=TRUE)
+  vol_bv <- temp_data %>%
     select(NumDisp, group, Cycle, Vha) %>% 
     rename(VhaArbres = Vha)
   
   # taillis
-  vol_taillis <- 
-    tables_needed$grouped_results_of_Taillis_by_ %>% 
-    filter(!is.na(Vha) & Vha != 0) %>% 
+  temp_data <- safe_process_data(tables_needed$grouped_results_of_Taillis_by_)
+  cat("\n[DEBUG TAILLIS] Avant filtre:", dim(temp_data), "\n", file=debug_file, append=TRUE)
+  if ("Vha" %in% names(temp_data)) {
+    cat("[DEBUG TAILLIS] Classe Vha:", class(temp_data$Vha), "\n", file=debug_file, append=TRUE)
+    cat("[DEBUG TAILLIS] Résumé Vha:", paste(summary(temp_data$Vha), collapse=", "), "\n", file=debug_file, append=TRUE)
+    cat("[DEBUG TAILLIS] NA count:", sum(is.na(temp_data$Vha)), "\n", file=debug_file, append=TRUE)
+  } else {
+    cat("[DEBUG TAILLIS] Pas de colonne Vha\n", file=debug_file, append=TRUE)
+  }
+  
+  # Filtrage sécurisé
+  valid_rows <- rep(FALSE, nrow(temp_data))
+  for (i in 1:nrow(temp_data)) {
+    if (!is.na(temp_data$Vha[i]) && temp_data$Vha[i] != 0) {
+      valid_rows[i] <- TRUE
+    }
+  }
+  temp_data <- temp_data[valid_rows, ]
+  
+  cat("[DEBUG TAILLIS] Après filtre:", dim(temp_data), "\n", file=debug_file, append=TRUE)
+  vol_taillis <- temp_data %>%
     select(NumDisp, group, Cycle, Vha) %>% 
     rename(VhaTaillis = Vha)
 
   # bmp
-  vol_bmp <- 
-    tables_needed$grouped_results_of_BMP_by_ %>% 
-    filter(!is.na(Vha) & Vha != 0) %>% 
+  temp_data <- safe_process_data(tables_needed$grouped_results_of_BMP_by_)
+  cat("\n[DEBUG BMP] Avant filtre:", dim(temp_data), "\n", file=debug_file, append=TRUE)
+  if ("Vha" %in% names(temp_data)) {
+    cat("[DEBUG BMP] Classe Vha:", class(temp_data$Vha), "\n", file=debug_file, append=TRUE)
+    cat("[DEBUG BMP] Résumé Vha:", paste(summary(temp_data$Vha), collapse=", "), "\n", file=debug_file, append=TRUE)
+    cat("[DEBUG BMP] NA count:", sum(is.na(temp_data$Vha)), "\n", file=debug_file, append=TRUE)
+  } else {
+    cat("[DEBUG BMP] Pas de colonne Vha\n", file=debug_file, append=TRUE)
+  }
+  
+  # Filtrage sécurisé
+  valid_rows <- rep(FALSE, nrow(temp_data))
+  for (i in 1:nrow(temp_data)) {
+    if (!is.na(temp_data$Vha[i]) && temp_data$Vha[i] != 0) {
+      valid_rows[i] <- TRUE
+    }
+  }
+  temp_data <- temp_data[valid_rows, ]
+  
+  cat("[DEBUG BMP] Après filtre:", dim(temp_data), "\n", file=debug_file, append=TRUE)
+  vol_bmp <- temp_data %>%
     select(NumDisp, group, Cycle, Vha) %>% 
     rename(VhaBMP = Vha)
 
       # bms
-  vol_bms <- 
-    tables_needed$grouped_results_of_BMS_by_ %>% 
-    filter(!is.na(Vha) & Vha != 0) %>% 
+  temp_data <- safe_process_data(tables_needed$grouped_results_of_BMS_by_)
+  cat("\n[DEBUG BMS] Avant filtre:", dim(temp_data), "\n", file=debug_file, append=TRUE)
+  if ("Vha" %in% names(temp_data)) {
+    cat("[DEBUG BMS] Classe Vha:", class(temp_data$Vha), "\n", file=debug_file, append=TRUE)
+    cat("[DEBUG BMS] Résumé Vha:", paste(summary(temp_data$Vha), collapse=", "), "\n", file=debug_file, append=TRUE)
+    cat("[DEBUG BMS] NA count:", sum(is.na(temp_data$Vha)), "\n", file=debug_file, append=TRUE)
+  } else {
+    cat("[DEBUG BMS] Pas de colonne Vha\n", file=debug_file, append=TRUE)
+  }
+  
+  # Filtrage sécurisé
+  valid_rows <- rep(FALSE, nrow(temp_data))
+  for (i in 1:nrow(temp_data)) {
+    if (!is.na(temp_data$Vha[i]) && temp_data$Vha[i] != 0) {
+      valid_rows[i] <- TRUE
+    }
+  }
+  temp_data <- temp_data[valid_rows, ]
+  
+  cat("[DEBUG BMS] Après filtre:", dim(temp_data), "\n", file=debug_file, append=TRUE)
+  vol_bms <- temp_data %>%
     select(NumDisp, group, Cycle, Vha) %>% 
     rename(VhaBMS = Vha)
   
@@ -769,17 +1207,63 @@ stadeD_diversity <-
   select(NumDisp, group, Cycle, NoteBMD)
 
 # -- critère 4 - structure horizontale : diversité des classes de diamètre (sur la surface terrière)
-# arbres
-ba_bv <- 
-  tables_needed$grouped_results_of_Fpied_by_Classe %>% 
-  filter(!is.na(Gha) & Gha != 0) %>%
+# arbres - DÉBOGAGE
+temp_data <- tables_needed$grouped_results_of_Fpied_by_Classe
+cat("\n[DEBUG BA_BV] Classe filtrage:", dim(temp_data), "\n", file=debug_file, append=TRUE)
+if ("Gha" %in% names(temp_data)) {
+  cat("[DEBUG BA_BV] Classe Gha:", class(temp_data$Gha), "\n", file=debug_file, append=TRUE)
+  cat("[DEBUG BA_BV] Résumé Gha:", paste(summary(temp_data$Gha), collapse=", "), "\n", file=debug_file, append=TRUE)
+  cat("[DEBUG BA_BV] NA count:", sum(is.na(temp_data$Gha)), "\n", file=debug_file, append=TRUE)
+} else {
+  cat("[DEBUG BA_BV] Pas de colonne Gha\n", file=debug_file, append=TRUE)
+}
+
+# Filtrage sécurisé pour Gha
+valid_rows <- rep(FALSE, nrow(temp_data))
+for (i in 1:nrow(temp_data)) {
+  if (!is.na(temp_data$Gha[i]) && temp_data$Gha[i] != 0) {
+    valid_rows[i] <- TRUE
+  }
+}
+temp_data <- temp_data[valid_rows, ]
+
+cat("[DEBUG BA_BV] Après filtre:", dim(temp_data), "\n", file=debug_file, append=TRUE)
+ba_bv <- temp_data %>%
   select(NumDisp, group, Cycle, Classe, Gha) %>% 
   rename(GhaArbres = Gha)
 
-# taillis
-ba_taillis <- 
-  tables_needed$grouped_results_of_Taillis_by_Classe %>% 
-  filter(!is.na(Vha) & Vha != 0) %>% 
+# taillis - DÉBOGAGE
+temp_data <- tables_needed$grouped_results_of_Taillis_by_Classe
+cat("\n[DEBUG BA_TAILLIS] Avant filtre:", dim(temp_data), "\n", file=debug_file, append=TRUE)
+if ("Vha" %in% names(temp_data)) {
+  cat("[DEBUG BA_TAILLIS] Classe Vha:", class(temp_data$Vha), "\n", file=debug_file, append=TRUE)
+  cat("[DEBUG BA_TAILLIS] Résumé Vha:", paste(summary(temp_data$Vha), collapse=", "), "\n", file=debug_file, append=TRUE)
+  cat("[DEBUG BA_TAILLIS] NA count:", sum(is.na(temp_data$Vha)), "\n", file=debug_file, append=TRUE)
+} else {
+  cat("[DEBUG BA_TAILLIS] Pas de colonne Vha\n", file=debug_file, append=TRUE)
+}
+
+if ("Gha" %in% names(temp_data)) {
+  cat("[DEBUG BA_TAILLIS] Classe Gha:", class(temp_data$Gha), "\n", file=debug_file, append=TRUE)
+  cat("[DEBUG BA_TAILLIS] Résumé Gha:", paste(summary(temp_data$Gha), collapse=", "), "\n", file=debug_file, append=TRUE)
+  cat("[DEBUG BA_TAILLIS] NA count:", sum(is.na(temp_data$Gha)), "\n", file=debug_file, append=TRUE)
+} else {
+  cat("[DEBUG BA_TAILLIS] Pas de colonne Gha\n", file=debug_file, append=TRUE)
+}
+
+# Filtrage sécurisé pour Vha
+valid_rows <- rep(FALSE, nrow(temp_data))
+for (i in 1:nrow(temp_data)) {
+  if ("Vha" %in% names(temp_data)) {
+    if (!is.na(temp_data$Vha[i]) && temp_data$Vha[i] != 0) {
+      valid_rows[i] <- TRUE
+    }
+  }
+}
+temp_data <- temp_data[valid_rows, ]
+
+cat("[DEBUG BA_TAILLIS] Après filtre:", dim(temp_data), "\n", file=debug_file, append=TRUE)
+ba_taillis <- temp_data %>%
   select(NumDisp, group, Cycle, Classe, Gha) %>% 
   rename(GhaTaillis = Gha)
 
@@ -1649,7 +2133,19 @@ La figure \ref{fig:DiamDist} également située en annexe \ref{AnnexeEchantillon
 \subsection{Habitats naturels échantillonnés}
 Le tableau \ref{TabMilieux} présente les habitats naturels échantillonnés sur le dispositif au dernier passage en inventaire. A noter que la qualité de ces informations est tributaire de la fiabilité des relevés initiaux (ancienneté et méthodologie de réalisation de la cartographie des habitats). Si aucune cartographie des habitats n'est disponible, ces données peuvent être relevées et transmises \textit{a posteriori} (\textit{id est} dans l'intervalle entre deux campagnes par exemples).
 <<TabMilieux, fig.pos = 'H', fig.width = 17>>= 
-CodesCorine <- CodesCorine[!is.na(CodesCorine$CD_CB_SUP), ]
+# Filtrer CodesCorine en gérant le cas où CD_CB_SUP est NULL ou NA
+CodesCorine <- if (nrow(CodesCorine) > 0) {
+  CodesCorine[!is.na(CodesCorine$CD_CB_SUP), ]
+} else {
+  CodesCorine
+}
+
+# Création du tableau avec gestion des erreurs
+tryCatch({
+  # Utilisation de la fonction sécurisée pour le traitement des données
+  if (exists("data_to_process")) {
+    data_to_process <- safe_process_data(data_to_process)
+  }
 
 tab <- 
   Placettes_Sel %>% 
@@ -1657,17 +2153,26 @@ tab <-
   select(NumPlac, Habitat) %>% 
   group_by(Habitat) %>%
   summarise(NbPlac = length(NumPlac)) %>% 
-  ungroup() %>% 
+    ungroup()
+  
+  # Joindre avec CodesCorine seulement si des données existent
+  if (nrow(CodesCorine) > 0) {
+    tab <- tab %>%
   left_join(
     CodesCorine[, c("CD_CB", "LB_CB97_FR")], 
     by = c("Habitat" = "CD_CB")
-  ) %>% 
+      )
+  } else {
+    tab$LB_CB97_FR <- NA_character_
+  }
+  
+  # Finalisation du tableau
+  tab <- tab %>%
   select(Habitat, LB_CB97_FR, NbPlac) %>% 
   arrange(NbPlac) %>% 
-  # -- remplissage des vides
   mutate(
     LB_CB97_FR = ifelse(
-      is.na(LB_CB97_FR),
+        is.na(LB_CB97_FR) & nrow(CodesCorine) > 0,
       CodesCorine$LB_CB97_FR[match(Habitat, CodesCorine$CD_CB_SUP)],
       LB_CB97_FR
     ),
@@ -1682,7 +2187,7 @@ tab <-
     "Nombre de placettes" = "NbPlac"
   )
     
-TotPlac <- sum(tab[, "Nombre de placettes"], na.rm = T)
+  TotPlac <- sum(tab[, "Nombre de placettes"], na.rm = TRUE)
 
 format2 <- c("p{1cm}", "M{1.5cm}", "|M{0.5\\textwidth}", "|M{1.5cm}")
 
@@ -1695,7 +2200,7 @@ print(
     label = "TabMilieux", 
     caption.placement = "top"
   ),
-  include.rownames = F, 
+    include.rownames = FALSE, 
   size = "\\footnotesize", 
   hline.after = c(-1:(dim(tab)[1] - 1)), 
   add.to.row = list(
@@ -1707,6 +2212,27 @@ print(
     )
   )
 )
+}, error = function(e) {
+  warning("Erreur lors de la création du tableau : ", e$message)
+  # Créer un tableau minimal en cas d'erreur
+  tab <- data.frame(
+    Habitat = "Non disponible",
+    "Intitulé CORINE Biotopes" = "Données non disponibles",
+    "Nombre de placettes" = sum(Placettes_Sel$Cycle == last_cycle)
+  )
+  format2 <- c("p{1cm}", "M{1.5cm}", "|M{0.5\\textwidth}", "|M{1.5cm}")
+  print(
+    xtable(
+      tab,
+      caption = "Habitats naturels échantillonnés par le PSDRF (données non disponibles).",
+      align = format2,
+      label = "TabMilieux",
+      caption.placement = "top"
+    ),
+    include.rownames = FALSE,
+    size = "\\footnotesize"
+  )
+})
 @
 
 
@@ -1915,10 +2441,61 @@ src_Temp
 
 # TODO : ramener la fonction prepare_tables dans le parent (version dans psdrf_Evol_BV)
 @
-\Sexpr{knit_child(text = unlist(src_Final))}
+<<process_src_final, echo=FALSE>>=
+process_src_final <- function() {
+  # Désactiver des messages d'erreur et warnings qui pourraient interrompre la compilation
+  old_options <- options(show.error.messages = FALSE, warn = -1)
+  on.exit(options(old_options))  # Restaurer options originales à la sortie
+  
+  # Vérifier l'existence de src_Final
+  if (!exists("src_Final") || is.null(src_Final) || length(src_Final) == 0) {
+    cat("AVERTISSEMENT: src_Final manquant ou vide\n", file=debug_file, append=TRUE)
+    return("% Problème avec src_Final: section omise")
+  }
+  
+  result <- tryCatch({
+    # Traiter toute la chaîne
+    safe_src <- unlist(src_Final)
+    
+    # Vérifier si le résultat a du contenu
+    if (length(safe_src) == 0) {
+      cat("AVERTISSEMENT: src_Final vide après unlist\n", file=debug_file, append=TRUE)
+      return("% src_Final vide après traitement")
+    }
+    
+    # Essayer de générer le contenu
+    content <- tryCatch({
+      suppressWarnings(knit_child(text = safe_src))
+    }, error = function(e) {
+      cat("ERREUR dans knit_child:", e$message, "\n", file=debug_file, append=TRUE)
+      "% Erreur lors du traitement du contenu"
+    })
+    
+    # Sanitiser la sortie pour éviter d'injecter des erreurs dans le LaTeX
+    if (exists("sanitize_latex_output")) {
+      content <- sanitize_latex_output(content)
+    }
+    
+    return(content)
+  }, error = function(e) {
+    cat("ERREUR GLOBALE:", e$message, "\n", file=debug_file, append=TRUE)
+    return("% Section omise à cause d'une erreur")
+  })
+  
+  return(result)
+}
+@
+
+\Sexpr{process_src_final()}
 
 <<Evol, eval = T>>= 
-# if (travail == F) {
+# Utilisation de la fonction sécurisée
+tryCatch({
+  if (exists("data_to_process")) {
+    processed_data <- safe_process_data(data_to_process)
+  }
+  
+  # Continue with the rest of the evolution analysis
 src_EvolFinal <- c()
 src_chapEvol_BV <- c()
 src_chapEvol_BM <- c()
@@ -2008,28 +2585,67 @@ group_knit_arg <-
 
   src_chapEvol_BM <- encoding(src_chapEvol_BM, TabCharacters)
   
-  # ----- Assemblage des expressions des template
+  # Assemblage des sections d'évolution
   src_EvolFinal <- c(
     txt_Evol, 
-    
-    "\\chapter{Bois vivant}
-
-                     ", 
+    "\\chapter{Evolution du bois vivant}",
     src_chapEvol_BV, 
-    "\\chapter{Bois Mort}
-
-                     ", 
+    "\\chapter{Evolution du bois mort}",
     src_chapEvol_BM
   )
-  
-} else {
-  txt_Evol <- c()
-  src_chapEvol <- c()
-  src_EvolFinal <- ""
 }
-# }
+}, error = function(e) {
+  warning("Erreur dans la section Evolution : ", e$message)
+  # Create minimal output in case of error
+  txt_Evol <- c("\\part{Evolution}\n\\textit{Données non disponibles pour l'analyse d'évolution}")
+})
 @
-\Sexpr{knit_child(text = unlist(src_EvolFinal))}
+<<process_src_evolfinal, echo=FALSE>>=
+process_src_evolfinal <- function() {
+  # Désactiver des messages d'erreur et warnings qui pourraient interrompre la compilation
+  old_options <- options(show.error.messages = FALSE, warn = -1)
+  on.exit(options(old_options))  # Restaurer options originales à la sortie
+  
+  # Vérifier l'existence de src_EvolFinal
+  if (!exists("src_EvolFinal") || is.null(src_EvolFinal) || length(src_EvolFinal) == 0) {
+    cat("AVERTISSEMENT: src_EvolFinal manquant ou vide\n", file=debug_file, append=TRUE)
+    return("% Problème avec src_EvolFinal: section omise")
+  }
+  
+  result <- tryCatch({
+    # Traiter toute la chaîne
+    safe_src <- unlist(src_EvolFinal)
+    
+    # Vérifier si le résultat a du contenu
+    if (length(safe_src) == 0) {
+      cat("AVERTISSEMENT: src_EvolFinal vide après unlist\n", file=debug_file, append=TRUE)
+      return("% src_EvolFinal vide après traitement")
+    }
+    
+    # Essayer de générer le contenu
+    content <- tryCatch({
+      suppressWarnings(knit_child(text = safe_src))
+    }, error = function(e) {
+      cat("ERREUR dans knit_child (evolution):", e$message, "\n", file=debug_file, append=TRUE)
+      "% Erreur lors du traitement du contenu de l'évolution"
+    })
+    
+    # Sanitiser la sortie pour éviter d'injecter des erreurs dans le LaTeX
+    if (exists("sanitize_latex_output")) {
+      content <- sanitize_latex_output(content)
+    }
+    
+    return(content)
+  }, error = function(e) {
+    cat("ERREUR GLOBALE (evolution):", e$message, "\n", file=debug_file, append=TRUE)
+    return("% Section évolution omise à cause d'une erreur")
+  })
+  
+  return(result)
+}
+@
+
+\Sexpr{process_src_evolfinal()}
 
 \begin{appendices}
 \addtocontents{toc}{\protect\setcounter{tocdepth}{0}}

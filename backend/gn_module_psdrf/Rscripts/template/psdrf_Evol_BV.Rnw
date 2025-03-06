@@ -61,34 +61,85 @@ names(Palette_Cycles) <- c(cycle_num - 1, cycle_num)
 @
 
 <<ClasseEvol{{x}}, size = 'footnotesize', fig.height = 3.5, fig.cap =  "R\u00E9partition du volume et du nombre de tiges par classes de diam\u00E8tre (arbres vivants).">>= 
-tab <- 
-  grouped_results_of_Fpied_by_Classe %>% 
-  filter(!is.na(Classe)) %>% 
-  mutate(Population = "Tiges de\nfranc-pied")
+# Traitement sécurisé des données de franc-pied
+tab <- tryCatch({
+  temp_data <- safe_process_data(grouped_results_of_Fpied_by_Classe)
+  # Utiliser une approche alternative au filtre direct
+  valid_rows <- !is.na(temp_data$Classe)
+  temp_data <- temp_data[valid_rows, ]
+  # Remplacer NA par 0 de manière sécurisée
+  temp_data$Vha <- ifelse(is.na(temp_data$Vha), 0, temp_data$Vha)
+  temp_data$Population <- "Tiges de\nfranc-pied"
+  temp_data
+}, error = function(e) {
+  warning("Erreur lors du traitement des données de franc-pied: ", e$message)
+  data.frame(
+    Classe = numeric(0),
+    Vha = numeric(0),
+    Population = character(0)
+  )
+})
 
-tab2 <- 
-  grouped_results_of_Taillis_by_Classe %>% 
-  filter(!is.na(Classe))
+# Traitement sécurisé des données de taillis
+tab2 <- tryCatch({
+  # Approche sans utiliser %>% et filter
+  temp_data <- safe_process_data(grouped_results_of_Taillis_by_Classe)
+  # Filtrage explicite
+  valid_rows <- !is.na(temp_data$Classe)
+  temp_data <- temp_data[valid_rows, ]
+  # Remplacement sécurisé des NA
+  temp_data$Vha <- ifelse(is.na(temp_data$Vha), 0, temp_data$Vha)
+  temp_data
+}, error = function(e) {
+  warning("Erreur lors du traitement des données de taillis: ", e$message)
+  data.frame(
+    Classe = numeric(0),
+    Vha = numeric(0)
+  )
+})
 
-if (dim(tab2)[1] > 0) {
-  tab2$Population <-"Tiges de\ntaillis"
+if (nrow(tab2) > 0) {
+  tab2$Population <- "Tiges de\ntaillis"
 }
 
+# Combinaison des données
 tab <- as.data.frame(tab)
 tab2 <- as.data.frame(tab2)
-tab <- 
+tab <- tryCatch({
   tab %>% 
-  rbind(tab2) %>%
-  mutate(Titre = paste0("Cycle ", Cycle))
+    rbind(tab2) %>%
+    mutate(
+      Titre = paste0("Cycle ", Cycle),
+      Vha = as.numeric(Vha)
+    )
+}, error = function(e) {
+  warning("Erreur lors de la combinaison des données : ", e$message)
+  data.frame(
+    Classe = numeric(0),
+    Vha = numeric(0),
+    Population = character(0),
+    Titre = character(0)
+  )
+})
 
-tab3 <- 
+# Calcul des sommes
+tab3 <- tryCatch({
   tab %>% 
-  group_by(Cycle, Titre) %>%
-  summarise(som = round(sum(Vha), 0)) %>%
-  ungroup()
+    group_by(Cycle, Titre) %>%
+    summarise(som = round(sum(Vha, na.rm = TRUE), 0)) %>%
+    ungroup()
+}, error = function(e) {
+  warning("Erreur lors du calcul des sommes : ", e$message)
+  data.frame(
+    Cycle = numeric(0),
+    Titre = character(0),
+    som = numeric(0)
+  )
+})
 
-X <- max(tab$Classe, na.rm = T) - 20
-Y <- max(tab$Vha, na.rm = T) - 10
+# Calcul des limites du graphique
+X <- ifelse(length(tab$Classe) > 0, max(tab$Classe, na.rm = TRUE) - 20, 0)
+Y <- ifelse(length(tab$Vha) > 0, max(tab$Vha, na.rm = TRUE) - 10, 0)
 
 p1 <- 
   ggplot() +

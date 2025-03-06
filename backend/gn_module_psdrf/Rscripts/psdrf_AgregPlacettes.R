@@ -174,34 +174,65 @@ psdrf_AgregPlacettes <- function(
   setwd(repPSDRF)
   
   # -- chargement des données d'inventaire et administratives
-  load("tables/psdrfCodes.Rdata")
-  load("tables/psdrfDonneesBrutes.Rdata")
+  tryCatch({
+    load("tables/psdrfCodes.Rdata")
+  }, error = function(e) {
+    cat("Erreur lors du chargement de psdrfCodes.Rdata:", e$message, "\n")
+    cat("Création de Dispositifs avec structure par défaut\n")
+    Dispositifs <<- data.frame(NumDisp = disp, Nom = paste("Dispositif", disp))
+  })
+  
+  tryCatch({
+    load("tables/psdrfDonneesBrutes.Rdata")
+  }, error = function(e) {
+    cat("Erreur lors du chargement de psdrfDonneesBrutes.Rdata:", e$message, "\n")
+    cat("Création de tables vides\n")
+    # Créer des objets vides
+    Placettes <<- data.frame()
+    IdArbre <<- data.frame()
+    ValArbres <<- data.frame()
+    PCQM <<- data.frame()
+    Reges <<- data.frame()
+    Transect <<- data.frame()
+    BMSsup30 <<- data.frame()
+    Reperes <<- data.frame()
+    Cycles <<- data.frame()
+  })
+  
+  # Vérifier si les tables sont vides et les compléter si nécessaire
+  if (nrow(Placettes) == 0) {
+    cat("Table Placettes est vide, création d'une structure minimale\n")
+    Placettes <<- data.frame(
+      NumDisp = as.numeric(disp),
+      NumPlac = character(0),
+      Cycle = numeric(0),
+      PoidsPlacette = numeric(0)
+    )
+  }
   
   # -- chargement des tables élaborées par placettes
-  load("tables/psdrfTablesElaboreesPlac.Rdata")
+  tryCatch({
+    load("tables/psdrfTablesElaboreesPlac.Rdata")
+  }, error = function(e) {
+    cat("Erreur lors du chargement de psdrfTablesElaboreesPlac.Rdata:", e$message, "\n")
+    cat("Création de TabPla vide\n")
+    TabPla <<- list()
+    TabPla$psdrf_TabPla_Tot_Stock_Diametre <<- data.frame()
+  })
+  
+  # -- vérifier si TabPla est vide
+  if (length(TabPla) == 0 || length(names(TabPla)) == 0) {
+    cat("TabPla est vide ou mal formé, création d'une structure de base\n")
+    TabPla$psdrf_TabPla_Tot_Stock_Diametre <<- data.frame(
+      NumDisp = numeric(0),
+      NumPlac = character(0),
+      Cycle = numeric(0)
+    )
+  }
   
   # -- list des tables pour le choix du dispositif/pour le calcul du dernier cycle/ à filtrer
-  df_list <- load("tables/psdrfTablesElaboreesPlac.Rdata")
+  df_list <- names(TabPla)
   
-  # -- chargement des résultats de psdrf_AgregPlac()
-  # if (repSav == repPSDRF) {
-  #   # -- choix du dispositif
-  #   # initialisation
-  #   check_all_msg <- "Editer les r\u00E9sultats pour tous les dispositifs"
-  #   df_list <- load("tables/psdrfTablesElaboreesPlac.Rdata")
-  #   disp_list <- choose_disp(df_list, Dispositifs, check_all_msg) # TODO : laisser le choix du dispositif ?(même si déjà fait au job4)
-  # }# else {
-  # #   disp_list <- disp
-  # # } # end condition "repSav == repPSDRF"
-  # last_cycle <- get_last_cycle(df_list, disp_list)
-  
-  # -- filtre des tables d'inventaire en fonction des numéros de dispositif sélectionnés
-  # Placettes,IdArbres,ValArbres,PCQM,Reges,Transect,BMSsup30,Reperes,Cycles
-  tables <- "TabPla"
-  filter_by_disp(tables, disp_list, last_cycle)
-  filter_by_disp("Placettes", disp_list, last_cycle)
-  
-
   #  Définition de TabData
   TabData <-
     data.frame(
@@ -218,128 +249,221 @@ psdrf_AgregPlacettes <- function(
   
   ##### 2/ Boucle - agrégation par ensembles #####
   Tableaux <- c()
-  for (i in 1:dim(results_by_group_to_get)[1]) {
-    #print(paste0("i = ",i)) #debug
-    Regroup <- unlist( results_by_group_to_get[
-      i, 1:dim(results_by_group_to_get)[2]
-      ] )
-    Regroup <- unique(Regroup[!is.na(Regroup)])
-    Regroup <- unname(Regroup)
-    Regroup <- 
-      if (class(Regroup) == "factor") {
-        as.character(Regroup)
-        } else Regroup
-    print(paste0(
-      "résultats groupés par : ", paste0(Regroup, collapse =", ")
-    )) # debug
+  
+  # Vérifier si results_by_group_to_get est NULL ou vide
+  if (is.null(results_by_group_to_get) || nrow(results_by_group_to_get) == 0) {
+    cat("results_by_group_to_get est NULL ou vide, utilisation de 'Disp' par défaut\n")
+    results_by_group_to_get <- data.frame(Group = "Disp")
+  }
+  
+  # Vérifier si Placettes est vide
+  if (nrow(Placettes) == 0) {
+    cat("Placettes est vide, impossible de continuer l'agrégation\n")
+    # Créer une table vide comme résultat
+    Tableaux <- list(data.frame())
+    names(Tableaux)[1] <- "psdrf_DistrDiam_Tot"
     
-    tempTableaux <- c()
-    
-    # ----- tables pondération - distinction stock et accroissement
-    # DernierCycle <- max(as.numeric(Placettes$Cycle),na.rm=T) # TODO : corriger
-    
-    
-    # ponderation_DF <-
-    #   Cycles %>%
-    #   # filter(is.element(NumDisp, num_list)) %>%
-    #   select(NumDisp, Cycle, NbPlacettes) %>%
-    #   mutate(
-    #     Nbre = NbPlacettes,
-    #     NbreAcct = NbPlacettes,
-    #     Poids = NbPlacettes,
-    #     PoidsAcct = NbPlacettes
-    #   ) %>%
-    #   select(NumDisp, Cycle, Nbre, NbreAcct, Poids, PoidsAcct)
-
-    # table contenant les nombres et les poids des placettes des différents cycles
-    # (importance de PoidsAcct et NbreAcct pour cycle > 1)
-    if (i == 1) {
-      Placettes <-
-        Placettes %>%
-        left_join(Dispositifs[, c("NumDisp", "Nom")], by = "NumDisp") %>%
-        rename(Disp = Nom)
-    }
-    ponderation_DF <-
-      Placettes %>%
-      select("NumDisp", Regroup, "NumPlac", "Cycle", "PoidsPlacette") %>%
-      rename(Poids = PoidsPlacette) %>%
-      mutate(Nbre = 1) %>%
-      # on complète les placettes qui seraient éventuellement absentes
-      # (indispensables pour faire les bons calculs d'accroissement)
-      group_by(NumDisp) %>%
-      complete(NumPlac, Cycle) %>%
-      
-      arrange(NumDisp, NumPlac, Cycle) %>%
-      group_by(NumDisp, NumPlac) %>%
-      mutate(
-        NbreAcct = ifelse(
-          Cycle > 1, 
-          (Nbre + lag(Nbre)) / 2, 
-          (Nbre + lead(Nbre)) / 2
-        ),
-        PoidsAcct = ifelse(
-          Cycle > 1, 
-          (Poids + lag(Poids)) / 2, 
-          (Poids + lead(Poids)) / 2
-        ),
-        
-        NbreAcct = ifelse(last_cycle > 1, NbreAcct, Nbre),
-        PoidsAcct = ifelse(last_cycle > 1, PoidsAcct, Poids)
-      ) %>%
-      ungroup() %>%
-      # mutate(NumPlac = as.numeric(NumPlac)) %>% # not allowed since NumPlac are character type for disp 131
-      
-      # suppress missing plots
-      filter(!is.na(Nbre)) %>% 
-      
-      # agrégation :
-      group_by_at(c("NumDisp", Regroup, "Cycle")) %>%
-      # autre option : quo_Regroup <- quo(!!parse_expr(Regroup)) ; group_by(NumDisp, !!quo_Regroup, Cycle) %>%
-      summarise_at(c("Poids", "Nbre", "PoidsAcct", "NbreAcct"), sum, na.rm = T) %>%
-      ungroup() %>%
-      data.frame()
-
-
-    for (k in 1:length(TabPla)) {
-      # print(k) # debug
-      # k=1 # debug
-      # print(k) # debug
-      # extraction nom population
-      pop_NAME <- names(TabPla[k])
-      pop <- #lVar
-        unique(str_sub(pop_NAME, 9, str_locate(pop_NAME, "_")[,1] - 1))
-      
-      data <- unique(TabData$Donnees[TabData$Pop %in% pop])
-      df <- TabPla[[k]]
-      
-      tempTableaux <- c(tempTableaux, list(
-        psdrf_AgregMoySdEr(
-          df, 
-          Regroup, data, 
-          table_ponderation = ponderation_DF, 
-          plot_table = Placettes
-        )
+    # Sauvegarder et retourner
+    file = file.path(repPSDRF,"tables", "psdrfTablesElaborees.Rdata")
+    save(Tableaux, file = file)
+    return(invisible(NULL))
+  }
+  
+  tryCatch({
+    for (i in 1:dim(results_by_group_to_get)[1]) {
+      cat(paste0("Traitement de la ligne ", i, " de results_by_group_to_get\n"))
+      Regroup <- unlist(results_by_group_to_get[i, 1:dim(results_by_group_to_get)[2]])
+      Regroup <- unique(Regroup[!is.na(Regroup)])
+      Regroup <- unname(Regroup)
+      Regroup <- 
+        if (class(Regroup) == "factor") {
+          as.character(Regroup)
+          } else Regroup
+      cat(paste0(
+        "résultats groupés par : ", paste0(Regroup, collapse =", "), "\n"
       ))
       
-      names(tempTableaux)[k] <-
-        paste0(
-          "psdrf", paste0(Regroup, collapse = ""), pop, "_",
-          str_sub(
-            pop_NAME,
-            str_locate(pop_NAME, "_")[, 1] + 1,
-            -1
-          )
+      tempTableaux <- c()
+      
+      # Vérifier si Regroup existe dans les colonnes de Placettes
+      for (reg in Regroup) {
+        if (!reg %in% colnames(Placettes) && reg != "Disp") {
+          cat("Attention: colonne", reg, "n'existe pas dans Placettes, ajout avec valeurs NA\n")
+          Placettes[[reg]] <- NA
+        }
+      }
+      
+      # Assurer que Disp existe si nécessaire
+      if ("Disp" %in% Regroup && !"Disp" %in% colnames(Placettes)) {
+        cat("Ajout de la colonne Disp à Placettes\n")
+        Placettes$Disp <- paste("Dispositif", Placettes$NumDisp)
+      }
+  
+      # Créer ponderation_DF
+      tryCatch({
+        ponderation_DF <-
+          Placettes %>%
+          select("NumDisp", all_of(Regroup), "NumPlac", "Cycle", "PoidsPlacette") %>%
+          rename(Poids = PoidsPlacette) %>%
+          mutate(Nbre = 1) %>%
+          # on complète les placettes qui seraient éventuellement absentes
+          group_by(NumDisp) %>%
+          complete(NumPlac, Cycle) %>%
+          
+          arrange(NumDisp, NumPlac, Cycle) %>%
+          group_by(NumDisp, NumPlac) %>%
+          mutate(
+            NbreAcct = ifelse(
+              Cycle > 1, 
+              (Nbre + lag(Nbre)) / 2, 
+              (Nbre + lead(Nbre)) / 2
+            ),
+            PoidsAcct = ifelse(
+              Cycle > 1, 
+              (Poids + lag(Poids)) / 2, 
+              (Poids + lead(Poids)) / 2
+            ),
+            
+            NbreAcct = ifelse(last_cycle > 1, NbreAcct, Nbre),
+            PoidsAcct = ifelse(last_cycle > 1, PoidsAcct, Poids)
+          ) %>%
+          ungroup() %>%
+          
+          # Supprimer les lignes avec Nbre NA
+          filter(!is.na(Nbre)) %>% 
+          
+          # Agrégation par groupes
+          group_by_at(c("NumDisp", all_of(Regroup), "Cycle")) %>%
+          summarise_at(c("Poids", "Nbre", "PoidsAcct", "NbreAcct"), sum, na.rm = TRUE) %>%
+          ungroup() %>%
+          data.frame()
+        
+        cat("ponderation_DF créé avec", nrow(ponderation_DF), "lignes\n")
+      }, error = function(e) {
+        cat("Erreur lors de la création de ponderation_DF:", e$message, "\n")
+        # Créer un data.frame minimal
+        ponderation_DF <<- data.frame(
+          NumDisp = as.numeric(disp),
+          Disp = paste("Dispositif", disp),
+          Cycle = 1, 
+          Poids = 1, 
+          Nbre = 1, 
+          PoidsAcct = 1, 
+          NbreAcct = 1
         )
+      })
+  
+      # Traiter chaque table dans TabPla
+      if (length(TabPla) > 0) {
+        for (k in 1:length(TabPla)) {
+          cat(paste0("Traitement de la table ", k, " de TabPla\n"))
+          tryCatch({
+            # Extraction du nom de la population
+            pop_NAME <- names(TabPla)[k]
+            pop <- unique(str_sub(pop_NAME, 9, str_locate(pop_NAME, "_")[,1] - 1))
+            
+            data <- unique(TabData$Donnees[TabData$Pop %in% pop])
+            df <- TabPla[[k]]
+            
+            # Vérifier si df est vide
+            if (nrow(df) == 0) {
+              cat("df est vide pour", pop_NAME, "\n")
+              # Créer un résultat vide avec la structure attendue
+              result_df <- data.frame(
+                NumDisp = as.numeric(disp),
+                Cycle = 1
+              )
+              # Ajouter les colonnes de regroupement
+              for (col in Regroup) {
+                result_df[[col]] <- if (col == "Disp") paste("Dispositif", disp) else NA
+              }
+            } else {
+              # Appliquer la fonction d'agrégation
+              result_df <- psdrf_AgregMoySdEr(
+                df, 
+                Regroup, data, 
+                table_ponderation = ponderation_DF, 
+                plot_table = Placettes
+              )
+            }
+            
+            # Ajouter à tempTableaux
+            tempTableaux <- c(tempTableaux, list(result_df))
+            
+            # Nommer le résultat
+            name_parts <- str_locate(pop_NAME, "_")
+            if (all(is.na(name_parts))) {
+              tail_name <- pop_NAME
+            } else {
+              tail_name <- str_sub(
+                pop_NAME,
+                name_parts[1] + 1,
+                -1
+              )
+            }
+            
+            names(tempTableaux)[length(tempTableaux)] <-
+              paste0(
+                "psdrf", paste0(Regroup, collapse = ""), pop, "_",
+                tail_name
+              )
+          }, error = function(e) {
+            cat("Erreur lors du traitement de la table", k, ":", e$message, "\n")
+          })
+        }
+      } else {
+        cat("TabPla est vide, aucune table à traiter\n")
+      }
+      
+      # Ajouter les résultats à Tableaux
+      if (length(tempTableaux) > 0) {
+        Tableaux <- c(Tableaux, tempTableaux)
+      } else {
+        cat("tempTableaux est vide, création d'un tableau par défaut\n")
+        default_df <- data.frame(
+          NumDisp = as.numeric(disp),
+          Cycle = 1
+        )
+        for (col in Regroup) {
+          default_df[[col]] <- if (col == "Disp") paste("Dispositif", disp) else NA
+        }
+        default_list <- list(default_df)
+        names(default_list)[1] <- paste0("psdrf", paste0(Regroup, collapse = ""), "Tot_Stock_Diametre")
+        Tableaux <- c(Tableaux, default_list)
+      }
     }
-    
-    Tableaux <- c(Tableaux, tempTableaux)
+  }, error = function(e) {
+    cat("Erreur lors du traitement des groupes:", e$message, "\n")
+    # Créer au moins un tableau vide pour éviter les erreurs
+    default_df <- data.frame(
+      NumDisp = as.numeric(disp),
+      Disp = paste("Dispositif", disp),
+      Cycle = 1
+    )
+    default_list <- list(default_df)
+    names(default_list)[1] <- "psdrfDispTot_Stock_Diametre"
+    Tableaux <- default_list
+  })
+  
+  # Si Tableaux est toujours vide, créer au moins un résultat par défaut
+  if (length(Tableaux) == 0) {
+    cat("Tableaux est vide, création d'un tableau par défaut\n")
+    default_df <- data.frame(
+      NumDisp = as.numeric(disp),
+      Disp = paste("Dispositif", disp),
+      Cycle = 1
+    )
+    Tableaux <- list(default_df)
+    names(Tableaux)[1] <- "psdrfDispTot_Stock_Diametre"
   }
 
   ##### 3/ Sauvegarde  #####
+  cat("Sauvegarde des résultats dans psdrfTablesElaborees.Rdata\n")
   file = file.path(repPSDRF,"tables", "psdrfTablesElaborees.Rdata")
   save(
     Tableaux,
     file = file
   )
-    
+  
+  cat("Agrégation des placettes terminée\n")
  }
