@@ -423,3 +423,10 @@ build_tables <- function(
   # -- retour de la fonction build_tables -> cf dossier ../"disp_name"/tables
 }
 ##### /\ #####
+
+# Fonction pour créer des variables nulles (utilisée dans plusieurs scripts)
+create_null <- function(objects) {
+  for (obj in objects) {
+    assign(obj, NULL, envir = .GlobalEnv)
+  }
+}

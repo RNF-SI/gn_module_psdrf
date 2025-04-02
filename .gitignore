@@ -152,5 +152,10 @@ backend/gn_module_psdrf/Rscripts/template/compare
 # ajouter les fichier dans  le folder debug_data
 backend/gn_module_psdrf/debug_data
 
-#CLAUDE.md
-CLAUDE.md
+# debug_data
+backend/gn_module_psdrf/debug_data/
+
+# Fichiers générés
+output_files/
+# Fichiers de log
+*.log
