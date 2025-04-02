@@ -664,12 +664,14 @@ def formatBdd2RData(r, dispId, lastCycle, dispName, isCarnetToDownload, isPlanDe
             ro.r(r_load_script)
             
             # Maintenant appeler directement la fonction R
+            # Traiter les guillemets d'abord pour éviter les problèmes avec les backslashes
+            disp_name_formatted = disp_name_str.replace('"', '\\"')
             r_call = f"""
             tryCatch({{
                 editDocuments(
                     {dispId}, 
                     {lastCycle.r_repr()}, 
-                    "{disp_name_str.replace('"', '\\"')}", 
+                    "{disp_name_formatted}", 
                     {r_placettes.r_repr()}, 
                     {r_arbres.r_repr()}, 
                     {r_bmss.r_repr()}, 
