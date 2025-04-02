@@ -652,13 +652,16 @@ def generate_carnet_web(disp_id, is_carnet=True, is_plan=False, radar_params=Non
                 """
                 ro.r(r_load_script)
                 
+                # Traiter les guillemets avant pour éviter les problèmes avec les backslashes
+                disp_name_formatted = str(disp_name).replace('"', '\\"')
+                
                 # Appel direct en R
                 r_call = f"""
                 tryCatch({{
                     editDocuments(
                         {disp_id}, 
                         {r_last_cycle.r_repr()}, 
-                        "{str(disp_name).replace('"', '\\"')}", 
+                        "{disp_name_formatted}", 
                         {r_placettes.r_repr()}, 
                         {r_arbres.r_repr()}, 
                         {r_bmss.r_repr()}, 

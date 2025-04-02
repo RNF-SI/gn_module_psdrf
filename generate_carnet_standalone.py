@@ -557,14 +557,20 @@ def generate_carnet(disp_id, is_carnet=True, is_plan=False):
             # Essayer en utilisant la méthode directe en R
             try:
                 print("Tentative d'appel direct via R...")
+                # Préparer le chemin du script
+                script_path = bdd2rdata_path.replace('\\', '\\\\') if os.name == 'nt' else bdd2rdata_path
+                
                 r_load_script = f"""
                 # Réinitialiser l'environnement
                 options(dplyr.auto_copy = TRUE)
                 
                 # Sourcer le script BDD2RData.R directement
-                source('{bdd2rdata_path.replace('\\', '\\\\') if os.name == 'nt' else bdd2rdata_path}')
+                source('{script_path}')
                 """
                 ro.r(r_load_script)
+                
+                # Traiter les guillemets avant pour éviter les problèmes avec les backslashes
+                disp_name_formatted = str(disp_name).replace('"', '\\"')
                 
                 # Appel direct en R
                 r_call = f"""
@@ -572,7 +578,7 @@ def generate_carnet(disp_id, is_carnet=True, is_plan=False):
                     editDocuments(
                         {disp_id}, 
                         {r_last_cycle.r_repr()}, 
-                        "{str(disp_name).replace('"', '\\"')}", 
+                        "{disp_name_formatted}", 
                         {r_placettes.r_repr()}, 
                         {r_arbres.r_repr()}, 
                         {r_bmss.r_repr()}, 
