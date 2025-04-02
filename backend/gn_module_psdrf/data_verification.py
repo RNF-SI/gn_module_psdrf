@@ -1,12 +1,13 @@
-import pandas as pd
 import json
-import numpy as np
-from datetime import datetime
-import re
-
-from geonature.utils.config import config
 import os.path
+import re
 import traceback
+from datetime import datetime
+
+import numpy as np
+import pandas as pd
+from geonature.utils.config import config
+
 
 # Fonction principale de vérification des données du PSDRF
 def data_verification(data):
@@ -426,7 +427,7 @@ def data_verification(data):
             pos_Error2 = np.unique(pos_Error2)
             df_Error2 = df_temp2.iloc[pos_Error2, : ]
 
-            df_Error = np.concatenate((df_Error1, df_Error2))
+            df_Error = pd.DataFrame(np.concatenate((df_Error1, df_Error2)), columns=df_Error1.columns)
 
           # Cas où on n'a que 2 cycles
           else:
@@ -487,7 +488,7 @@ def data_verification(data):
             pos_Error2 = np.unique(pos_Error2)
             df_Error2 = df_temp2.iloc[pos_Error2, : ]
 
-            df_Error = np.concatenate((df_Error1, df_Error2))
+            df_Error = pd.DataFrame(np.concatenate((df_Error1, df_Error2)), columns=df_Error1.columns)
 
           else:
             pos_Error = np.where(~(pd.isnull(t.shape[1])) & ((t.iloc[:, 4]) > (t.iloc[:,5])))

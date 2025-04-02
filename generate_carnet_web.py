@@ -4,20 +4,21 @@ Script de génération du carnet PSDRF pour un dispositif spécifique.
 Version adaptée pour l'utilisation avec l'interface web de GeoNature.
 """
 
-import sys
 import os
+import sys
 import traceback
-import pandas as pd
-import numpy as np
-import rpy2.robjects as ro
-from rpy2.robjects.packages import STAP
-from sqlalchemy import create_engine, text
-from rpy2.robjects import pandas2ri
-from rpy2.robjects.conversion import localconverter
 
+import numpy as np
+import pandas as pd
+import rpy2.robjects as ro
+from flask import current_app
 # Pour l'utilisation avec GeoNature, importez directement de l'environnement
 from geonature.utils.env import DB
-from flask import current_app
+from rpy2.robjects import pandas2ri
+from rpy2.robjects.conversion import localconverter
+from rpy2.robjects.packages import STAP
+from sqlalchemy import create_engine, text
+
 
 def get_cd_nomenclature_from_id_type_and_id_nomenclature(id_type, id_nomenclature):
     """Obtient le code de nomenclature à partir de son ID et du type"""
@@ -651,6 +652,9 @@ def generate_carnet_web(disp_id, is_carnet=True, is_plan=False, radar_params=Non
                 source('/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/BDD2RData.R')
                 """
                 ro.r(r_load_script)
+                                
+                # Traiter les guillemets avant pour éviter les problèmes avec les backslashes
+                disp_name_formatted = str(disp_name).replace('"', '\\"')
                 
                 # Appel direct en R
                 r_call = f"""
@@ -658,7 +662,7 @@ def generate_carnet_web(disp_id, is_carnet=True, is_plan=False, radar_params=Non
                     editDocuments(
                         {disp_id}, 
                         {r_last_cycle.r_repr()}, 
-                        "{str(disp_name).replace('"', '\\"')}", 
+                        "{disp_name_formatted}", 
                         {r_placettes.r_repr()}, 
                         {r_arbres.r_repr()}, 
                         {r_bmss.r_repr()}, 
