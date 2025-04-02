@@ -682,9 +682,9 @@ def formatBdd2RData(r, dispId, lastCycle, dispName, isCarnetToDownload, isPlanDe
                     {r_answer_radar.r_repr() if r_answer_radar is not ro.NULL else "NULL"}
                 )
             }}, error = function(e) {{
-                cat("\\n=== ERREUR R DIRECTE ===\\n")
-                cat("Message:", e$message, "\\n")
-                cat("Call:", deparse(e$call), "\\n")
+                cat("\n=== ERREUR R DIRECTE ===\n")
+                cat("Message:", e$message, "\n")
+                cat("Call:", deparse(e$call), "\n")
                 stop(paste0("Erreur R: ", e$message))
             }})
             """

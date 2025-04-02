@@ -159,3 +159,6 @@ backend/gn_module_psdrf/debug_data/
 output_files/
 # Fichiers de log
 *.log
+
+# Ajouter le fichier CLAUDE.md
+CLAUDE.md
