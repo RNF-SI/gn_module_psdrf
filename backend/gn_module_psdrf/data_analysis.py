@@ -344,9 +344,9 @@ def formatBdd2RData(r, dispId, lastCycle, dispName, isCarnetToDownload, isPlanDe
             df_copy.to_csv(temp_csv, index=False, na_rep='NA', encoding='utf-8')
             
             # Script R pour lire le CSV
-            r_script = f"""
+            r_script = r"""
             options(warn = 1)  # Afficher tous les avertissements
-            tryCatch({{
+            tryCatch({
                 # Lire le CSV avec check.names=FALSE pour conserver les noms exacts
                 df <- read.csv('{temp_csv}', 
                                stringsAsFactors = FALSE,
@@ -357,28 +357,28 @@ def formatBdd2RData(r, dispId, lastCycle, dispName, isCarnetToDownload, isPlanDe
                 cat("Colonnes dans le dataframe R:", paste(colnames(df), collapse=", "), "\\n")
                 
                 # Remplacer les NA par NULL dans les colonnes de caractères
-                for (col in names(df)) {{
-                    if (is.character(df[[col]])) {{
+                for (col in names(df)) {
+                    if (is.character(df[[col]])) {
                         df[[col]][df[[col]] == "NA"] <- NA
-                    }}
-                }}
+                    }
+                }
                 
                 # Vérifier que tout s'est bien passé
-                if (is.data.frame(df)) {{
+                if (is.data.frame(df)) {
                     cat("Conversion réussie:", nrow(df), "lignes,", ncol(df), "colonnes\\n")
-                }} else {{
+                } else {
                     cat("ERREUR: Résultat n'est pas un dataframe\\n")
                     df <- data.frame()  # Renvoyer un dataframe vide en cas d'erreur
-                }}
+                }
                 
                 # Renvoyer le dataframe
                 df
-            }}, error = function(e) {{
+            }, error = function(e) {
                 cat("ERREUR lors de la lecture du CSV:", e$message, "\\n")
                 data.frame()  # Renvoyer un dataframe vide en cas d'erreur
-            }})
+            })
             """
-            
+
             # Exécuter le script R
             r_df = ro.r(r_script)
             
@@ -665,12 +665,14 @@ def formatBdd2RData(r, dispId, lastCycle, dispName, isCarnetToDownload, isPlanDe
             ro.r(r_load_script)
             
             # Maintenant appeler directement la fonction R
+            # Traiter les guillemets d'abord pour éviter les problèmes avec les backslashes
+            disp_name_formatted = disp_name_str.replace('"', '\\"')
             r_call = f"""
             tryCatch({{
                 editDocuments(
                     {dispId}, 
                     {lastCycle.r_repr()}, 
-                    "{disp_name_str.replace('"', '\\"')}", 
+                    "{disp_name_formatted}", 
                     {r_placettes.r_repr()}, 
                     {r_arbres.r_repr()}, 
                     {r_bmss.r_repr()}, 
@@ -683,9 +685,9 @@ def formatBdd2RData(r, dispId, lastCycle, dispName, isCarnetToDownload, isPlanDe
                     {r_answer_radar.r_repr() if r_answer_radar is not ro.NULL else "NULL"}
                 )
             }}, error = function(e) {{
-                cat("\\n=== ERREUR R DIRECTE ===\\n")
-                cat("Message:", e$message, "\\n")
-                cat("Call:", deparse(e$call), "\\n")
+                cat("\n=== ERREUR R DIRECTE ===\n")
+                cat("Message:", e$message, "\n")
+                cat("Call:", deparse(e$call), "\n")
                 stop(paste0("Erreur R: ", e$message))
             }})
             """
