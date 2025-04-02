@@ -343,9 +343,9 @@ def formatBdd2RData(r, dispId, lastCycle, dispName, isCarnetToDownload, isPlanDe
             df_copy.to_csv(temp_csv, index=False, na_rep='NA', encoding='utf-8')
             
             # Script R pour lire le CSV
-            r_script = f"""
+            r_script = r"""
             options(warn = 1)  # Afficher tous les avertissements
-            tryCatch({{
+            tryCatch({
                 # Lire le CSV avec check.names=FALSE pour conserver les noms exacts
                 df <- read.csv('{temp_csv}', 
                                stringsAsFactors = FALSE,
@@ -356,26 +356,26 @@ def formatBdd2RData(r, dispId, lastCycle, dispName, isCarnetToDownload, isPlanDe
                 cat("Colonnes dans le dataframe R:", paste(colnames(df), collapse=", "), "\\n")
                 
                 # Remplacer les NA par NULL dans les colonnes de caractères
-                for (col in names(df)) {{
-                    if (is.character(df[[col]])) {{
+                for (col in names(df)) {
+                    if (is.character(df[[col]])) {
                         df[[col]][df[[col]] == "NA"] <- NA
-                    }}
-                }}
+                    }
+                }
                 
                 # Vérifier que tout s'est bien passé
-                if (is.data.frame(df)) {{
+                if (is.data.frame(df)) {
                     cat("Conversion réussie:", nrow(df), "lignes,", ncol(df), "colonnes\\n")
-                }} else {{
+                } else {
                     cat("ERREUR: Résultat n'est pas un dataframe\\n")
                     df <- data.frame()  # Renvoyer un dataframe vide en cas d'erreur
-                }}
+                }
                 
                 # Renvoyer le dataframe
                 df
-            }}, error = function(e) {{
+            }, error = function(e) {
                 cat("ERREUR lors de la lecture du CSV:", e$message, "\\n")
                 data.frame()  # Renvoyer un dataframe vide en cas d'erreur
-            }})
+            })
             """
             
             # Exécuter le script R
