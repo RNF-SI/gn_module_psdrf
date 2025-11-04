@@ -72,11 +72,17 @@ def generate_carnet_web(disp_id, is_carnet=True, is_plan=False, radar_params=Non
         is_plan (bool): Si True, génère le plan des arbres
         radar_params (dict): Paramètres pour le radar (optionnel)
     """
+    import logging
+    logger = logging.getLogger(__name__)
+    
     try:
+        logger.info(f"[GENERATE_CARNET] Starting generation for dispositif {disp_id}")
+        logger.info(f"[GENERATE_CARNET] Parameters: is_carnet={is_carnet}, is_plan={is_plan}, radar_params={radar_params}")
         print(f"Génération du carnet pour le dispositif {disp_id}")
         
         # Nettoyer les fichiers de sortie au préalable
         out_dir = '/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/out'
+        logger.info(f"[GENERATE_CARNET] Cleaning output directory: {out_dir}")
         for f in os.listdir(out_dir):
             if f != '.gitignore':
                 path = os.path.join(out_dir, f)
@@ -89,9 +95,11 @@ def generate_carnet_web(disp_id, is_carnet=True, is_plan=False, radar_params=Non
         # Créer le dossier figures s'il n'existe pas
         figures_dir = os.path.join(out_dir, 'figures')
         if not os.path.exists(figures_dir):
+            logger.info(f"[GENERATE_CARNET] Creating figures directory: {figures_dir}")
             os.mkdir(figures_dir)
         
         # Initialiser l'environnement R
+        logger.info(f"[GENERATE_CARNET] Initializing R environment")
         r = ro.r
         
         # Récupérer les informations du dispositif et le dernier cycle

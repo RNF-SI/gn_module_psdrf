@@ -6,6 +6,7 @@
 """
 
 from marshmallow import Schema, fields
+import os
 
 
 class FormConfig(Schema):
@@ -13,4 +14,20 @@ class FormConfig(Schema):
 
 
 class GnModuleSchemaConf(Schema):
-    pass
+    # Répertoire de stockage des données PSDRF
+    PSDRF_DATA_DIR = fields.String(
+        load_default="media/psdrf/data",
+        metadata={"description": "Répertoire pour stocker les données PSDRF"}
+    )
+    
+    # Répertoire temporaire pour les fichiers d'upload
+    PSDRF_UPLOAD_DIR = fields.String(
+        load_default="media/psdrf/uploads",
+        metadata={"description": "Répertoire temporaire pour les uploads"}
+    )
+    
+    # Répertoire pour les exports
+    PSDRF_EXPORT_DIR = fields.String(
+        load_default="media/psdrf/exports", 
+        metadata={"description": "Répertoire pour les exports"}
+    )

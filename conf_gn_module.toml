@@ -1,5 +1,10 @@
 api_url = '/psdrf'
 id_application = 7
 
+# Configuration des répertoires PSDRF
+PSDRF_DATA_DIR = "media/psdrf/data"
+PSDRF_UPLOAD_DIR = "media/psdrf/uploads" 
+PSDRF_EXPORT_DIR = "media/psdrf/exports"
+
 [CELERY]
 CELERY_IMPORTS = ['backend.gn_module_psdrf.blueprint']

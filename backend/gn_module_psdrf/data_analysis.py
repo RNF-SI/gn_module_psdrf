@@ -40,13 +40,21 @@ logger = get_task_logger(__name__)
 # from sqlalchemy.orm import scoped_session
 
 def data_analysis(dispId, isCarnetToDownload, isPlanDesArbresToDownload, carnetToDownloadParameters):
+    logger.info(f"[DATA_ANALYSIS] Starting analysis for dispositif {dispId}")
+    logger.info(f"[DATA_ANALYSIS] Parameters: isCarnet={isCarnetToDownload}, isPlan={isPlanDesArbresToDownload}, params={carnetToDownloadParameters}")
+    
     try:
         # Utiliser le nouveau module pour générer le carnet directement
+        logger.info(f"[DATA_ANALYSIS] Calling generate_carnet_web module")
         success = generate_carnet_web(dispId, isCarnetToDownload, isPlanDesArbresToDownload, carnetToDownloadParameters)
         if success:
+            logger.info(f"[DATA_ANALYSIS] Génération du carnet pour le dispositif {dispId} réussie avec le nouveau module!")
             print(f"Génération du carnet pour le dispositif {dispId} réussie avec le nouveau module!")
             return
+        else:
+            logger.warning(f"[DATA_ANALYSIS] generate_carnet_web returned False for dispositif {dispId}")
     except Exception as e:
+        logger.error(f"[DATA_ANALYSIS] Erreur avec le nouveau module de génération: {e}", exc_info=True)
         print(f"Erreur avec le nouveau module de génération: {e}")
         print("Tentative avec l'ancienne méthode...")
     

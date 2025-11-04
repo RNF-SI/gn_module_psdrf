@@ -45,30 +45,44 @@ logger = get_task_logger(__name__)
 
 @celery_app.task(bind=True, soft_time_limit=700, time_limit=900)
 def test_celery(self, id_dispositif, isCarnetToDownload, isPlanDesArbresToDownload, carnetToDownloadParameters, outFilePath):
-    logger.info(f"Starting carnet d'analyse of dispositif {id_dispositif}.")
+    logger.info(f"[TASK] Starting carnet d'analyse of dispositif {id_dispositif}.")
+    logger.info(f"[TASK] Task ID: {self.request.id}")
+    logger.info(f"[TASK] Parameters: isCarnet={isCarnetToDownload}, isPlan={isPlanDesArbresToDownload}")
     temp_file = None  # Initialize temp_file and zipName before try-except block
     zipName = f'documents_dispositif-{str(id_dispositif)}.zip'
     try:
+        logger.info(f"[TASK] Getting app context...")
         with current_app.app_context():
+            logger.info(f"[TASK] Calling data_analysis function...")
             data_analysis(str(id_dispositif), isCarnetToDownload, isPlanDesArbresToDownload, carnetToDownloadParameters)
+            logger.info(f"[TASK] data_analysis completed successfully")
         
+            logger.info(f"[TASK] Preparing output directories...")
             base_dir = os.path.dirname(os.path.abspath(__file__))  # Gets the directory of the current script
             output_dir = os.path.join(base_dir, 'Rscripts/zip')
+            logger.info(f"[TASK] Output dir: {output_dir}")
         
             if not os.path.exists(output_dir):
+                logger.info(f"[TASK] Creating output directory...")
                 os.makedirs(output_dir)
 
             temp_file = tempfile.NamedTemporaryFile(dir=output_dir, delete=False, suffix=".zip")
+            logger.info(f"[TASK] Created temp file: {temp_file.name}")
             outFilePath = os.path.join(base_dir, 'Rscripts/out')
+            logger.info(f"[TASK] Looking for files in: {outFilePath}")
         
+            files_added = 0
             with zipfile.ZipFile(temp_file.name, 'w', zipfile.ZIP_DEFLATED) as zf:
                 for dirname, subdirs, files in os.walk(outFilePath):
                     for filename in files:
                         absname = os.path.abspath(os.path.join(dirname, filename))
                         arcname = absname[len(outFilePath) + 1:]
                         if (arcname != '.gitignore') and (not arcname.endswith(('.log', '.tex'))):
+                            logger.info(f"[TASK] Adding file to zip: {arcname}")
                             zf.write(absname, arcname)
+                            files_added += 1
 
+            logger.info(f"[TASK] Zip created with {files_added} files")
             os.chmod(temp_file.name, 0o777)
         
         self.update_state(state='SUCCESS', meta={'file_path': temp_file.name, "file_name": zipName})

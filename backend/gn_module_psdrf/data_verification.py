@@ -205,9 +205,17 @@ def data_verification(data):
         if not df_info.get('array').empty:
           df = df_info['array']
           for col_name in df_info['intNames']:
-              df[col_name] = pd.to_numeric(df[col_name], errors='ignore', downcast='integer')
+              try:
+                  df[col_name] = pd.to_numeric(df[col_name], downcast='integer')
+              except (ValueError, TypeError):
+                  # Si la conversion échoue, garder les valeurs originales
+                  pass
           for col_name in df_info['floatNames']:
-              df[col_name] = pd.to_numeric(df[col_name], errors='ignore', downcast='float')
+              try:
+                  df[col_name] = pd.to_numeric(df[col_name], downcast='float')
+              except (ValueError, TypeError):
+                  # Si la conversion échoue, garder les valeurs originales
+                  pass
 
       current_dir = os.path.dirname(os.path.abspath(__file__))
       parent_dir = os.path.dirname(current_dir)
@@ -412,31 +420,28 @@ def data_verification(data):
           if last_cycle > 2:
             pos_Error1 = []
             # On prend le dernier cycle et on considères les arbres non coupés (non Na)
-            df_temp1 = t[~t.iloc[:,t.shape[1]-1].isna()]
-            for i in range(5, t.shape[1]):
-              pos_Error1 =  np.concatenate((pos_Error1, np.array(np.where(df_temp1.iloc[:, i] != df_temp1.iloc[:, i-1])).tolist()[0]))
+            df_temp1 = t[~t[('first', last_cycle)].isna()]
+            # Comparer les valeurs des cycles successifs (colonnes 'first')
+            for cycle in range(2, last_cycle + 1):
+              pos_Error1 = np.concatenate((pos_Error1, np.array(np.where(df_temp1[('first', cycle)] != df_temp1[('first', cycle-1)])[0]).tolist()))
             pos_Error1 = np.unique(pos_Error1)
             df_Error1 = df_temp1.iloc[pos_Error1, : ]
 
             pos_Error2= []
             # On prend le dernier cycle et on considères les arbres coupés (Na)
-            df_temp2 = t[t.iloc[:,t.shape[1]-1].isna()]
-            for i in range(5, t.shape[1]-1):
+            df_temp2 = t[t[('first', last_cycle)].isna()]
+            for cycle in range(2, last_cycle):
               # Si arbre coupé au dernier cycle, les autres valeurs doivent être identiques
-              pos_Error2 =  np.concatenate((pos_Error2, np.array(np.where(df_temp2.iloc[:, i] != df_temp2.iloc[:, i-1])).tolist()[0]))
+              pos_Error2 = np.concatenate((pos_Error2, np.array(np.where(df_temp2[('first', cycle)] != df_temp2[('first', cycle-1)])[0]).tolist()))
             pos_Error2 = np.unique(pos_Error2)
             df_Error2 = df_temp2.iloc[pos_Error2, : ]
 
-            df_Error = pd.DataFrame(np.concatenate((df_Error1, df_Error2)), columns=df_Error1.columns)
+            df_Error = pd.concat([df_Error1, df_Error2]) if df_Error1.shape[0] > 0 or df_Error2.shape[0] > 0 else pd.DataFrame()
 
           # Cas où on n'a que 2 cycles
           else:
-            # pos_Error = np.where(~(pd.isnull(t.shape[1])) & ((t.iloc[:, 4]) != (t.iloc[:,5])))
-            # pos_Error = np.unique(pos_Error)
-            # df_Error = t.iloc[pos_Error, : ]
-
-            temp1 = t[(~t.iloc[:,4].isna()) & (~t.iloc[:,5].isna())]
-            pos_Error = np.where(temp1.iloc[:,4] != temp1.iloc[:,5])
+            temp1 = t[(~t[('first', 1)].isna()) & (~t[('first', 2)].isna())]
+            pos_Error = np.where(temp1[('first', 1)] != temp1[('first', 2)])[0]
             pos_Error = np.unique(pos_Error)
             df_Error = temp1.iloc[pos_Error, : ]
               
@@ -445,16 +450,24 @@ def data_verification(data):
             i = 0
             for index, row in df_Error.iterrows():
               if i<100:
-                # valuesDupl = df_Error.loc[listDupl[i]]
-                tValues = tArbres[["NumArbre", "Cycle", str(row["variable"].item())]].loc[[int(x) for x in row["<lambda>"].values]]
-                err = {
-                    "message": "Incohérence(s) relevée(s) sur les valeurs "+ str(row["variable"].item()) +" pour l'arbre numéro "+ str(row["NumArbre"].item()) + " de la placette numéro " + str(row["NumPlac"].item()),
-                    "table": "Arbres",
-                    "column": [ "NumArbre", "Cycle", str(row["variable"].item())],
-                    "row": [int(x) for x in row["<lambda>"].values], 
-                    "value": tValues.to_json(orient='records'),
-                  }
-                error_List_Temp.append(err)
+                # Filtrer les données originales pour cette combinaison arbre/variable spécifique
+                variable_name = str(row["variable"].item())
+                arbre_num = row["NumArbre"].item()
+                plac_num = row["NumPlac"].item()
+                
+                # Récupérer seulement les lignes correspondant à cet arbre et cette variable
+                mask = (tArbres["NumArbre"] == arbre_num) & (tArbres["NumPlac"] == plac_num)
+                tValues = tArbres[mask][["NumArbre", "Cycle", variable_name]]
+                
+                if not tValues.empty:
+                  err = {
+                      "message": "Incohérence(s) relevée(s) sur les valeurs "+ variable_name +" pour l'arbre numéro "+ str(arbre_num) + " de la placette numéro " + str(plac_num),
+                      "table": "Arbres",
+                      "column": [ "NumArbre", "Cycle", variable_name],
+                      "row": tValues.index.tolist(),
+                      "value": tValues.to_json(orient='records'),
+                    }
+                  error_List_Temp.append(err)
               i = i+1
             verificationList.append({'errorName': "Incohérence dans Arbres", 'errorText': "Arbre: Incohérence(s) relevée(s) sur les valeurs d'Essence, Azimut et Dist entre les différents inventaires. Conseil: Modifier les valeurs des cycles précédents si vous êtes sûrs de vous.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
@@ -501,12 +514,14 @@ def data_verification(data):
             for index, row in df_Error.iterrows():
               if i<100:
                 # valuesDupl = df_Error.loc[listDupl[i]]
-                tValues = tArbres[["NumArbre", "Cycle", str(row["variable"].item())]].loc[[int(x) for x in row["<lambda>"].values],:]
+                # Filtrer les valeurs NaN avant conversion en entier
+                valid_indices = [int(x) for x in row["<lambda>"].values if not pd.isna(x)]
+                tValues = tArbres[["NumArbre", "Cycle", str(row["variable"].item())]].loc[valid_indices,:]
                 err = {
                     "message": "Accroissement(s) sur le "+ str(row["variable"].item()) +" négatif(s)  pour l'arbre numéro "+ str(row["NumArbre"].item()) + " de la placette numéro " + str(row["NumPlac"].item()),
                     "table": "Arbres",
                     "column": [ "NumArbre", "Cycle", str(row["variable"].item())],
-                    "row": [int(x) for x in row["<lambda>"].values], 
+                    "row": valid_indices, 
                     "value": tValues.to_json(orient='records'),
                   }
                 error_List_Temp.append(err)
@@ -544,12 +559,14 @@ def data_verification(data):
             for index, row in df_Error.iterrows():
               if i<100:
               # valuesDupl = df_Error.loc[listDupl[i]]
-                tValues = tArbres[["NumArbre", "Cycle", "Type", str(row["variable"].item())]].loc[[int(x) for x in row["<lambda>"].values],:]
+                # Filtrer les valeurs NaN avant conversion en entier
+                valid_indices = [int(x) for x in row["<lambda>"].values if not pd.isna(x)]
+                tValues = tArbres[["NumArbre", "Cycle", "Type", str(row["variable"].item())]].loc[valid_indices,:]
                 err = {
                     "message": "Accroissement(s) sur le "+ str(row["variable"].item()) +" positif(s)  pour l'arbre numéro "+ str(row["NumArbre"].item()) + " de la placette numéro " + str(row["NumPlac"].item()),
                     "table": "Arbres",
                     "column": [ "NumArbre", "Cycle","Type", str(row["variable"].item())],
-                    "row": [int(x) for x in row["<lambda>"].values], 
+                    "row": valid_indices, 
                     "value": tValues.to_json(orient='records'),
                   }
                 error_List_Temp.append(err)
@@ -573,12 +590,14 @@ def data_verification(data):
             i=0
             for index, row in error_trees.iterrows():
               if i<100:
-                tValues = tArbres[["NumArbre", "Cycle", str(row["variable"].item())]].loc[[int(x) for x in row["<lambda>"].values],:]
+                # Filtrer les valeurs NaN avant conversion en entier
+                valid_indices = [int(x) for x in row["<lambda>"].values if not pd.isna(x)]
+                tValues = tArbres[["NumArbre", "Cycle", str(row["variable"].item())]].loc[valid_indices,:]
                 err = {
                     "message": "Valeur d'accroissement trop importante pour le "+ str(row["variable"].item()) +" de l'arbre numéro "+ str(row["NumArbre"].item()) + " de la placette numéro " + str(row["NumPlac"].item()),
                     "table": "Arbres",
                     "column": [ "NumArbre", "Cycle", str(row["variable"].item())],
-                    "row": [int(x) for x in row["<lambda>"].values], 
+                    "row": valid_indices, 
                     "value": tValues.to_json(orient='records'),
                   }
                 error_List_Temp.append(err)
@@ -1327,15 +1346,18 @@ def data_verification(data):
               i=0
               for index, row in df_Error.iterrows():
                 if i<100:
-                  tValues = BMSsup30[["Id", "Cycle", str(row["variable"].item())]].loc[[int(x) for x in row["<lambda>"].values]]
-                  err = {
-                      "message": "Incohérence(s) relevée(s) sur les valeurs "+ str(row["variable"].item()) +" pour l'id numéro "+ str(row["Id"].item()) + " de la placette numéro " + str(row["NumPlac"].item()),
-                      "table": "BMSsup30",
-                      "column": [ "Id", "Cycle", str(row["variable"].item())],
-                      "row": [int(x) for x in row["<lambda>"].values], 
-                      "value": tValues.to_json(orient='records'),
-                    }
-                  error_List_Temp.append(err)
+                  # Filtrer les NaN avant conversion en int pour éviter ValueError
+                  row_indices = [int(x) for x in row["<lambda>"].values if pd.notna(x)]
+                  if len(row_indices) > 0:
+                    tValues = BMSsup30[["Id", "Cycle", str(row["variable"].item())]].loc[row_indices]
+                    err = {
+                        "message": "Incohérence(s) relevée(s) sur les valeurs "+ str(row["variable"].item()) +" pour l'id numéro "+ str(row["Id"].item()) + " de la placette numéro " + str(row["NumPlac"].item()),
+                        "table": "BMSsup30",
+                        "column": [ "Id", "Cycle", str(row["variable"].item())],
+                        "row": row_indices,
+                        "value": tValues.to_json(orient='records'),
+                      }
+                    error_List_Temp.append(err)
                 i=i+1
               verificationList.append({'errorName': "Incohérence(s) dans BMSsup30", 'errorText':  "BMSsup30: Incohérence(s) relevée(s) sur les valeurs d'Essence, Azimut et Dist entre les différents inventaires. Conseil: Modifier les valeurs des cycles précédents si vous êtes sûrs de vous.", 'errorList': error_List_Temp, 'errorType': 'PsdrfError', 'isFatalError': True, 'errorNumber': i})
 
@@ -1365,12 +1387,14 @@ def data_verification(data):
               i=0
               for index, row in df_Error.iterrows():
                 if i<100:
-                  tValues = BMSsup30[["Id", "Cycle", str(row["variable"].item())]].loc[[int(x) for x in row["<lambda>"].values]]
+                  # Filtrer les valeurs NaN avant conversion en entier
+                  valid_indices = [int(x) for x in row["<lambda>"].values if not pd.isna(x)]
+                  tValues = BMSsup30[["Id", "Cycle", str(row["variable"].item())]].loc[valid_indices]
                   err = {
                     "message": "Accroissement(s) sur le "+ str(row["variable"].item()) +" positif(s)  pour l'id numéro "+ str(row["Id"].item()) + " de la placette numéro " + str(row["NumPlac"].item()),
                     "table": "BMSsup30",
                     "column": [ "Id", "Cycle", str(row["variable"].item())],
-                    "row": [int(x) for x in row["<lambda>"].values], 
+                    "row": valid_indices, 
                     "value": tValues.to_json(orient='records'),
                         }
                   error_List_Temp.append(err)
@@ -1395,12 +1419,14 @@ def data_verification(data):
             i=0
             for index, row in error_trees.iterrows():
               if i<100:
-                tValues = BMSsup30[["Id", "Cycle", str(row["variable"].item())]].loc[[int(x) for x in row["<lambda>"].values],:]
+                # Filtrer les valeurs NaN avant conversion en entier
+                valid_indices = [int(x) for x in row["<lambda>"].values if not pd.isna(x)]
+                tValues = BMSsup30[["Id", "Cycle", str(row["variable"].item())]].loc[valid_indices,:]
                 err = {
                     "message": "Valeur d'accroissement trop importante pour le "+ str(row["variable"].item()) +" de l'arbre id "+ str(row["Id"].item()) + " de la placette numéro " + str(row["NumPlac"].item()),
                     "table": "BMSsup30",
                     "column": [ "Id", "Cycle", str(row["variable"].item())],
-                    "row": [int(x) for x in row["<lambda>"].values], 
+                    "row": valid_indices, 
                     "value": tValues.to_json(orient='records'),
                   }
                 error_List_Temp.append(err)

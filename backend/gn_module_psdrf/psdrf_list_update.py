@@ -2,9 +2,11 @@ import datetime
 import logging
 import os
 from math import isnan
+from pathlib import Path
 
 import pandas as pd
 import rpy2.robjects as robjects
+from flask import current_app
 from geonature.utils.env import DB
 from rpy2.robjects.packages import STAP
 
@@ -13,16 +15,30 @@ from .models import TCycles, TDispositifs
 
 def psdrf_list_update(psdrf_list_file, update_code_ecologie):
     try:
-        data_dir = "/home/geonatureadmin/gn_module_psdrf/data"
+        # Obtenir les chemins depuis la configuration GeoNature
+        module_path = Path(__file__).parent
+        rscripts_dir = module_path / "Rscripts"
         
-        with open('/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/psdrf_Codes.R', 'r') as f:
+        # Utiliser la configuration pour le répertoire de données
+        data_dir = Path(current_app.config["ROOT_PATH"]) / current_app.config.get("PSDRF_DATA_DIR", "media/psdrf/data")
+        upload_dir = Path(current_app.config["ROOT_PATH"]) / current_app.config.get("PSDRF_UPLOAD_DIR", "media/psdrf/uploads")
+        
+        # Créer les répertoires s'ils n'existent pas
+        data_dir.mkdir(parents=True, exist_ok=True)
+        upload_dir.mkdir(parents=True, exist_ok=True)
+        (rscripts_dir / "psdrf_liste").mkdir(parents=True, exist_ok=True)
+        
+        # Charger le script R
+        psdrf_codes_path = rscripts_dir / "psdrf_Codes.R"
+        with open(psdrf_codes_path, 'r') as f:
             string = f.read()
         psdrf_Codes = STAP(string, "psdrf_Codes")
 
-        excel_save_path = "/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/psdrf_liste/PsdrfListes.xlsx"
-        psdrf_list_file.save(excel_save_path)
+        # Sauvegarder le fichier Excel uploadé
+        excel_save_path = rscripts_dir / "psdrf_liste" / "PsdrfListes.xlsx"
+        psdrf_list_file.save(str(excel_save_path))
         
-        excel_file_path = "/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/psdrf_liste/PsdrfListes.xlsx"
+        excel_file_path = excel_save_path
         
         sheet_names = ['CodeDurete', 'CodeEcologie', 'CodeEcorce', 'CodeEssence', 'CodeTypoArbres',
                        'Communes', 'Dispositifs', 'EssReg', 'Referents', 'Tarifs', 'Cycles']
@@ -30,7 +46,7 @@ def psdrf_list_update(psdrf_list_file, update_code_ecologie):
         for sheet_name in sheet_names:
             try:
                 df = pd.read_excel(open(excel_file_path, 'rb'), sheet_name=sheet_name)
-                csv_file_path = os.path.join(data_dir, f"{sheet_name}.csv")
+                csv_file_path = data_dir / f"{sheet_name}.csv"
                 df.to_csv(csv_file_path, index=False)
             except Exception as e:
                 logging.error(f"Error processing sheet {sheet_name}: {e}")
@@ -43,7 +59,7 @@ def psdrf_list_update(psdrf_list_file, update_code_ecologie):
             add_dispositif(row)
             add_cycle(row)
 
-        psdrf_Codes.psdrf_Codes('/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/')
+        psdrf_Codes.psdrf_Codes(str(rscripts_dir))
 
     except Exception as e:
         logging.critical(f"Error in psdrf_list_update: {e}")

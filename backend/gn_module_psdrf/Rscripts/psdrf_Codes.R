@@ -21,7 +21,7 @@ psdrf_Codes <- function(repPSDRF) {
   library("openxlsx") 
   library('lubridate')  # gestion des dates
 
-  file <- "/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/psdrf_liste/PsdrfListes.xlsx"
+  file <- paste0(repPSDRF, "/psdrf_liste/PsdrfListes.xlsx")
   ##### / \ #####
   
   
