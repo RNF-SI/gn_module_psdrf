@@ -423,7 +423,9 @@ def data_verification(data):
             df_temp1 = t[~t[('first', last_cycle)].isna()]
             # Comparer les valeurs des cycles successifs (colonnes 'first')
             for cycle in range(2, last_cycle + 1):
-              pos_Error1 = np.concatenate((pos_Error1, np.array(np.where(df_temp1[('first', cycle)] != df_temp1[('first', cycle-1)])[0]).tolist()))
+              # Sélectionner seulement les lignes où les deux valeurs existent
+              mask_both_exist = (~df_temp1[('first', cycle)].isna()) & (~df_temp1[('first', cycle-1)].isna())
+              pos_Error1 = np.concatenate((pos_Error1, np.array(np.where(mask_both_exist & (df_temp1[('first', cycle)] != df_temp1[('first', cycle-1)]))[0]).tolist()))
             pos_Error1 = np.unique(pos_Error1)
             df_Error1 = df_temp1.iloc[pos_Error1, : ]
 
@@ -432,7 +434,9 @@ def data_verification(data):
             df_temp2 = t[t[('first', last_cycle)].isna()]
             for cycle in range(2, last_cycle):
               # Si arbre coupé au dernier cycle, les autres valeurs doivent être identiques
-              pos_Error2 = np.concatenate((pos_Error2, np.array(np.where(df_temp2[('first', cycle)] != df_temp2[('first', cycle-1)])[0]).tolist()))
+              # Sélectionner seulement les lignes où les deux valeurs existent
+              mask_both_exist = (~df_temp2[('first', cycle)].isna()) & (~df_temp2[('first', cycle-1)].isna())
+              pos_Error2 = np.concatenate((pos_Error2, np.array(np.where(mask_both_exist & (df_temp2[('first', cycle)] != df_temp2[('first', cycle-1)]))[0]).tolist()))
             pos_Error2 = np.unique(pos_Error2)
             df_Error2 = df_temp2.iloc[pos_Error2, : ]
 
@@ -440,10 +444,14 @@ def data_verification(data):
 
           # Cas où on n'a que 2 cycles
           else:
-            temp1 = t[(~t[('first', 1)].isna()) & (~t[('first', 2)].isna())]
-            pos_Error = np.where(temp1[('first', 1)] != temp1[('first', 2)])[0]
+            # On veut détecter les incohérences seulement pour les arbres ayant des valeurs dans les deux cycles
+            mask_both_exist = (~t[('first', 1)].isna()) & (~t[('first', 2)].isna())
+            pos_Error = np.where(mask_both_exist & (t[('first', 1)] != t[('first', 2)]))[0]
             pos_Error = np.unique(pos_Error)
-            df_Error = temp1.iloc[pos_Error, : ]
+            if len(pos_Error) > 0 and len(pos_Error) <= len(t):
+              df_Error = t.iloc[pos_Error, : ]
+            else:
+              df_Error = pd.DataFrame()
               
           if df_Error.shape[0] > 0 :
             error_List_Temp = []
@@ -459,7 +467,8 @@ def data_verification(data):
                 mask = (tArbres["NumArbre"] == arbre_num) & (tArbres["NumPlac"] == plac_num)
                 tValues = tArbres[mask][["NumArbre", "Cycle", variable_name]]
                 
-                if not tValues.empty:
+                # Pour une erreur de cohérence entre cycles, il faut au minimum 2 lignes
+                if not tValues.empty and len(tValues) >= 2:
                   err = {
                       "message": "Incohérence(s) relevée(s) sur les valeurs "+ variable_name +" pour l'arbre numéro "+ str(arbre_num) + " de la placette numéro " + str(plac_num),
                       "table": "Arbres",
@@ -504,9 +513,13 @@ def data_verification(data):
             df_Error = pd.DataFrame(np.concatenate((df_Error1, df_Error2)), columns=df_Error1.columns)
 
           else:
-            pos_Error = np.where(~(pd.isnull(t.shape[1])) & ((t.iloc[:, 4]) > (t.iloc[:,5])))
+            temp1 = t[(~t.iloc[:,4].isna()) & (~t.iloc[:,5].isna())]
+            pos_Error = np.where(temp1.iloc[:,4] > temp1.iloc[:,5])[0]
             pos_Error = np.unique(pos_Error)
-            df_Error = t.iloc[pos_Error, : ]
+            if len(pos_Error) > 0 and len(pos_Error) <= len(temp1):
+              df_Error = temp1.iloc[pos_Error, : ]
+            else:
+              df_Error = pd.DataFrame()
 
           if df_Error.shape[0] > 0 :
             error_List_Temp = []
@@ -547,11 +560,18 @@ def data_verification(data):
               # toutes les valeurs doivent être décroissantes au cours du temps
               pos_Error = np.concatenate((pos_Error, np.array(np.where(df_temp.iloc[:, i] > df_temp.iloc[:, i-1])).tolist()[0]))
               pos_Error = np.unique(pos_Error)
+            if len(pos_Error) > 0 and len(pos_Error) <= len(df_temp):
               df_Error = df_temp.iloc[pos_Error, : ]
+            else:
+              df_Error = pd.DataFrame()
           else:
-            pos_Error = np.where(~(pd.isnull(t.iloc[:, 5])) & ~(pd.isnull(t.iloc[:, 6])) & ((t.iloc[:, 5]) < (t.iloc[:,6])) )
+            temp1 = df_temp[(~df_temp.iloc[:,5].isna()) & (~df_temp.iloc[:,6].isna())]
+            pos_Error = np.where(temp1.iloc[:,5] < temp1.iloc[:,6])[0]
             pos_Error = np.unique(pos_Error)
-            df_Error = df_temp.iloc[pos_Error, : ]   
+            if len(pos_Error) > 0 and len(pos_Error) <= len(temp1):
+              df_Error = temp1.iloc[pos_Error, : ]
+            else:
+              df_Error = pd.DataFrame()   
 
           if df_Error.shape[0] > 0 :
             error_List_Temp = []
@@ -1331,7 +1351,9 @@ def data_verification(data):
               df_temp = t[~t.iloc[:,t.shape[1]-1].isna()]
               # Si arbre non coupé au dernier cycle, toutes les valeurs doivent être identiques
               for i in range(5, t.shape[1]):
-                pos_Error =  np.concatenate((pos_Error, np.array(np.where(df_temp.iloc[:, i] != df_temp.iloc[:, i-1])).tolist()[0]))
+                # Sélectionner seulement les lignes où les deux valeurs existent
+                mask_both_exist = (~df_temp.iloc[:, i].isna()) & (~df_temp.iloc[:, i-1].isna())
+                pos_Error =  np.concatenate((pos_Error, np.array(np.where(mask_both_exist & (df_temp.iloc[:, i] != df_temp.iloc[:, i-1]))).tolist()[0]))
               pos_Error = np.unique(pos_Error)
               df_Error = df_temp.iloc[pos_Error, : ]
 
@@ -1350,6 +1372,9 @@ def data_verification(data):
                   row_indices = [int(x) for x in row["<lambda>"].values if pd.notna(x)]
                   if len(row_indices) > 0:
                     tValues = BMSsup30[["Id", "Cycle", str(row["variable"].item())]].loc[row_indices]
+                    # Pour une erreur de cohérence entre cycles, il faut au minimum 2 lignes
+                    if len(tValues) < 2:
+                      continue
                     err = {
                         "message": "Incohérence(s) relevée(s) sur les valeurs "+ str(row["variable"].item()) +" pour l'id numéro "+ str(row["Id"].item()) + " de la placette numéro " + str(row["NumPlac"].item()),
                         "table": "BMSsup30",
@@ -1373,14 +1398,22 @@ def data_verification(data):
             if last_cycle > 2:
               #Sous ensemble des arbres non coupés au dernier cycle
               pos_Error = []
+              df_temp = t[~t.iloc[:,t.shape[1]-1].isna()] # On supprime les arbres dont la dernière valeur est vide (arbre coupé)
               for i in range(5, t.shape[1]):
-                pos_Error =  np.concatenate((pos_Error, np.array(np.where(t.iloc[:, i] > t.iloc[:, i-1])).tolist()[0]))
+                pos_Error =  np.concatenate((pos_Error, np.array(np.where(df_temp.iloc[:, i] > df_temp.iloc[:, i-1])).tolist()[0]))
               pos_Error = np.unique(pos_Error)
-              df_Error = df_temp.iloc[pos_Error, : ]
+              if len(pos_Error) > 0 and len(pos_Error) <= len(df_temp):
+                df_Error = df_temp.iloc[pos_Error, : ]
+              else:
+                df_Error = pd.DataFrame()
             else :
-              pos_Error = np.where(~(pd.isnull(t.shape[1])) & ((t.iloc[:, 4]) < (t.iloc[:,5])))
+              temp1 = t[(~t.iloc[:,4].isna()) & (~t.iloc[:,5].isna())]
+              pos_Error = np.where(temp1.iloc[:,4] < temp1.iloc[:,5])[0]
               pos_Error = np.unique(pos_Error)
-              df_Error = t.iloc[pos_Error, : ]
+              if len(pos_Error) > 0 and len(pos_Error) <= len(temp1):
+                df_Error = temp1.iloc[pos_Error, : ]
+              else:
+                df_Error = pd.DataFrame()
 
             if df_Error.shape[0] > 0 :
               error_List_Temp = []
