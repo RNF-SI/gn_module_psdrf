@@ -444,14 +444,29 @@ def data_verification(data):
 
           # Cas où on n'a que 2 cycles
           else:
-            # On veut détecter les incohérences seulement pour les arbres ayant des valeurs dans les deux cycles
-            mask_both_exist = (~t[('first', 1)].isna()) & (~t[('first', 2)].isna())
-            pos_Error = np.where(mask_both_exist & (t[('first', 1)] != t[('first', 2)]))[0]
-            pos_Error = np.unique(pos_Error)
-            if len(pos_Error) > 0 and len(pos_Error) <= len(t):
-              df_Error = t.iloc[pos_Error, : ]
-            else:
-              df_Error = pd.DataFrame()
+            # Identifier tous les cycles disponibles
+            available_cycles = sorted([col[1] for col in t.columns if isinstance(col, tuple) and col[0] == 'first' and isinstance(col[1], (int, float))])
+            
+            df_Error = pd.DataFrame()
+            
+            # Comparer chaque paire de cycles consécutifs
+            for i in range(len(available_cycles) - 1):
+              cycle1 = available_cycles[i]
+              cycle2 = available_cycles[i + 1]
+              
+              # On veut détecter les incohérences seulement pour les arbres ayant des valeurs dans les deux cycles
+              mask_both_exist = (~t[('first', cycle1)].isna()) & (~t[('first', cycle2)].isna())
+              pos_Error = np.where(mask_both_exist & (t[('first', cycle1)] != t[('first', cycle2)]))[0]
+              
+              if len(pos_Error) > 0:
+                pos_Error = np.unique(pos_Error)
+                if len(pos_Error) <= len(t):
+                  df_Error_temp = t.iloc[pos_Error, : ]
+                  df_Error = pd.concat([df_Error, df_Error_temp]) if not df_Error.empty else df_Error_temp
+            
+            # Supprimer les doublons si nécessaire
+            if not df_Error.empty:
+              df_Error = df_Error.drop_duplicates()
               
           if df_Error.shape[0] > 0 :
             error_List_Temp = []
@@ -1347,22 +1362,55 @@ def data_verification(data):
 
             # Cas où un arbre présent au cycle 1, disparaît au cycle 2 et réapparaît au cycle3
             if last_cycle > 2:
-              pos_Error = []
-              df_temp = t[~t.iloc[:,t.shape[1]-1].isna()]
-              # Si arbre non coupé au dernier cycle, toutes les valeurs doivent être identiques
-              for i in range(5, t.shape[1]):
+              pos_Error1 = []
+              # On prend le dernier cycle et on considère les BMS non coupés (non Na)
+              df_temp1 = t[~t[('first', last_cycle)].isna()]
+              # Comparer les valeurs des cycles successifs (colonnes 'first')
+              for cycle in range(2, last_cycle + 1):
                 # Sélectionner seulement les lignes où les deux valeurs existent
-                mask_both_exist = (~df_temp.iloc[:, i].isna()) & (~df_temp.iloc[:, i-1].isna())
-                pos_Error =  np.concatenate((pos_Error, np.array(np.where(mask_both_exist & (df_temp.iloc[:, i] != df_temp.iloc[:, i-1]))).tolist()[0]))
-              pos_Error = np.unique(pos_Error)
-              df_Error = df_temp.iloc[pos_Error, : ]
+                mask_both_exist = (~df_temp1[('first', cycle)].isna()) & (~df_temp1[('first', cycle-1)].isna())
+                pos_Error1 = np.concatenate((pos_Error1, np.array(np.where(mask_both_exist & (df_temp1[('first', cycle)] != df_temp1[('first', cycle-1)]))[0]).tolist()))
+              pos_Error1 = np.unique(pos_Error1)
+              df_Error1 = df_temp1.iloc[pos_Error1, : ]
+
+              pos_Error2= []
+              # On prend le dernier cycle et on considère les BMS coupés (Na)
+              df_temp2 = t[t[('first', last_cycle)].isna()]
+              for cycle in range(2, last_cycle):
+                # Si BMS coupé au dernier cycle, les autres valeurs doivent être identiques
+                # Sélectionner seulement les lignes où les deux valeurs existent
+                mask_both_exist = (~df_temp2[('first', cycle)].isna()) & (~df_temp2[('first', cycle-1)].isna())
+                pos_Error2 = np.concatenate((pos_Error2, np.array(np.where(mask_both_exist & (df_temp2[('first', cycle)] != df_temp2[('first', cycle-1)]))[0]).tolist()))
+              pos_Error2 = np.unique(pos_Error2)
+              df_Error2 = df_temp2.iloc[pos_Error2, : ]
+
+              df_Error = pd.concat([df_Error1, df_Error2]) if df_Error1.shape[0] > 0 or df_Error2.shape[0] > 0 else pd.DataFrame()
 
             # Cas où on n'a que 2 cycles
             else:
-              temp1 = t[(~t.iloc[:,4].isna()) & (~t.iloc[:,5].isna())]
-              pos_Error = np.where(temp1.iloc[:,4] != temp1.iloc[:,5])
-              pos_Error = np.unique(pos_Error)
-              df_Error = temp1.iloc[pos_Error, : ]
+              # Identifier tous les cycles disponibles
+              available_cycles = sorted([col[1] for col in t.columns if isinstance(col, tuple) and col[0] == 'first' and isinstance(col[1], (int, float))])
+              
+              df_Error = pd.DataFrame()
+              
+              # Comparer chaque paire de cycles consécutifs
+              for i in range(len(available_cycles) - 1):
+                cycle1 = available_cycles[i]
+                cycle2 = available_cycles[i + 1]
+                
+                # On veut détecter les incohérences seulement pour les BMS ayant des valeurs dans les deux cycles
+                mask_both_exist = (~t[('first', cycle1)].isna()) & (~t[('first', cycle2)].isna())
+                pos_Error = np.where(mask_both_exist & (t[('first', cycle1)] != t[('first', cycle2)]))[0]
+                
+                if len(pos_Error) > 0:
+                  pos_Error = np.unique(pos_Error)
+                  if len(pos_Error) <= len(t):
+                    df_Error_temp = t.iloc[pos_Error, : ]
+                    df_Error = pd.concat([df_Error, df_Error_temp]) if not df_Error.empty else df_Error_temp
+              
+              # Supprimer les doublons si nécessaire
+              if not df_Error.empty:
+                df_Error = df_Error.drop_duplicates()
             if df_Error.shape[0] >0:
               error_List_Temp = []
               i=0
