@@ -201,21 +201,42 @@ def data_integration(dispId, dispName, data):
             id_type_durete = get_id_type_from_mnemonique("PSDRF_DURETE")
             id_type_ecorce = get_id_type_from_mnemonique("PSDRF_ECORCE")
 
+            # Pré-charger les placettes pour éviter les requêtes en boucle
+            placettes_map = {}
+            placettes_query = DB.session.query(TPlacettes.id_placette, TPlacettes.id_placette_orig).filter(
+                TPlacettes.id_dispositif == id_dispositif
+            ).all()
+            for placette_id, placette_orig in placettes_query:
+                placettes_map[str(placette_orig)] = placette_id
+
+            # Pré-charger les cycles pour éviter les requêtes en boucle  
+            cycles_map = {}
+            cycles_query = DB.session.query(TCycles.id_cycle, TCycles.num_cycle).filter(
+                TCycles.id_dispositif == id_dispositif
+            ).all()
+            for cycle_id, num_cycle in cycles_query:
+                cycles_map[num_cycle] = cycle_id
+
+            # Pré-charger les arbres pour éviter les requêtes en boucle
+            arbres_map = {}
+            arbres_query = DB.session.query(TArbres.id_arbre, TArbres.id_arbre_orig, TArbres.id_placette).join(
+                TPlacettes, TArbres.id_placette == TPlacettes.id_placette
+            ).filter(TPlacettes.id_dispositif == id_dispositif).all()
+            for arbre_id, arbre_orig, placette_id in arbres_query:
+                arbres_map[(arbre_orig, placette_id)] = arbre_id
+
             for arbre in Arbres:
-                placette_id_row = DB.session.query(TPlacettes.id_placette).filter(
-                    (TPlacettes.id_dispositif == id_dispositif) & (TPlacettes.id_placette_orig == str(arbre["NumPlac"]))
-                ).one()
-                placette_id = placette_id_row[0]
-
-                arbre_id_row = DB.session.query(TArbres.id_arbre).filter(
-                    (TArbres.id_arbre_orig == int(arbre["NumArbre"])) & (TArbres.id_placette == placette_id)
-                ).one()
-                arbre_id = arbre_id_row[0]
-
-                cycle_id_row = DB.session.query(TCycles.id_cycle).filter(
-                    (TCycles.num_cycle == arbre["Cycle"]) & (TCycles.id_dispositif == id_dispositif)
-                ).one()
-                cycle_id = cycle_id_row[0]
+                placette_id = placettes_map.get(str(arbre["NumPlac"]))
+                if not placette_id:
+                    continue
+                
+                arbre_id = arbres_map.get((int(arbre["NumArbre"]), placette_id))
+                if not arbre_id:
+                    continue
+                
+                cycle_id = cycles_map.get(arbre["Cycle"])
+                if not cycle_id:
+                    continue
 
                 if arbre["Diam1"]:
                     arbre["Diam1"] = float(arbre["Diam1"].replace(',', '.')) if isinstance(arbre["Diam1"], str) else float(arbre["Diam1"])
