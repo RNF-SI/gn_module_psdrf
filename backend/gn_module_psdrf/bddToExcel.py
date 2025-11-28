@@ -86,7 +86,7 @@ def bddToExcel(dispId, database='production'):
         ).join(
             TArbresTemp, TArbresTemp.id_placette == TPlacettesTemp.id_placette
         ).join(
-            TArbresMesuresTemp
+            TArbresMesuresTemp, TArbresMesuresTemp.id_arbre == TArbresTemp.id_arbre
         ).join(
             TCyclesTemp, TCyclesTemp.id_cycle == TArbresMesuresTemp.id_cycle
         )
@@ -142,7 +142,7 @@ def bddToExcel(dispId, database='production'):
         ).join(
             TBmSup30Temp, TBmSup30Temp.id_placette == TPlacettesTemp.id_placette
         ).join(
-            TBmSup30MesuresTemp
+            TBmSup30MesuresTemp, TBmSup30MesuresTemp.id_bm_sup_30 == TBmSup30Temp.id_bm_sup_30
         ).join(
             TCyclesTemp, TCyclesTemp.id_cycle == TBmSup30MesuresTemp.id_cycle
         )

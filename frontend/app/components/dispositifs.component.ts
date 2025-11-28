@@ -29,9 +29,11 @@ import { ToastrService } from 'ngx-toastr';
     public layerDict: object;
     public isLoading: boolean = false;
     public searchForm = new FormGroup({
+      name: new FormControl(''),
       region: new FormControl(''),
       alluvial: new FormControl(''),
       status: new FormControl(''),
+      with_placettes: new FormControl(''),
     });
     public statusList: Array<object>;
     public regions = [ // NB : dans l'idéal, les récupérer depuis l'API
@@ -92,9 +94,12 @@ import { ToastrService } from 'ngx-toastr';
 
     loadData(): void {
       this.isLoading = true;
-      const params = new HttpParams().set('region', this.searchForm.get('region').value)
+      const params = new HttpParams()
+        .set('name', this.searchForm.get('name').value)
+        .set('region', this.searchForm.get('region').value)
         .set('alluvial', this.searchForm.get('alluvial').value)
-        .set('status', this.searchForm.get('status').value);
+        .set('status', this.searchForm.get('status').value)
+        .set('with_placettes', this.searchForm.get('with_placettes').value);
       this._api.get<any>(`${this.config.API_ENDPOINT}/${this.apiEndPoint}`, {params: params})
           .subscribe(data => {
             this.layerDict = {};

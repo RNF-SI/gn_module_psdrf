@@ -1,6 +1,6 @@
 from flask import Blueprint, request, make_response, send_file, send_from_directory, Response, jsonify, current_app
 from sqlalchemy.orm import subqueryload, joinedload
-from sqlalchemy.sql import func, distinct
+from sqlalchemy.sql import func, distinct, text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.sql.expression import false
 
@@ -69,6 +69,8 @@ def get_disps():
 
     region = request.args.get("region")
     alluvial = request.args.get("alluvial")
+    with_placettes = request.args.get("with_placettes")
+    name_filter = request.args.get("name")
     try:
         status = int(request.args.get("status"))
     except ValueError:
@@ -79,7 +81,6 @@ def get_disps():
         .outerjoin(CorCyclesPlacettes) \
         .outerjoin(TCycles) \
         .group_by(TDispositifs) \
-        .having(func.count(TDispositifs.placettes) > 0) \
         .order_by(TDispositifs.name)
 
     if alluvial is not None and alluvial != '':
@@ -97,6 +98,20 @@ def get_disps():
 
     if status:
         query = query.filter(TDispositifs.areas.any(LAreas.id_type == status))
+
+    # Filtre sur le nom du dispositif (recherche insensible à la casse)
+    if name_filter and name_filter != '':
+        query = query.filter(TDispositifs.name.ilike(f'%{name_filter}%'))
+
+    # Filtre pour afficher/masquer les dispositifs sans placettes
+    if with_placettes is not None and with_placettes != '':
+        if with_placettes.lower() == 'true':
+            # Afficher uniquement les dispositifs avec placettes
+            query = query.having(func.count(TDispositifs.placettes) > 0)
+        elif with_placettes.lower() == 'false':
+            # Afficher uniquement les dispositifs sans placettes
+            query = query.having(func.count(TDispositifs.placettes) == 0)
+        # Si ni true ni false, on affiche tous les dispositifs
 
     total = query.count()
     pgs = query.offset(page * limit).limit(limit).all()
@@ -178,6 +193,72 @@ def save_dispositif():
         DB.session.commit()
         return {"success": True}
     return {"success": False, "message": "Id was not provided in data."}
+
+
+@blueprint.route('/dispositif/<int:id_dispositif>/stats', methods=['GET'])
+@json_resp
+def dispositif_stats(id_dispositif):
+    """ Renvoie les statistiques d'un dispositif pour production et staging """
+    
+    stats = {
+        'production': {
+            'nb_placettes': 0,
+            'cycles': [],
+            'dernier_cycle': None
+        },
+        'staging': {
+            'nb_placettes': 0,
+            'cycles': [],
+            'dernier_cycle': None
+        }
+    }
+    
+    # Stats production
+    query_prod = DB.session.query(func.count(distinct(TPlacettes.id_placette))) \
+        .filter(TPlacettes.id_dispositif == id_dispositif)
+    stats['production']['nb_placettes'] = query_prod.scalar() or 0
+    
+    # Cycles en production
+    query_cycles_prod = DB.session.query(TCycles.num_cycle) \
+        .join(CorCyclesPlacettes) \
+        .join(TPlacettes) \
+        .filter(TPlacettes.id_dispositif == id_dispositif) \
+        .distinct() \
+        .order_by(TCycles.num_cycle)
+    cycles_prod = [c[0] for c in query_cycles_prod.all()]
+    stats['production']['cycles'] = cycles_prod
+    stats['production']['dernier_cycle'] = max(cycles_prod) if cycles_prod else None
+    
+    # Stats staging (si le schéma existe)
+    try:
+        # Requête SQL directe pour le schéma staging
+        sql_staging = text("""
+            SELECT COUNT(DISTINCT p.id_placette) as nb_placettes
+            FROM pr_psdrf_staging.t_placettes p
+            WHERE p.id_dispositif = :id_dispositif
+        """)
+        result_staging = DB.session.execute(sql_staging, {'id_dispositif': id_dispositif}).fetchone()
+        stats['staging']['nb_placettes'] = result_staging[0] if result_staging else 0
+        
+        # Cycles en staging
+        sql_cycles_staging = text("""
+            SELECT DISTINCT c.num_cycle
+            FROM pr_psdrf_staging.t_cycles c
+            JOIN pr_psdrf_staging.cor_cycles_placettes cp ON c.id_cycle = cp.id_cycle
+            JOIN pr_psdrf_staging.t_placettes p ON cp.id_placette = p.id_placette
+            WHERE p.id_dispositif = :id_dispositif
+            ORDER BY c.num_cycle
+        """)
+        cycles_staging = DB.session.execute(sql_cycles_staging, {'id_dispositif': id_dispositif}).fetchall()
+        cycles_staging = [c[0] for c in cycles_staging]
+        stats['staging']['cycles'] = cycles_staging
+        stats['staging']['dernier_cycle'] = max(cycles_staging) if cycles_staging else None
+        
+    except Exception as e:
+        # Si le schéma staging n'existe pas ou erreur
+        pass
+    
+    return stats
 
 
 @blueprint.route('/global_stats', methods=['GET'])

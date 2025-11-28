@@ -25,6 +25,7 @@ export interface Document {
 })
 export class InfoDispositifComponent implements OnInit {
   public dispositif: any;
+  public dispositifStats: any;
   public id: number;
   public apiEndPoint: string;
   public placettesEndPoint: string;
@@ -100,6 +101,13 @@ export class InfoDispositifComponent implements OnInit {
           this.mapListService.getData("psdrf/placettes/" + this.id, [
             { param: "limit", value: 20 },
           ]);
+        });
+
+      // Récupérer les statistiques du dispositif
+      this._api
+        .get<any>(`${this.config.API_ENDPOINT}/psdrf/dispositif/${this.id}/stats`)
+        .subscribe((data) => {
+          this.dispositifStats = data;
         });
     });
   }

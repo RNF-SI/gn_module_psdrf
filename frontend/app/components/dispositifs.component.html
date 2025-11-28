@@ -108,6 +108,16 @@
               </div>
               <div class="card-body">
                 <div class="form-group">
+                  <label for="name">Nom du dispositif</label>
+                  <input
+                    id="name"
+                    type="text"
+                    class="form-control"
+                    formControlName="name"
+                    placeholder="Rechercher..."
+                  />
+                </div>
+                <div class="form-group">
                   <label for="region">Région</label>
                   <select
                     id="region"
@@ -146,6 +156,18 @@
                     >
                       {{ status.name }}
                     </option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="with_placettes">Avec placettes</label>
+                  <select
+                    id="with_placettes"
+                    class="form-control"
+                    formControlName="with_placettes"
+                  >
+                    <option value="">Tous les dispositifs</option>
+                    <option value="true">Avec placettes uniquement</option>
+                    <option value="false">Sans placettes uniquement</option>
                   </select>
                 </div>
               </div>

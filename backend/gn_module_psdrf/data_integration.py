@@ -234,7 +234,7 @@ def data_integration(dispId, dispName, data):
                 if not arbre_id:
                     continue
                 
-                cycle_id = cycles_map.get(arbre["Cycle"])
+                cycle_id = cycles_map.get(int(arbre["Cycle"]))
                 if not cycle_id:
                     continue
 

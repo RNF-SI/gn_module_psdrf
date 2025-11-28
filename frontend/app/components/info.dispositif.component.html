@@ -17,6 +17,63 @@
           : "&lt;inconnu&gt;"
       }}
     </p>
+    
+    <!-- Informations sur les données Production/Staging -->
+    <div class="row mt-3" *ngIf="dispositifStats">
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Base de données Production</h5>
+          </div>
+          <div class="card-body">
+            <p><strong>Nombre de placettes :</strong> {{ dispositifStats.production.nb_placettes }}</p>
+            <p><strong>Cycles disponibles :</strong> 
+              <span *ngIf="dispositifStats.production.cycles.length > 0">
+                {{ dispositifStats.production.cycles.join(', ') }}
+              </span>
+              <span *ngIf="dispositifStats.production.cycles.length === 0" class="text-muted">
+                Aucun cycle
+              </span>
+            </p>
+            <p><strong>Dernier cycle :</strong> 
+              <span *ngIf="dispositifStats.production.dernier_cycle">
+                Cycle {{ dispositifStats.production.dernier_cycle }}
+              </span>
+              <span *ngIf="!dispositifStats.production.dernier_cycle" class="text-muted">
+                Aucun
+              </span>
+            </p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header bg-warning">
+            <h5 class="mb-0">Base de données Staging</h5>
+          </div>
+          <div class="card-body">
+            <p><strong>Nombre de placettes :</strong> {{ dispositifStats.staging.nb_placettes }}</p>
+            <p><strong>Cycles disponibles :</strong> 
+              <span *ngIf="dispositifStats.staging.cycles.length > 0">
+                {{ dispositifStats.staging.cycles.join(', ') }}
+              </span>
+              <span *ngIf="dispositifStats.staging.cycles.length === 0" class="text-muted">
+                Aucun cycle
+              </span>
+            </p>
+            <p><strong>Dernier cycle :</strong> 
+              <span *ngIf="dispositifStats.staging.dernier_cycle">
+                Cycle {{ dispositifStats.staging.dernier_cycle }}
+              </span>
+              <span *ngIf="!dispositifStats.staging.dernier_cycle" class="text-muted">
+                Aucun
+              </span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
   <div class="row" id="map-list-placettes">
     <div class="col-sm-7">
