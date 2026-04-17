@@ -8,11 +8,18 @@ import zipfile
 import os
 import tempfile
 from datetime import datetime
-from sqlalchemy.orm import sessionmaker, joinedload, aliased, scoped_session
+from sqlalchemy.orm import sessionmaker, joinedload, selectinload, aliased, scoped_session
 from sqlalchemy.exc import SQLAlchemyError
 
 from geonature.utils.env import DB
-from .models import TDispositifs
+from .models import (
+    TDispositifs,
+    TPlacettes,
+    TArbres,
+    TBmSup30,
+    TCycles,
+    CorCyclesPlacettes,
+)
 from .schemas.dispositifs import DispositifSchema
 from .staging_schemas.dispositifs import DispositifStagingSchema
 from .pr_psdrf_staging_functions.models_staging import TDispositifsStaging
@@ -219,7 +226,30 @@ def fetch_dispositif_data(self, id_dispositif):
     try:
         with current_app.app_context():
             logger.info("Starting database query...")
-            query = DB.session.query(TDispositifs).filter(TDispositifs.id_dispositif == id_dispositif).one()
+            query = (
+                DB.session.query(TDispositifs)
+                .filter(TDispositifs.id_dispositif == id_dispositif)
+                .options(
+                    selectinload(TDispositifs.placettes).options(
+                        selectinload(TPlacettes.arbres).options(
+                            selectinload(TArbres.arbres_mesures),
+                            joinedload(TArbres.essence),
+                        ),
+                        selectinload(TPlacettes.bmsSup30).options(
+                            selectinload(TBmSup30.bm_sup_30_mesures),
+                            joinedload(TBmSup30.essence),
+                        ),
+                        selectinload(TPlacettes.reperes),
+                    ),
+                    selectinload(TDispositifs.cycles).options(
+                        selectinload(TCycles.corCyclesPlacettes).options(
+                            selectinload(CorCyclesPlacettes.regenerations),
+                            selectinload(CorCyclesPlacettes.transects),
+                        ),
+                    ),
+                )
+                .one()
+            )
             logger.info("Database query completed.")
             schema = DispositifSchema(many=False)
             logger.info("Starting serialization of data...")
