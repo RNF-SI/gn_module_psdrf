@@ -2019,11 +2019,11 @@ ggplot() +
       min(df_AcctD$AcctD, na.rm = T) - 0.5, 
       max(df_AcctD$AcctD, na.rm = T) + 0.5
     ), 
-    breaks = seq(
-      floor((min(df_AcctD$AcctD, na.rm = T) - 0.5) / 0.5 - 0.5) * 0.5, 
-      floor((max(df_AcctD$AcctD, na.rm = T) + 0.5) / 0.5 + 0.5) * 0.5, 
-      floor((max(df_AcctD$AcctD, na.rm = T) + 0.5) / 5 / 0.5 + 0.5) * 0.5
-    ), 
+    # breaks = seq(
+    #   floor((min(df_AcctD$AcctD, na.rm = T) - 0.5) / 0.5 - 0.5) * 0.5,
+    #   floor((max(df_AcctD$AcctD, na.rm = T) + 0.5) / 0.5 + 0.5) * 0.5,
+    #   floor((max(df_AcctD$AcctD, na.rm = T) + 0.5) / 5 / 0.5 + 0.5) * 0.5
+    # ),
     expand = c(0, 0)
   ) +
   scale_colour_manual(

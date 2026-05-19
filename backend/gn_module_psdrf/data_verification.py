@@ -6,7 +6,21 @@ from datetime import datetime
 
 import numpy as np
 import pandas as pd
+from flask import current_app
 from geonature.utils.config import config
+
+
+def _pivot_value_and_origin_index(melted_df, index_cols):
+    # pandas 2.x casse sur aggfunc=['first', lambda x: x.index[0]] (InvalidIndexError
+    # dans la concat interne) — on fait les deux pivots séparément puis on les
+    # concatène en préservant la structure 2-niveaux attendue par le code aval.
+    values = melted_df.pivot_table(
+        index=index_cols, columns="Cycle", values="value", aggfunc="first"
+    )
+    origin_idx = melted_df.pivot_table(
+        index=index_cols, columns="Cycle", values="value", aggfunc=lambda x: x.index[0]
+    )
+    return pd.concat({"first": values, "<lambda>": origin_idx}, axis=1).reset_index()
 
 
 # Fonction principale de vérification des données du PSDRF
@@ -217,11 +231,10 @@ def data_verification(data):
                   # Si la conversion échoue, garder les valeurs originales
                   pass
 
-      current_dir = os.path.dirname(os.path.abspath(__file__))
-      parent_dir = os.path.dirname(current_dir)
-      base_dir = os.path.dirname(parent_dir)
-
-      DATA_DIR_PSDRF = os.path.join(base_dir, 'data')
+      DATA_DIR_PSDRF = os.path.join(
+          current_app.config["ROOT_PATH"],
+          current_app.config.get("PSDRF_DATA_DIR", "media/psdrf/data"),
+      )
 
       #chargement des tables nécessaires aux tests 
       CodeEssence = pd.read_csv(os.path.join(DATA_DIR_PSDRF, 'CodeEssence.csv'))
@@ -410,7 +423,7 @@ def data_verification(data):
           t = pd.melt(tArbres, id_vars=["NumDisp", "NumPlac", "NumArbre", "Cycle"], value_vars=["Essence", "Azimut", "Dist"], ignore_index=False)
 
           #On utilise la fonction first car il n'y a pas de duplicate dans notre cas. 
-          t = t.pivot_table(index=["NumDisp", "NumPlac", "NumArbre", "variable"], columns='Cycle', values='value', aggfunc=['first', lambda x: x.index[0]]).reset_index()
+          t = _pivot_value_and_origin_index(t, ["NumDisp", "NumPlac", "NumArbre", "variable"])
 
           t = t.sort_values(by=["NumDisp", "NumPlac", "NumArbre", "variable"])
 
@@ -503,7 +516,7 @@ def data_verification(data):
           t = Arbres[["NumDisp", "NumPlac", "NumArbre", "Cycle", "Diam1", "Diam2", "Type"]]
           tArbres = t[t["Type"].isna()]
           t = pd.melt(tArbres, id_vars=["NumDisp", "NumPlac", "NumArbre", "Cycle", "Type"], value_vars=["Diam1", "Diam2"], ignore_index=False)
-          t = t.pivot_table(index=["NumDisp", "NumPlac", "NumArbre", "variable"], columns='Cycle',values='value', aggfunc=['first', lambda x: x.index[0]]).reset_index()
+          t = _pivot_value_and_origin_index(t, ["NumDisp", "NumPlac", "NumArbre", "variable"])
           t = t.sort_values(by=["NumDisp", "NumPlac", "NumArbre", "variable"])
 
           if last_cycle > 2:
@@ -564,7 +577,7 @@ def data_verification(data):
           tArbres = Arbres[["NumDisp", "NumPlac", "NumArbre", "Cycle", "Diam1", "Diam2", "Type"]]
           t = tArbres[~tArbres["Type"].isna()]
           t = pd.melt(t, id_vars=["NumDisp", "NumPlac", "NumArbre", "Cycle", "Type"], value_vars=["Diam1", "Diam2"], ignore_index=False)
-          t = t.pivot_table(index=["NumDisp", "NumPlac", "NumArbre", "Type", "variable"], columns='Cycle',values='value', aggfunc=['first', lambda x: x.index[0]]).reset_index()
+          t = _pivot_value_and_origin_index(t, ["NumDisp", "NumPlac", "NumArbre", "Type", "variable"])
           t = t.sort_values(by=["NumDisp", "NumPlac", "NumArbre", "variable"])
           df_temp = t
           # Note : on distingue quand il y a 2 cycles et 1 seul
@@ -613,7 +626,7 @@ def data_verification(data):
           # ----- Contrôle sur les écarts de diamètre entre les cycles trop importants
           t = Arbres[["NumDisp", "NumPlac", "NumArbre", "Cycle", "Diam1", "Diam2", "Type"]]
           t = pd.melt(t, id_vars=["NumDisp", "NumPlac", "NumArbre", "Cycle", "Type"], value_vars=["Diam1", "Diam2"], ignore_index=False)
-          t = t.pivot_table(index=["NumDisp", "NumPlac", "NumArbre", "variable"], columns='Cycle',values='value', aggfunc=['first', lambda x: x.index[0]]).reset_index()
+          t = _pivot_value_and_origin_index(t, ["NumDisp", "NumPlac", "NumArbre", "variable"])
           t = t.sort_values(by=["NumDisp", "NumPlac", "NumArbre", "variable"])
 
           pos = []
@@ -1356,7 +1369,7 @@ def data_verification(data):
             t = BMSsup30[["NumDisp", "NumPlac", "Id", "Cycle", "Essence", "Azimut", "Dist"]]
             t = pd.melt(t, id_vars=["NumDisp", "NumPlac", "Id", "Cycle"], value_vars=["Essence", "Azimut", "Dist"], ignore_index=False)
             #On utilise la fonction first car il n'y a pas de duplicate dans notre cas. 
-            t = t.pivot_table(index=["NumDisp", "NumPlac", "Id", "variable"], columns='Cycle',values='value', aggfunc=['first', lambda x: x.index[0]]).reset_index()
+            t = _pivot_value_and_origin_index(t, ["NumDisp", "NumPlac", "Id", "variable"])
             t = t.sort_values(by=["NumDisp", "NumPlac", "Id", "variable"])
             # Note : on distingue quand il y a 2 cycles et 1 seul
 
@@ -1440,7 +1453,7 @@ def data_verification(data):
             t = pd.melt(t, id_vars=["NumDisp", "NumPlac", "Id", "Cycle"], value_vars=["DiamMed"], ignore_index=False)
 
             #On utilise la fonction first car il n'y a pas de duplicate dans notre cas. 
-            t = t.pivot_table(index=["NumDisp", "NumPlac", "Id", "variable"], columns='Cycle',values='value', aggfunc=['first', lambda x: x.index[0]]).reset_index()
+            t = _pivot_value_and_origin_index(t, ["NumDisp", "NumPlac", "Id", "variable"])
             t = t.sort_values(by=["NumDisp", "NumPlac", "Id", "variable"])
           
             if last_cycle > 2:
@@ -1487,7 +1500,7 @@ def data_verification(data):
           t = BMSsup30[["NumDisp", "NumPlac", "Id", "Cycle", "DiamMed"]]
           t = pd.melt(t, id_vars=["NumDisp", "NumPlac", "Id", "Cycle"], value_vars=["DiamMed"], ignore_index=False)
           #On utilise la fonction first car il n'y a pas de duplicate dans notre cas. 
-          t = t.pivot_table(index=["NumDisp", "NumPlac", "Id", "variable"], columns='Cycle',values='value', aggfunc=['first', lambda x: x.index[0]]).reset_index()
+          t = _pivot_value_and_origin_index(t, ["NumDisp", "NumPlac", "Id", "variable"])
           t = t.sort_values(by=["NumDisp", "NumPlac", "Id", "variable"])
           pos = []
           for i in range(1, last_cycle) :

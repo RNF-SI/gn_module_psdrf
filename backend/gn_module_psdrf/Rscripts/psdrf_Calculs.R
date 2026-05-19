@@ -1614,7 +1614,8 @@ calculs_dmh <- function(df = NULL, dmh_df = NULL) {
                       Ref_CodeEcolo == "afi")
     df_EFI <- df %>% filter(Ref_CodeEcolo == "efi")
     df_IRSTEA <- df %>% filter(Ref_CodeEcolo == "irstea")
-    
+    df_2018 <- df %>% filter(Ref_CodeEcolo == "2018") #NEW
+
     # ----- Codification ProSilva
     if (dim(df_ProSilva)[1] > 0) {
       # ---- décomposition
@@ -1688,8 +1689,23 @@ calculs_dmh <- function(df = NULL, dmh_df = NULL) {
     } else {
       codes4 <- data.frame()
     }
-    
-    codes <- rbind(codes1, codes2, codes3, codes4)
+
+    # ----- Codification 2018 #NEW
+    if (dim(df_2018)[1] > 0) {
+      # ---- décomposition
+      # liste
+      list <- with(
+        df_2018,
+        str_split(CodeEcolo, boundary("word"))
+      )
+      # df
+      codes5 <- dmh_split(df_2018, list)
+    } else {
+      codes5 <- data.frame()
+    }
+
+    codes <- rbind(codes1, codes2, codes3, codes4, codes5) #New codes5
+    codes$CodeEcolo <- paste(codes$Ref_CodeEcolo, codes$CodeEcolo) #NEWS
   } else {
     codes <- data.frame()
   }

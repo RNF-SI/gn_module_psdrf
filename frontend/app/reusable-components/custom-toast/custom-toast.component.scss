@@ -1,47 +1,77 @@
 :host {
-    background-color: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: transparent;
-    border: none;
-    box-shadow: none;
-    width: 500px;
+  display: block;
+  width: min(90vw, 800px);
+  pointer-events: auto;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 .custom-toast {
-    max-width: 90vw;
-    margin: 0.5rem;
-    background-color: #bd2130; /* adjust the background color as needed */
-    color: #fff; /* adjust the text color as needed */
-    border-radius: 0.25rem;
-    box-shadow: 0 0.1rem 0.75rem rgba(0, 0, 0, 0.1);
-  }
-  
-  .custom-toast-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.5rem 0.75rem;
+  background-color: #bd2130;
+  color: #fff;
+  border-radius: 0.25rem;
+  box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  max-height: 80vh;
+  overflow: hidden;
+}
+
+.custom-toast-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  background-color: #bd2130;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  border-top-left-radius: 0.25rem;
+  border-top-right-radius: 0.25rem;
+
+  .close {
+    background: transparent;
+    border: 0;
     color: #fff;
-    background-color: #bd2130; /* adjust the background color as needed */
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    border-top-left-radius: 0.25rem;
-    border-top-right-radius: 0.25rem;
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0.85;
   }
-  
-  .custom-toast-body {
-    padding: 0.5rem 0.75rem;
+
+  .close:hover {
+    opacity: 1;
   }
-  
-  .error-line-title {
-    font-weight: bold;
-    font-size: medium;
-  }
+}
+
+.custom-toast-body {
+  padding: 0.75rem;
+  overflow-y: auto;
+  overflow-wrap: break-word;
+  flex: 1 1 auto;
+}
+
+.error-line-title {
+  font-weight: bold;
+  font-size: medium;
+}
+
+.actions {
+  margin-top: 0.75rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.error-detail {
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background-color: rgba(0, 0, 0, 0.3);
+  color: #fff;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 50vh;
+  overflow: auto;
+  border-radius: 0.25rem;
+}

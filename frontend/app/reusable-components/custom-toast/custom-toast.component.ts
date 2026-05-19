@@ -15,7 +15,6 @@ export class CustomToastComponent extends Toast implements OnInit {
   message: string = '';
   errorDetail: string = '';
   showErrorDetail: boolean = false;
-  detailSnippet: string = '';
 
   constructor(
     protected toastrService: ToastrService,
@@ -27,25 +26,18 @@ export class CustomToastComponent extends Toast implements OnInit {
   }
 
   ngOnInit() {
-
     this.errorDetailService.currentError.subscribe(error => {
       if (error) {
         this.success = error.success;
-        this.message = error.message;      
-        this.errorDetail = error.error_detail;
-        this.detailSnippet = this.errorDetail.slice(0, 300) + ' [......]';
+        this.message = error.message;
+        this.errorDetail = error.error_detail || '';
       }
     });
   }
 
   seeDetails(event: Event) {
-    if(this.showErrorDetail) {
-      this.showErrorDetail = false; 
-    } else {
-      event.preventDefault();
-      console.log(this.errorDetail); // Log the full error message.
-      this.showErrorDetail = true; 
-    }
+    event.preventDefault();
+    this.showErrorDetail = !this.showErrorDetail;
   }
 
   copyDetails(event: Event) {

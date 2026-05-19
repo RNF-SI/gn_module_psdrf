@@ -670,9 +670,7 @@ def psdrf_update_psdrf_liste():
         return {"success": True, "message": "Les données administrateurs ont bien été mises à jour."}
     except Exception as e:
         logging.critical(e)
-        msg = {"type": "bug", "msg": "Unknown error during psdrf liste change"}
-        logging.info(msg)
-        return Response(json.dumps(msg), status=500, mimetype='application/json')
+        return {"type": "bug", "msg": f"Erreur lors de la mise à jour de la PSDRF Liste : {e}"}, 500
     
 # add Placette List request
 @blueprint.route('/disp_placette_liste', methods=['POST'])
@@ -684,9 +682,7 @@ def psdrf_update_disp_placette_liste():
         return {"success": True, "message": result_message}
     except Exception as e:
         logging.critical(e)
-        msg = json.dumps({"type": "bug", "msg": "Unknown error during disp_placette_liste change"})
-        logging.info(msg)
-        return Response(msg, status=500)
+        return {"type": "bug", "msg": f"Erreur lors de la mise à jour de la liste placettes : {e}"}, 500
 
 
 # Fonctions pour l'application de saisir PSDRF

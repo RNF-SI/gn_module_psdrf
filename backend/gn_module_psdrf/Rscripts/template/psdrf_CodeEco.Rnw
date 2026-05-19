@@ -82,7 +82,7 @@ t <-
 #   )
 
 t.m <- t
-t.m$Note <- CodeEcologie$Descriptif[match(t.m$CodeEcolo, CodeEcologie$Code)]
+t.m$Note <- CodeEcologie$Descriptif[match(t.m$CodeEcolo, paste(tolower(CodeEcologie$Codification), CodeEcologie$Code))]
 t.m <- 
   t.m %>%
   group_by(NumDisp, Disp, Cycle, Note, NbrePlacettes) %>%
@@ -257,7 +257,7 @@ t.m <-
 t.m <- t.m[t.m$Nha > t.m$Tot*Seuil2, ]
 t.m <- t.m[order(t.m$Nha), ]
 
-t.m$Note <- CodeEcologie$Descriptif[match(t.m$CodeEcolo, CodeEcologie$Code)]
+t.m$Note <- CodeEcologie$Descriptif[match(t.m$CodeEcolo, paste(tolower(CodeEcologie$Codification), CodeEcologie$Code))]
 t.m$Note <- str_wrap(t.m$Note, width = 35, indent = 3, exdent = 0)
 t.m <- arrange(t.m, Note) %>%
   mutate(Cat = factor(Cat, levels = c("PER", "PB", "BM", "GB", "TGB"))) %>%
