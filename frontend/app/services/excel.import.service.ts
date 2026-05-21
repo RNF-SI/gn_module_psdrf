@@ -81,7 +81,7 @@ import * as XLSX from 'xlsx';
         "Rege": [
           "NumDisp", "NumPlac", "SsPlac", 
           "Cycle", "Essence", "Recouv", "Class1", "Class2", 
-          "Class3", " Taillis", "Abroutis", "Observation"
+          "Class3", "Taillis", "Abroutis", "Observation"
         ], 
         "Transect": [  
           "NumDisp", "NumPlac", "Id", "Cycle", "Transect", 
