@@ -92,6 +92,8 @@ def bddToExcel(dispId, database='production'):
         )
     Arbres = [arbre for arbre in arbresQuery]
     Arbres = [cdNomemclatureEdition(arbre, 11, 12, id_type_durete, id_type_ecorce) for arbre in Arbres]
+    if database == 'staging':
+        Arbres = [clearRefCodeEcoloPlaceholder(arbre, 17) for arbre in Arbres]
 
     regesQuery = db_session.query(
         TPlacettesTemp.id_dispositif, TPlacettesTemp.id_placette_orig, TRegenerationsTemp.sous_placette,
@@ -267,6 +269,14 @@ def getColumnObject(sheetName):
         }
         }
     return allColumnObject[sheetName]
+
+def clearRefCodeEcoloPlaceholder(obj, refCodeEcoloIdx):
+    # Nettoie le placeholder hérité "2018" présent dans pr_psdrf_staging.ref_code_ecolo
+    # pour éviter de l'exporter dans l'Excel staging.
+    finalObjtemp = list(obj)
+    if finalObjtemp[refCodeEcoloIdx] == "2018":
+        finalObjtemp[refCodeEcoloIdx] = None
+    return tuple(finalObjtemp)
 
 def cdNomemclatureEdition(obj, stadeDIdx, stadeEIdx, id_type_durete, id_type_ecorce):
     finalObjtemp = list(obj)
