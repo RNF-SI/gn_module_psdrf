@@ -10,7 +10,11 @@
 # repFigures <- "figures/" # debug or "figures" ?
 
 # Initialiser le fichier de débogage
-debug_file <- "/home/geonatureadmin/gn_module_psdrf/vha_debug.log"
+psdrf_module_root <- Sys.getenv("PSDRF_MODULE_ROOT")
+if (!nzchar(psdrf_module_root)) {
+  stop("PSDRF_MODULE_ROOT environment variable is not set. It must be exported by the Python caller.")
+}
+debug_file <- file.path(psdrf_module_root, "vha_debug.log")
 cat("=== DÉBUT DU DEBUGGING - ", format(Sys.time()), " ===\n", file=debug_file)
 
 # Options de sécurité pour éviter les erreurs avec les NA
@@ -43,13 +47,13 @@ library("scales")
 # library("doBy")
 library("grid")
 library("gridExtra")
-library("maptools")
-library("rgdal")
+# library("maptools")  # retiré CRAN 2023-10, non utilisé
+# library("rgdal")  # retiré CRAN 2023-10, non utilisé
 # library(raster)
 library("tcltk")
 library("gWidgets2")
 # library("gWidgets2tcltk")
-library("rgeos")
+# library("rgeos")  # retiré CRAN 2023-10, non utilisé
 # library(RgoogleMaps)
 library("tools")
 library("stringr")
@@ -80,7 +84,7 @@ cat("\n\n=== DÉBUT IMPORT DES DONNÉES ===\n", file=debug_file, append=TRUE)
 ### Lancement manuel de l'édition du livret PSDRF #####
 # --- Choix du répertoire de travail
 #  repPSDRF <- tclvalue(tkchooseDirectory(title = "Choix du répertoire Administrateurs dans la base PSDRF"))
-repPSDRF <- "/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts"
+repPSDRF <- file.path(psdrf_module_root, "backend", "gn_module_psdrf", "Rscripts")
 
 # --- Chargement des données administrateurs
 tryCatch({
@@ -177,7 +181,11 @@ setwd(repOut)
 
 # --- Chargement des tables de la base
 
-load(file.path(repPSDRF, "tables/corine.rda"))
+tryCatch({
+  load(file.path(repPSDRF, "tables/corine.rda"))
+}, error = function(e) {
+  cat("ERREUR chargement corine.rda:", e$message, "\n", file=debug_file, append=TRUE)
+})
 
 # Vérification et création de CodesCorine si nécessaire
 if (!exists("CodesCorine") || is.null(CodesCorine)) {
@@ -203,7 +211,11 @@ CodesCorine$CD_CB <- as.character(CodesCorine$CD_CB)
 CodesCorine$LB_CB97_FR <- as.character(CodesCorine$LB_CB97_FR)
 CodesCorine$CD_CB_SUP <- as.character(CodesCorine$CD_CB_SUP)
 
-load(file.path(repPSDRF, "tables/ser.rda"))
+tryCatch({
+  load(file.path(repPSDRF, "tables/ser.rda"))
+}, error = function(e) {
+  cat("ERREUR chargement ser.rda:", e$message, "\n", file=debug_file, append=TRUE)
+})
 
 # Fonction pour convertir ser en SpatialPolygonsDataFrame si nécessaire
 # Vérifie toujours que l'objet est de type spatial, sinon le convertit
@@ -590,7 +602,7 @@ Niveaux_EssReg2 <- EssReg_ORDER1[length(EssReg_ORDER1):1]
 # Fonction pour traiter de manière sécurisée les données avec Vha
 safe_process_data <- function(data) {
   # Débogage
-  debug_file <- "/home/geonatureadmin/gn_module_psdrf/vha_debug.log"
+  debug_file <- file.path(Sys.getenv("PSDRF_MODULE_ROOT"), "vha_debug.log")
   
   # Log d'entrée
   cat("\n=== SAFE_PROCESS_DATA - ENTRÉE ===\n", file=debug_file, append=TRUE)
@@ -606,10 +618,13 @@ safe_process_data <- function(data) {
   
   cat("Dimensions: ", nrow(data), "x", ncol(data), "\n", file=debug_file, append=TRUE)
   
-  # Si les données sont vides, retourner un data frame vide
+  # Si les données sont vides, préserver les colonnes (ajouter Vha si manquant)
   if (nrow(data) == 0) {
     cat("DATA A 0 LIGNES\n", file=debug_file, append=TRUE)
-    return(data.frame())
+    if (!"Vha" %in% names(data)) {
+      data$Vha <- numeric(0)
+    }
+    return(data)
   }
   
   # Vérifier si Vha existe dans les données
@@ -1046,11 +1061,20 @@ prepare_tables <- function ( # TODO : ne garder qu'1 fonction prepare_tables ? -
 get_radar_coords <- function(group = NULL, tables_needed = NULL) { # à tester par habitat
  # group <- "Habitat" # debug
   # quo_group <- enquo(group)
+  # Wrapper de sécurité : si la fonction plante (souvent à cause de tables vides
+  # sans colonne Vha/Gha/Classe), on retourne un radar par défaut avec note 1
+  # pour éviter que l'erreur ne se propage et tue tout le src_Final.
+  .safe_radar_default <- function() {
+    res <- data.frame(BMort = 1, BMort30 = 1, StadeD = 1, DivClasses = 1, PartTGB = 1)
+    res[[group]] <- "Disp"
+    res[, c(group, "BMort", "BMort30", "StadeD", "DivClasses", "PartTGB")]
+  }
+  return(tryCatch({
   quo_group <- quo(!!parse_expr(group))
 
   # -- critère 1 ratio volume de bois mort / volume de bois total
   # DÉBOGAGE: Créer un fichier log
-  debug_file <- "/home/geonatureadmin/gn_module_psdrf/vha_debug.log"
+  debug_file <- file.path(Sys.getenv("PSDRF_MODULE_ROOT"), "vha_debug.log")
   cat("=== DÉBUT DU DÉBOGAGE ===\n", file=debug_file, append=TRUE)
   
   # arbres sur pied
@@ -1066,8 +1090,8 @@ get_radar_coords <- function(group = NULL, tables_needed = NULL) { # à tester p
   
   # Filtrage sécurisé sans utiliser l'expression problématique
   valid_rows <- rep(FALSE, nrow(temp_data))
-  for (i in 1:nrow(temp_data)) {
-    if (!is.na(temp_data$Vha[i]) && temp_data$Vha[i] != 0) {
+  for (i in seq_len(nrow(temp_data))) {
+    if (!is.null(temp_data$Vha) && !is.na(temp_data$Vha[i]) && temp_data$Vha[i] != 0) {
       valid_rows[i] <- TRUE
     }
   }
@@ -1091,8 +1115,8 @@ get_radar_coords <- function(group = NULL, tables_needed = NULL) { # à tester p
   
   # Filtrage sécurisé
   valid_rows <- rep(FALSE, nrow(temp_data))
-  for (i in 1:nrow(temp_data)) {
-    if (!is.na(temp_data$Vha[i]) && temp_data$Vha[i] != 0) {
+  for (i in seq_len(nrow(temp_data))) {
+    if (!is.null(temp_data$Vha) && !is.na(temp_data$Vha[i]) && temp_data$Vha[i] != 0) {
       valid_rows[i] <- TRUE
     }
   }
@@ -1116,8 +1140,8 @@ get_radar_coords <- function(group = NULL, tables_needed = NULL) { # à tester p
   
   # Filtrage sécurisé
   valid_rows <- rep(FALSE, nrow(temp_data))
-  for (i in 1:nrow(temp_data)) {
-    if (!is.na(temp_data$Vha[i]) && temp_data$Vha[i] != 0) {
+  for (i in seq_len(nrow(temp_data))) {
+    if (!is.null(temp_data$Vha) && !is.na(temp_data$Vha[i]) && temp_data$Vha[i] != 0) {
       valid_rows[i] <- TRUE
     }
   }
@@ -1141,8 +1165,8 @@ get_radar_coords <- function(group = NULL, tables_needed = NULL) { # à tester p
   
   # Filtrage sécurisé
   valid_rows <- rep(FALSE, nrow(temp_data))
-  for (i in 1:nrow(temp_data)) {
-    if (!is.na(temp_data$Vha[i]) && temp_data$Vha[i] != 0) {
+  for (i in seq_len(nrow(temp_data))) {
+    if (!is.null(temp_data$Vha) && !is.na(temp_data$Vha[i]) && temp_data$Vha[i] != 0) {
       valid_rows[i] <- TRUE
     }
   }
@@ -1380,7 +1404,14 @@ radar_coords <-
   select(group, BMort, BMort30, StadeD, DivClasses, PartTGB)
 
 # -- retour de la fonction get_radar_coords
-return(radar_coords)
+radar_coords
+  }, error = function(e) {
+    if (exists("debug_file")) {
+      cat("ERREUR get_radar_coords:", conditionMessage(e), "\n",
+          file = debug_file, append = TRUE)
+    }
+    .safe_radar_default()
+  }))
 }
 
 ##### fonction pour créer une figure radar (avec paramètres fixes) #####
@@ -1472,7 +1503,7 @@ DetailTypo <- ifelse("gfTypologieClasseEssRegDen" %in% ls(), 1, 0)
 DetailCarto <- 1
 
 
-if (Answer_Radar == "true") {
+if (isTRUE(!is.null(Answer_Radar) && length(Answer_Radar) > 0 && Answer_Radar == "true")) {
   EvalRadar <- T
   EvalRadar2 <- 1
 } else {
@@ -2237,10 +2268,19 @@ print(
 
 
 % \renewcommand{\thechapter}{\thepart.\arabic{chapter}} TODO : à paramétrer
-<<knit_groups>>= 
+<<knit_groups>>=
   # -- balise texte (ex : txt introduction bois mort)
   Balise_TextBM = 1
   Balise_TextCodeEco = 1
+
+# -- fallback : analyse par dispositif seulement si chosen_group_combination non défini
+if (!exists("chosen_group_combination")) {
+  chosen_group_combination <- data.frame(
+    variable = c("Disp"),
+    value = c(disp_num),
+    stringsAsFactors = FALSE
+  )
+}
 
 # -- list des cycles (à insérer dans les template)
 cycles_list <- sort(unique(Cycles_Sel$Cycle))
@@ -2465,9 +2505,22 @@ process_src_final <- function() {
     
     # Essayer de générer le contenu
     content <- tryCatch({
-      suppressWarnings(knit_child(text = safe_src))
+      withCallingHandlers(
+        suppressWarnings(knit_child(text = safe_src)),
+        error = function(e) {
+          cat("\n=== TRACEBACK knit_child ===\n", file=debug_file, append=TRUE)
+          tb <- paste(capture.output(traceback(max.lines = 30)), collapse = "\n")
+          cat(tb, "\n", file=debug_file, append=TRUE)
+          if (!is.null(sys.calls())) {
+            cat("\n--- sys.calls() ---\n", file=debug_file, append=TRUE)
+            calls_txt <- paste(capture.output(print(sys.calls())), collapse = "\n")
+            cat(calls_txt, "\n", file=debug_file, append=TRUE)
+          }
+        }
+      )
     }, error = function(e) {
       cat("ERREUR dans knit_child:", e$message, "\n", file=debug_file, append=TRUE)
+      cat("Call:", paste(deparse(conditionCall(e)), collapse = " "), "\n", file=debug_file, append=TRUE)
       "% Erreur lors du traitement du contenu"
     })
     

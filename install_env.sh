@@ -1,6 +1,11 @@
 #!/bin/bash
 # Script bash pour l'installation de paquets Linux
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Override via la variable d'environnement GEONATURE_VENV si l'install GeoNature
+# n'est pas dans $HOME/geonature/backend
+GEONATURE_VENV="${GEONATURE_VENV:-$HOME/geonature/backend}"
+
 # Linux
 sudo apt install libudunits2-dev
 sudo apt-get install texlive-latex-extra
@@ -9,10 +14,10 @@ sudo apt-get install texlive-latex-extra
 # sudo apt-get install texlive-latex-base
 # sudo apt-get install texlive-full
 
-cd /home/geonatureadmin/geonature/backend/
+cd "$GEONATURE_VENV"
 source venv/bin/activate
 # Packages Python
-pip install -r /home/geonatureadmin/gn_module_psdrf/requirements.txt
+pip install -r "$SCRIPT_DIR/requirements.txt"
 
 # Packages R
 sudo su - -c "R -e \"install.packages('stringr')\""

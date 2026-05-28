@@ -19,6 +19,10 @@ from rpy2.robjects.conversion import localconverter
 from rpy2.robjects.packages import STAP
 from sqlalchemy import create_engine, text
 
+PSDRF_MODULE_ROOT = os.path.dirname(os.path.abspath(__file__))
+PSDRF_RSCRIPTS_DIR = os.path.join(PSDRF_MODULE_ROOT, 'backend', 'gn_module_psdrf', 'Rscripts')
+os.environ['PSDRF_MODULE_ROOT'] = PSDRF_MODULE_ROOT
+
 
 def get_cd_nomenclature_from_id_type_and_id_nomenclature(id_type, id_nomenclature):
     """Obtient le code de nomenclature à partir de son ID et du type"""
@@ -81,7 +85,7 @@ def generate_carnet_web(disp_id, is_carnet=True, is_plan=False, radar_params=Non
         print(f"Génération du carnet pour le dispositif {disp_id}")
         
         # Nettoyer les fichiers de sortie au préalable
-        out_dir = '/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/out'
+        out_dir = os.path.join(PSDRF_RSCRIPTS_DIR, 'out')
         logger.info(f"[GENERATE_CARNET] Cleaning output directory: {out_dir}")
         for f in os.listdir(out_dir):
             if f != '.gitignore':
@@ -282,14 +286,32 @@ def generate_carnet_web(disp_id, is_carnet=True, is_plan=False, radar_params=Non
             cycles_result = connection.execute(cycles_query, {"id_dispositif": disp_id})
             cycles_raw = cycles_result.fetchall()
         
+        # Normalise les booléens en chaînes "t"/"f" attendues côté R (filter(Taillis == "t"))
+        # Sans ça, str(True)="True" donne un Taillis "True" qui ne matche jamais "t".
+        def normalize_bools_to_tf(df):
+            for col in df.columns:
+                s = df[col]
+                if s.dtype == bool:
+                    df[col] = s.map({True: 't', False: 'f'}).astype(object)
+                elif s.dtype == object and len(s) > 0:
+                    sample = s.dropna()
+                    if len(sample) > 0 and isinstance(sample.iloc[0], bool):
+                        df[col] = s.apply(lambda v: 't' if v is True else ('f' if v is False else v))
+            return df
+
         # Fonction pour convertir un DataFrame pandas en DataFrame R
         def pandas_to_r_dataframe(df):
+            normalize_bools_to_tf(df)
             print(f"Converting DataFrame with shape: {df.shape}, columns: {list(df.columns)}")
             
             if df.empty:
-                print("DataFrame is empty - returning empty R dataframe")
-                empty_r_df = ro.r('data.frame()')
-                return empty_r_df
+                print(f"DataFrame is empty - building empty R dataframe with columns: {list(df.columns)}")
+                if len(df.columns) == 0:
+                    return ro.r('data.frame()')
+                # Construire un data.frame vide en préservant les noms de colonnes,
+                # sinon setnames() côté R échoue sur les tables vides (ex: Reperes)
+                cols_expr = ", ".join(f'`{c}` = character(0)' for c in df.columns)
+                return ro.r(f'data.frame({cols_expr}, stringsAsFactors = FALSE, check.names = FALSE)')
             
             # Utiliser la méthode CSV
             temp_csv = f"/tmp/temp_dataframe_{os.getpid()}_{id(df)}.csv"
@@ -436,7 +458,7 @@ def generate_carnet_web(disp_id, is_carnet=True, is_plan=False, radar_params=Non
         
         # Charger le script BDD2RData.R
         print("Chargement du script BDD2RData.R...")
-        with open('/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/BDD2RData.R', 'r') as f:
+        with open(os.path.join(PSDRF_RSCRIPTS_DIR, 'BDD2RData.R'), 'r') as f:
             string = f.read()
             
         # Créer un objet STAP
@@ -652,12 +674,13 @@ def generate_carnet_web(disp_id, is_carnet=True, is_plan=False, radar_params=Non
             # Essayer en utilisant la méthode directe en R
             try:
                 print("Tentative d'appel direct via R...")
-                r_load_script = """
+                bdd2rdata_path = os.path.join(PSDRF_RSCRIPTS_DIR, 'BDD2RData.R')
+                r_load_script = f"""
                 # Réinitialiser l'environnement
                 options(dplyr.auto_copy = TRUE)
-                
+
                 # Sourcer le script BDD2RData.R directement
-                source('/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/BDD2RData.R')
+                source('{bdd2rdata_path}')
                 """
                 ro.r(r_load_script)
                                 

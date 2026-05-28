@@ -358,7 +358,7 @@ def psdrf_data_analysis(id_dispositif):
 
     isPlanDesArbresToDownload = request.args.get('isPlanDesArbresToDownload')
 
-    outFilePath = "/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/out/"
+    outFilePath = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'Rscripts', 'out') + os.sep
     task = test_celery.delay(str(id_dispositif), isCarnetToDownload, isPlanDesArbresToDownload, carnetToDownloadParameters, outFilePath)
     # Return the task ID to the client
     return jsonify({'task_id': task.id})

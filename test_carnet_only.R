@@ -5,8 +5,18 @@
 args <- commandArgs(trailingOnly = TRUE)
 disp_num <- if (length(args) > 0) as.numeric(args[1]) else 152  # Utiliser 152 par défaut
 
+# Auto-détection de la racine du module à partir du chemin de ce script
+script_args <- commandArgs(trailingOnly = FALSE)
+file_arg <- grep("^--file=", script_args, value = TRUE)
+if (length(file_arg) > 0) {
+  module_root <- dirname(normalizePath(sub("^--file=", "", file_arg[1])))
+} else {
+  module_root <- Sys.getenv("PSDRF_MODULE_ROOT", unset = getwd())
+}
+Sys.setenv(PSDRF_MODULE_ROOT = module_root)
+
 # Définir le chemin du répertoire de base
-repPSDRF <- "/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts"
+repPSDRF <- file.path(module_root, "backend", "gn_module_psdrf", "Rscripts")
 
 # Définir les chemins des fichiers
 output_dir <- file.path(repPSDRF, "out")
@@ -14,7 +24,7 @@ template_file <- file.path(repPSDRF, "template/psdrf_Carnet_V3.Rnw")
 carnet_name <- paste0("carnet_Altier_", format(Sys.Date(), "%Y"), ".tex")
 
 # Définir le fichier de log
-log_file <- "/home/geonatureadmin/gn_module_psdrf/carnet_generation.log"
+log_file <- file.path(module_root, "carnet_generation.log")
 cat(paste("=== Démarrage génération carnet pour dispositif", disp_num, "à", format(Sys.time()), "===\n"), 
     file=log_file, append=TRUE)
 
@@ -43,7 +53,7 @@ try({
   
   # Assigner l'ID du dispositif dans l'environnement global
   assign("disp_num", disp_num, envir = .GlobalEnv)
-  assign("Answer_Radar", NULL, envir = .GlobalEnv)
+  assign("Answer_Radar", "true", envir = .GlobalEnv)
   
   # Générer le PDF à partir du template
   cat("Génération du carnet pour dispositif", disp_num, "...\n", file=log_file, append=TRUE)

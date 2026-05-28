@@ -51,8 +51,12 @@ library(gridExtra)
 library(stringr)
 @
 
-<<Import, echo=FALSE>>= 
-repPSDRF <- "/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts"
+<<Import, echo=FALSE>>=
+psdrf_module_root <- Sys.getenv("PSDRF_MODULE_ROOT")
+if (!nzchar(psdrf_module_root)) {
+  stop("PSDRF_MODULE_ROOT environment variable is not set. It must be exported by the Python caller.")
+}
+repPSDRF <- file.path(psdrf_module_root, "backend", "gn_module_psdrf", "Rscripts")
 # --- Chargement des données administrateurs
 load(file.path(repPSDRF, "tables/psdrfCodes.Rdata"))
 
@@ -63,7 +67,7 @@ setwd(repPlansArbres)
 
 <<Initialisation, echo=FALSE, warning=F, error=F, comment=F, message=F >>=
 
-# repPSDRF <- "/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts"
+# repPSDRF <- file.path(Sys.getenv("PSDRF_MODULE_ROOT"), "backend", "gn_module_psdrf", "Rscripts")
 # repOut <- paste0(
 #   repPSDRF, "/out/remesures/plans_arbres"
 # )

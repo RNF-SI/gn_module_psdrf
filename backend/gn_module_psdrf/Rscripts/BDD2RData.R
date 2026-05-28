@@ -9,15 +9,15 @@ editDocuments <- function(dispId, lastCycle, dispName, placettes, arbres, bms, r
     library("dplyr") 
     library("gWidgets2")
     library("knitr")
-    library("maptools")
+    # library("maptools")  # retiré CRAN 2023-10, non utilisé
     library("xtable")
     library("ggplot2")
-    library("ggrepel") 
+    library("ggrepel")
     library("ggthemes")
     library("scales")
     library("gridExtra")
-    library("rgeos")
-    library("rgdal")
+    # library("rgeos")  # retiré CRAN 2023-10, non utilisé
+    # library("rgdal")  # retiré CRAN 2023-10, non utilisé
     library("gdata") 
     library("grid")
     library("fmsb")
@@ -27,9 +27,13 @@ editDocuments <- function(dispId, lastCycle, dispName, placettes, arbres, bms, r
     library("sf")
 
     lastCycle = lastCycle[1,1]
-    setwd('/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts')
 
-    repPSDRF <- '/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts'
+    psdrf_module_root <- Sys.getenv("PSDRF_MODULE_ROOT")
+    if (!nzchar(psdrf_module_root)) {
+        stop("PSDRF_MODULE_ROOT environment variable is not set. It must be exported by the Python caller.")
+    }
+    repPSDRF <- file.path(psdrf_module_root, "backend", "gn_module_psdrf", "Rscripts")
+    setwd(repPSDRF)
 
     # Conversion des données des réserves de la Bdd en Rdata (au format excel) 
     source(

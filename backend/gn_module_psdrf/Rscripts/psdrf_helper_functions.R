@@ -36,7 +36,11 @@ safe_logical <- function(expr, default = FALSE) {
 
 # Fonction de débogage pour Vha
 debug_vha <- function(data, label="") {
-  log_file <- file.path("/home/geonatureadmin/gn_module_psdrf/vha_debug.log")
+  psdrf_module_root <- Sys.getenv("PSDRF_MODULE_ROOT")
+  if (!nzchar(psdrf_module_root)) {
+    psdrf_module_root <- tempdir()
+  }
+  log_file <- file.path(psdrf_module_root, "vha_debug.log")
   
   # Ouvrir le fichier en mode append
   con <- file(log_file, "a")

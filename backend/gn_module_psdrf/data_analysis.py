@@ -27,9 +27,12 @@ from .models import (BibEssences, CorCyclesPlacettes, TArbres, TArbresMesures,
                      TPlacettes, TRegenerations, TReperes, TTransects,
                      dispositifs_area_assoc)
 
-# Charger le module de génération de carnet web
-generate_carnet_web_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 
-                                    'generate_carnet_web.py')
+PSDRF_PKG_DIR = os.path.dirname(os.path.abspath(__file__))
+PSDRF_MODULE_ROOT = os.path.dirname(os.path.dirname(PSDRF_PKG_DIR))
+PSDRF_RSCRIPTS_DIR = os.path.join(PSDRF_PKG_DIR, 'Rscripts')
+os.environ['PSDRF_MODULE_ROOT'] = PSDRF_MODULE_ROOT
+
+generate_carnet_web_path = os.path.join(PSDRF_MODULE_ROOT, 'generate_carnet_web.py')
 spec = importlib.util.spec_from_file_location("generate_carnet_web", generate_carnet_web_path)
 generate_carnet_web_module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(generate_carnet_web_module)
@@ -58,8 +61,8 @@ def data_analysis(dispId, isCarnetToDownload, isPlanDesArbresToDownload, carnetT
         print(f"Erreur avec le nouveau module de génération: {e}")
         print("Tentative avec l'ancienne méthode...")
     
-    # Suppression des fichiers de sortie 
-    folder = '/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/out'
+    # Suppression des fichiers de sortie
+    folder = os.path.join(PSDRF_RSCRIPTS_DIR, 'out')
     for filename in os.listdir(folder):
         if filename != ".gitignore":
             file_path = os.path.join(folder, filename)
@@ -71,7 +74,7 @@ def data_analysis(dispId, isCarnetToDownload, isPlanDesArbresToDownload, carnetT
             except Exception as e:
                 print(f'Failed to delete {file_path}. Reason: {e}')
 
-    os.mkdir("/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/out/figures")
+    os.mkdir(os.path.join(PSDRF_RSCRIPTS_DIR, 'out', 'figures'))
 
     r = ro.r
 
@@ -318,13 +321,26 @@ def formatBdd2RData(r, dispId, lastCycle, dispName, isCarnetToDownload, isPlanDe
             table['table'][bc] = table['table'][bc].map(noValueToNa)
 
     #--- Conversion du df Pandas en rdataframe en utilisant une méthode CSV simple
+    def normalize_bools_to_tf(df):
+        """Convertit les booléens Python en chaînes 't'/'f' attendues par le code R PSDRF."""
+        for col in df.columns:
+            s = df[col]
+            if s.dtype == bool:
+                df[col] = s.map({True: 't', False: 'f'}).astype(object)
+            elif s.dtype == object and len(s) > 0:
+                sample = s.dropna()
+                if len(sample) > 0 and isinstance(sample.iloc[0], bool):
+                    df[col] = s.apply(lambda v: 't' if v is True else ('f' if v is False else v))
+        return df
+
     # Fonction helper pour convertir pandas DataFrame vers R DataFrame
     def pandas_to_r_dataframe(df):
         """
         Convertit un DataFrame pandas en DataFrame R via la méthode CSV.
-        Les noms de colonnes sont maintenant directement définis en Python, 
+        Les noms de colonnes sont maintenant directement définis en Python,
         donc pas besoin de mapping ou de renommage.
         """
+        normalize_bools_to_tf(df)
         print(f"Converting DataFrame with shape: {df.shape}, columns: {list(df.columns)}")
         
         if df.empty:
@@ -442,7 +458,7 @@ def formatBdd2RData(r, dispId, lastCycle, dispName, isCarnetToDownload, isPlanDe
     r_cycles = verify_df(r_cycles, "r_cycles")
     
     # 2/ Formater dans le bon format en modifiant XLs2Rdata
-    with open('/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/BDD2RData.R', 'r') as f:
+    with open(os.path.join(PSDRF_RSCRIPTS_DIR, 'BDD2RData.R'), 'r') as f:
         string = f.read()
     BDD2Rdata = STAP(string, "BDD2Rdata")
     print(carnetToDownloadParameters)
@@ -663,12 +679,13 @@ def formatBdd2RData(r, dispId, lastCycle, dispName, isCarnetToDownload, isPlanDe
         try:
             # Charger le script R directement et appeler la fonction
             print("Tentative d'appel direct via R...")
-            r_load_script = """
+            bdd2rdata_path = os.path.join(PSDRF_RSCRIPTS_DIR, 'BDD2RData.R')
+            r_load_script = f"""
             # Réinitialiser l'environnement
             options(dplyr.auto_copy = TRUE)
-            
+
             # Sourcer le script BDD2RData.R directement
-            source('/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts/BDD2RData.R')
+            source('{bdd2rdata_path}')
             """
             ro.r(r_load_script)
             

@@ -1,7 +1,7 @@
 
 
 ##### --- PSDRF data processing (without ui) --- #####
-library(easypackages)
+# library(easypackages)  # fonction libraries() jamais appelée; install CRAN échoue sur R 4.5
 library(lubridate)  # gestion des dates
 
 # suppressMessages(
@@ -28,15 +28,15 @@ library("dplyr")
 library("gWidgets2")
 # library("gWidgets2tcltk")
 library("knitr")
-library("maptools")
+# library("maptools")  # retiré CRAN 2023-10, non utilisé
 library("xtable")
 library("ggplot2")
-library("ggrepel") 
+library("ggrepel")
 library("ggthemes")
 library("scales")
 library("gridExtra")
-library("rgeos")
-library("rgdal")
+# library("rgeos")  # retiré CRAN 2023-10, non utilisé
+# library("rgdal")  # retiré CRAN 2023-10, non utilisé
 library("gdata") 
 library("grid")
 library("fmsb")
@@ -47,9 +47,12 @@ library("sf")
 
 
 
-setwd('/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts')
-
-repPSDRF <- '/home/geonatureadmin/gn_module_psdrf/backend/gn_module_psdrf/Rscripts'
+psdrf_module_root <- Sys.getenv("PSDRF_MODULE_ROOT")
+if (!nzchar(psdrf_module_root)) {
+  stop("PSDRF_MODULE_ROOT environment variable is not set. It must be exported by the Python caller.")
+}
+repPSDRF <- file.path(psdrf_module_root, "backend", "gn_module_psdrf", "Rscripts")
+setwd(repPSDRF)
 
 source(
   file.path("./psdrf_EditCarnet.R"), 
