@@ -297,10 +297,12 @@ temp <-
 # TODO : à supprimer (supprimer aussi l'utilisation de reshape2)
   rename(NhaTot = Nha)
 
-t3 <- 
-  t.m %>% 
-  left_join(temp) %>% 
-  mutate(Relatif2 = Nha / NhaTot) %>% 
+t3 <-
+  t.m %>%
+  left_join(temp) %>%
+  mutate(Relatif2 = Nha / NhaTot) %>%
+  # le left_join coerce Cat en character → re-factoriser pour préserver l'ordre dendrométrique
+  mutate(Cat = factor(Cat, levels = c("PER", "PB", "BM", "GB", "TGB"))) %>%
   arrange(Note)
 
 p2 <- 

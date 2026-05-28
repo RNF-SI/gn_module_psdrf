@@ -2337,8 +2337,14 @@ psdrf_Calculs <- function(
                           
                           
                           ##### 9/ dendromicohabitats #####
+                          # Bugfix : inclure aussi les Perches dans le calcul DMH.
+                          # À ce stade `Arbres` ne contient que les précomptables (Diam ≥ 17,5 cm) ;
+                          # les Perches (Diam < 17,5 cm) sont dans une variable séparée. Or les DMH
+                          # peuvent être portés par n'importe quel arbre vivant, perches incluses.
+                          # Sans cette correction, tous les DMH portés par des perches sont ignorés
+                          # et les Nha DMH ressortent ~50 % trop bas (cf. comparaison Aiguebelette).
                           Codes <-
-                            Arbres %>%
+                            dplyr::bind_rows(Arbres, Perches) %>%
                             filter(
                               CodeEcolo != "" &
                                 !is.na(NumDisp) & !is.na(NumPlac) &
