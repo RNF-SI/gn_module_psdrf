@@ -13,8 +13,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 GEONATURE_VENV="${GEONATURE_VENV:-$HOME/geonature/backend}"
 
 # LaTeX requis pour la compilation du carnet PDF (pdflatex).
+# texlive-lang-french : indispensable (babel french / french.ldf) — le carnet est en français,
+# sans lui pdflatex échoue avec « Package babel Error: Unknown option 'french' ».
 sudo apt-get update
-sudo apt-get install -y texlive-latex-extra texlive-latex-recommended texlive-fonts-recommended
+sudo apt-get install -y texlive-latex-extra texlive-latex-recommended texlive-fonts-recommended texlive-lang-french
 
 # Récupérer le sous-module PermPSDRF4py (pipeline Python).
 cd "$SCRIPT_DIR"
