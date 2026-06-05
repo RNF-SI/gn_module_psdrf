@@ -32,8 +32,7 @@ from .disp_placette_liste import disp_placette_liste_add
 from .bddToExcel import bddToExcel
 from .schemas.cycles import ConciseCycleSchema
 from .schemas.essences import EssenceSchema
-from .tasks import test_celery, insert_or_update_data, fetch_dispositif_data, fetch_updated_data, fetch_dispositif_data_merged
-from .pr_psdrf_staging_functions.models_staging import TDendro3SyncLog
+from .tasks import test_celery, insert_or_update_data, fetch_dispositif_data, fetch_updated_data
 from .helpers.parse_date import parse_iso_datetime
 
 # Modèle standard GeoNature des applications mobiles : source unique de vérité
@@ -743,109 +742,6 @@ def get_dispositif_result(task_id):
         return jsonify({'status': 'incomplete', 'message': 'Task is not finished yet.'}), 202
 
 
-# ---------------------------------------------------------------------------
-# Brique 1 — Pull fusionné prod + staging (reprise/continuation de saisie).
-# Même patron async que /dispositif-complet (202 + status + result) et même
-# format de réponse, de sorte que l'app dendro3 réutilise le même mapper.
-# ---------------------------------------------------------------------------
-
-@blueprint.route('/dispositif-complet-staging/<int:id_dispositif>', methods=['GET'])
-def get_dispositif_complet_staging(id_dispositif):
-    logger.info(f"Received request to start MERGED task for dispositif ID: {id_dispositif}")
-    task = fetch_dispositif_data_merged.delay(id_dispositif)
-    logger.info(f"Merged task {task.id} started for dispositif ID: {id_dispositif}")
-    return jsonify({'task_id': task.id}), 202
-
-
-@blueprint.route('/dispositif-complet-staging/status/<task_id>', methods=['GET'])
-def get_dispositif_staging_status(task_id):
-    logger.info(f"Checking status of merged task ID: {task_id}")
-    task = fetch_dispositif_data_merged.AsyncResult(task_id)
-    if task.state in ['PENDING', 'STARTED']:
-        return jsonify({'state': task.state}), 202
-    elif task.state == 'FAILURE':
-        logger.error(f"Merged task {task_id} failed with error: {task.info}")
-        return jsonify({'state': task.state, 'error': str(task.info)}), 500
-    elif task.state == 'SUCCESS':
-        return jsonify({'state': task.state}), 200
-    else:
-        return jsonify({'state': task.state}), 202
-
-
-@blueprint.route('/dispositif-complet-staging/result/<task_id>', methods=['GET'])
-def get_dispositif_staging_result(task_id):
-    logger.info(f"Retrieving result for merged task ID: {task_id}")
-    task = fetch_dispositif_data_merged.AsyncResult(task_id)
-    if task.status == 'SUCCESS':
-        return jsonify(task.result), 200
-    elif task.status == 'FAILURE':
-        logger.error(f"Retrieving merged result failed for task ID: {task_id}, Error: {task.info}")
-        return jsonify({'error': str(task.info)}), 500
-    else:
-        return jsonify({'status': 'incomplete', 'message': 'Task is not finished yet.'}), 202
-
-
-# ---------------------------------------------------------------------------
-# Brique 3 — État des placettes : dernier appareil/utilisateur ayant saisi en
-# staging sur chaque placette du dispositif (tableau de bord multi-édition).
-# ---------------------------------------------------------------------------
-
-@blueprint.route('/dispositif-placettes-state/<int:id_dispositif>', methods=['GET'])
-def get_dispositif_placettes_state(id_dispositif):
-    """Renvoie, par placette, le dernier log de synchro (qui/quel appareil/quand).
-
-    Réponse : {'status': 'success', 'data': [ {id_placette, id_dispositif,
-    device, id_role, identifiant, nom_complet, synced_at}, ... ]}.
-    """
-    # Dernier synced_at par placette pour ce dispositif.
-    last_per_placette = (
-        DB.session.query(
-            TDendro3SyncLog.id_placette.label('id_placette'),
-            func.max(TDendro3SyncLog.synced_at).label('last_synced_at'),
-        )
-        .filter(TDendro3SyncLog.id_dispositif == id_dispositif)
-        .group_by(TDendro3SyncLog.id_placette)
-        .subquery()
-    )
-
-    rows = (
-        DB.session.query(TDendro3SyncLog, User)
-        .join(
-            last_per_placette,
-            (TDendro3SyncLog.id_placette == last_per_placette.c.id_placette)
-            & (TDendro3SyncLog.synced_at == last_per_placette.c.last_synced_at),
-        )
-        .outerjoin(User, User.id_role == TDendro3SyncLog.id_role)
-        .filter(TDendro3SyncLog.id_dispositif == id_dispositif)
-        .all()
-    )
-
-    data = []
-    seen = set()
-    for log, user in rows:
-        # Garde-fou contre d'éventuels ex-aequo de synced_at sur une placette.
-        if log.id_placette in seen:
-            continue
-        seen.add(log.id_placette)
-        nom_complet = None
-        identifiant = None
-        if user is not None:
-            identifiant = getattr(user, 'identifiant', None)
-            prenom = getattr(user, 'prenom_role', None) or ''
-            nom = getattr(user, 'nom_role', None) or ''
-            nom_complet = (prenom + ' ' + nom).strip() or None
-        data.append({
-            'id_placette': log.id_placette,
-            'id_dispositif': log.id_dispositif,
-            'device': log.device,
-            'id_role': log.id_role,
-            'identifiant': identifiant,
-            'nom_complet': nom_complet,
-            'synced_at': log.synced_at.isoformat() if log.synced_at else None,
-        })
-
-    return jsonify({'status': 'success', 'data': data}), 200
-
 
 @blueprint.route('/dispositif-cycles/<int:id_dispositif>', methods=['GET'])
 def get_dispositif_cycles(id_dispositif):
@@ -897,14 +793,8 @@ def get_PSDRF_t_nomenclatures():
 @blueprint.route('/export_dispositif_from_dendro3', methods=['POST'])
 def export_dispositif():
     """
-    Receives a dispositif entity as JSON and exports it to the database (staging).
-    Returns the number of added/updated entities.
-
-    Brique 2 (traçabilité) : le payload accepte désormais, à la racine, deux
-    champs optionnels qui sont propagés tels quels à la tâche d'export :
-      - ``device`` (str) : nom/identifiant de l'appareil mobile ;
-      - ``id_role`` (int) : utilisateur ayant lancé la synchro.
-    La tâche insère une ligne par placette dans ``pr_psdrf_staging.t_dendro3_sync_log``.
+    Receives a dispositif entity as JSON and exports it to the database.
+    Returns the number of added entities and that have updated
     """
     data = request.get_json()
     

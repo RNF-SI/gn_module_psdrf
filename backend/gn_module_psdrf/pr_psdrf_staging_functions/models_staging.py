@@ -310,21 +310,3 @@ class TTransectsStaging (DB.Model):
     updated_at = DB.Column('updated_at', DB.DateTime)
 
     cor_cycles_placettes = DB.relationship('CorCyclesPlacettesStaging', foreign_keys=id_cycle_placette, back_populates='transects')
-
-
-class TDendro3SyncLog(DB.Model):
-    """Journal de synchronisation dendro3 : trace quel appareil et quel
-    utilisateur ont saisi sur quelle placette, et quand.
-
-    Une ligne est insérée par placette synchronisée lors d'un export depuis
-    l'app mobile. Sert la règle « 1 mobile = 1 placette », la prévention de
-    multi-édition et l'écran de comparaison local <-> staging (Brique 3).
-    """
-    __tablename__ = "t_dendro3_sync_log"
-    __table_args__ = {'schema': SCHEMA_STAGING}
-    id = DB.Column('id', DB.Integer, primary_key=True)
-    id_dispositif = DB.Column('id_dispositif', DB.Integer)
-    id_placette = DB.Column('id_placette', DB.Integer)
-    device = DB.Column('device', DB.Text)
-    id_role = DB.Column('id_role', DB.Integer)
-    synced_at = DB.Column('synced_at', DB.DateTime, default=datetime.utcnow)
