@@ -142,6 +142,10 @@ Services clés : `route.service.ts` (PsdrfDataService — toutes les requêtes A
 - `requirements.in` — dépendances Python : Flask, openpyxl, pandas, numpy, scipy, matplotlib, jinja2 (rpy2 retiré).
 - `.gitmodules` — déclare le sous-module `backend/gn_module_psdrf/PermPSDRF4py` (dépôt `RNF-SI/PermPSDRF4py`, branche `main`).
 
+### Première installation / mise en service
+
+Après `install_gn_module`, avant toute génération : **charger `PsdrfListes` via la route `/psdrfListe`** (page admin). Cet upload écrit `PsdrfListes.xlsx` + `tables/psdrfCodes.pkl` dans `PSDRF_DATA_DIR`, peuple Dispositifs/Cycles et la nomenclature `PSDRF_ECOLOGIE`. Sans lui, la génération échoue (« Référentiel introuvable… »). Les nomenclatures `PSDRF_DURETE`/`PSDRF_ECORCE` viennent des migrations. Un dispositif doit être présent dans PsdrfListes (Cycles/Tarifs/EssReg/Cat) avant de générer son carnet. Détails : `README.rst`. Ne pas copier de fichiers à la main — tout passe par l'upload.
+
 ## Debugging
 
 - Logs GeoNature : `sudo journalctl -u geonature`
