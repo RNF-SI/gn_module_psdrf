@@ -6,7 +6,9 @@ from .data_analysis import data_analysis
 from io import BytesIO
 import zipfile
 import os
+import shutil
 import tempfile
+from pathlib import Path
 from datetime import datetime
 from sqlalchemy.orm import sessionmaker, joinedload, selectinload, aliased, scoped_session
 from sqlalchemy.exc import SQLAlchemyError
@@ -51,47 +53,51 @@ import logging
 logger = get_task_logger(__name__)
 
 @celery_app.task(bind=True, soft_time_limit=700, time_limit=900)
-def test_celery(self, id_dispositif, isCarnetToDownload, isPlanDesArbresToDownload, carnetToDownloadParameters, outFilePath):
+def test_celery(self, id_dispositif, isCarnetToDownload, isPlanDesArbresToDownload, carnetToDownloadParameters, outFilePath=None):
+    """Génère le(s) PDF (carnet/plan) via le pipeline Python et les archive en ZIP.
+
+    ``outFilePath`` est conservé pour compatibilité d'appel mais n'est plus utilisé.
+    """
     logger.info(f"[TASK] Starting carnet d'analyse of dispositif {id_dispositif}.")
     logger.info(f"[TASK] Task ID: {self.request.id}")
     logger.info(f"[TASK] Parameters: isCarnet={isCarnetToDownload}, isPlan={isPlanDesArbresToDownload}")
-    temp_file = None  # Initialize temp_file and zipName before try-except block
+    temp_file = None
+    work_dir = None
     zipName = f'documents_dispositif-{str(id_dispositif)}.zip'
     try:
-        logger.info(f"[TASK] Getting app context...")
         with current_app.app_context():
             logger.info(f"[TASK] Calling data_analysis function...")
-            data_analysis(str(id_dispositif), isCarnetToDownload, isPlanDesArbresToDownload, carnetToDownloadParameters)
-            logger.info(f"[TASK] data_analysis completed successfully")
-        
-            logger.info(f"[TASK] Preparing output directories...")
-            base_dir = os.path.dirname(os.path.abspath(__file__))  # Gets the directory of the current script
-            output_dir = os.path.join(base_dir, 'Rscripts/zip')
-            logger.info(f"[TASK] Output dir: {output_dir}")
-        
-            if not os.path.exists(output_dir):
-                logger.info(f"[TASK] Creating output directory...")
-                os.makedirs(output_dir)
+            result = data_analysis(
+                str(id_dispositif),
+                isCarnetToDownload,
+                isPlanDesArbresToDownload,
+                carnetToDownloadParameters,
+                work_token=self.request.id,
+            )
+            pdfs = result.get("pdfs", [])
+            work_dir = result.get("work_dir")
+            logger.info(f"[TASK] Pipeline produced {len(pdfs)} PDF(s)")
 
-            temp_file = tempfile.NamedTemporaryFile(dir=output_dir, delete=False, suffix=".zip")
-            logger.info(f"[TASK] Created temp file: {temp_file.name}")
-            outFilePath = os.path.join(base_dir, 'Rscripts/out')
-            logger.info(f"[TASK] Looking for files in: {outFilePath}")
-        
+            # Le ZIP doit survivre à la purge du dossier de travail : on l'écrit
+            # sous PSDRF_EXPORT_DIR/zip (persistant), récupéré par /analysis/result.
+            root = Path(current_app.config["ROOT_PATH"])
+            export_dir = root / current_app.config.get("PSDRF_EXPORT_DIR", "media/psdrf/exports")
+            zip_dir = export_dir / "zip"
+            zip_dir.mkdir(parents=True, exist_ok=True)
+
+            temp_file = tempfile.NamedTemporaryFile(dir=str(zip_dir), delete=False, suffix=".zip")
             files_added = 0
             with zipfile.ZipFile(temp_file.name, 'w', zipfile.ZIP_DEFLATED) as zf:
-                for dirname, subdirs, files in os.walk(outFilePath):
-                    for filename in files:
-                        absname = os.path.abspath(os.path.join(dirname, filename))
-                        arcname = absname[len(outFilePath) + 1:]
-                        if (arcname != '.gitignore') and (not arcname.endswith(('.log', '.tex'))):
-                            logger.info(f"[TASK] Adding file to zip: {arcname}")
-                            zf.write(absname, arcname)
-                            files_added += 1
+                for pdf in pdfs:
+                    pdf_path = str(pdf)
+                    if os.path.isfile(pdf_path):
+                        zf.write(pdf_path, os.path.basename(pdf_path))
+                        files_added += 1
+                        logger.info(f"[TASK] Adding file to zip: {os.path.basename(pdf_path)}")
 
             logger.info(f"[TASK] Zip created with {files_added} files")
             os.chmod(temp_file.name, 0o777)
-        
+
         self.update_state(state='SUCCESS', meta={'file_path': temp_file.name, "file_name": zipName})
 
     except SoftTimeLimitExceeded as e:
@@ -110,6 +116,10 @@ def test_celery(self, id_dispositif, isCarnetToDownload, isPlanDesArbresToDownlo
         logger.exception("General error during processing task id %s", self.request.id)
         self.update_state(state='FAILURE', meta={'exc_type': str(type(e).__name__), 'exc_message': str(e)})
         raise e
+    finally:
+        # Purge du dossier de travail temporaire (campagne + pickles + figures).
+        if work_dir and os.path.isdir(str(work_dir)):
+            shutil.rmtree(str(work_dir), ignore_errors=True)
 
     return {"file_path": temp_file.name if temp_file else "N/A", "file_name": zipName}
 

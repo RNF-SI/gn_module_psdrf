@@ -1,0 +1,3 @@
+[submodule "backend/gn_module_psdrf/PermPSDRF4py"]
+	path = backend/gn_module_psdrf/PermPSDRF4py
+	url = https://github.com/RNF-SI/PermPSDRF4py.git

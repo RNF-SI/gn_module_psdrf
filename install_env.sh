@@ -1,58 +1,31 @@
 #!/bin/bash
-# Script bash pour l'installation de paquets Linux
+# Installation des dépendances système du module PSDRF.
+#
+# Depuis la bascule R→Python, le module n'a plus besoin de R ni des ~30 paquets R.
+# Seule subsiste une distribution LaTeX (pdflatex) pour compiler le carnet PDF
+# produit par le pipeline Python (PermPSDRF4py). Les dépendances Python sont
+# installées par `geonature install_gn_module` (via setup.py / requirements.in) ;
+# on les (re)pose ici par sécurité dans le venv GeoNature.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Override via la variable d'environnement GEONATURE_VENV si l'install GeoNature
 # n'est pas dans $HOME/geonature/backend
 GEONATURE_VENV="${GEONATURE_VENV:-$HOME/geonature/backend}"
 
-# Linux
-sudo apt install libudunits2-dev
-sudo apt-get install texlive-latex-extra
+# LaTeX requis pour la compilation du carnet PDF (pdflatex).
+sudo apt-get update
+sudo apt-get install -y texlive-latex-extra texlive-latex-recommended texlive-fonts-recommended
 
-# Voir si les 2 packages suivant sont nécessaires (Très lourds)
-# sudo apt-get install texlive-latex-base
-# sudo apt-get install texlive-full
+# Récupérer le sous-module PermPSDRF4py (pipeline Python).
+cd "$SCRIPT_DIR"
+git submodule update --init --recursive
 
 cd "$GEONATURE_VENV"
 source venv/bin/activate
-# Packages Python
-pip install -r "$SCRIPT_DIR/requirements.txt"
 
-# Packages R
-sudo su - -c "R -e \"install.packages('stringr')\""
-sudo su - -c "R -e \"install.packages('openxlsx')\""
-sudo su - -c "R -e \"install.packages('rmarkdown')\""
-sudo su - -c "R -e \"install.packages('tools')\""
-sudo su - -c "R -e \"install.packages('')\""
-sudo su - -c "R -e \"install.packages('tidyr')\""
-sudo su - -c "R -e \"install.packages('dplyr')\""
-sudo su - -c "R -e \"install.packages('gWidgets2')\""
-sudo su - -c "R -e \"install.packages('knitr')\""
-sudo su - -c "R -e \"install.packages('maptools')\""
-sudo su - -c "R -e \"install.packages('xtable')\""
-sudo su - -c "R -e \"install.packages('ggplot2')\""
-sudo su - -c "R -e \"install.packages('ggrepel')\""
-sudo su - -c "R -e \"install.packages('ggthemes')\""
-sudo su - -c "R -e \"install.packages('scales')\""
-sudo su - -c "R -e \"install.packages('gridExtra')\""
-sudo su - -c "R -e \"install.packages('rgeos')\""
-sudo su - -c "R -e \"install.packages('rgdal')\""
-sudo su - -c "R -e \"install.packages('gdata')\""
-sudo su - -c "R -e \"install.packages('grid')\""
-sudo su - -c "R -e \"install.packages('fmsb')\""
-sudo su - -c "R -e \"install.packages('rlang')\""
-sudo su - -c "R -e \"install.packages('tcltk')\""
-sudo su - -c "R -e \"install.packages('reshape2')\""
-sudo su - -c "R -e \"install.packages('sf')\""
-sudo su - -c "R -e \"install.packages('sf')\""
-sudo su - -c "R -e \"install.packages('ggmap')\""
-sudo su - -c "R -e \"install.packages('dichromat')\""
-sudo su - -c "R -e \"install.packages('stringi')\""
-sudo su - -c "R -e \"install.packages('gtools')\""
-sudo su - -c "R -e \"install.packages('broom')\""
-sudo su - -c "R -e \"install.packages('gtable')\""
-  
+# Dépendances Python du pipeline (pandas, numpy, scipy, matplotlib, jinja2, openpyxl).
+pip install -r "$SCRIPT_DIR/requirements.in"
+
 geonature update_configuration
 
 deactivate

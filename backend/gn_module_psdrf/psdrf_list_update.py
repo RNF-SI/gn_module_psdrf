@@ -1,48 +1,34 @@
 import datetime
 import logging
-import os
 from math import isnan
 from pathlib import Path
 
 import pandas as pd
-import rpy2.robjects as robjects
 from flask import current_app
 from geonature.utils.env import DB
-from rpy2.robjects.packages import STAP
 
 from .models import TCycles, TDispositifs
+# Déclenche le bootstrap (sys.path vers le sous-module PermPSDRF4py).
+from .psdrf_py import SUBMODULE_ROOT  # noqa: F401
+from python.script.psdrf_codes import psdrf_codes  # noqa: E402
 
 
 def psdrf_list_update(psdrf_list_file, update_code_ecologie):
     try:
-        # Obtenir les chemins depuis la configuration GeoNature
-        module_path = Path(__file__).parent
-        rscripts_dir = module_path / "Rscripts"
-        
-        # Utiliser la configuration pour le répertoire de données
+        # Répertoire de données depuis la configuration GeoNature.
         data_dir = Path(current_app.config["ROOT_PATH"]) / current_app.config.get("PSDRF_DATA_DIR", "media/psdrf/data")
         upload_dir = Path(current_app.config["ROOT_PATH"]) / current_app.config.get("PSDRF_UPLOAD_DIR", "media/psdrf/uploads")
-        
-        # Créer les répertoires s'ils n'existent pas
         data_dir.mkdir(parents=True, exist_ok=True)
         upload_dir.mkdir(parents=True, exist_ok=True)
-        (rscripts_dir / "psdrf_liste").mkdir(parents=True, exist_ok=True)
-        
-        # Charger le script R
-        psdrf_codes_path = rscripts_dir / "psdrf_Codes.R"
-        with open(psdrf_codes_path, 'r') as f:
-            string = f.read()
-        psdrf_Codes = STAP(string, "psdrf_Codes")
 
-        # Sauvegarder le fichier Excel uploadé
-        excel_save_path = rscripts_dir / "psdrf_liste" / "PsdrfListes.xlsx"
-        psdrf_list_file.save(str(excel_save_path))
-        
-        excel_file_path = excel_save_path
-        
+        # Sauvegarder le classeur PsdrfListes dans le répertoire de données :
+        # c'est la source des référentiels (codes) consommée à la génération.
+        excel_file_path = data_dir / "PsdrfListes.xlsx"
+        psdrf_list_file.save(str(excel_file_path))
+
         sheet_names = ['CodeDurete', 'CodeEcologie', 'CodeEcorce', 'CodeEssence', 'CodeTypoArbres',
                        'Communes', 'Dispositifs', 'EssReg', 'Referents', 'Tarifs', 'Cycles']
-        
+
         for sheet_name in sheet_names:
             try:
                 df = pd.read_excel(open(excel_file_path, 'rb'), sheet_name=sheet_name)
@@ -53,13 +39,14 @@ def psdrf_list_update(psdrf_list_file, update_code_ecologie):
 
         if update_code_ecologie:
             process_code_ecologie(excel_file_path)
-        
+
         df = pd.read_excel(open(excel_file_path, 'rb'), sheet_name='Cycles')
         for index, row in df.iterrows():
             add_dispositif(row)
             add_cycle(row)
 
-        psdrf_Codes.psdrf_Codes(str(rscripts_dir))
+        # Référentiels Python (remplace psdrf_Codes.R) : écrit data_dir/tables/psdrfCodes.pkl
+        psdrf_codes(data_dir, excel_file_path)
 
     except Exception as e:
         logging.critical(f"Error in psdrf_list_update: {e}")

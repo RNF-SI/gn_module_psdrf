@@ -1,4 +1,4 @@
-from flask import Blueprint, request, make_response, send_file, send_from_directory, Response, jsonify, current_app
+from flask import Blueprint, request, make_response, send_file, send_from_directory, Response, jsonify, current_app, url_for, redirect
 from sqlalchemy.orm import subqueryload, joinedload
 from sqlalchemy.sql import func, distinct, text
 from sqlalchemy.exc import SQLAlchemyError
@@ -34,6 +34,11 @@ from .schemas.cycles import ConciseCycleSchema
 from .schemas.essences import EssenceSchema
 from .tasks import test_celery, insert_or_update_data, fetch_dispositif_data, fetch_updated_data
 from .helpers.parse_date import parse_iso_datetime
+
+# Modèle standard GeoNature des applications mobiles : source unique de vérité
+# pour la version et le chemin de l'APK de dendro3 (app_code = 'dendro3').
+# On réutilise le modèle gn_commons sans dupliquer la donnée.
+from geonature.core.gn_commons.models.base import TMobileApps
 
 
 
@@ -358,8 +363,7 @@ def psdrf_data_analysis(id_dispositif):
 
     isPlanDesArbresToDownload = request.args.get('isPlanDesArbresToDownload')
 
-    outFilePath = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'Rscripts', 'out') + os.sep
-    task = test_celery.delay(str(id_dispositif), isCarnetToDownload, isPlanDesArbresToDownload, carnetToDownloadParameters, outFilePath)
+    task = test_celery.delay(str(id_dispositif), isCarnetToDownload, isPlanDesArbresToDownload, carnetToDownloadParameters, None)
     # Return the task ID to the client
     return jsonify({'task_id': task.id})
 
@@ -975,20 +979,84 @@ def get_sync_task_result(task_id):
 #         print(e)
 #         return jsonify({"error": "File not found"}), 404
     
+DENDRO3_APP_CODE = 'dendro3'
+
+
+def _build_apk_url(mobile_app):
+    """URL téléchargeable de l'APK pour une ligne t_mobile_apps.
+
+    Réplique la logique de la route standard gn_commons : préfixe "mobile/"
+    devant relative_path_apk, puis URL absolue servie par l'endpoint média
+    GeoNature ({MEDIA_URL}/mobile/...). Aucune copie du binaire : on pointe
+    vers le même fichier média que la route standard.
+    """
+    if mobile_app.url_apk:
+        # URL absolue renseignée en base (ex. APK hébergé en externe)
+        return mobile_app.url_apk
+    if mobile_app.relative_path_apk:
+        relative_apk_path = os.path.join('mobile', mobile_app.relative_path_apk)
+        return url_for('media', filename=relative_apk_path, _external=True)
+    return None
+
+
+def _read_version_name(app_code):
+    """version_name (ex. '1.0.2') depuis {MEDIA_FOLDER}/mobile/<app_code>/settings.json.
+
+    La table t_mobile_apps n'a pas de colonne version_name ; on la lit dans le
+    settings.json déjà servi par la route standard gn_commons. Retourne None si
+    absent (champ purement informatif, la décision de MAJ repose sur version_code).
+    """
+    settings_path = os.path.join(
+        current_app.config['MEDIA_FOLDER'], 'mobile', app_code.lower(), 'settings.json'
+    )
+    try:
+        with open(settings_path) as f:
+            return json.load(f).get('version_name')
+    except (OSError, ValueError):
+        return None
+
+
+@blueprint.route('/mobile-app', methods=['GET'])
+@json_resp
+def get_mobile_app():
+    """Contrat de mise à jour de l'application mobile dendro3.
+
+    Lit la ligne gn_commons.t_mobile_apps où app_code = 'dendro3' (source
+    unique de vérité, partagée avec la route standard /gn_commons/t_mobile_apps)
+    et renvoie un JSON simple consommable directement par le client Flutter :
+        { app_code, package, version_code, apk_url }
+    Route publique, cohérente avec les autres routes /psdrf/*.
+    """
+    mobile_app = DB.session.scalars(
+        DB.select(TMobileApps).where(TMobileApps.app_code == DENDRO3_APP_CODE)
+    ).first()
+
+    if mobile_app is None:
+        return {"error": "dendro3 not registered in gn_commons.t_mobile_apps"}, 404
+
+    return {
+        "app_code": mobile_app.app_code,
+        "package": mobile_app.package,
+        "version_code": mobile_app.version_code,
+        "version_name": _read_version_name(mobile_app.app_code),
+        "apk_url": _build_apk_url(mobile_app),
+    }
+
+
 @blueprint.route('/dendro_apk', methods=['GET'])
 def get_dendro_apk():
-    try:
-        # Define the base directory where your APK is stored
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        apk_directory = os.path.join(base_dir, 'apk')  # APK is inside the 'downloads' folder
-        apk_path = 'app-release.apk'  # The path to your APK file
+    """Téléchargement direct de l'APK dendro3.
 
-        # Send file from the specified directory with the path
-        return send_from_directory(directory=apk_directory, 
-                                   path=apk_path, 
-                                   as_attachment=True,
-                                   )  # Suggests a filename for the download
-    except Exception as e:
-        print(e)
-        # Provide a JSON response in case of error
-        return jsonify({"error": "File not found"}), 404
+    Redirige vers le fichier média servi par GeoNature (même binaire que la
+    route standard). Pas de duplication : le fichier n'existe qu'une fois sous
+    {MEDIA_FOLDER}/mobile/dendro3/. Conserve la rétro-compatibilité de l'URL
+    /psdrf/dendro_apk déjà utilisée côté client.
+    """
+    mobile_app = DB.session.scalars(
+        DB.select(TMobileApps).where(TMobileApps.app_code == DENDRO3_APP_CODE)
+    ).first()
+
+    apk_url = _build_apk_url(mobile_app) if mobile_app else None
+    if apk_url is None:
+        return jsonify({"error": "APK not found"}), 404
+    return redirect(apk_url)
