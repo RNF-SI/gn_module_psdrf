@@ -24,7 +24,8 @@ from .models import (
 )
 from .schemas.dispositifs import DispositifSchema
 from .staging_schemas.dispositifs import DispositifStagingSchema
-from .pr_psdrf_staging_functions.models_staging import TDispositifsStaging
+from .pr_psdrf_staging_functions.models_staging import TDispositifsStaging, TDendro3SyncLog
+from .pr_psdrf_staging_functions.merge_prod_staging import merge_dispositif_prod_staging
 from .helpers.count_updates_and_creation import count_updates_and_creations
 
 from .pr_psdrf_staging_functions.insert_or_update_functions.insert_or_update_dispositif import insert_or_update_dispositif
@@ -144,10 +145,16 @@ def insert_or_update_data(self, data):
     counts_regeneration = {'created': 0, 'updated': 0, 'deleted': 0}
     counts_transect = {'created': 0, 'updated': 0, 'deleted': 0}
 
+    # Brique 2 — traçabilité : appareil + utilisateur ayant lancé cet export.
+    device = data.get('device')
+    id_role = data.get('id_role')
+    sync_log_count = 0
+
     try:
         with current_app.app_context():
             if 'id_dispositif' in data:
                 result = insert_or_update_dispositif(data, session)
+                id_dispositif = data.get('id_dispositif')
 
                 if 'cycles' in data:
                     for cycle_data in data['cycles']:
@@ -156,7 +163,18 @@ def insert_or_update_data(self, data):
                 if 'placettes' in data:
                     for placette_data in data['placettes']:
                         placette_result = insert_or_update_placette(placette_data, session)
-                    
+
+                        # Une ligne de log par placette synchronisée (qui/quel
+                        # appareil/quand) — alimente la route d'état des placettes.
+                        session.add(TDendro3SyncLog(
+                            id_dispositif=id_dispositif,
+                            id_placette=placette_data.get('id_placette'),
+                            device=device,
+                            id_role=id_role,
+                            synced_at=datetime.utcnow(),
+                        ))
+                        sync_log_count += 1
+
                         created_arbres_temp, counts_arbre_temp, counts_arbre_mesure_temp = insert_update_or_delete_arbre(placette_data, session)
                         created_arbres.extend(created_arbres_temp)
                         for key in counts_arbre_temp:
@@ -195,9 +213,10 @@ def insert_or_update_data(self, data):
                 'counts_bm': counts_bm, 
                 'counts_bm_mesure': counts_bm_mesure, 
                 'counts_repere': counts_repere, 
-                'counts_cor_cycle_placette': counts_cor_cycle_placette, 
-                'counts_regeneration': counts_regeneration, 
+                'counts_cor_cycle_placette': counts_cor_cycle_placette,
+                'counts_regeneration': counts_regeneration,
                 'counts_transect': counts_transect,
+                'sync_log_count': sync_log_count,
             }
         )
 
@@ -222,11 +241,42 @@ def insert_or_update_data(self, data):
         'counts_bm': counts_bm, 
         'counts_bm_mesure': counts_bm_mesure,
         'counts_repere': counts_repere, 
-        'counts_cor_cycle_placette': counts_cor_cycle_placette, 
-        'counts_regeneration': counts_regeneration, 
-        'counts_transect': counts_transect
+        'counts_cor_cycle_placette': counts_cor_cycle_placette,
+        'counts_regeneration': counts_regeneration,
+        'counts_transect': counts_transect,
+        'sync_log_count': sync_log_count,
     }
 
+
+
+def _query_dispositif_prod(id_dispositif):
+    """Charge un dispositif complet depuis la prod (pr_psdrf) avec toutes ses
+    relations préchargées. Requête partagée par ``fetch_dispositif_data`` et
+    ``fetch_dispositif_data_merged``."""
+    return (
+        DB.session.query(TDispositifs)
+        .filter(TDispositifs.id_dispositif == id_dispositif)
+        .options(
+            selectinload(TDispositifs.placettes).options(
+                selectinload(TPlacettes.arbres).options(
+                    selectinload(TArbres.arbres_mesures),
+                    joinedload(TArbres.essence),
+                ),
+                selectinload(TPlacettes.bmsSup30).options(
+                    selectinload(TBmSup30.bm_sup_30_mesures),
+                    joinedload(TBmSup30.essence),
+                ),
+                selectinload(TPlacettes.reperes),
+            ),
+            selectinload(TDispositifs.cycles).options(
+                selectinload(TCycles.corCyclesPlacettes).options(
+                    selectinload(CorCyclesPlacettes.regenerations),
+                    selectinload(CorCyclesPlacettes.transects),
+                ),
+            ),
+        )
+        .one()
+    )
 
 
 # Task to get all the data of a dispositif from the prod database
@@ -236,30 +286,7 @@ def fetch_dispositif_data(self, id_dispositif):
     try:
         with current_app.app_context():
             logger.info("Starting database query...")
-            query = (
-                DB.session.query(TDispositifs)
-                .filter(TDispositifs.id_dispositif == id_dispositif)
-                .options(
-                    selectinload(TDispositifs.placettes).options(
-                        selectinload(TPlacettes.arbres).options(
-                            selectinload(TArbres.arbres_mesures),
-                            joinedload(TArbres.essence),
-                        ),
-                        selectinload(TPlacettes.bmsSup30).options(
-                            selectinload(TBmSup30.bm_sup_30_mesures),
-                            joinedload(TBmSup30.essence),
-                        ),
-                        selectinload(TPlacettes.reperes),
-                    ),
-                    selectinload(TDispositifs.cycles).options(
-                        selectinload(TCycles.corCyclesPlacettes).options(
-                            selectinload(CorCyclesPlacettes.regenerations),
-                            selectinload(CorCyclesPlacettes.transects),
-                        ),
-                    ),
-                )
-                .one()
-            )
+            query = _query_dispositif_prod(id_dispositif)
             logger.info("Database query completed.")
             schema = DispositifSchema(many=False)
             logger.info("Starting serialization of data...")
@@ -269,6 +296,46 @@ def fetch_dispositif_data(self, id_dispositif):
             return {'status': 'SUCCESS', 'data': result}
     except Exception as e:
         logger.exception("Error during fetching dispositif data")
+        return {'status': 'FAILURE', 'data': str(e)}
+
+
+# Task to get the dispositif as a merge of prod + staging (Brique 1, le « pull »).
+@celery_app.task(bind=True, soft_time_limit=2400, time_limit=2600)
+def fetch_dispositif_data_merged(self, id_dispositif):
+    """Renvoie le dispositif complet FUSIONNÉ prod + staging.
+
+    Format de sortie STRICTEMENT identique à ``fetch_dispositif_data``
+    (``{'status': 'SUCCESS', 'data': <dispositif complet>}``) : l'app réutilise
+    le même mapper. Pour chaque entité (placettes, arbres, mesures, bms, reperes,
+    cycles, cor_cycles_placettes, regenerations, transects), la version staging
+    écrase la prod si elle existe ; sinon la valeur prod est conservée. Un
+    dispositif sans saisie staging ressort identique à la prod.
+    """
+    logger.info(f"[MERGE] Task started for dispositif ID: {id_dispositif}")
+    try:
+        with current_app.app_context():
+            # 1/ Dispositif complet depuis la prod (même requête que le download classique).
+            prod_query = _query_dispositif_prod(id_dispositif)
+            prod_data = DispositifSchema(many=False).dump(prod_query)
+
+            # 2/ Version staging (peut être absente : pas encore de saisie terrain).
+            staging_dispositif = (
+                DB.session.query(TDispositifsStaging)
+                .filter(TDispositifsStaging.id_dispositif == id_dispositif)
+                .first()
+            )
+            staging_data = (
+                DispositifStagingSchema(many=False).dump(staging_dispositif)
+                if staging_dispositif is not None
+                else None
+            )
+
+            # 3/ Fusion par id à chaque niveau (staging écrase prod).
+            merged = merge_dispositif_prod_staging(prod_data, staging_data)
+            logger.info(f"[MERGE] Merge completed for dispositif ID: {id_dispositif}")
+            return {'status': 'SUCCESS', 'data': merged}
+    except Exception as e:
+        logger.exception("Error during fetching merged dispositif data")
         return {'status': 'FAILURE', 'data': str(e)}
     
 
