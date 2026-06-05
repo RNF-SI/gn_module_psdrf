@@ -28,6 +28,7 @@ from flask import current_app
 from . import SUBMODULE_ROOT
 from .carnet_tables import TABPLA_NAMES_CARNET
 from .db_to_campagne import CampagneRefs, build_campagne_from_db
+from .transforms import map_radar
 
 import pandas as pd  # noqa: E402
 
@@ -40,9 +41,6 @@ from python.template.carnet.psdrf_edit_carnet import psdrf_edit_carnet  # noqa: 
 
 logger = logging.getLogger(__name__)
 
-# Valeurs sentinelles d'Answer_Radar désactivant le chapitre Conservation.
-_RADAR_OFF = {"none", "false", "non", "no", "0"}
-
 
 def _config_dirs() -> tuple[Path, Path]:
     """(data_dir, export_dir) résolus depuis la config GeoNature."""
@@ -50,24 +48,6 @@ def _config_dirs() -> tuple[Path, Path]:
     data_dir = root / current_app.config.get("PSDRF_DATA_DIR", "media/psdrf/data")
     export_dir = root / current_app.config.get("PSDRF_EXPORT_DIR", "media/psdrf/exports")
     return data_dir, export_dir
-
-
-def _map_radar(answer_radar) -> tuple[bool, Optional[list[str]]]:
-    """
-    Traduit le paramètre web ``Answer_Radar`` vers (include_conservation, groups).
-
-    - vide / None        → radar dispositif global (conservation activée, pas de groupe)
-    - 'none'/'false'/... → conservation désactivée
-    - '<colonne>'        → radars par regroupement sur cette colonne
-    """
-    if answer_radar is None:
-        return True, None
-    value = str(answer_radar).strip()
-    if value == "":
-        return True, None
-    if value.lower() in _RADAR_OFF:
-        return False, None
-    return True, [value]
 
 
 def run_psdrf_pipeline(
@@ -92,7 +72,7 @@ def run_psdrf_pipeline(
     work_dir = export_dir / f"disp-{disp_id}-{token}"
     work_dir.mkdir(parents=True, exist_ok=True)
 
-    include_conservation, groups = _map_radar(answer_radar)
+    include_conservation, groups = map_radar(answer_radar)
 
     if is_carnet and shutil.which("pdflatex") is None:
         raise RuntimeError(

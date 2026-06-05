@@ -63,30 +63,12 @@ from ..models import (  # noqa: E402
     TReperes,
     TTransects,
 )
-
-# Colonnes texte de Placettes : forcées en dtype object (None si vide). Sinon une
-# colonne partiellement vide revient en float64 depuis la BDD alors que le chemin
-# Excel produit de l'object.
-_PLAC_TEXT_COLS = [
-    "Strate", "Exposition", "Habitat", "PrecisionGPS", "Station", "Typologie",
-    "Groupe", "Groupe1", "Groupe2", "Ref_Habitat", "Precision_Habitat",
-    "Ref_Station", "Ref_Typologie", "Descriptif_Groupe", "Descriptif_Groupe1",
-    "Descriptif_Groupe2", "Cheminement", "Nature_Intervention", "Gestion",
-]
-
-# Colonnes de regroupement pilotant l'agrégation par groupe : une colonne
-# ENTIÈREMENT vide est retirée (comme une colonne absente du classeur Excel),
-# sinon le pipeline tente de grouper/merger dessus et plante (float64 vs object).
-_GROUP_CANDIDATE_COLS = ["Strate", "Habitat", "Groupe", "Groupe1", "Groupe2", "Gestion"]
-
-# Colonnes booléennes (PostgreSQL boolean) → 't'/'f' attendus par le pipeline.
-_BOOL_COLS = {
-    "Placettes": ["CorrectionPente"],
-    "Arbres": ["Taillis", "Limite", "RatioHaut"],
-    "Reges": ["Taillis", "Abroutis"],
-    "Transect": ["Contact", "Chablis"],
-    "BMSsup30": ["RatioHaut", "Chablis"],
-}
+from .transforms import (  # noqa: E402
+    apply_bool_cols,
+    convert_stades,
+    empty_to_none,
+    normalize_placettes,
+)
 
 
 @dataclass
@@ -99,43 +81,17 @@ class CampagneRefs:
     disp_slug: str
 
 
-def _bool_to_tf(value) -> str:
-    """True → 't', tout le reste (False/None) → 'f' (parité booleanToChar R)."""
-    return "t" if value is True else "f"
-
-
-def _empty_to_none(value):
-    return None if value == "" else value
-
-
-def _apply_bool_cols(df: pd.DataFrame, table: str) -> pd.DataFrame:
-    for col in _BOOL_COLS.get(table, []):
-        if col in df.columns:
-            df[col] = df[col].map(_bool_to_tf)
-    return df
-
-
-def _convert_stade_value(value, id_type):
-    """id_nomenclature (int, éventuellement NaN/float pandas) → code mnémonique."""
-    if value is None or pd.isna(value):
-        return None
-    return get_cd_nomenclature_from_id_type_and_id_nomenclature(id_type, int(value))
-
-
-def _convert_stades(df: pd.DataFrame, id_type_durete: int, id_type_ecorce: int) -> pd.DataFrame:
-    """Convertit StadeD/StadeE d'id_nomenclature vers le code mnémonique (par nom)."""
-    if "StadeD" in df.columns:
-        df["StadeD"] = df["StadeD"].map(lambda v: _convert_stade_value(v, id_type_durete))
-    if "StadeE" in df.columns:
-        df["StadeE"] = df["StadeE"].map(lambda v: _convert_stade_value(v, id_type_ecorce))
-    return df
-
-
 def _build_donnees_brutes(disp_id: int) -> dict:
     """Construit le dict des tables d'inventaire (équivalent psdrfDonneesBrutes)."""
     session = DB.session
     id_type_durete = get_id_type_from_mnemonique("PSDRF_DURETE")
     id_type_ecorce = get_id_type_from_mnemonique("PSDRF_ECORCE")
+
+    def _stade_durete(v):
+        return get_cd_nomenclature_from_id_type_and_id_nomenclature(id_type_durete, v)
+
+    def _stade_ecorce(v):
+        return get_cd_nomenclature_from_id_type_and_id_nomenclature(id_type_ecorce, v)
 
     # --- Arbres ---
     arbres_rows = (
@@ -164,10 +120,10 @@ def _build_donnees_brutes(disp_id: int) -> dict:
         "CodeEcolo", "Ref_CodeEcolo", "CodeSanit", "HautV", "RatioHaut",
         "Observation", "Cycle",
     ])
-    arbres = _convert_stades(arbres, id_type_durete, id_type_ecorce)
-    arbres = _apply_bool_cols(arbres, "Arbres")
+    arbres = convert_stades(arbres, _stade_durete, _stade_ecorce)
+    arbres = apply_bool_cols(arbres, "Arbres")
     if "Type" in arbres.columns:
-        arbres["Type"] = arbres["Type"].map(_empty_to_none)
+        arbres["Type"] = arbres["Type"].map(empty_to_none)
 
     # --- BMSsup30 ---
     bms_rows = (
@@ -195,8 +151,8 @@ def _build_donnees_brutes(disp_id: int) -> dict:
         "StadeD", "StadeE", "Observation", "Diam130", "AzimutS", "DistS",
         "RatioHaut", "Orientation",
     ])
-    bms = _convert_stades(bms, id_type_durete, id_type_ecorce)
-    bms = _apply_bool_cols(bms, "BMSsup30")
+    bms = convert_stades(bms, _stade_durete, _stade_ecorce)
+    bms = apply_bool_cols(bms, "BMSsup30")
 
     # --- Placettes ---
     placettes_rows = (
@@ -225,18 +181,7 @@ def _build_donnees_brutes(disp_id: int) -> dict:
         "Descriptif_Groupe2", "Cheminement", "Date_Intervention",
         "Nature_Intervention", "Gestion", "Cycle",
     ])
-    placettes = _apply_bool_cols(placettes, "Placettes")
-    # Retirer les colonnes de regroupement entièrement vides (mirror du classeur Excel).
-    empty_group_cols = [
-        c for c in _GROUP_CANDIDATE_COLS
-        if c in placettes.columns and placettes[c].isna().all()
-    ]
-    if empty_group_cols:
-        placettes = placettes.drop(columns=empty_group_cols)
-    # Forcer les colonnes texte restantes en object (None si vide).
-    for col in _PLAC_TEXT_COLS:
-        if col in placettes.columns:
-            placettes[col] = placettes[col].astype(object).where(placettes[col].notna(), None)
+    placettes = normalize_placettes(placettes)
 
     # --- Régénérations ---
     reges_rows = (
@@ -257,7 +202,7 @@ def _build_donnees_brutes(disp_id: int) -> dict:
         "NumDisp", "NumPlac", "SsPlac", "Cycle", "Essence", "Recouv",
         "Class1", "Class2", "Class3", "Taillis", "Abroutis", "Observation",
     ])
-    reges = _apply_bool_cols(reges, "Reges")
+    reges = apply_bool_cols(reges, "Reges")
 
     # --- Transects ---
     transects_rows = (
@@ -278,8 +223,8 @@ def _build_donnees_brutes(disp_id: int) -> dict:
         "NumDisp", "NumPlac", "Id", "Cycle", "Transect", "Essence", "Dist",
         "Diam", "Angle", "Contact", "Chablis", "StadeD", "StadeE", "Observation",
     ])
-    transect = _convert_stades(transect, id_type_durete, id_type_ecorce)
-    transect = _apply_bool_cols(transect, "Transect")
+    transect = convert_stades(transect, _stade_durete, _stade_ecorce)
+    transect = apply_bool_cols(transect, "Transect")
 
     # --- Repères ---
     reperes_rows = (
