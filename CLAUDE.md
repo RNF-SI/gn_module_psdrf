@@ -43,8 +43,12 @@ cd /home/geonatureadmin/geonature && flask run
 # Frontend Angular (intégré au shell GeoNature)
 cd frontend && npm install && npm run start
 
-# Migrations BDD (alembic, déclenchées par GeoNature)
-cd /home/geonatureadmin/geonature && alembic upgrade head
+# Migrations BDD — TOUJOURS via la CLI GeoNature, JAMAIS `alembic` en direct.
+# GeoNature agrège les migrations de tous les modules (branches Alembic multiples) :
+# un `alembic upgrade head` nu échoue sur « Multiple head revisions are present ».
+# Les migrations de ce module portent le branch label `psdrf` → cibler ce head :
+cd /home/geonatureadmin/geonature && geonature db upgrade psdrf@head
+# (revenir en arrière d'un cran : geonature db downgrade psdrf@-1)
 
 # Redémarrer les services
 sudo systemctl restart geonature
