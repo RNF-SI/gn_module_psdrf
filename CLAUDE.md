@@ -54,6 +54,19 @@ cd /home/geonatureadmin/geonature && geonature db upgrade psdrf@head
 sudo systemctl restart geonature
 ```
 
+> **Migrations — prérequis de PROPRIÉTÉ des tables.** Les tables de `pr_psdrf`
+> et `pr_psdrf_staging` doivent appartenir au **rôle Postgres avec lequel
+> GeoNature se connecte** (celui de `SQLALCHEMY_DATABASE_URI`, ex. `geonatadmin`).
+> Si elles ont été créées par `postgres` (fréquent en install multi-conteneurs :
+> app et BDD séparées), tout `ALTER TABLE` de migration échoue en
+> `InsufficientPrivilege: doit être le propriétaire de la table`. Correctif
+> ponctuel, **en superuser sur la base**, à faire une fois : réattribuer la
+> propriété de chaque table des deux schémas au rôle GeoNature —
+> `ALTER TABLE <schema>.<table> OWNER TO <role_geonature>` (boucle `DO $$ … $$`
+> sur `pg_tables WHERE schemaname IN ('pr_psdrf','pr_psdrf_staging')`, idem
+> séquences/vues + `ALTER SCHEMA … OWNER TO`). La migration DDL étant
+> transactionnelle, un échec fait un rollback propre : relancer après correction.
+
 **Pas de suite de tests pytest** : `backend/tests/` n'existe pas. Le `package.json` du frontend n'a pas non plus de tests configurés. La validation se fait manuellement via l'UI ou via les scripts ci-dessous.
 
 ### Test rapide de la génération de carnet
