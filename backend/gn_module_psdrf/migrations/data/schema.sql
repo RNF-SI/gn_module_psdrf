@@ -106,7 +106,7 @@ CREATE TABLE t_arbres_mesures (
   stade_ecorce integer,
   liane character varying(25),
   diametre_liane real,
-  coupe char(1),
+  coupe character varying,
   limite boolean,
   id_nomenclature_code_sanitaire integer,
   code_ecolo character varying,
