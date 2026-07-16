@@ -132,7 +132,8 @@ def data_verification(data):
           'boolNames' : [],
           'dateNames' : [],
           'notNullNames': ['NumDisp', 'NumPlac', 'NumArbre', 'Cycle'],
-          'charNames': ['Coupe']
+          'charNames': [],
+          'coupeNames': ['Coupe']
         },
         {
           'arrayName': 'BMSsup30',
@@ -209,6 +210,7 @@ def data_verification(data):
             {'colnames': typeObj.get('boolNames'), 'checktypefunction': check_boolean, 'type_text': '(f, t ou rien attendus)'}, 
             {'colnames': typeObj.get('dateNames'), 'checktypefunction': check_date, 'type_text': '(dates attendues sous la forme dd/mm/aaaa)'},
             {'colnames': typeObj.get('charNames'), 'checktypefunction': check_char, 'type_text': '(1 seul caractère attendu)'},
+            {'colnames': typeObj.get('coupeNames') or [], 'checktypefunction': check_coupe, 'type_text': '(valeurs attendues : C, E, NR ou vide)'},
             ]:
             for col in check.get('colnames'):
               check_code_Error_List, i = check.get('checktypefunction')(typeObj.get('arrayName'), col, typeObj.get('array'))
@@ -2427,6 +2429,34 @@ def check_char(tableName, colonneName, table_to_test):
   bool_list = [((not isemptystring(x)) & (len(x)>1)) for x in t[colonneName]]
   temp = t[bool_list]
   if not temp.empty: 
+    for index, row in temp.iterrows():
+      if i<100:
+        err= {
+          "message": "Dans la table "+tableName+" la colonne "+ colonneName  +" contient la valeur \""+ str(row[colonneName])+"\"",
+          "table": tableName,
+          "column": [colonneName],
+          "row": [index],
+          "value": temp.loc[[index],:].to_json(orient='records'),
+        }
+        error.append(err)
+      i=i+1
+  return error, i
+
+
+def check_coupe(tableName, colonneName, table_to_test):
+  # Coupe : codes courts. Historiquement 1 caractère (C = chablis, E = exploité).
+  # dendro3 >= 1.1.0 ajoute le code "NR" (arbre non retrouvé), sur 2 caractères,
+  # qui est une valeur VALIDE et ne doit pas être signalée en erreur.
+  error = []
+  i=0
+  allowed_multichar = {'NR'}
+  t = table_to_test.dropna(subset=[colonneName])
+  bool_list = [
+      ((not isemptystring(x)) & (len(str(x))>1) & (str(x).strip().upper() not in allowed_multichar))
+      for x in t[colonneName]
+  ]
+  temp = t[bool_list]
+  if not temp.empty:
     for index, row in temp.iterrows():
       if i<100:
         err= {
