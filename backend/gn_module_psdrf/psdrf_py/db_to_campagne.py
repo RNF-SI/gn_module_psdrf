@@ -313,6 +313,56 @@ def _last_cycle(disp_id: int) -> int:
     return int(val) if val is not None else 1
 
 
+def _check_donnees_non_vides(disp_id: int, donnees: dict, last_cycle: int) -> None:
+    """Refuse tôt un dispositif inexploitable, avec un message actionnable.
+
+    Sans ces contrôles, le problème ne se manifeste que plus loin sous la forme
+    d'un « Cycles introuvable pour déduire l'année campagne » ou d'un
+    « Aucune Annee pour NumDisp=… », qui laissent penser à un problème de
+    référentiel alors que ce sont les données du dispositif qui manquent.
+    """
+    placettes = donnees.get("Placettes")
+    if placettes is None or placettes.empty:
+        raise ValueError(
+            f"Le dispositif {disp_id} ne contient aucune placette en base : "
+            "le carnet ne peut pas être généré. Réimportez les données du "
+            "dispositif depuis la page « Import de données » avant de relancer "
+            "l'analyse."
+        )
+
+    cycles = donnees.get("Cycles")
+    if cycles is None or cycles.empty:
+        raise ValueError(
+            f"Le dispositif {disp_id} a des placettes mais aucun relevé "
+            "(association cycle/placette) en base : le carnet ne peut pas être "
+            "généré. Réimportez les données du dispositif."
+        )
+
+    # L'année de campagne se déduit du dernier cycle DÉCLARÉ (t_cycles, alimenté
+    # par PsdrfListes). Si ce cycle n'a pas encore été inventorié, on le dit
+    # plutôt que de laisser remonter une erreur sur l'année.
+    num_cycle = pd.to_numeric(cycles["Cycle"], errors="coerce")
+    annees_dernier_cycle = pd.to_numeric(
+        cycles.loc[num_cycle == int(last_cycle), "Annee"], errors="coerce"
+    ).dropna()
+    if annees_dernier_cycle.empty:
+        cycles_avec_donnees = sorted(
+            int(c)
+            for c in pd.to_numeric(
+                cycles.loc[cycles["Annee"].notna(), "Cycle"], errors="coerce"
+            )
+            .dropna()
+            .unique()
+        )
+        raise ValueError(
+            f"Le dernier cycle déclaré pour le dispositif {disp_id} (cycle "
+            f"{last_cycle}) n'a aucun relevé daté en base ; cycles disposant de "
+            f"données : {cycles_avec_donnees or 'aucun'}. Soit les données du "
+            f"cycle {last_cycle} n'ont pas encore été importées, soit la colonne "
+            "« Année » de l'onglet Cycles du fichier est vide."
+        )
+
+
 def build_campagne_from_db(disp_id: int, *, base_dir: Path, data_dir: Path) -> CampagneRefs:
     """
     Construit un dossier campagne complet (pickles codes + données brutes) à partir
@@ -332,8 +382,9 @@ def build_campagne_from_db(disp_id: int, *, base_dir: Path, data_dir: Path) -> C
     data_dir = Path(data_dir)
 
     donnees = _build_donnees_brutes(disp_id)
-    codes = _load_codes(data_dir)
     last_cycle = _last_cycle(disp_id)
+    _check_donnees_non_vides(disp_id, donnees, last_cycle)
+    codes = _load_codes(data_dir)
 
     year = campagne_year_rule_c(donnees, disp_id, last_cycle)
     slug = disp_dir_slug(disp_id, codes)
