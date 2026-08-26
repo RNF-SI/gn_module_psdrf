@@ -46,6 +46,8 @@ export class ImportDonneesComponent  implements OnInit{
 
   //Tableau qui contient au départ les données du fichier excel. Il est actualisé au fur et à mesure que les erreurs sont corrigées
   psdrfArray: any[][] = [];
+  //Message d'erreur de lecture du classeur, affiché à la fin du chargement
+  excelLoadingError: string | null = null;
 
   tableColumnsArray: string[][] = [];
   tableDataSourceArray: MatTableDataSource<any>[] = []; //Tableau des Datasource de chaque onglet
@@ -215,6 +217,7 @@ export class ImportDonneesComponent  implements OnInit{
   onFileLoad(target: DataTransfer): void {
     // Reset application state
     this.psdrfArray = [];
+    this.excelLoadingError = null;
     this.tableColumnsArray = [];
     this.tableDataSourceArray = [];
     this.isExcelLoaded = false;
@@ -222,6 +225,10 @@ export class ImportDonneesComponent  implements OnInit{
     this.isVerificationObjLoaded = false;
 
     let excelData;
+    // onloadend se déclenche que onload ait réussi ou non : sans ce drapeau, un
+    // classeur mal formé (onglet vide) fait partir la requête de vérification
+    // avec un psdrfArray tronqué, et le backend casse sur data[6].
+    let isExcelParsed = false;
     const reader: FileReader = new FileReader();
     this.excelFileName = target.files[0].name;
     
@@ -237,6 +244,15 @@ export class ImportDonneesComponent  implements OnInit{
         for (let i = 0; i < excelData.length; i++) {
           // const header: string[] = this.tableColumnsArray[i];
           let columnNames = excelData[i].slice(0, 1)[0];
+          //Un onglet sans ligne d'en-tête ne peut pas être interprété: on
+          //arrête ici plutôt que de laisser planter la boucle, ce qui enverrait
+          //un tableau incomplet au backend.
+          if (!columnNames) {
+            this.excelLoadingError =
+              "L'onglet n°" + (i + 1) + " du classeur est vide (aucune ligne d'en-tête). " +
+              "Complétez-le ou supprimez-le, puis rechargez le fichier.";
+            return;
+          }
           this.tableColumnsArray[i] = columnNames;
           const header: string[] = columnNames;
           const importedData = excelData[i].slice(1);
@@ -263,17 +279,37 @@ export class ImportDonneesComponent  implements OnInit{
         }
 
         this.isExcelLoaded = true;
+        isExcelParsed = true;
       };
 
       reader.onerror = (e: any) => {
-        this._toasterService.error("Un problème a été rencontré lors du chargement du fichier Excel.", "Chargement des données du fichier Excel", {
-          closeButton: true,
-          disableTimeOut: true,
-        });
+        //Le message est affiché par onloadend, qui se déclenche juste après.
+        this.excelLoadingError =
+          "Un problème a été rencontré lors du chargement du fichier Excel.";
       };
       reader.readAsBinaryString(target.files[0]);
       //Lancement de la requête psdrf_data_verification avec les données Excel chargée
       reader.onloadend = (e) => {
+        if (!isExcelParsed) {
+          //Le fichier n'a pas pu être lu entièrement: inutile d'envoyer des
+          //données partielles au backend, on explique le problème à l'utilisateur.
+          this.psdrfArray = [];
+          this.tableColumnsArray = [];
+          this.tableDataSourceArray = [];
+          this.isDataCharging = false;
+          this.isExcelLoaded = false;
+          this._toasterService.error(
+            this.excelLoadingError ||
+              "Le fichier Excel n'a pas pu être lu. Vérifiez qu'il contient bien les 7 onglets attendus (Placettes, Cycles, Arbres, Regeneration, Transect, BMSsup30, Reperes) et qu'aucun n'est vide.",
+            "Chargement des données du fichier Excel",
+            {
+              closeButton: true,
+              disableTimeOut: true,
+            }
+          );
+          this.excelLoadingError = null;
+          return;
+        }
         this.dataSrv
           .psdrf_data_verification(
             JSON.stringify(this.psdrfArray, (k, v) =>
