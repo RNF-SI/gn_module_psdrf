@@ -14,12 +14,30 @@ def _pivot_value_and_origin_index(melted_df, index_cols):
     # pandas 2.x casse sur aggfunc=['first', lambda x: x.index[0]] (InvalidIndexError
     # dans la concat interne) — on fait les deux pivots séparément puis on les
     # concatène en préservant la structure 2-niveaux attendue par le code aval.
+    #
+    # Deux précautions indispensables pour retrouver le comportement de
+    # l'ancien pivot unique :
+    #  - `melted_df` sort d'un `pd.melt(..., ignore_index=False)`, donc ses
+    #    labels sont dupliqués (un par variable fondue). On les recopie dans une
+    #    colonne avant de repartir d'un index propre, sinon les deux pivots
+    #    héritent d'un index non unique et la concaténation lève
+    #    « Reindexing only valid with uniquely valued Index objects ».
+    #  - `aggfunc="first"` supprime les groupes entièrement vides (arbre dont la
+    #    variable n'est renseignée à aucun cycle), pas l'agrégation des indices
+    #    d'origine : les deux pivots n'ont alors ni les mêmes lignes ni les mêmes
+    #    colonnes. On les réaligne pour que le résultat couvre, comme avant,
+    #    tous les groupes (valeur NaN là où il n'y a pas de mesure).
+    melted_df = melted_df.copy()
+    melted_df["__origin_index"] = melted_df.index
+    melted_df = melted_df.reset_index(drop=True)
+
     values = melted_df.pivot_table(
         index=index_cols, columns="Cycle", values="value", aggfunc="first"
     )
     origin_idx = melted_df.pivot_table(
-        index=index_cols, columns="Cycle", values="value", aggfunc=lambda x: x.index[0]
+        index=index_cols, columns="Cycle", values="__origin_index", aggfunc="first"
     )
+    values, origin_idx = values.align(origin_idx, axis=None)
     return pd.concat({"first": values, "<lambda>": origin_idx}, axis=1).reset_index()
 
 
