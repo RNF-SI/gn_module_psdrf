@@ -9,6 +9,8 @@ import pandas as pd
 from flask import current_app
 from geonature.utils.config import config
 
+from .psdrf_tables import TablesPsdrfError, unpack_tables
+
 
 def _pivot_value_and_origin_index(melted_df, index_cols):
     # pandas 2.x casse sur aggfunc=['first', lambda x: x.index[0]] (InvalidIndexError
@@ -58,13 +60,16 @@ def data_verification(data):
 
     tableDict = {}
     # Initialisation des données du dispositif testée dans des dataframes Pandas
-    Placettes = pd.json_normalize(data[0]) 
-    Cycles = pd.json_normalize(data[1])
-    Arbres = pd.json_normalize(data[2])
-    Regeneration = pd.json_normalize(data[3])
-    Transect = pd.json_normalize(data[4])
-    BMSsup30 = pd.json_normalize(data[5])
-    Reperes = pd.json_normalize(data[6])
+    # Le dépaquetage est positionnel : on contrôle d'abord la forme du classeur,
+    # sinon un onglet manquant sort en IndexError illisible pour l'utilisateur.
+    tables = unpack_tables(data)
+    Placettes = pd.json_normalize(tables[0])
+    Cycles = pd.json_normalize(tables[1])
+    Arbres = pd.json_normalize(tables[2])
+    Regeneration = pd.json_normalize(tables[3])
+    Transect = pd.json_normalize(tables[4])
+    BMSsup30 = pd.json_normalize(tables[5])
+    Reperes = pd.json_normalize(tables[6])
 
     i =0
     # Todo: Remettre cette partie de code si Eugénie est d'accord
@@ -2190,6 +2195,9 @@ def data_verification(data):
 
 
     return verifiedJson
+  except TablesPsdrfError as e:
+      # Classeur mal formé : l'utilisateur peut corriger lui-même, on lui dit quoi.
+      return (json.dumps({'success': False, "message": str(e)}), 400, {'ContentType':'application/json'})
   except Exception as e:
       # Rollback and print error
       print(e)

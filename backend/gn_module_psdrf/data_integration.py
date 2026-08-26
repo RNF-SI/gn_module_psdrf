@@ -5,6 +5,7 @@ from geonature.utils.env import DB
 from .models import TDispositifs, TPlacettes, TArbres, TCycles, \
     CorCyclesPlacettes, TArbresMesures, TReperes, BibEssences, TRegenerations, TBmSup30,TBmSup30Mesures, TTransects
 from .geonature_PSDRF_function import get_id_type_from_mnemonique, get_id_nomenclature_from_id_type_and_cd_nomenclature
+from .psdrf_tables import TablesPsdrfError, unpack_tables
 from datetime import datetime
 from math import isnan
 
@@ -118,13 +119,24 @@ def _error_response(message, exception=None):
 
 def data_integration(dispId, dispName, data):
     try:
-        Placettes = data[0]
-        Cycles = data[1]
-        Arbres = data[2]
-        Regeneration = data[3]
-        Transect = data[4]
-        BMSsup30 = data[5]
-        Reperes = data[6]
+        # Dépaquetage positionnel : on contrôle la forme du classeur avant de
+        # toucher à quoi que ce soit (cf. psdrf_tables).
+        try:
+            tables = unpack_tables(data)
+        except TablesPsdrfError as e:
+            return (
+                json.dumps({'success': False, "message": str(e)}),
+                400,
+                {'ContentType': 'application/json'},
+            )
+
+        Placettes = tables[0]
+        Cycles = tables[1]
+        Arbres = tables[2]
+        Regeneration = tables[3]
+        Transect = tables[4]
+        BMSsup30 = tables[5]
+        Reperes = tables[6]
 
         id_dispositif = int(dispId)
 
