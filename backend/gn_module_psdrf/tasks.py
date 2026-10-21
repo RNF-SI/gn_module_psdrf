@@ -63,6 +63,7 @@ def test_celery(self, id_dispositif, isCarnetToDownload, isPlanDesArbresToDownlo
     logger.info(f"[TASK] Parameters: isCarnet={isCarnetToDownload}, isPlan={isPlanDesArbresToDownload}")
     temp_file = None
     work_dir = None
+    avertissements = []
     zipName = f'documents_dispositif-{str(id_dispositif)}.zip'
     try:
         with current_app.app_context():
@@ -76,6 +77,7 @@ def test_celery(self, id_dispositif, isCarnetToDownload, isPlanDesArbresToDownlo
             )
             pdfs = result.get("pdfs", [])
             work_dir = result.get("work_dir")
+            avertissements = result.get("avertissements", [])
             logger.info(f"[TASK] Pipeline produced {len(pdfs)} PDF(s)")
 
             # Le ZIP doit survivre à la purge du dossier de travail : on l'écrit
@@ -98,7 +100,7 @@ def test_celery(self, id_dispositif, isCarnetToDownload, isPlanDesArbresToDownlo
             logger.info(f"[TASK] Zip created with {files_added} files")
             os.chmod(temp_file.name, 0o777)
 
-        self.update_state(state='SUCCESS', meta={'file_path': temp_file.name, "file_name": zipName})
+        self.update_state(state='SUCCESS', meta={'file_path': temp_file.name, "file_name": zipName, "avertissements": avertissements})
 
     except SoftTimeLimitExceeded as e:
         logger.exception("Soft time limit exceeded for task id %s", self.request.id)
@@ -121,7 +123,7 @@ def test_celery(self, id_dispositif, isCarnetToDownload, isPlanDesArbresToDownlo
         if work_dir and os.path.isdir(str(work_dir)):
             shutil.rmtree(str(work_dir), ignore_errors=True)
 
-    return {"file_path": temp_file.name if temp_file else "N/A", "file_name": zipName}
+    return {"file_path": temp_file.name if temp_file else "N/A", "file_name": zipName, "avertissements": avertissements}
 
 
 

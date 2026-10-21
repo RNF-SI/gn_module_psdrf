@@ -714,6 +714,26 @@
   <mat-card>
     <mat-card-title>Import de PSDRF Listes</mat-card-title>
     <mat-card-content>
+      <div class="mb-2 d-flex justify-content-center">
+        <button
+          *ngIf="!psdrfListDownloading"
+          class="action-button-class"
+          mat-raised-button
+          matTooltip="Télécharger le PSDRF Listes actuellement chargé sur cette instance (pour le réimporter sur une autre)"
+          (click)="psdrfListeDownload()"
+        >
+          <mat-icon>cloud_download</mat-icon>
+          Télécharger le PSDRF Listes en place
+        </button>
+        <button
+          *ngIf="psdrfListDownloading"
+          class="action-button-class spinner-button"
+          mat-raised-button
+          disabled
+        >
+          <mat-spinner diameter="22" color="primary"></mat-spinner>
+        </button>
+      </div>
       <div
         class="container"
         appDnd

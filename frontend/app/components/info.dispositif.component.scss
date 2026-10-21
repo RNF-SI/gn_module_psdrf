@@ -31,6 +31,26 @@ h3 {
     color: var(--brown);
 }
 
+.staging-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
+    border-left: 4px solid var(--brown);
+    border-radius: 4px;
+    background-color: #fff3cd;
+
+    mat-icon {
+        color: var(--brown);
+        flex-shrink: 0;
+    }
+
+    p {
+        margin: 0;
+    }
+}
+
 .unactive-text {
     color: var(--black);
     opacity: 0.54;

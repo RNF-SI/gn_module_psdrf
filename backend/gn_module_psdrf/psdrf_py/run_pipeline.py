@@ -57,6 +57,7 @@ def run_psdrf_pipeline(
     is_plan: bool = False,
     answer_radar=None,
     work_token: Optional[str] = None,
+    cycle: Optional[int] = None,
 ) -> dict:
     """
     Génère le carnet et/ou le plan des arbres pour un dispositif.
@@ -64,8 +65,10 @@ def run_psdrf_pipeline(
     Returns
     -------
     dict
-        ``{"pdfs": [Path, ...], "campagne_dir": Path, "work_dir": Path}``.
-        ``work_dir`` est le dossier temporaire à purger après archivage.
+        ``{"pdfs": [Path, ...], "campagne_dir": Path, "work_dir": Path,
+        "avertissements": [str, ...]}``. ``work_dir`` est le dossier temporaire
+        à purger après archivage. ``cycle`` arrête les documents à ce cycle
+        (défaut : dernier cycle ayant des relevés).
     """
     data_dir, export_dir = _config_dirs()
     token = work_token or uuid.uuid4().hex[:12]
@@ -86,7 +89,7 @@ def run_psdrf_pipeline(
     )
 
     refs: CampagneRefs = build_campagne_from_db(
-        disp_id, base_dir=work_dir, data_dir=data_dir
+        disp_id, base_dir=work_dir, data_dir=data_dir, cycle=cycle
     )
     camp = refs.campagne_dir
     pdfs: list[Path] = []
@@ -136,4 +139,9 @@ def run_psdrf_pipeline(
         pdfs.extend(Path(p) for p in plan_pdfs if Path(p).is_file())
 
     logger.info("[PSDRF] Pipeline terminé : %d PDF(s) — %s", len(pdfs), [p.name for p in pdfs])
-    return {"pdfs": pdfs, "campagne_dir": camp, "work_dir": work_dir}
+    return {
+        "pdfs": pdfs,
+        "campagne_dir": camp,
+        "work_dir": work_dir,
+        "avertissements": refs.avertissements,
+    }

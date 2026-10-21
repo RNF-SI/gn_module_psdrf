@@ -122,6 +122,7 @@ Excel utilisateur ──► /validation (data_verification.py)
   - `db_to_campagne.py` : adaptateur BDD → dossier « campagne » (écrit `psdrfDonneesBrutes.pkl` + `psdrfCodes.pkl`), remplace l'import Excel du pipeline.
   - `run_pipeline.py` : orchestration `psdrf_calculs → psdrf_agreg_arbres → psdrf_agreg_placettes → psdrf_edit_carnet` (+ `psdrf_edit_plans_arbres`).
   - `carnet_tables.py` : liste figée des 97 tables `psdrfPla*` nécessaires à un carnet complet.
+  - `etat_cycles.py` : état par cycle (annoncé dans PsdrfListes / relevé en prod / en staging) et textes d'avertissement (cycle annoncé sans données, cycle incomplet). Partagé par la route `/dispositif/<id>/etat_cycles` (aperçu avant lancement) et la génération, qui s'arrête au cycle choisi (`?cycle=`, défaut : dernier cycle **relevé**, pas le dernier annoncé).
 - **`PermPSDRF4py/`** — **Sous-module git** : le pipeline Python autonome (calculs, agrégation, carnet/plans). Consommé en lecture seule via `psdrf_py`.
 - **`tasks.py`** — Tâches Celery (`test_celery` = génération carnet/plan async puis ZIP des PDF sous `PSDRF_EXPORT_DIR/zip` + purge du dossier de travail ; `fetch_dispositif_data`, `fetch_updated_data`, `insert_or_update_data`).
 - **`migrations/`** — Migrations Alembic spécifiques au module (création schéma, switch UUID, ajout colonnes cycles).

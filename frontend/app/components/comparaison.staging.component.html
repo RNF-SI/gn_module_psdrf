@@ -1,0 +1,93 @@
+<button
+  class="m-1 float-left action-button-class"
+  mat-raised-button
+  matTooltip="Revenir à la fiche du dispositif"
+  (click)="returnToDispositif()"
+>
+  <mat-icon>arrow_back</mat-icon>
+</button>
+<div class="container-fluid">
+  <h2>Placettes relevées : production / staging</h2>
+  <p>
+    Pour chaque cycle, placettes présentes dans une base et pas dans l'autre,
+    ou présentes dans les deux avec une année ou un nombre d'arbres mesurés
+    différents. Les documents (carnet, plan des arbres) sont générés à partir
+    de la production.
+  </p>
+
+  <div *ngIf="loading" class="d-flex justify-content-center m-4">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <p *ngIf="erreur" class="text-danger">
+    La comparaison n'a pas pu être chargée.
+  </p>
+
+  <ng-container *ngIf="!loading && !erreur">
+    <p *ngIf="cycles.length === 0" class="text-muted">
+      Aucun relevé ni en production ni en staging pour ce dispositif.
+    </p>
+
+    <mat-checkbox *ngIf="cycles.length > 0" [(ngModel)]="ecartsSeulement">
+      Afficher seulement les écarts
+    </mat-checkbox>
+
+    <div class="card mt-3" *ngFor="let cycle of cycles">
+      <h3>Cycle {{ cycle.num_cycle }}</h3>
+      <div class="compteurs">
+        <span
+          *ngFor="let statut of statuts"
+          class="badge-statut statut-{{ statut }}"
+        >
+          {{ libelles[statut] }} : {{ cycle.compte[statut] }}
+        </span>
+      </div>
+
+      <p *ngIf="ecartsSeulement && nbEcarts(cycle) === 0" class="mt-2 mb-0">
+        Production et staging sont identiques pour ce cycle.
+      </p>
+
+      <table
+        class="table table-sm mt-2"
+        *ngIf="placettesAffichees(cycle).length > 0"
+      >
+        <thead>
+          <tr>
+            <th rowspan="2">Placette</th>
+            <th rowspan="2">Statut</th>
+            <th colspan="2" class="text-center">Production</th>
+            <th colspan="2" class="text-center">Staging</th>
+          </tr>
+          <tr>
+            <th>Année</th>
+            <th>Arbres</th>
+            <th>Année</th>
+            <th>Arbres</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let pl of placettesAffichees(cycle)">
+            <td>{{ pl.num_placette }}</td>
+            <td>
+              <span class="badge-statut statut-{{ pl.statut }}">
+                {{ libelles[pl.statut] }}
+              </span>
+            </td>
+            <ng-container *ngIf="pl.production; else absent">
+              <td>{{ pl.production.annee ?? "—" }}</td>
+              <td>{{ pl.production.nb_arbres }}</td>
+            </ng-container>
+            <ng-container *ngIf="pl.staging; else absent">
+              <td>{{ pl.staging.annee ?? "—" }}</td>
+              <td>{{ pl.staging.nb_arbres }}</td>
+            </ng-container>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </ng-container>
+</div>
+
+<ng-template #absent>
+  <td colspan="2" class="text-muted">absente</td>
+</ng-template>

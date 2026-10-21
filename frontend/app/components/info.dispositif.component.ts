@@ -26,6 +26,10 @@ export interface Document {
 export class InfoDispositifComponent implements OnInit {
   public dispositif: any;
   public dispositifStats: any;
+  // État des cycles (annoncés / relevés en production / en staging) et
+  // avertissements pour le cycle choisi, cf. route /etat_cycles.
+  public etatCycles: any;
+  public cycleChoisi: number = null;
   public id: number;
   public apiEndPoint: string;
   public placettesEndPoint: string;
@@ -59,7 +63,7 @@ export class InfoDispositifComponent implements OnInit {
         name: "Plan des arbres et figures",
         toDownload: false,
         documentParameters: [],
-        activated: false,
+        activated: true,
       },
       // {name: 'Table Excel des Résultats Bruts', toDownload: false},
       // {name: 'Plan des arbres', toDownload: false}
@@ -109,6 +113,8 @@ export class InfoDispositifComponent implements OnInit {
         .subscribe((data) => {
           this.dispositifStats = data;
         });
+
+      this.chargerEtatCycles();
     });
   }
 
@@ -130,8 +136,28 @@ export class InfoDispositifComponent implements OnInit {
     }
   }
 
-  checkCheckboxDisabled(): boolean {
-    return this.mapListService.page.totalElements > 150 ? true : false;
+  /**
+   * Charge l'état des cycles et les avertissements pour le cycle choisi
+   * (par défaut : dernier cycle ayant des relevés en production).
+   */
+  chargerEtatCycles(cycle?: number): void {
+    this.dataSrv.getEtatCycles(this.id, cycle).subscribe((etat) => {
+      this.etatCycles = etat;
+      if (this.cycleChoisi == null) {
+        this.cycleChoisi = etat.cycle_defaut;
+      }
+    });
+  }
+
+  aDesDonneesEnStaging(): boolean {
+    return (
+      this.etatCycles &&
+      this.etatCycles.cycles.some((c) => c.nb_placettes_staging > 0)
+    );
+  }
+
+  goToComparaison(): void {
+    this._router.navigate(["psdrf/comparaison", this.id]);
   }
 
   onDetailPlacette(row): void {
@@ -169,7 +195,8 @@ export class InfoDispositifComponent implements OnInit {
             this.id,
             isCarnetToDownload,
             isPlanDesArbresToDownload,
-            parameters
+            parameters,
+            this.cycleChoisi
           )
           .subscribe(
             (taskId) => {
@@ -184,7 +211,7 @@ export class InfoDispositifComponent implements OnInit {
                   // Check if the task state is 'FAILURE' and handle it
                   if (taskStatus.state === "FAILURE") {
                     this._toasterService.error(
-                      "La génération du document a échoué.",
+                      taskStatus.status || "La génération du document a échoué.",
                       "Échec de la génération",
                       {
                         closeButton: true,
@@ -246,6 +273,12 @@ export class InfoDispositifComponent implements OnInit {
                           "Les documents ont bien été générés.",
                           "Génération des documents réussie"
                         );
+                        (taskStatus.avertissements || []).forEach((msg) => {
+                          this._toasterService.warning(msg, "Attention", {
+                            closeButton: true,
+                            disableTimeOut: true,
+                          });
+                        });
                       },
                       (error) => {
                         // This catch block is for handling errors thrown from within the subscription itself

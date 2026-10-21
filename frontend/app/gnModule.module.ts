@@ -25,12 +25,14 @@ import {MatCheckboxModule} from '@angular/material/checkbox';
 import { CustomToastComponent } from "./reusable-components/custom-toast/custom-toast.component"
 import { ToastrModule } from 'ngx-toastr';
 import { DendroDownloadComponent } from "./components/dendro-download.component";
+import { ComparaisonStagingComponent } from "./components/comparaison.staging.component";
 import { MatSortModule } from '@angular/material/sort';
 
 // my module routing
 const routes: Routes = [
   { path: "", component: DispositifsComponent },
   { path: "infodispositif/:id", component: InfoDispositifComponent },
+  { path: "comparaison/:id", component: ComparaisonStagingComponent },
   { path: "importdonnees", component: ImportDonneesComponent },
   { path: "adminPage", component: AdminComponent },
   { path: 'download-mobile-app', component: DendroDownloadComponent }
@@ -50,7 +52,8 @@ const routes: Routes = [
     ErrorSubStepComponent,
     AdminTableComponent, 
     CustomToastComponent,
-    DendroDownloadComponent
+    DendroDownloadComponent,
+    ComparaisonStagingComponent
   ],
   imports: [
     GN2CommonModule,

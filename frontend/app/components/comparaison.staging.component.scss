@@ -1,0 +1,54 @@
+:root {
+    --blue: #598979;
+    --brown: #8B5500;
+    --beige: #F4F1E4;
+}
+
+h2 {
+    color: var(--blue);
+}
+
+h3 {
+    color: var(--brown);
+}
+
+.card {
+    background-color: var(--beige);
+    padding: 16px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.compteurs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.badge-statut {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    white-space: nowrap;
+}
+
+.statut-staging_seul {
+    background-color: #fff3cd;
+    color: #664d03;
+}
+
+.statut-prod_seul {
+    background-color: #cfe2ff;
+    color: #084298;
+}
+
+.statut-different {
+    background-color: #f8d7da;
+    color: #842029;
+}
+
+.statut-identique {
+    background-color: #d1e7dd;
+    color: #0f5132;
+}

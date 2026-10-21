@@ -74,6 +74,17 @@
         </div>
       </div>
     </div>
+    <div class="mt-2" *ngIf="dispositifStats">
+      <button
+        class="action-button-class"
+        mat-raised-button
+        matTooltip="Voir, cycle par cycle, les placettes relevées dans une base et pas dans l'autre"
+        (click)="goToComparaison()"
+      >
+        <mat-icon>compare_arrows</mat-icon>
+        Comparer production et staging par placette
+      </button>
+    </div>
   </div>
   <div class="row" id="map-list-placettes">
     <div class="col-sm-7">
@@ -84,6 +95,59 @@
     <div class="col-sm-5">
       <div class="m-3 justify-content-center card">
         <h3>Génération du carnet et des figures</h3>
+        <div *ngIf="etatCycles" class="etat-cycles">
+          <p class="mb-1">
+            Données disponibles ({{ etatCycles.nb_placettes }} placettes au
+            dispositif). Les documents sont générés à partir de la production.
+          </p>
+          <table class="table table-sm mb-2">
+            <thead>
+              <tr>
+                <th>Cycle</th>
+                <th>Annoncé (PsdrfListes)</th>
+                <th>Relevé en production</th>
+                <th>En staging</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let c of etatCycles.cycles">
+                <td>{{ c.num_cycle }}</td>
+                <td>{{ c.annee_annoncee || "non" }}</td>
+                <td>
+                  <span *ngIf="c.nb_placettes_relevees > 0">
+                    {{ c.nb_placettes_relevees }} / {{ etatCycles.nb_placettes }}
+                    placettes
+                  </span>
+                  <strong *ngIf="c.nb_placettes_relevees === 0">aucun</strong>
+                </td>
+                <td>{{ c.nb_placettes_staging || "—" }}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div *ngIf="etatCycles.cycles_disponibles.length > 0" class="mb-2">
+            <label for="cycle-choisi" class="mr-2">Documents arrêtés au cycle :</label>
+            <select
+              id="cycle-choisi"
+              [(ngModel)]="cycleChoisi"
+              (ngModelChange)="chargerEtatCycles($event)"
+            >
+              <option *ngFor="let n of etatCycles.cycles_disponibles" [ngValue]="n">
+                Cycle {{ n }}{{ n > 1 ? " (données des cycles 1 à " + n + ")" : "" }}
+              </option>
+            </select>
+          </div>
+
+          <div class="staging-alert" *ngFor="let msg of etatCycles.avertissements">
+            <mat-icon>warning</mat-icon>
+            <p>{{ msg }}</p>
+          </div>
+          <p *ngIf="aDesDonneesEnStaging()" class="mb-2">
+            <a href="javascript:void(0)" (click)="goToComparaison()"
+              >Comparer production et staging placette par placette</a
+            >
+          </p>
+        </div>
         <section class="checkbox-section">
           <span class="checkbox-list-section">
             <mat-checkbox
@@ -102,19 +166,10 @@
                   class="custom-checkbox"
                   [(ngModel)]="subdocument.toDownload"
                   (ngModelChange)="updateAllToDownload()"
-                  [disabled]="
-                    subdocument.activated ? false : checkCheckboxDisabled()
-                  "
+                  [disabled]="!subdocument.activated"
                 >
                   {{ subdocument.name }}
                 </mat-checkbox>
-                <p *ngIf="!subdocument.activated && checkCheckboxDisabled()">
-                  <small class="unactive-text">
-                    Au-delà de 150 placettes la génération du plan des arbres
-                    est trop lourde. Veuillez nous contacter en attendant
-                    l'intégration d'un futur développement.
-                  </small>
-                </p>
                 <ul *ngIf="subdocument.toDownload">
                   <li *ngFor="let parameter of subdocument.documentParameters">
                     <mat-checkbox

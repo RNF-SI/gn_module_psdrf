@@ -13,9 +13,11 @@ import time
 import logging
 import os
 from datetime import datetime
+from pathlib import Path
 
 
 from geonature.utils.env import DB
+from geonature.core.gn_permissions.decorators import login_required
 # from geonature.utils.utilssqlalchemy import json_resp, get_geojson_feature
 
 from geonature.core.users.models import CorRole
@@ -30,6 +32,7 @@ from .psdrf_list_update import psdrf_list_update
 from .disp_placette_liste import disp_placette_liste_add
 # from .pr_psdrf_staging_functions.insert_or_update_disp_to_staging import insert_or_update_data
 from .bddToExcel import bddToExcel
+from .psdrf_py.etat_cycles import avertissements, etat_cycles
 from .schemas.cycles import ConciseCycleSchema
 from .schemas.essences import EssenceSchema
 from .tasks import test_celery, insert_or_update_data, fetch_dispositif_data, fetch_updated_data
@@ -266,6 +269,95 @@ def dispositif_stats(id_dispositif):
     return stats
 
 
+_RELEVES_SQL = """
+    SELECT c.num_cycle, p.id_placette_orig AS num_placette,
+           cp.annee, cp.date_releve,
+           (SELECT count(*)
+              FROM {schema}.t_arbres a
+              JOIN {schema}.t_arbres_mesures am ON am.id_arbre = a.id_arbre
+             WHERE a.id_placette = p.id_placette
+               AND am.id_cycle = c.id_cycle) AS nb_arbres
+      FROM {schema}.cor_cycles_placettes cp
+      JOIN {schema}.t_cycles c ON c.id_cycle = cp.id_cycle
+      JOIN {schema}.t_placettes p ON p.id_placette = cp.id_placette
+     WHERE p.id_dispositif = :id_dispositif
+"""
+
+
+def _releves_par_placette(schema, id_dispositif):
+    """{(num_cycle, num_placette): relevé} pour un schéma (prod ou staging)."""
+    rows = DB.session.execute(
+        text(_RELEVES_SQL.format(schema=schema)), {'id_dispositif': id_dispositif}
+    ).mappings().all()
+    return {
+        (r['num_cycle'], r['num_placette']): {
+            'annee': r['annee'],
+            'date_releve': r['date_releve'].isoformat() if r['date_releve'] else None,
+            'nb_arbres': r['nb_arbres'],
+        }
+        for r in rows
+    }
+
+
+def _cle_tri_placette(num_placette):
+    """Tri numérique des numéros de placette (stockés en texte), sinon alphabétique."""
+    return (0, int(num_placette), '') if str(num_placette).isdigit() else (1, 0, str(num_placette))
+
+
+@blueprint.route('/dispositif/<int:id_dispositif>/comparaison', methods=['GET'])
+@json_resp
+def dispositif_comparaison(id_dispositif):
+    """Compare, cycle par cycle, les placettes relevées en production et en staging.
+
+    Les deux schémas sont appariés sur (num_cycle, id_placette_orig) et non sur
+    les identifiants internes. Statut de chaque placette :
+    prod_seul, staging_seul, different (année ou nb d'arbres) ou identique.
+    """
+    prod = _releves_par_placette('pr_psdrf', id_dispositif)
+    staging = _releves_par_placette('pr_psdrf_staging', id_dispositif)
+
+    cycles = {}
+    for cle in set(prod) | set(staging):
+        num_cycle, num_placette = cle
+        p, s = prod.get(cle), staging.get(cle)
+        if p is None:
+            statut = 'staging_seul'
+        elif s is None:
+            statut = 'prod_seul'
+        elif (p['annee'], p['nb_arbres']) != (s['annee'], s['nb_arbres']):
+            statut = 'different'
+        else:
+            statut = 'identique'
+        cycles.setdefault(num_cycle, []).append({
+            'num_placette': num_placette,
+            'statut': statut,
+            'production': p,
+            'staging': s,
+        })
+
+    resultat = []
+    for num_cycle in sorted(cycles):
+        placettes = sorted(cycles[num_cycle], key=lambda x: _cle_tri_placette(x['num_placette']))
+        compte = {k: 0 for k in ('prod_seul', 'staging_seul', 'different', 'identique')}
+        for pl in placettes:
+            compte[pl['statut']] += 1
+        resultat.append({'num_cycle': num_cycle, 'compte': compte, 'placettes': placettes})
+    return {'id_dispositif': id_dispositif, 'cycles': resultat}
+
+
+@blueprint.route('/dispositif/<int:id_dispositif>/etat_cycles', methods=['GET'])
+@json_resp
+def dispositif_etat_cycles(id_dispositif):
+    """État des cycles (annoncés / relevés en production / en staging) et
+    avertissements pour une génération arrêtée au cycle ``?cycle=`` (défaut :
+    dernier cycle ayant des relevés). Mêmes textes que ceux renvoyés après
+    génération, cf. psdrf_py.etat_cycles."""
+    etat = etat_cycles(id_dispositif, avec_staging=True)
+    cycle = request.args.get('cycle', type=int) or etat['cycle_defaut']
+    etat['avertissements'] = avertissements(etat, cycle)
+    return etat
+
+
 @blueprint.route('/global_stats', methods=['GET'])
 @json_resp
 def global_stats():
@@ -360,6 +452,8 @@ def psdrf_data_analysis(id_dispositif):
         carnetToDownloadParameters['Answer_Radar']= request.args.get('Answer_Radar')
     else:
         carnetToDownloadParameters['Answer_Radar']=None
+    # Cycle auquel arrêter les documents (défaut : dernier cycle ayant des relevés).
+    carnetToDownloadParameters['Cycle'] = request.args.get('cycle')
 
     isPlanDesArbresToDownload = request.args.get('isPlanDesArbresToDownload')
 
@@ -383,8 +477,15 @@ def get_task_status(task_id):
             'state': task_result.state,
             'status': str(task_result.info),  # info property contains exception raised by task
         }
+    elif task_result.state == 'SUCCESS':
+        result = task_result.result or {}
+        response = {
+            'state': task_result.state,
+            'status': 'Task has finished',
+            'avertissements': result.get('avertissements', []),
+        }
     else:
-        # For other states like SUCCESS, RETRY, etc.
+        # For other states like RETRY, STARTED, etc.
         response = {'state': task_result.state, 'status': 'Task is currently being processed or has finished'}
 
     return jsonify(response)
@@ -675,7 +776,29 @@ def psdrf_update_psdrf_liste():
     except Exception as e:
         logging.critical(e)
         return {"type": "bug", "msg": f"Erreur lors de la mise à jour de la PSDRF Liste : {e}"}, 500
-    
+
+
+@blueprint.route('/psdrfListe', methods=['GET'])
+@login_required
+def psdrf_download_psdrf_liste():
+    """Renvoie le PsdrfListes.xlsx actuellement chargé sur cette instance.
+
+    Permet de recopier le référentiel d'une instance à l'autre (prod → staging
+    ou local) en le réimportant via le POST de cette même route. Connexion
+    requise : l'onglet Referents contient des noms de personnes.
+    """
+    data_dir = Path(current_app.config["ROOT_PATH"]) / current_app.config.get("PSDRF_DATA_DIR", "media/psdrf/data")
+    excel_file_path = data_dir / "PsdrfListes.xlsx"
+    if not excel_file_path.is_file():
+        return jsonify({"msg": "Aucun PsdrfListes n'a encore été chargé sur cette instance."}), 404
+    date_maj = datetime.fromtimestamp(excel_file_path.stat().st_mtime).strftime("%Y%m%d")
+    return send_file(
+        excel_file_path,
+        as_attachment=True,
+        download_name=f"PsdrfListes_{date_maj}.xlsx",
+    )
+
+
 # add Placette List request
 @blueprint.route('/disp_placette_liste', methods=['POST'])
 @json_resp

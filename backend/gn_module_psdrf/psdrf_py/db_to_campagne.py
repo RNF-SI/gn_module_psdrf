@@ -20,13 +20,13 @@ Cat/Tarifs/EssReg y sont vides).
 from __future__ import annotations
 
 import shutil
-from dataclasses import dataclass
+import logging
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
 import pandas as pd
 from geonature.utils.env import DB
-from sqlalchemy.sql.expression import func
 
 # Déclenche le bootstrap (sys.path vers le sous-module + backend matplotlib).
 from . import SUBMODULE_ROOT  # noqa: F401
@@ -63,12 +63,15 @@ from ..models import (  # noqa: E402
     TReperes,
     TTransects,
 )
+from .etat_cycles import avertissements, etat_cycles  # noqa: E402
 from .transforms import (  # noqa: E402
     apply_bool_cols,
     convert_stades,
     empty_to_none,
     normalize_placettes,
 )
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -79,6 +82,7 @@ class CampagneRefs:
     num_disp: int
     last_cycle: int
     disp_slug: str
+    avertissements: list[str] = field(default_factory=list)
 
 
 def _build_donnees_brutes(disp_id: int) -> dict:
@@ -304,16 +308,22 @@ def _load_codes(data_dir: Path) -> dict:
     return psdrf_codes(data_dir, xlsx)
 
 
-def _last_cycle(disp_id: int) -> int:
-    val = (
-        DB.session.query(func.max(TCycles.num_cycle))
-        .filter(TCycles.id_dispositif == disp_id)
-        .scalar()
+def _cycles_releves(donnees: dict) -> list[int]:
+    """Cycles ayant au moins un relevé daté (Année renseignée) dans les données."""
+    cycles = donnees.get("Cycles")
+    if cycles is None or cycles.empty:
+        return []
+    return sorted(
+        int(c)
+        for c in pd.to_numeric(
+            cycles.loc[cycles["Annee"].notna(), "Cycle"], errors="coerce"
+        )
+        .dropna()
+        .unique()
     )
-    return int(val) if val is not None else 1
 
 
-def _check_donnees_non_vides(disp_id: int, donnees: dict, last_cycle: int) -> None:
+def _check_donnees_non_vides(disp_id: int, donnees: dict) -> None:
     """Refuse tôt un dispositif inexploitable, avec un message actionnable.
 
     Sans ces contrôles, le problème ne se manifeste que plus loin sous la forme
@@ -338,32 +348,36 @@ def _check_donnees_non_vides(disp_id: int, donnees: dict, last_cycle: int) -> No
             "généré. Réimportez les données du dispositif."
         )
 
-    # L'année de campagne se déduit du dernier cycle DÉCLARÉ (t_cycles, alimenté
-    # par PsdrfListes). Si ce cycle n'a pas encore été inventorié, on le dit
-    # plutôt que de laisser remonter une erreur sur l'année.
-    num_cycle = pd.to_numeric(cycles["Cycle"], errors="coerce")
-    annees_dernier_cycle = pd.to_numeric(
-        cycles.loc[num_cycle == int(last_cycle), "Annee"], errors="coerce"
-    ).dropna()
-    if annees_dernier_cycle.empty:
-        cycles_avec_donnees = sorted(
-            int(c)
-            for c in pd.to_numeric(
-                cycles.loc[cycles["Annee"].notna(), "Cycle"], errors="coerce"
-            )
-            .dropna()
-            .unique()
-        )
+    if not _cycles_releves(donnees):
         raise ValueError(
-            f"Le dernier cycle déclaré pour le dispositif {disp_id} (cycle "
-            f"{last_cycle}) n'a aucun relevé daté en base ; cycles disposant de "
-            f"données : {cycles_avec_donnees or 'aucun'}. Soit les données du "
-            f"cycle {last_cycle} n'ont pas encore été importées, soit la colonne "
-            "« Année » de l'onglet Cycles du fichier est vide."
+            f"Le dispositif {disp_id} n'a aucun relevé daté en base : la colonne "
+            "« Année » de l'onglet Cycles est vide pour tous les cycles. "
+            "Complétez-la puis réimportez les données."
         )
 
 
-def build_campagne_from_db(disp_id: int, *, base_dir: Path, data_dir: Path) -> CampagneRefs:
+def _limiter_au_cycle(donnees: dict, cycle: int) -> dict:
+    """Ne garde que les cycles 1 à ``cycle`` dans toutes les tables qui en portent un.
+
+    Le pipeline prend pour cycle de référence le plus grand cycle présent dans
+    les données : couper ici suffit à produire un carnet ou un plan « au cycle N ».
+    """
+    limitees = {}
+    for nom, table in donnees.items():
+        if isinstance(table, pd.DataFrame) and "Cycle" in table.columns:
+            num_cycle = pd.to_numeric(table["Cycle"], errors="coerce")
+            table = table[num_cycle.isna() | (num_cycle <= cycle)]
+        limitees[nom] = table
+    return limitees
+
+
+def build_campagne_from_db(
+    disp_id: int,
+    *,
+    base_dir: Path,
+    data_dir: Path,
+    cycle: Optional[int] = None,
+) -> CampagneRefs:
     """
     Construit un dossier campagne complet (pickles codes + données brutes) à partir
     de la BDD, prêt à être consommé par psdrf_calculs / psdrf_edit_carnet.
@@ -377,22 +391,37 @@ def build_campagne_from_db(disp_id: int, *, base_dir: Path, data_dir: Path) -> C
         joue le rôle de ``PROJECT_ROOT`` pour la convention ``out/...``.
     data_dir
         Répertoire des référentiels web (``PSDRF_DATA_DIR``) contenant PsdrfListes.
+    cycle
+        Cycle auquel arrêter les documents (données des cycles 1 à ``cycle``).
+        Par défaut, le dernier cycle ayant des relevés — et non le dernier cycle
+        annoncé par PsdrfListes, qui peut ne pas encore être inventorié.
     """
     base_dir = Path(base_dir)
     data_dir = Path(data_dir)
 
     donnees = _build_donnees_brutes(disp_id)
-    last_cycle = _last_cycle(disp_id)
-    _check_donnees_non_vides(disp_id, donnees, last_cycle)
+    _check_donnees_non_vides(disp_id, donnees)
+    disponibles = _cycles_releves(donnees)
+    if cycle is None:
+        cycle = disponibles[-1]
+    elif cycle not in disponibles:
+        raise ValueError(
+            f"Le cycle {cycle} du dispositif {disp_id} n'a aucun relevé daté en "
+            f"production ; cycles disponibles : {disponibles}."
+        )
+    donnees = _limiter_au_cycle(donnees, cycle)
+    messages = avertissements(etat_cycles(disp_id, avec_staging=True), cycle)
+    for message in messages:
+        logger.warning("[PSDRF] disp=%s : %s", disp_id, message)
     codes = _load_codes(data_dir)
 
-    year = campagne_year_rule_c(donnees, disp_id, last_cycle)
+    year = campagne_year_rule_c(donnees, disp_id, cycle)
     slug = disp_dir_slug(disp_id, codes)
     if "-" not in slug:  # garantir le séparateur attendu par les détections internes
         slug = f"{disp_id}-disp"
     campagne = base_dir / "out" / slug / campagne_dir_name(year)
     ensure_campagne_layout(
-        campagne, num_disp=disp_id, cycle=last_cycle, year=year, disp_slug=slug
+        campagne, num_disp=disp_id, cycle=cycle, year=year, disp_slug=slug
     )
 
     save_psdrf_donnees_brutes(campagne, donnees)
@@ -401,6 +430,7 @@ def build_campagne_from_db(disp_id: int, *, base_dir: Path, data_dir: Path) -> C
     return CampagneRefs(
         campagne_dir=campagne,
         num_disp=disp_id,
-        last_cycle=last_cycle,
+        last_cycle=cycle,
         disp_slug=slug,
+        avertissements=messages,
     )

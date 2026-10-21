@@ -43,7 +43,7 @@ export class PsdrfDataService {
     ); 
   }
 
-  psdrf_data_analysis(id: number, isCarnetToDownload: boolean, isPlanDesArbresToDownload: boolean, parameters: {name: string, text: string, value: any}[] ) {
+  psdrf_data_analysis(id: number, isCarnetToDownload: boolean, isPlanDesArbresToDownload: boolean, parameters: {name: string, text: string, value: any}[], cycle?: number ) {
     const headers = new HttpHeaders({ 'Content-Type': 'application/json', responseType : 'blob'});
   
     let url = `${this.config.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/analysis/`+ id
@@ -52,6 +52,10 @@ export class PsdrfDataService {
     parameters.forEach(param => {
       params= params.append(param.name, param.value.toString());
     })
+    // Cycle auquel arrêter les documents (défaut côté serveur : dernier cycle relevé)
+    if (cycle != null) {
+      params = params.set("cycle", cycle.toString());
+    }
   
     return this._http.get(
       url, 
@@ -257,6 +261,30 @@ export class PsdrfDataService {
     );
   }
 
+
+  getEtatCycles(dispId: number, cycle?: number): Observable<any> {
+    let params = new HttpParams();
+    if (cycle != null) {
+      params = params.set("cycle", cycle.toString());
+    }
+    return this._http.get<any>(
+      `${this.config.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/dispositif/${dispId}/etat_cycles`,
+      { params: params }
+    );
+  }
+
+  getComparaisonStaging(dispId: number): Observable<any> {
+    return this._http.get<any>(
+      `${this.config.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/dispositif/${dispId}/comparaison`
+    );
+  }
+
+  psdrf_liste_download(): Observable<Blob> {
+    return this._http.get(
+      `${this.config.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/psdrfListe`,
+      { responseType: 'blob' }
+    );
+  }
 
   disp_placette_liste_update(file){
     let disp_placette_liste:FormData = new FormData();

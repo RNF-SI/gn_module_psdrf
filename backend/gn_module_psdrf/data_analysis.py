@@ -33,15 +33,19 @@ def data_analysis(
     Returns
     -------
     dict
-        ``{"pdfs": [...], "campagne_dir": Path, "work_dir": Path}`` (cf. run_pipeline).
+        ``{"pdfs": [...], "campagne_dir": Path, "work_dir": Path,
+        "avertissements": [...]}`` (cf. run_pipeline).
     """
     answer_radar = None
+    cycle = None
     if carnetToDownloadParameters:
         answer_radar = carnetToDownloadParameters.get("Answer_Radar")
+        if carnetToDownloadParameters.get("Cycle"):
+            cycle = int(carnetToDownloadParameters["Cycle"])
 
     logger.info(
-        "[DATA_ANALYSIS] disp=%s carnet=%s plan=%s radar=%s",
-        dispId, isCarnetToDownload, isPlanDesArbresToDownload, answer_radar,
+        "[DATA_ANALYSIS] disp=%s carnet=%s plan=%s radar=%s cycle=%s",
+        dispId, isCarnetToDownload, isPlanDesArbresToDownload, answer_radar, cycle,
     )
     return run_psdrf_pipeline(
         int(dispId),
@@ -49,4 +53,5 @@ def data_analysis(
         is_plan=_as_bool(isPlanDesArbresToDownload),
         answer_radar=answer_radar,
         work_token=work_token,
+        cycle=cycle,
     )

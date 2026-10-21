@@ -96,7 +96,8 @@ export interface Orga {
     private psdrfListeFile: any = null;
     private excelFileName: any;
     public isPsdrfListeCharging: any;
-    private psdrfListUploading = false; 
+    private psdrfListUploading = false;
+    public psdrfListDownloading = false;
     private isPSDRFListeLoaded= false;
 
     // Placette file variables
@@ -735,6 +736,33 @@ export interface Orga {
               }
           );
   }
+
+    // Téléchargement du PsdrfListes en place, pour le recopier vers une autre
+    // instance (prod → staging ou local).
+    psdrfListeDownload() {
+      this.psdrfListDownloading = true;
+      this.dataSrv.psdrf_liste_download().subscribe(
+        blob => {
+          this.psdrfListDownloading = false;
+          const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(blob);
+          link.download = `PsdrfListes_${date}.xlsx`;
+          link.click();
+          URL.revokeObjectURL(link.href);
+        },
+        error => {
+          this.psdrfListDownloading = false;
+          const message = error.status === 404
+            ? "Aucun PsdrfListes n'a encore été chargé sur cette instance."
+            : "Le téléchargement de PSDRF liste a échoué.";
+          this._toasterService.error(message, "Téléchargement de PSDRF liste", {
+            closeButton: true,
+            disableTimeOut: true,
+          });
+        }
+      );
+    }
 
     // Placette File Part
     // Add methods for handling Placette file events
