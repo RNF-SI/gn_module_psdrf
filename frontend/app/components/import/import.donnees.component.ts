@@ -82,6 +82,7 @@ export class ImportDonneesComponent  implements OnInit{
   mainStepNameArr: string[] = []; // Tableau des titres des main step(affichés dans les main steps)
   mainStepTextArr: string[] = []; //Tableau des textes d'erreurs pour chaque mainstep
   errorElementArr: PsdrfErrorCoordinates[] = []; //Tableau de toutes les erreurs
+  blockingErrorElementArr: PsdrfErrorCoordinates[] = []; //Sous-ensemble des erreurs bloquantes
   modifiedElementArr: PsdrfErrorCoordinates[] = []; //Tableau des erreurs qui ont été modifiées
   selectedErrorElementArr: PsdrfErrorCoordinates|null; //Erreur qui est actuellement sélectionnée
   deletedElementArr: PsdrfErrorCoordinates[] = [];//Tableau des erreurs supprimées
@@ -411,9 +412,11 @@ export class ImportDonneesComponent  implements OnInit{
               JSON.parse(error.value)
             )
           );
-          this.errorElementArr.push(
-            new PsdrfErrorCoordinates(error.table, error.column, error.row)
-          );
+          const coordinates = new PsdrfErrorCoordinates(error.table, error.column, error.row);
+          this.errorElementArr.push(coordinates);
+          if(mainError.isFatalError){
+            this.blockingErrorElementArr.push(coordinates);
+          }
           error.row!.forEach((idx) => {
             this.totalErrorNumber++;
             if(mainError.isFatalError){
@@ -531,6 +534,31 @@ export class ImportDonneesComponent  implements OnInit{
     } else {
       return false;
     }
+  }
+
+  /**
+   *  Comme checkErrorCell, mais pour les seules erreurs bloquantes
+   */
+  checkBlockingErrorCell(table: string, column: string, i: number): boolean {
+    if (this.isVerificationObjLoaded) {
+      let row = this.getRowIndexFromPaginatorProperties(table, i);
+      return this.blockingErrorElementArr.some(
+        (obj) =>
+          obj.table == table &&
+          obj.column!.includes(column) &&
+          obj.row!.includes(row)
+      );
+    } else {
+      return false;
+    }
+  }
+
+  nbBlockingSteps(): number {
+    return this.errorsPsdrfList.filter((e) => e.isFatalError).length;
+  }
+
+  nbVigilanceSteps(): number {
+    return this.errorsPsdrfList.filter((e) => !e.isFatalError).length;
   }
 
   /**
@@ -856,6 +884,7 @@ export class ImportDonneesComponent  implements OnInit{
     this.errorsPsdrfList = [];
     this.mainStepNameArr = [];
     this.errorElementArr = [];
+    this.blockingErrorElementArr = [];
     this.modifiedElementArr = [];
     this.deletedElementArr = [];
     this.totalErrorNumber = 0;

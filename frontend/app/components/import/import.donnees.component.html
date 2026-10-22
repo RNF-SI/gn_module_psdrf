@@ -92,16 +92,17 @@
           <div *ngIf="!isFileContainingFatalError">
             <button
               *ngIf="!integrationLoading"
-              class="action-button-class"
+              class="action-button-class bouton-integration"
               mat-raised-button
               matTooltip="Intégrer les données à la base de données"
               (click)="integrationToDatabase()"
             >
               <mat-icon> cloud_upload </mat-icon>
+              Intégrer
             </button>
             <button
               *ngIf="integrationLoading"
-              class="action-button-class spinner-button"
+              class="action-button-class bouton-integration spinner-button"
               mat-raised-button
               matTooltip="Intégration des données en cours"
               disabled
@@ -172,6 +173,11 @@
                   *matCellDef="let element; let i = index"
                   [ngClass]="{
                     isError: checkErrorCell('Placettes', columnName, i),
+                    isBlockingError: checkBlockingErrorCell(
+                      'Placettes',
+                      columnName,
+                      i
+                    ),
                     isModifiedError: checkModifiedErrorCell(
                       'Placettes',
                       columnName,
@@ -215,6 +221,11 @@
                   *matCellDef="let element; let i = index"
                   [ngClass]="{
                     isError: checkErrorCell('Cycles', columnName, i),
+                    isBlockingError: checkBlockingErrorCell(
+                      'Cycles',
+                      columnName,
+                      i
+                    ),
                     isModifiedError: checkModifiedErrorCell(
                       'Cycles',
                       columnName,
@@ -259,6 +270,11 @@
                   *matCellDef="let element; let i = index"
                   [ngClass]="{
                     isError: checkErrorCell('Arbres', columnName, i),
+                    isBlockingError: checkBlockingErrorCell(
+                      'Arbres',
+                      columnName,
+                      i
+                    ),
                     isModifiedError: checkModifiedErrorCell(
                       'Arbres',
                       columnName,
@@ -302,6 +318,11 @@
                   *matCellDef="let element; let i = index"
                   [ngClass]="{
                     isError: checkErrorCell('Regeneration', columnName, i),
+                    isBlockingError: checkBlockingErrorCell(
+                      'Regeneration',
+                      columnName,
+                      i
+                    ),
                     isModifiedError: checkModifiedErrorCell(
                       'Regeneration',
                       columnName,
@@ -346,6 +367,11 @@
                   *matCellDef="let element; let i = index"
                   [ngClass]="{
                     isError: checkErrorCell('Transect', columnName, i),
+                    isBlockingError: checkBlockingErrorCell(
+                      'Transect',
+                      columnName,
+                      i
+                    ),
                     isModifiedError: checkModifiedErrorCell(
                       'Transect',
                       columnName,
@@ -389,6 +415,11 @@
                   *matCellDef="let element; let i = index"
                   [ngClass]="{
                     isError: checkErrorCell('BMSsup30', columnName, i),
+                    isBlockingError: checkBlockingErrorCell(
+                      'BMSsup30',
+                      columnName,
+                      i
+                    ),
                     isModifiedError: checkModifiedErrorCell(
                       'BMSsup30',
                       columnName,
@@ -432,6 +463,11 @@
                   *matCellDef="let element; let i = index"
                   [ngClass]="{
                     isError: checkErrorCell('Reperes', columnName, i),
+                    isBlockingError: checkBlockingErrorCell(
+                      'Reperes',
+                      columnName,
+                      i
+                    ),
                     isModifiedError: checkModifiedErrorCell(
                       'Reperes',
                       columnName,
@@ -464,6 +500,20 @@
       </mat-tab-group>
 
       <div *ngIf="isVerificationObjLoaded">
+        <div class="resume-verification">
+          <span class="pastille pastille-bloquant" *ngIf="nbBlockingSteps() > 0">
+            <mat-icon>block</mat-icon>
+            {{ nbBlockingSteps() }} erreur(s) bloquante(s)
+          </span>
+          <span class="pastille pastille-vigilance" *ngIf="nbVigilanceSteps() > 0">
+            <mat-icon>warning</mat-icon>
+            {{ nbVigilanceSteps() }} point(s) de vigilance
+          </span>
+          <span class="resume-consigne" *ngIf="isFileContainingFatalError">
+            Corrigez ou supprimez les erreurs bloquantes, puis relancez la
+            vérification pour pouvoir intégrer les données.
+          </span>
+        </div>
         <div class="stepperPart" #stepperPart>
           <div class="stepper-arrow-icons">
             <button mat-icon-button (click)="paginatorBack()" *ngIf="page > 0">
@@ -485,7 +535,16 @@
                 [completed]="checkMainStepCompleted(mainStepIndex)"
               >
                 <ng-template matStepLabel>
-                  <div>{{ mainStepNameArr[mainStepIndex] }}</div>
+                  <div
+                    [ngClass]="
+                      error.isFatalError ? 'etape-bloquante' : 'etape-vigilance'
+                    "
+                  >
+                    <mat-icon class="etape-icone">{{
+                      error.isFatalError ? "block" : "warning"
+                    }}</mat-icon>
+                    {{ mainStepNameArr[mainStepIndex] }}
+                  </div>
                 </ng-template>
                 <error-main-step
                   *ngIf="mainStepper.selectedIndex == mainStepIndex"
@@ -546,20 +605,32 @@
             </mat-icon>
           </button>
         </div>
-        <mat-progress-bar
-          class="example-margin"
-          [color]="color"
-          mode="determinate"
-          [value]="progressBarValue"
-        >
-        </mat-progress-bar>
-        <mat-progress-bar
-          class="example-margin"
-          [color]="color"
-          mode="determinate"
-          [value]="blockingErrorProgressBarValue"
-        >
-        </mat-progress-bar>
+        <div class="progression" *ngIf="blockingErrorNumber > 0">
+          <span class="progression-libelle libelle-bloquant">
+            Erreurs bloquantes traitées : {{ corrigedBlockingErrorNumber }} /
+            {{ blockingErrorNumber }}
+          </span>
+          <mat-progress-bar
+            class="example-margin barre-bloquant"
+            [color]="color"
+            mode="determinate"
+            [value]="blockingErrorProgressBarValue"
+          >
+          </mat-progress-bar>
+        </div>
+        <div class="progression">
+          <span class="progression-libelle">
+            Ensemble des points traités : {{ corrigedErrorNumber }} /
+            {{ totalErrorNumber }}
+          </span>
+          <mat-progress-bar
+            class="example-margin"
+            [color]="color"
+            mode="determinate"
+            [value]="progressBarValue"
+          >
+          </mat-progress-bar>
+        </div>
       </div>
     </div>
   </div>

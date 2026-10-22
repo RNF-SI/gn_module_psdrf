@@ -22,6 +22,7 @@ import {PsdrfError, PsdrfErrorCoordinates} from '../../../../models/psdrfObject.
     @Input() subStepIndex: number; //Index du subStep 
     @Input() psdrfError: PsdrfError;
     @Input() errorType: any; 
+    @Input() isFatalError: boolean; // Erreur bloquante (vs point de vigilance)
 
     @Output() indexButtonClicked=new EventEmitter<PsdrfErrorCoordinates>();
     @Output() modificationValidated=new EventEmitter<{errorCoordinates: PsdrfErrorCoordinates, newErrorValue: any}>();

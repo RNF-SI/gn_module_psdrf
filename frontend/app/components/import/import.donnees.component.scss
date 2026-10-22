@@ -101,8 +101,16 @@ table {
     justify-content: center;
 }
 
+// Point de vigilance par défaut ; une erreur bloquante prend le dessus.
 .isError {
-    background-color: $error-color;
+    background-color: $vigilance-bg;
+}
+
+.isBlockingError {
+    background-color: $blocking-bg;
+    color: $blocking-color;
+    font-weight: 600;
+    box-shadow: inset 0 0 0 2px $blocking-color;
 }
 
 .isSelectedError {
@@ -124,7 +132,11 @@ table {
 }
 
 ::ng-deep .mat-progress-bar-buffer {
-    background: $error-color;
+    background: $vigilance-bg;
+}
+
+::ng-deep .barre-bloquant .mat-progress-bar-buffer {
+    background: $blocking-bg;
 }
 
 ::ng-deep .mat-progress-bar {
@@ -161,7 +173,12 @@ table {
 }
 
 ::ng-deep.mat-step-icon {
-    background-color: $error-color!important
+    background-color: $vigilance-color!important
+}
+
+// Pastille de l'étape en rouge pour une erreur bloquante (repli : l'icône du libellé).
+::ng-deep .mat-step-header:has(.etape-bloquante) .mat-step-icon:not(.mat-step-icon-state-edit):not(.mat-step-icon-selected) {
+    background-color: $blocking-color!important
 }
 
 ::ng-deep.mat-step-icon-state-edit {
@@ -186,3 +203,84 @@ table {
 ::ng-deep.mat-menu-panel {
     max-width: none !important;
   }
+
+// Bouton d'intégration : l'action finale, distincte des outils d'édition.
+.bouton-integration:not([disabled]) {
+    background-color: $dark-green;
+    color: #fff;
+
+    mat-icon {
+        margin-right: 6px;
+    }
+}
+
+// Résumé de la vérification
+.resume-verification {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    margin: 8px 2rem;
+}
+
+.pastille {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-weight: 600;
+
+    mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+    }
+}
+
+.pastille-bloquant {
+    background-color: $blocking-color;
+    color: #fff;
+}
+
+.pastille-vigilance {
+    background-color: $vigilance-bg;
+    color: $vigilance-color;
+}
+
+.resume-consigne {
+    color: $blocking-color;
+}
+
+// Libellés des étapes
+.etape-icone {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    vertical-align: text-bottom;
+}
+
+.etape-bloquante {
+    color: $blocking-color;
+    font-weight: 600;
+}
+
+.etape-vigilance {
+    color: $vigilance-color;
+}
+
+// Barres de progression
+.progression {
+    margin: 6px 2.5rem;
+}
+
+.progression-libelle {
+    display: block;
+    font-size: 0.85rem;
+    margin-bottom: 2px;
+}
+
+.libelle-bloquant {
+    color: $blocking-color;
+    font-weight: 600;
+}

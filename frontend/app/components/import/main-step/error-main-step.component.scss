@@ -47,9 +47,57 @@
     color: $corrified-color;
 }
 
-.blocking-error-class {
-    font-size: 20px;
+// Bandeau d'en-tête : la nature de l'erreur doit se lire avant le détail.
+.bandeau {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    border-left: 6px solid;
+    border-radius: 4px;
+
+    h4 {
+        margin: 4px 0 0;
+        font-size: 1rem;
+        color: #1a1a18;
+    }
+}
+
+.bandeau-icone {
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.bandeau-titre {
+    font-size: 1.1rem;
     font-weight: 700;
-    color: #353f4a;
-    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.bandeau-consigne {
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.bandeau-bloquant {
+    background-color: $blocking-bg;
+    border-left-color: $blocking-color;
+
+    .bandeau-icone,
+    .bandeau-titre {
+        color: $blocking-color;
+    }
+}
+
+.bandeau-vigilance {
+    background-color: lighten($vigilance-bg, 8%);
+    border-left-color: $vigilance-color;
+
+    .bandeau-icone,
+    .bandeau-titre {
+        color: $vigilance-color;
+    }
 }

@@ -1,6 +1,14 @@
-<div>
-    <div class="blocking-error-class" *ngIf="!step.isFatalError">Point de vigilance:</div>
-    <h4 [innerHTML]="mainStepText"></h4>
+<div class="bandeau" [ngClass]="step.isFatalError ? 'bandeau-bloquant' : 'bandeau-vigilance'">
+    <mat-icon class="bandeau-icone">{{ step.isFatalError ? 'block' : 'warning' }}</mat-icon>
+    <div>
+        <div class="bandeau-titre" *ngIf="step.isFatalError">
+            Erreur bloquante <span class="bandeau-consigne">: à corriger ou supprimer avant de pouvoir intégrer les données</span>
+        </div>
+        <div class="bandeau-titre" *ngIf="!step.isFatalError">
+            Point de vigilance <span class="bandeau-consigne">: à vérifier, n'empêche pas l'intégration</span>
+        </div>
+        <h4 [innerHTML]="mainStepText"></h4>
+    </div>
 </div>
 <div class="alert alert-info" *ngIf="step.errorNumber > 100">Le nombre d'occurence est très élévé pour cette erreur ({{step.errorNumber}} occurences). Pour des questions de rapidité du navigateur, le nombre d'occurences affichées est limité à 100. Veuillez corriger les erreurs affichées puis relancer l'algorithme de vérification.</div>
 <div class="solution" #subStepperContainer>
@@ -20,7 +28,7 @@
                     (modificationValidated)="modifValidation($event)" (deletionValidated)="deleteValidation($event)" 
                     (allRowsModified)="onAllRowsModified($event)" (applyToAllRow)="onAppliedToAllRows($event)"
                     [psdrfError]="error" [subStepIndex]="subStepIndex" [mainStepIndex]="mainStepIndex" 
-                    [errorType]="step.errorType" 
+                    [errorType]="step.errorType" [isFatalError]="step.isFatalError" 
                     >
                 </error-sub-step>
             </mat-step>

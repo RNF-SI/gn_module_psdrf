@@ -5,7 +5,15 @@
 }
 
 .isError {
-    background-color: $error-color;
+    background-color: $vigilance-bg;
+    border-color: $vigilance-color;
+    color: #1a1a18;
+}
+
+.isError.isBlocking {
+    background-color: $blocking-color;
+    border-color: $blocking-color;
+    color: #fff;
 }
 
 .isSelected {
