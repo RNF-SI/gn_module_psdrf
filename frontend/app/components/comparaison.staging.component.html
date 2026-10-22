@@ -1,93 +1,153 @@
-<button
-  class="m-1 float-left action-button-class"
-  mat-raised-button
-  matTooltip="Revenir à la fiche du dispositif"
-  (click)="returnToDispositif()"
->
-  <mat-icon>arrow_back</mat-icon>
-</button>
-<div class="container-fluid">
-  <h2>Placettes relevées : production / staging</h2>
-  <p>
-    Pour chaque cycle, placettes présentes dans une base et pas dans l'autre,
-    ou présentes dans les deux avec une année ou un nombre d'arbres mesurés
-    différents. Les documents (carnet, plan des arbres) sont générés à partir
-    de la production.
-  </p>
+<div class="container-fluid page">
+  <header class="page-header">
+    <button
+      class="action-button-class back-button"
+      mat-raised-button
+      matTooltip="Revenir à la fiche du dispositif"
+      (click)="returnToDispositif()"
+    >
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <div>
+      <h2>Production et staging</h2>
+      <p class="sous-titre">Dispositif n° {{ id }} · placettes relevées, cycle par cycle</p>
+    </div>
+  </header>
 
   <div *ngIf="loading" class="d-flex justify-content-center m-4">
     <mat-spinner diameter="40"></mat-spinner>
   </div>
 
-  <p *ngIf="erreur" class="text-danger">
-    La comparaison n'a pas pu être chargée.
+  <p *ngIf="erreur" class="erreur">
+    La comparaison n'a pas pu être chargée. Rechargez la page ; si le problème
+    persiste, signalez-le.
   </p>
 
   <ng-container *ngIf="!loading && !erreur">
-    <p *ngIf="cycles.length === 0" class="text-muted">
+    <p *ngIf="cycles.length === 0" class="aide">
       Aucun relevé ni en production ni en staging pour ce dispositif.
     </p>
 
-    <mat-checkbox *ngIf="cycles.length > 0" [(ngModel)]="ecartsSeulement">
-      Afficher seulement les écarts
-    </mat-checkbox>
+    <ng-container *ngIf="cycles.length > 0">
+      <section class="bloc synthese">
+        <h3>En résumé</h3>
+        <ul>
+          <li *ngFor="let cycle of cycles">
+            <strong>Cycle {{ cycle.num_cycle }} :</strong> {{ synthese(cycle) }}
+          </li>
+        </ul>
+        <div class="marche" *ngIf="aDesEcarts()">
+          <p>
+            <span class="badge-statut statut-staging_seul">Staging seul</span>
+            Envoyé depuis Dendro3 mais pas encore en production : exportez
+            l'Excel du staging depuis la fiche du dispositif, puis passez-le par
+            « Import de données ».
+          </p>
+          <p>
+            <span class="badge-statut statut-prod_seul">Production seule</span>
+            Pas (encore) synchronisé depuis Dendro3 pour ce cycle.
+          </p>
+          <p>
+            <span class="badge-statut statut-different">Différent</span>
+            Présente des deux côtés avec une année ou un nombre d'arbres
+            différent : vérifier laquelle est à jour avant d'importer.
+          </p>
+        </div>
+      </section>
 
-    <div class="card mt-3" *ngFor="let cycle of cycles">
-      <h3>Cycle {{ cycle.num_cycle }}</h3>
-      <div class="compteurs">
-        <span
-          *ngFor="let statut of statuts"
-          class="badge-statut statut-{{ statut }}"
-        >
-          {{ libelles[statut] }} : {{ cycle.compte[statut] }}
-        </span>
+      <div class="filtres">
+        <div class="pastilles" role="group" aria-label="Statuts affichés">
+          <button
+            *ngFor="let statut of statuts"
+            type="button"
+            class="badge-statut filtre statut-{{ statut }}"
+            [class.inactif]="!statutsAffiches.has(statut)"
+            [attr.aria-pressed]="statutsAffiches.has(statut)"
+            (click)="basculerStatut(statut)"
+          >
+            {{ libelles[statut] }}
+          </button>
+        </div>
+        <input
+          id="recherche-placette"
+          type="search"
+          [(ngModel)]="recherche"
+          placeholder="N° de placette"
+          aria-label="Rechercher une placette"
+        />
+        <label class="tri">
+          <input id="tri-statut" type="checkbox" [(ngModel)]="triParStatut" />
+          Trier par statut
+        </label>
       </div>
 
-      <p *ngIf="ecartsSeulement && nbEcarts(cycle) === 0" class="mt-2 mb-0">
-        Production et staging sont identiques pour ce cycle.
-      </p>
+      <section class="bloc" *ngFor="let cycle of cycles">
+        <div class="bloc-titre">
+          <h3>Cycle {{ cycle.num_cycle }}</h3>
+          <span class="compteurs">
+            <span
+              *ngFor="let statut of statuts"
+              class="badge-statut statut-{{ statut }}"
+              [class.zero]="!cycle.compte[statut]"
+            >
+              {{ libelles[statut] }} : {{ cycle.compte[statut] }}
+            </span>
+          </span>
+        </div>
 
-      <table
-        class="table table-sm mt-2"
-        *ngIf="placettesAffichees(cycle).length > 0"
-      >
-        <thead>
-          <tr>
-            <th rowspan="2">Placette</th>
-            <th rowspan="2">Statut</th>
-            <th colspan="2" class="text-center">Production</th>
-            <th colspan="2" class="text-center">Staging</th>
-          </tr>
-          <tr>
-            <th>Année</th>
-            <th>Arbres</th>
-            <th>Année</th>
-            <th>Arbres</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let pl of placettesAffichees(cycle)">
-            <td>{{ pl.num_placette }}</td>
-            <td>
-              <span class="badge-statut statut-{{ pl.statut }}">
-                {{ libelles[pl.statut] }}
-              </span>
-            </td>
-            <ng-container *ngIf="pl.production; else absent">
-              <td>{{ pl.production.annee ?? "—" }}</td>
-              <td>{{ pl.production.nb_arbres }}</td>
-            </ng-container>
-            <ng-container *ngIf="pl.staging; else absent">
-              <td>{{ pl.staging.annee ?? "—" }}</td>
-              <td>{{ pl.staging.nb_arbres }}</td>
-            </ng-container>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+        <p *ngIf="placettesAffichees(cycle).length === 0" class="aide">
+          Aucune placette pour ces filtres.
+        </p>
+
+        <div class="table-scroll" *ngIf="placettesAffichees(cycle).length > 0">
+          <table class="comparaison">
+            <thead>
+              <tr>
+                <th rowspan="2">Placette</th>
+                <th rowspan="2">Statut</th>
+                <th colspan="2" class="groupe">Production</th>
+                <th colspan="2" class="groupe">Staging</th>
+              </tr>
+              <tr>
+                <th>Année</th>
+                <th>Arbres</th>
+                <th>Année</th>
+                <th>Arbres</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let pl of placettesAffichees(cycle)">
+                <td class="num">{{ pl.num_placette }}</td>
+                <td>
+                  <span class="badge-statut statut-{{ pl.statut }}">
+                    {{ libelles[pl.statut] }}
+                  </span>
+                </td>
+                <ng-container *ngIf="pl.production; else absent">
+                  <td>{{ pl.production.annee ?? "—" }}</td>
+                  <td
+                    [class.ecart]="pl.statut === 'different' && pl.staging && pl.staging.nb_arbres !== pl.production.nb_arbres"
+                  >
+                    {{ pl.production.nb_arbres }}
+                  </td>
+                </ng-container>
+                <ng-container *ngIf="pl.staging; else absent">
+                  <td>{{ pl.staging.annee ?? "—" }}</td>
+                  <td
+                    [class.ecart]="pl.statut === 'different' && pl.production && pl.staging.nb_arbres !== pl.production.nb_arbres"
+                  >
+                    {{ pl.staging.nb_arbres }}
+                  </td>
+                </ng-container>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </ng-container>
   </ng-container>
 </div>
 
 <ng-template #absent>
-  <td colspan="2" class="text-muted">absente</td>
+  <td colspan="2" class="absente">absente</td>
 </ng-template>

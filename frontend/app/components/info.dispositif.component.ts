@@ -25,7 +25,6 @@ export interface Document {
 })
 export class InfoDispositifComponent implements OnInit {
   public dispositif: any;
-  public dispositifStats: any;
   // État des cycles (annoncés / relevés en production / en staging) et
   // avertissements pour le cycle choisi, cf. route /etat_cycles.
   public etatCycles: any;
@@ -33,7 +32,6 @@ export class InfoDispositifComponent implements OnInit {
   public id: number;
   public apiEndPoint: string;
   public placettesEndPoint: string;
-  public allToDownload: boolean = true;
 
   //Boolean du lancement de la génération du rapport d'un dispositif (vrai si requête en cours)
   analysisLoading = false;
@@ -105,13 +103,6 @@ export class InfoDispositifComponent implements OnInit {
           this.mapListService.getData("psdrf/placettes/" + this.id, [
             { param: "limit", value: 20 },
           ]);
-        });
-
-      // Récupérer les statistiques du dispositif
-      this._api
-        .get<any>(`${this.config.API_ENDPOINT}/psdrf/dispositif/${this.id}/stats`)
-        .subscribe((data) => {
-          this.dispositifStats = data;
         });
 
       this.chargerEtatCycles();
@@ -425,31 +416,7 @@ export class InfoDispositifComponent implements OnInit {
 
   importSIG(): void {}
 
-  updateAllToDownload() {
-    this.allToDownload =
-      this.documents.subdocuments != null &&
-      this.documents.subdocuments.every((t) => t.toDownload);
-  }
-
-  someToDownload(): boolean {
-    if (this.documents.subdocuments == null) {
-      return false;
-    }
-    return (
-      this.documents.subdocuments.filter((t) => t.toDownload).length > 0 &&
-      !this.allToDownload
-    );
-  }
-
-  setAll(toDownload: boolean) {
-    this.allToDownload = toDownload;
-    if (this.documents.subdocuments == null) {
-      return;
-    }
-    this.documents.subdocuments.forEach((t) => {
-      if (t.activated) {
-        t.toDownload = toDownload;
-      }
-    });
+  someDocumentSelected(): boolean {
+    return this.documents.subdocuments.some((t) => t.toDownload);
   }
 }

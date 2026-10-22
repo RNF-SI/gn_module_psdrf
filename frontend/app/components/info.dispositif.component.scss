@@ -1,45 +1,162 @@
-:root {
+// Palette du module PSDRF, déclarée sur :host (un :root dans un style de
+// composant n'est pas garanti avec l'encapsulation Angular).
+:host {
     --blue: #598979;
     --lightGreen: #8AAC3E;
-    --teal: #7DAB9C;
     --black: #1a1a18;
+    --muted: #5d6660;
     --beige: #F4F1E4;
+    --line: #e2ddc9;
     --brown: #8B5500;
+    --warn-bg: #f3e4c9; // bois clair
+    display: block;
 }
 
-h2 {
-    color: var(--blue);
+.fiche {
+    padding-top: 12px;
+}
+
+.fiche-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+
+    h2 {
+        margin: 0;
+    }
 }
 
 .dispositif-title {
     color: var(--black);
 }
 
+.sous-titre {
+    margin: 0;
+    color: var(--muted);
+}
+
 p {
     color: var(--black);
 }
 
-.card {
+h3 {
+    color: var(--brown);
+    font-size: 1.15rem;
+    margin: 0;
+}
+
+.panneau {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.bloc {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
     background-color: var(--beige);
     padding: 16px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    margin-bottom: 16px;
 }
 
-h3 {
-    color: var(--brown);
+.bloc-principal {
+    border-top: 4px solid var(--lightGreen);
 }
 
-.staging-alert {
+.bloc-titre {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.aide {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.9rem;
+}
+
+// Tableau des cycles
+.table-scroll {
+    overflow-x: auto;
+}
+
+table.cycles {
+    width: 100%;
+    border-collapse: collapse;
+    font-variant-numeric: tabular-nums;
+
+    th,
+    td {
+        padding: 6px 8px;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+        white-space: nowrap;
+    }
+
+    th {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--muted);
+    }
+
+    .incomplet {
+        color: var(--brown);
+        font-weight: 600;
+    }
+
+    .vide {
+        color: var(--muted);
+        font-style: italic;
+    }
+}
+
+// Choix des documents et du cycle
+.documents {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.options {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-left: 28px;
+}
+
+.choix-cycle {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+
+    label {
+        margin: 0;
+    }
+
+    select {
+        padding: 4px 8px;
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        background: #fff;
+    }
+}
+
+.avertissement {
     display: flex;
     align-items: flex-start;
     gap: 8px;
-    padding: 12px;
-    margin-bottom: 12px;
+    padding: 10px 12px;
     border-left: 4px solid var(--brown);
     border-radius: 4px;
-    background-color: #fff3cd;
+    background-color: var(--warn-bg);
 
     mat-icon {
         color: var(--brown);
@@ -48,53 +165,52 @@ h3 {
 
     p {
         margin: 0;
+        font-size: 0.9rem;
     }
 }
 
-.unactive-text {
-    color: var(--black);
-    opacity: 0.54;
-}
-
-.button-primary {
-    background-color: var(--blue);
-    color: var(--beige);
-}
-
-.spinner-button {
-    align-items: center;
-    justify-content: center;
-    height: 35px;
-    background-color: var(--blue);
-}
-
+// Boutons
 .action-button-class {
-    margin: 4px 8px;
     background-color: var(--lightGreen);
-    color: var(--beige);
+    color: #fff;
 }
 
-.checkbox-section {
-    margin: 12px 0;
+.back-button {
+    min-width: 0;
+    flex-shrink: 0;
 }
 
-.checkbox-margin {
-    margin: 0 12px;
+.bouton-generer {
+    align-self: flex-start;
+
+    mat-spinner {
+        display: inline-block;
+        margin-right: 8px;
+        vertical-align: middle;
+    }
 }
 
-ul {
-    list-style-type: none;
-    margin-top: 4px;
+.bouton-secondaire {
+    color: var(--blue);
+    border-color: var(--blue);
+
+    mat-spinner {
+        display: inline-block;
+        margin-right: 6px;
+        vertical-align: middle;
+    }
 }
 
-button > mat-icon {
+.exports {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+button mat-icon {
+    margin-right: 4px;
+}
+
+.back-button mat-icon {
     margin-right: 0;
-}
-
-.custom-checkbox .mat-checkbox-frame {
-    border-color: var(--lightGreen);
-}
-
-.custom-checkbox .mat-checkbox-background {
-    background-color: var(--lightGreen);
 }

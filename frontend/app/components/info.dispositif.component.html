@@ -1,319 +1,238 @@
-<button
-  class="m-1 float-left action-button-class"
-  mat-raised-button
-  matTooltip="Revenir à la page d'accueil du module"
-  (click)="returnToPreviousPage()"
->
-  <mat-icon>arrow_back</mat-icon>
-</button>
-<div class="container-fluid">
-  <div>
-    <h2 class="dispositif-title">Dispositif : {{ dispositif.name }}</h2>
-    <p>
-      Organisme :
-      {{
-        dispositif.organisme
-          ? dispositif.organisme.nom_organisme
-          : "&lt;inconnu&gt;"
-      }}
-    </p>
-    
-    <!-- Informations sur les données Production/Staging -->
-    <div class="row mt-3" *ngIf="dispositifStats">
-      <div class="col-md-6">
-        <div class="card">
-          <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">Base de données Production</h5>
-          </div>
-          <div class="card-body">
-            <p><strong>Nombre de placettes :</strong> {{ dispositifStats.production.nb_placettes }}</p>
-            <p><strong>Cycles disponibles :</strong> 
-              <span *ngIf="dispositifStats.production.cycles.length > 0">
-                {{ dispositifStats.production.cycles.join(', ') }}
-              </span>
-              <span *ngIf="dispositifStats.production.cycles.length === 0" class="text-muted">
-                Aucun cycle
-              </span>
-            </p>
-            <p><strong>Dernier cycle :</strong> 
-              <span *ngIf="dispositifStats.production.dernier_cycle">
-                Cycle {{ dispositifStats.production.dernier_cycle }}
-              </span>
-              <span *ngIf="!dispositifStats.production.dernier_cycle" class="text-muted">
-                Aucun
-              </span>
-            </p>
-          </div>
-        </div>
-      </div>
-      
-      <div class="col-md-6">
-        <div class="card">
-          <div class="card-header bg-warning">
-            <h5 class="mb-0">Base de données Staging</h5>
-          </div>
-          <div class="card-body">
-            <p><strong>Nombre de placettes :</strong> {{ dispositifStats.staging.nb_placettes }}</p>
-            <p><strong>Cycles disponibles :</strong> 
-              <span *ngIf="dispositifStats.staging.cycles.length > 0">
-                {{ dispositifStats.staging.cycles.join(', ') }}
-              </span>
-              <span *ngIf="dispositifStats.staging.cycles.length === 0" class="text-muted">
-                Aucun cycle
-              </span>
-            </p>
-            <p><strong>Dernier cycle :</strong> 
-              <span *ngIf="dispositifStats.staging.dernier_cycle">
-                Cycle {{ dispositifStats.staging.dernier_cycle }}
-              </span>
-              <span *ngIf="!dispositifStats.staging.dernier_cycle" class="text-muted">
-                Aucun
-              </span>
-            </p>
-          </div>
-        </div>
-      </div>
+<div class="container-fluid fiche">
+  <header class="fiche-header">
+    <button
+      class="action-button-class back-button"
+      mat-raised-button
+      matTooltip="Revenir à la liste des dispositifs"
+      (click)="returnToPreviousPage()"
+    >
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <div>
+      <h2 class="dispositif-title">{{ dispositif.name }}</h2>
+      <p class="sous-titre">
+        Dispositif n° {{ id }} ·
+        {{
+          dispositif.organisme
+            ? dispositif.organisme.nom_organisme
+            : "organisme inconnu"
+        }}
+      </p>
     </div>
-    <div class="mt-2" *ngIf="dispositifStats">
-      <button
-        class="action-button-class"
-        mat-raised-button
-        matTooltip="Voir, cycle par cycle, les placettes relevées dans une base et pas dans l'autre"
-        (click)="goToComparaison()"
-      >
-        <mat-icon>compare_arrows</mat-icon>
-        Comparer production et staging par placette
-      </button>
-    </div>
-  </div>
-  <div class="row" id="map-list-placettes">
-    <div class="col-sm-7">
-      <pnx-map-list idName="id_placette" id="placettes-map-list" height="85vh">
-      </pnx-map-list>
-    </div>
+  </header>
 
-    <div class="col-sm-5">
-      <div class="m-3 justify-content-center card">
-        <h3>Génération du carnet et des figures</h3>
-        <div *ngIf="etatCycles" class="etat-cycles">
-          <p class="mb-1">
-            Données disponibles ({{ etatCycles.nb_placettes }} placettes au
-            dispositif). Les documents sont générés à partir de la production.
-          </p>
-          <table class="table table-sm mb-2">
+  <div class="row">
+    <!-- Sur écran étroit, les actions passent avant la carte (order-*). -->
+    <div class="col-lg-5 order-1 order-lg-2 panneau">
+      <section class="bloc" *ngIf="etatCycles">
+        <div class="bloc-titre">
+          <h3>Données du dispositif</h3>
+          <button
+            *ngIf="aDesDonneesEnStaging()"
+            mat-stroked-button
+            class="bouton-secondaire"
+            (click)="goToComparaison()"
+          >
+            <mat-icon>compare_arrows</mat-icon>
+            Comparer avec le staging
+          </button>
+        </div>
+        <p class="aide">
+          {{ etatCycles.nb_placettes }} placettes. Les documents sont générés
+          à partir des données de production.
+        </p>
+        <div class="table-scroll">
+          <table class="cycles">
             <thead>
               <tr>
                 <th>Cycle</th>
-                <th>Annoncé (PsdrfListes)</th>
-                <th>Relevé en production</th>
-                <th>En staging</th>
+                <th>Annoncé</th>
+                <th>Production</th>
+                <th>Staging</th>
               </tr>
             </thead>
             <tbody>
               <tr *ngFor="let c of etatCycles.cycles">
                 <td>{{ c.num_cycle }}</td>
-                <td>{{ c.annee_annoncee || "non" }}</td>
+                <td>{{ c.annee_annoncee || "—" }}</td>
                 <td>
-                  <span *ngIf="c.nb_placettes_relevees > 0">
+                  <span
+                    *ngIf="c.nb_placettes_relevees > 0"
+                    [class.incomplet]="c.nb_placettes_relevees < etatCycles.nb_placettes"
+                  >
                     {{ c.nb_placettes_relevees }} / {{ etatCycles.nb_placettes }}
-                    placettes
                   </span>
-                  <strong *ngIf="c.nb_placettes_relevees === 0">aucun</strong>
+                  <span *ngIf="c.nb_placettes_relevees === 0" class="vide"
+                    >aucun relevé</span
+                  >
                 </td>
                 <td>{{ c.nb_placettes_staging || "—" }}</td>
               </tr>
             </tbody>
           </table>
-
-          <div *ngIf="etatCycles.cycles_disponibles.length > 0" class="mb-2">
-            <label for="cycle-choisi" class="mr-2">Documents arrêtés au cycle :</label>
-            <select
-              id="cycle-choisi"
-              [(ngModel)]="cycleChoisi"
-              (ngModelChange)="chargerEtatCycles($event)"
-            >
-              <option *ngFor="let n of etatCycles.cycles_disponibles" [ngValue]="n">
-                Cycle {{ n }}{{ n > 1 ? " (données des cycles 1 à " + n + ")" : "" }}
-              </option>
-            </select>
-          </div>
-
-          <div class="staging-alert" *ngFor="let msg of etatCycles.avertissements">
-            <mat-icon>warning</mat-icon>
-            <p>{{ msg }}</p>
-          </div>
-          <p *ngIf="aDesDonneesEnStaging()" class="mb-2">
-            <a href="javascript:void(0)" (click)="goToComparaison()"
-              >Comparer production et staging placette par placette</a
-            >
-          </p>
         </div>
-        <section class="checkbox-section">
-          <span class="checkbox-list-section">
+        <p class="aide" *ngIf="!etatCycles.cycles.length">
+          Aucun cycle n'est encore annoncé ni relevé pour ce dispositif.
+        </p>
+      </section>
+
+      <section class="bloc bloc-principal">
+        <h3>Générer les documents</h3>
+
+        <div class="documents">
+          <div *ngFor="let subdocument of documents.subdocuments" class="document">
             <mat-checkbox
-              class="checkbox-margin custom-checkbox"
-              [checked]="allToDownload"
-              [indeterminate]="someToDownload()"
-              (change)="setAll($event.checked)"
+              [(ngModel)]="subdocument.toDownload"
+              [disabled]="!subdocument.activated"
             >
-              {{ documents.name }}
+              {{ subdocument.name }}
             </mat-checkbox>
-          </span>
-          <span class="checkbox-list-section">
-            <ul>
-              <li *ngFor="let subdocument of documents.subdocuments">
-                <mat-checkbox
-                  class="custom-checkbox"
-                  [(ngModel)]="subdocument.toDownload"
-                  (ngModelChange)="updateAllToDownload()"
-                  [disabled]="!subdocument.activated"
-                >
-                  {{ subdocument.name }}
-                </mat-checkbox>
-                <ul *ngIf="subdocument.toDownload">
-                  <li *ngFor="let parameter of subdocument.documentParameters">
-                    <mat-checkbox
-                      class="custom-checkbox"
-                      [(ngModel)]="parameter.value"
-                    >
-                      {{ parameter.text }}
-                    </mat-checkbox>
-                  </li>
-                </ul>
-              </li>
-            </ul>
-          </span>
-        </section>
-        <div class="text-center">
-          <button
-            *ngIf="!analysisLoading"
-            class="action-button-class"
-            mat-raised-button
-            matTooltip="Générer les éléments sélectionnés"
-            (click)="launchAnalysis()"
-          >
-            <mat-icon>assessment</mat-icon>
-          </button>
-          <button
-            *ngIf="analysisLoading"
-            class="action-button-class spinner-button"
-            mat-raised-button
-            matTooltip="Intégration des données en cours"
-            disabled
-          >
-            <mat-spinner diameter="22" color="primary"></mat-spinner>
-          </button>
-        </div>
-      </div>
-
-      <div class="mt-1 justify-content-center card">
-        <h3>Génération du fichier excel de la base de données production</h3>
-        <div class="col-6">
-          <div class="text-center mt-4">
-            <button
-              *ngIf="!excelProdLoading"
-              class="action-button-class"
-              mat-raised-button
-              matTooltip="Téléchargement des données de production sur Excel"
-              (click)="importExcelData(true)"
+            <div
+              *ngIf="subdocument.toDownload && subdocument.documentParameters.length"
+              class="options"
             >
-              <mat-icon>view_comfy</mat-icon>
-            </button>
-            <button
-              *ngIf="excelProdLoading"
-              class="action-button-class spinner-button"
-              mat-raised-button
-              matTooltip="Intégration des données en cours"
-              disabled
-            >
-              <mat-spinner diameter="22" color="primary"></mat-spinner>
-            </button>
+              <mat-checkbox
+                *ngFor="let parameter of subdocument.documentParameters"
+                [(ngModel)]="parameter.value"
+              >
+                {{ parameter.text }}
+              </mat-checkbox>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="mt-1 justify-content-center card">
-        <h3>Génération du fichier excel de la base de données staging</h3>
-        <div class="col-6">
-          <div class="text-center mt-4">
-            <button
-              *ngIf="!excelStagingLoading"
-              class="action-button-class"
-              mat-raised-button
-              matTooltip="Téléchargement des données de staging sur Excel"
-              (click)="importExcelData(false)"
-            >
-              <mat-icon>view_comfy</mat-icon>
-            </button>
-            <button
-              *ngIf="excelStagingLoading"
-              class="action-button-class spinner-button"
-              mat-raised-button
-              matTooltip="Intégration des données en cours"
-              disabled
-            >
-              <mat-spinner diameter="22" color="primary"></mat-spinner>
-            </button>
-          </div>
+        <div
+          *ngIf="etatCycles && etatCycles.cycles_disponibles.length > 1"
+          class="choix-cycle"
+        >
+          <label for="cycle-choisi">Arrêter les documents au</label>
+          <select
+            id="cycle-choisi"
+            [(ngModel)]="cycleChoisi"
+            (ngModelChange)="chargerEtatCycles($event)"
+          >
+            <option *ngFor="let n of etatCycles.cycles_disponibles" [ngValue]="n">
+              cycle {{ n }}{{ n > 1 ? " (cycles 1 à " + n + ")" : "" }}
+            </option>
+          </select>
         </div>
-      </div>
+        <p
+          *ngIf="etatCycles && etatCycles.cycles_disponibles.length === 1"
+          class="aide"
+        >
+          Documents au cycle {{ etatCycles.cycles_disponibles[0] }}, seul cycle
+          relevé en production.
+        </p>
 
-      <h3>Placettes</h3>
+        <div class="avertissement" *ngFor="let msg of etatCycles?.avertissements">
+          <mat-icon>warning</mat-icon>
+          <p>{{ msg }}</p>
+        </div>
 
-      <ngx-datatable
-        #table
-        class="material striped margin-top-xs table-size expandable"
-        [rows]="mapListService.tableData"
-        [columns]="mapListService.displayColumns"
-        [loadingIndicator]="mapListService.isLoading"
-        [columnMode]="'force'"
-        [headerHeight]="35"
-        [footerHeight]="40"
-        [rowHeight]="40"
-        [draggable]="false"
-        [selected]="mapListService.selectedRow"
-        [externalPaging]="true"
-        [scrollbarH]="false"
-        [selectionType]="'single'"
-        [count]="mapListService.page.totalElements"
-        [offset]="mapListService.page.pageNumber"
-        [limit]="mapListService.page.size"
-        [rowClass]="mapListService.getRowClass"
-        [messages]=""
-        (page)="mapListService.setTablePage($event, placettesEndPoint)"
-        (select)="onRowSelect($event)"
-      >
-        <!-- ACTION COLUMNS -->
-        <ngx-datatable-column maxWidth="10">
-          <ng-template let-row="row" ngx-datatable-cell-template>
-            <button
-              class="btn btn-outline-shadow btn-no-padding btn-ghost"
-              [disabled]="!row.rights.R"
-              (click)="onDetailPlacette(row[mapListService.idName])"
-            >
-              <i
-                [ngClass]="{ disabled: !row.rights.R }"
-                matTooltip="{{ 'Placette.Info' | translate }} {{
-                  row[mapListService.idName]
-                }}"
-                class="fa fa-info-circle"
-                aria-hidden="true"
-              ></i>
-            </button>
-          </ng-template>
+        <button
+          mat-raised-button
+          class="action-button-class bouton-generer"
+          [disabled]="analysisLoading || !someDocumentSelected()"
+          (click)="launchAnalysis()"
+        >
+          <mat-spinner *ngIf="analysisLoading" diameter="20"></mat-spinner>
+          <mat-icon *ngIf="!analysisLoading">picture_as_pdf</mat-icon>
+          {{ analysisLoading ? "Génération en cours…" : "Générer" }}
+        </button>
+        <p class="aide" *ngIf="analysisLoading">
+          Cela peut prendre plusieurs minutes ; le fichier se télécharge à la fin.
+        </p>
+      </section>
+
+      <section class="bloc">
+        <h3>Exporter les données (Excel)</h3>
+        <div class="exports">
+          <button
+            mat-stroked-button
+            class="bouton-secondaire"
+            [disabled]="excelProdLoading"
+            matTooltip="Données validées, utilisées pour les documents"
+            (click)="importExcelData(true)"
+          >
+            <mat-spinner *ngIf="excelProdLoading" diameter="18"></mat-spinner>
+            <mat-icon *ngIf="!excelProdLoading">file_download</mat-icon>
+            Production
+          </button>
+          <button
+            mat-stroked-button
+            class="bouton-secondaire"
+            [disabled]="excelStagingLoading"
+            matTooltip="Données envoyées depuis Dendro3, pas encore importées"
+            (click)="importExcelData(false)"
+          >
+            <mat-spinner *ngIf="excelStagingLoading" diameter="18"></mat-spinner>
+            <mat-icon *ngIf="!excelStagingLoading">file_download</mat-icon>
+            Staging
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <div class="col-lg-7 order-2 order-lg-1">
+      <pnx-map-list idName="id_placette" id="placettes-map-list" height="85vh">
+      </pnx-map-list>
+
+      <h3 class="mt-3">Placettes</h3>
+
+    <ngx-datatable
+      #table
+      class="material striped margin-top-xs table-size expandable"
+      [rows]="mapListService.tableData"
+      [columns]="mapListService.displayColumns"
+      [loadingIndicator]="mapListService.isLoading"
+      [columnMode]="'force'"
+      [headerHeight]="35"
+      [footerHeight]="40"
+      [rowHeight]="40"
+      [draggable]="false"
+      [selected]="mapListService.selectedRow"
+      [externalPaging]="true"
+      [scrollbarH]="false"
+      [selectionType]="'single'"
+      [count]="mapListService.page.totalElements"
+      [offset]="mapListService.page.pageNumber"
+      [limit]="mapListService.page.size"
+      [rowClass]="mapListService.getRowClass"
+      [messages]=""
+      (page)="mapListService.setTablePage($event, placettesEndPoint)"
+      (select)="onRowSelect($event)"
+    >
+      <!-- ACTION COLUMNS -->
+      <ngx-datatable-column maxWidth="10">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <button
+            class="btn btn-outline-shadow btn-no-padding btn-ghost"
+            [disabled]="!row.rights.R"
+            (click)="onDetailPlacette(row[mapListService.idName])"
+          >
+            <i
+              [ngClass]="{ disabled: !row.rights.R }"
+              matTooltip="{{ 'Placette.Info' | translate }} {{
+                row[mapListService.idName]
+              }}"
+              class="fa fa-info-circle"
+              aria-hidden="true"
+            ></i>
+          </button>
+        </ng-template>
+      </ngx-datatable-column>
+
+      <!-- DATA COLUMNS -->
+      <span *ngFor="let col of mapListService.displayColumns">
+        <ngx-datatable-column [name]="col.name" [prop]="col.prop">
         </ngx-datatable-column>
-
-        <!-- DATA COLUMNS -->
-        <span *ngFor="let col of mapListService.displayColumns">
-          <ngx-datatable-column [name]="col.name" [prop]="col.prop">
-          </ngx-datatable-column>
-        </span>
-        <ngx-datatable-column name="code habitat">
-          <ng-template let-row="row" ngx-datatable-cell-template>
-            {{ row.habitat }} ({{ row.ref_habitat }})
-          </ng-template>
-        </ngx-datatable-column>
-      </ngx-datatable>
+      </span>
+      <ngx-datatable-column name="code habitat">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row.habitat }} ({{ row.ref_habitat }})
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
     </div>
   </div>
 </div>

@@ -1,54 +1,238 @@
-:root {
+// Même palette et mêmes blocs que la fiche dispositif (info.dispositif).
+:host {
     --blue: #598979;
-    --brown: #8B5500;
+    --lightGreen: #8AAC3E;
+    --black: #1a1a18;
+    --muted: #5d6660;
     --beige: #F4F1E4;
+    --line: #e2ddc9;
+    --brown: #8B5500;
+    // Statuts dans les tons du PSDRF : feuillage, forêt, bois mort, bois sec.
+    --staging-bg: #e4eecb;
+    --staging-fg: #46590f;
+    --prod-bg: #d9e6e0;
+    --prod-fg: #2c5547;
+    --different-bg: #f0d9c2;
+    --different-fg: #7a3b0c;
+    --identique-bg: #ebe5d0;
+    --identique-fg: #5b5643;
+    display: block;
 }
 
-h2 {
-    color: var(--blue);
+.page {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding-top: 12px;
+    padding-bottom: 24px;
+}
+
+.page-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    h2 {
+        margin: 0;
+        color: var(--black);
+    }
+}
+
+.sous-titre,
+.aide {
+    margin: 0;
+    color: var(--muted);
+}
+
+.erreur {
+    color: var(--different-fg);
 }
 
 h3 {
     color: var(--brown);
+    font-size: 1.15rem;
+    margin: 0;
 }
 
-.card {
+.bloc {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
     background-color: var(--beige);
     padding: 16px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.compteurs {
+.bloc-titre {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
     gap: 8px;
 }
 
+.synthese {
+    border-top: 4px solid var(--lightGreen);
+
+    ul {
+        margin: 0;
+        padding-left: 1.2rem;
+    }
+
+    p {
+        margin: 0;
+    }
+}
+
+.marche {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-top: 8px;
+    border-top: 1px solid var(--line);
+    font-size: 0.9rem;
+}
+
+// Filtres
+.filtres {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+
+    input[type="search"] {
+        padding: 4px 8px;
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        min-width: 0;
+        width: 12rem;
+        max-width: 100%;
+    }
+}
+
+.pastilles,
+.compteurs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.tri {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+}
+
+// Statuts
 .badge-statut {
     display: inline-block;
     padding: 2px 8px;
     border-radius: 4px;
-    font-size: 0.9em;
+    font-size: 0.85rem;
     white-space: nowrap;
+    border: 1px solid transparent;
+}
+
+.filtre {
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.85rem;
+
+    &.inactif {
+        background-color: transparent;
+        border-color: var(--line);
+        color: var(--muted);
+        text-decoration: line-through;
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--blue);
+        outline-offset: 2px;
+    }
+}
+
+.zero {
+    opacity: 0.5;
 }
 
 .statut-staging_seul {
-    background-color: #fff3cd;
-    color: #664d03;
+    background-color: var(--staging-bg);
+    color: var(--staging-fg);
 }
 
 .statut-prod_seul {
-    background-color: #cfe2ff;
-    color: #084298;
+    background-color: var(--prod-bg);
+    color: var(--prod-fg);
 }
 
 .statut-different {
-    background-color: #f8d7da;
-    color: #842029;
+    background-color: var(--different-bg);
+    color: var(--different-fg);
 }
 
 .statut-identique {
-    background-color: #d1e7dd;
-    color: #0f5132;
+    background-color: var(--identique-bg);
+    color: var(--identique-fg);
+}
+
+// Tableau
+.table-scroll {
+    overflow-x: auto;
+}
+
+table.comparaison {
+    width: 100%;
+    border-collapse: collapse;
+    font-variant-numeric: tabular-nums;
+
+    th,
+    td {
+        padding: 6px 10px;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+        white-space: nowrap;
+    }
+
+    th {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--muted);
+    }
+
+    .groupe {
+        text-align: center;
+        border-left: 1px solid var(--line);
+    }
+
+    .num {
+        font-weight: 600;
+    }
+
+    .ecart {
+        color: var(--different-fg);
+        font-weight: 600;
+    }
+
+    .absente {
+        color: var(--muted);
+        font-style: italic;
+    }
+}
+
+// Boutons
+.action-button-class {
+    background-color: var(--lightGreen);
+    color: #fff;
+}
+
+.back-button {
+    min-width: 0;
+    flex-shrink: 0;
+
+    mat-icon {
+        margin-right: 0;
+    }
 }
