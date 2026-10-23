@@ -34,12 +34,14 @@
             (click)="goToComparaison()"
           >
             <mat-icon>compare_arrows</mat-icon>
-            Comparer avec le staging
+            Comparer avec le staging-terrain
           </button>
         </div>
         <p class="aide">
           {{ etatCycles.nb_placettes }} placettes. Les documents sont générés
-          à partir des données de production.
+          à partir des données de production (validées par l'import).
+          Le staging-terrain contient les relevés envoyés depuis Dendro3,
+          pas encore importés.
         </p>
         <div class="table-scroll">
           <table class="cycles">
@@ -48,7 +50,7 @@
                 <th>Cycle</th>
                 <th>Annoncé</th>
                 <th>Production</th>
-                <th>Staging</th>
+                <th>Staging-terrain</th>
               </tr>
             </thead>
             <tbody>
@@ -167,7 +169,7 @@
           >
             <mat-spinner *ngIf="excelStagingLoading" diameter="18"></mat-spinner>
             <mat-icon *ngIf="!excelStagingLoading">file_download</mat-icon>
-            Staging
+            Staging-terrain
           </button>
         </div>
       </section>

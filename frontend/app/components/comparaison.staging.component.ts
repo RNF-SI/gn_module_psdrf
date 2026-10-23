@@ -39,7 +39,7 @@ export class ComparaisonStagingComponent implements OnInit {
   public erreur = false;
 
   public libelles: { [statut in StatutPlacette]: string } = {
-    staging_seul: "Staging seul",
+    staging_seul: "Staging-terrain seul",
     prod_seul: "Production seule",
     different: "Différent",
     identique: "Identique",
@@ -116,11 +116,11 @@ export class ComparaisonStagingComponent implements OnInit {
   synthese(cycle: CycleCompare): string {
     const c = cycle.compte;
     if (this.nbEcarts(cycle) === 0) {
-      return `${c.identique} placettes identiques en production et en staging.`;
+      return `${c.identique} placettes identiques en production et en staging-terrain.`;
     }
     const parties = [];
     if (c.staging_seul) {
-      parties.push(`${c.staging_seul} en staging à importer`);
+      parties.push(`${c.staging_seul} en staging-terrain à importer`);
     }
     if (c.different) {
       parties.push(`${c.different} différente(s)`);

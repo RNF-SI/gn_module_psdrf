@@ -363,7 +363,7 @@ export class InfoDispositifComponent implements OnInit {
             this.excelStagingLoading = false;
             this._toasterService.success(
               "Le fichier excel a bien été généré.",
-              "Génération du fichier excel de staging"
+              "Génération du fichier excel du staging-terrain"
             );
           },
           (error) => {

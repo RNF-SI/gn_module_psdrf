@@ -9,8 +9,12 @@
       <mat-icon>arrow_back</mat-icon>
     </button>
     <div>
-      <h2>Production et staging</h2>
+      <h2>Production et staging-terrain</h2>
       <p class="sous-titre">Dispositif n° {{ id }} · placettes relevées, cycle par cycle</p>
+      <p class="sous-titre">
+        Staging-terrain : relevés envoyés depuis Dendro3, pas encore importés.
+        Production : données validées par l'import, utilisées pour les documents.
+      </p>
     </div>
   </header>
 
@@ -25,7 +29,7 @@
 
   <ng-container *ngIf="!loading && !erreur">
     <p *ngIf="cycles.length === 0" class="aide">
-      Aucun relevé ni en production ni en staging pour ce dispositif.
+      Aucun relevé ni en production ni en staging-terrain pour ce dispositif.
     </p>
 
     <ng-container *ngIf="cycles.length > 0">
@@ -38,9 +42,9 @@
         </ul>
         <div class="marche" *ngIf="aDesEcarts()">
           <p>
-            <span class="badge-statut statut-staging_seul">Staging seul</span>
+            <span class="badge-statut statut-staging_seul">Staging-terrain seul</span>
             Envoyé depuis Dendro3 mais pas encore en production : exportez
-            l'Excel du staging depuis la fiche du dispositif, puis passez-le par
+            l'Excel du staging-terrain depuis la fiche du dispositif, puis passez-le par
             « Import de données ».
           </p>
           <p>
@@ -106,7 +110,7 @@
                 <th rowspan="2">Placette</th>
                 <th rowspan="2">Statut</th>
                 <th colspan="2" class="groupe">Production</th>
-                <th colspan="2" class="groupe">Staging</th>
+                <th colspan="2" class="groupe">Staging-terrain</th>
               </tr>
               <tr>
                 <th>Année</th>

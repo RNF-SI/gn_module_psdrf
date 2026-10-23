@@ -112,7 +112,7 @@ def avertissements(etat: dict, cycle: Optional[int]) -> list[str]:
             if c.get("nb_placettes_staging"):
                 msg += (
                     f" {c['nb_placettes_staging']} placette(s) de ce cycle sont en "
-                    "staging : elles doivent être importées en production pour être "
+                    "staging-terrain (envoyées depuis Dendro3) : elles doivent être importées en production pour être "
                     "prises en compte."
                 )
             messages.append(msg)
