@@ -27,6 +27,9 @@ Contexte préchargé :
    Regroupe tes questions en UN appel AskUserQuestion (cherche d'abord dans le
    code, `~/dendro3` et la doc du sous-module PermPSDRF4py).
 
+   RÉTROCOMPATIBILITÉ DENDRO3 (cf. /fix-issue, étape 2) : vérifiée pour chaque
+   issue qui touche une route ou une tâche appelée par l'appli.
+
 4. Pour CHAQUE issue A/B, en boucle :
    a. Plan en une ligne si non trivial.
    b. Bac A : script de vérification (scratchpad) écrit AVANT la correction,

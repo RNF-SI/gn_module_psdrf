@@ -42,6 +42,10 @@ Procédure :
    qu'ils ne disent pas.
    - Bac C : ne corrige pas avant mes réponses. Ambiguïté levée → reclasse A/B.
      Sinon → commente tes questions sur l'issue, pose `needs: discussion`, ARRÊTE.
+   - RÉTROCOMPATIBILITÉ DENDRO3 : des APK anciennes restent en circulation.
+     Routes appelées par l'appli (URL, requête, réponse) inchangées ; tout
+     champ nouveau du payload est optionnel (absent → null, jamais d'erreur).
+     Vérifie qu'un payload d'ancienne APK passe et dis-le dans le commentaire.
    - La correction relève de Dendro3 ou de PermPSDRF4py → ne modifie pas ce
      dépôt-là : propose une issue sur `RNF-SI/dendro3` / `RNF-SI/PermPSDRF4py`.
 
