@@ -11,6 +11,64 @@
 </button>
 <div class="container-fluid p-2">
   <mat-card>
+    <div class="titre-remontees">
+      <mat-card-title>Dernières remontées Dendro3</mat-card-title>
+      <button
+        mat-stroked-button
+        matTooltip="Recharger le journal"
+        [disabled]="dendro3ExportsLoading"
+        (click)="chargerExportsDendro3()"
+      >
+        <mat-icon>refresh</mat-icon>
+        Actualiser
+      </button>
+    </div>
+    <p class="aide-remontees">
+      Chaque export lancé depuis l'application Dendro3 arrive dans le
+      staging-terrain. Un export « Réussi » est bien arrivé : ses placettes
+      restent à importer en production depuis la fiche du dispositif.
+    </p>
+    <div class="table-remontees">
+      <table *ngIf="dendro3Exports.length">
+        <thead>
+          <tr>
+            <th>Reçu le</th>
+            <th>Dispositif</th>
+            <th>Statut</th>
+            <th>Placettes modifiées</th>
+            <th>Modifications</th>
+            <th>Appareil</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let e of dendro3Exports">
+            <td>{{ e.recu_le | date: "dd/MM/yyyy HH:mm" }}</td>
+            <td>
+              <a href="javascript:void(0)" (click)="goToDispositif(e.id_dispositif)">
+                {{ e.nom_dispositif || "Dispositif" }} (n° {{ e.id_dispositif }})
+              </a>
+            </td>
+            <td>
+              <span [ngClass]="'statut-' + e.statut">
+                {{ libelleStatutExport(e.statut) }}
+              </span>
+              <div *ngIf="e.message" class="message-export">{{ e.message }}</div>
+            </td>
+            <td>{{ resumePlacettes(e) }}</td>
+            <td>{{ e.statut === "succes" ? totalModifications(e) : "—" }}</td>
+            <td>{{ e.device || "—" }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <p *ngIf="!dendro3Exports.length && !dendro3ExportsLoading" class="aide-remontees">
+        Aucun export Dendro3 reçu depuis la mise en place du journal.
+      </p>
+    </div>
+  </mat-card>
+</div>
+
+<div class="container-fluid p-2">
+  <mat-card>
     <mat-card-title>Table des Utilisateurs</mat-card-title>
     <mat-drawer-container class="p-5" autosize>
       <mat-drawer

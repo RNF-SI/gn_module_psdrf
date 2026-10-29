@@ -10,6 +10,7 @@ import { MatDialog } from "@angular/material/dialog";
 import { ConfirmationDialog } from "@geonature_common/others/modal-confirmation/confirmation.dialog";
 import { Observable } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
+import { libelleStatutExport, resumePlacettes, totalModifications } from '../dendro3-exports.utils';
 
 
 export interface UserDisp {
@@ -109,6 +110,13 @@ export interface Orga {
     // Variable servant à update ou nom les données des codes ecologie lors de l'update de psdrfListe
     updateCodeEcologie: boolean = false;
 
+    // Dernières remontées Dendro3 (journal des exports, cf. route /dendro3/exports)
+    public dendro3Exports: any[] = [];
+    public dendro3ExportsLoading: boolean = false;
+    public libelleStatutExport = libelleStatutExport;
+    public totalModifications = totalModifications;
+    public resumePlacettes = resumePlacettes;
+
     public disableSubmit = false;
     public disableSubmitUserDisp = false;
     public disableSubmitOrganisme = false;
@@ -136,6 +144,7 @@ export interface Orga {
         this.getDispositifList();
         this.getOrganismeList();
         this.getUserDisps();
+        this.chargerExportsDendro3();
 
         this.createForm();
         this.createUserDispForm();
@@ -151,6 +160,24 @@ export interface Orga {
    */
     returnToPreviousPage(): void {
         this._router.navigate(["psdrf"]);
+    }
+
+    chargerExportsDendro3(): void {
+        this.dendro3ExportsLoading = true;
+        this.dataSrv.getDendro3Exports(50).subscribe(
+            (exports) => {
+                this.dendro3Exports = exports;
+                this.dendro3ExportsLoading = false;
+            },
+            () => {
+                this.dendro3ExportsLoading = false;
+                this._toasterService.error("Impossible de charger les remontées Dendro3", "Erreur");
+            }
+        );
+    }
+
+    goToDispositif(idDispositif: number): void {
+        this._router.navigate(["psdrf/infodispositif", idDispositif]);
     }
 
     createForm() {

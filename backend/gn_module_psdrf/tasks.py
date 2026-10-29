@@ -26,6 +26,7 @@ from .schemas.dispositifs import DispositifSchema
 from .staging_schemas.dispositifs import DispositifStagingSchema
 from .pr_psdrf_staging_functions.models_staging import TDispositifsStaging
 from .helpers.count_updates_and_creation import count_updates_and_creations
+from .dendro3_exports import clore_export
 
 from .pr_psdrf_staging_functions.insert_or_update_functions.insert_or_update_dispositif import insert_or_update_dispositif
 from .pr_psdrf_staging_functions.insert_or_update_functions.insert_or_update_placette import insert_or_update_placette
@@ -202,15 +203,27 @@ def insert_or_update_data(self, data):
                 'counts_transect': counts_transect,
             }
         )
+        clore_export(self.request.id, 'succes', compteurs={
+            'counts_arbre': counts_arbre,
+            'counts_arbre_mesure': counts_arbre_mesure,
+            'counts_bm': counts_bm,
+            'counts_bm_mesure': counts_bm_mesure,
+            'counts_repere': counts_repere,
+            'counts_cor_cycle_placette': counts_cor_cycle_placette,
+            'counts_regeneration': counts_regeneration,
+            'counts_transect': counts_transect,
+        })
 
     except SoftTimeLimitExceeded as e:
         logger.exception("Soft time limit exceeded for task id %s", self.request.id)
         session.rollback()
+        clore_export(self.request.id, 'echec', message="Temps limite dépassé")
         self.update_state(state='FAILURE', meta={'exc_type': str(type(e).__name__), 'exc_message': str(e)})
         raise e
     except Exception as e:
         logger.exception("Error in insert_or_update_data: %s", str(e))
         session.rollback()
+        clore_export(self.request.id, 'echec', message=f"{type(e).__name__} : {e}")
         self.update_state(state='FAILURE', meta={'exc_type': str(type(e).__name__), 'exc_message': str(e)})
         raise e
     finally:

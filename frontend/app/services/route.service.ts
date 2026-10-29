@@ -273,6 +273,15 @@ export class PsdrfDataService {
     );
   }
 
+  /** Derniers exports reçus depuis Dendro3, tous dispositifs confondus. */
+  getDendro3Exports(limit: number = 50): Observable<any[]> {
+    const params = new HttpParams().set("limit", limit.toString());
+    return this._http.get<any[]>(
+      `${this.config.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/dendro3/exports`,
+      { params: params }
+    );
+  }
+
   getComparaisonStaging(dispId: number): Observable<any> {
     return this._http.get<any>(
       `${this.config.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/dispositif/${dispId}/comparaison`

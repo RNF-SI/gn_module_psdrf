@@ -10,6 +10,7 @@ from shapely.geometry import shape as to_shape
 from shapely.geometry import mapping as from_shape
 import json
 import time
+import uuid
 import logging
 import os
 from datetime import datetime
@@ -33,6 +34,7 @@ from .disp_placette_liste import disp_placette_liste_add
 # from .pr_psdrf_staging_functions.insert_or_update_disp_to_staging import insert_or_update_data
 from .bddToExcel import bddToExcel
 from .psdrf_py.etat_cycles import avertissements, etat_cycles
+from .dendro3_exports import ouvrir_export, derniers_exports
 from .schemas.cycles import ConciseCycleSchema
 from .schemas.essences import EssenceSchema
 from .tasks import test_celery, insert_or_update_data, fetch_dispositif_data, fetch_updated_data
@@ -931,10 +933,11 @@ def export_dispositif():
         # Handle any errors that occur while saving the JSON file
         return {"success": False, "message": f"Failed to save JSON data: {str(e)}"}, 500
 
-    print('celery task before')
-    task = insert_or_update_data.delay(data)
-    print('celery task after')
-    print(task.id)
+    # Identifiant de tâche fixé avant l'envoi : la ligne de journal existe
+    # avant que le worker ne puisse la clore.
+    task_id = str(uuid.uuid4())
+    ouvrir_export(data, task_id)
+    task = insert_or_update_data.apply_async(args=[data], task_id=task_id)
 
     return jsonify({'task_id': task.id}), 202
 
@@ -969,6 +972,15 @@ def save_json_data_for_debugging(data):
 
     except Exception as e:
         print(f"Failed to save JSON data for debugging: {e}")
+
+@blueprint.route('/dendro3/exports', methods=['GET'])
+@json_resp
+def get_dendro3_exports():
+    """Derniers exports reçus depuis Dendro3, tous dispositifs confondus
+    (page admin). ``?limit=`` (défaut 50, max 500)."""
+    limit = min(request.args.get('limit', 50, type=int), 500)
+    return derniers_exports(limit)
+
 
 @blueprint.route('/export_dispositif_from_dendro3/status/<task_id>', methods=['GET'])
 def get_export_task_status(task_id):
