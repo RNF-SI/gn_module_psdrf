@@ -33,7 +33,7 @@ def data_analysis(
     Returns
     -------
     dict
-        ``{"pdfs": [...], "campagne_dir": Path, "work_dir": Path,
+        ``{"pdfs": [...], "figures": [...], "campagne_dir": Path, "work_dir": Path,
         "avertissements": [...]}`` (cf. run_pipeline).
     """
     answer_radar = None

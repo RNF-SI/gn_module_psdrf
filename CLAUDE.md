@@ -126,7 +126,7 @@ Excel utilisateur ──► /validation (data_verification.py)
   - `carnet_tables.py` : liste figée des 97 tables `psdrfPla*` nécessaires à un carnet complet.
   - `etat_cycles.py` : état par cycle (annoncé dans PsdrfListes / relevé en prod / en staging) et textes d'avertissement (cycle annoncé sans données, cycle incomplet). Partagé par la route `/dispositif/<id>/etat_cycles` (aperçu avant lancement) et la génération, qui s'arrête au cycle choisi (`?cycle=`, défaut : dernier cycle **relevé**, pas le dernier annoncé).
 - **`PermPSDRF4py/`** — **Sous-module git** : le pipeline Python autonome (calculs, agrégation, carnet/plans). Consommé en lecture seule via `psdrf_py`.
-- **`tasks.py`** — Tâches Celery (`test_celery` = génération carnet/plan async puis ZIP des PDF sous `PSDRF_EXPORT_DIR/zip` + purge du dossier de travail ; `fetch_dispositif_data`, `fetch_updated_data`, `insert_or_update_data`).
+- **`tasks.py`** — Tâches Celery (`test_celery` = génération carnet/plan async puis ZIP des PDF (+ figures PNG du carnet sous `figures/`) sous `PSDRF_EXPORT_DIR/zip` + purge du dossier de travail ; `fetch_dispositif_data`, `fetch_updated_data`, `insert_or_update_data`).
 - **`migrations/`** — Migrations Alembic spécifiques au module (création schéma, switch UUID, ajout colonnes cycles).
 
 ### Génération du carnet (chemin critique)
@@ -134,7 +134,7 @@ Excel utilisateur ──► /validation (data_verification.py)
 `/analysis/<id>` → Celery `test_celery` → `data_analysis()` → `run_psdrf_pipeline()` :
 1. `db_to_campagne.build_campagne_from_db()` interroge `pr_psdrf` et écrit, dans un dossier campagne temporaire sous `PSDRF_EXPORT_DIR`, les pickles d'entrée (`psdrfDonneesBrutes.pkl` depuis la BDD, `psdrfCodes.pkl` depuis PsdrfListes/`PSDRF_DATA_DIR`).
 2. Les étapes du sous-module s'enchaînent sur ce dossier (`rep_psdrf == rep_sav == campagne`), produisant les pickles intermédiaires puis le `.tex` compilé en PDF par **pdflatex** (figures matplotlib).
-3. Les PDF sont zippés ; le dossier de travail est purgé.
+3. Les PDF et les figures du carnet (`figures/…png`, listées par `run_pipeline`) sont zippés ; le dossier de travail est purgé.
 
 Référentiels (`codes`) : décision projet = source **PsdrfListes** (comme l'ancien `psdrf_Codes.R`), gérée à l'upload `/psdrfListe` → `psdrf_codes()` écrit `psdrfCodes.pkl` dans `PSDRF_DATA_DIR/tables/`.
 

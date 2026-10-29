@@ -97,6 +97,11 @@ def test_celery(self, id_dispositif, isCarnetToDownload, isPlanDesArbresToDownlo
                         zf.write(pdf_path, os.path.basename(pdf_path))
                         files_added += 1
                         logger.info(f"[TASK] Adding file to zip: {os.path.basename(pdf_path)}")
+                # Figures du carnet, sous figures/ en gardant les sous-dossiers.
+                figures_dir = result.get("figures_dir")
+                for figure in result.get("figures", []):
+                    zf.write(str(figure), str(Path("figures") / Path(figure).relative_to(figures_dir)))
+                    files_added += 1
 
             logger.info(f"[TASK] Zip created with {files_added} files")
             os.chmod(temp_file.name, 0o777)

@@ -65,9 +65,11 @@ def run_psdrf_pipeline(
     Returns
     -------
     dict
-        ``{"pdfs": [Path, ...], "campagne_dir": Path, "work_dir": Path,
-        "avertissements": [str, ...]}``. ``work_dir`` est le dossier temporaire
-        à purger après archivage. ``cycle`` arrête les documents à ce cycle
+        ``{"pdfs": [Path, ...], "figures": [Path, ...], "figures_dir": Path | None,
+        "campagne_dir": Path, "work_dir": Path, "avertissements": [str, ...]}``.
+        ``figures`` liste les images du carnet (sous ``figures_dir``), à livrer
+        avec le PDF. ``work_dir`` est le dossier temporaire à purger après
+        archivage. ``cycle`` arrête les documents à ce cycle
         (défaut : dernier cycle ayant des relevés).
     """
     data_dir, export_dir = _config_dirs()
@@ -93,6 +95,8 @@ def run_psdrf_pipeline(
     )
     camp = refs.campagne_dir
     pdfs: list[Path] = []
+    figures: list[Path] = []
+    figures_dir: Optional[Path] = None
 
     if is_carnet:
         psdrf_calculs(camp, rep_sav=camp, disp_list=[disp_id], last_cycle=refs.last_cycle)
@@ -129,6 +133,10 @@ def run_psdrf_pipeline(
             pdfs.append(pdf_carnet)
         else:
             logger.error("[PSDRF] Carnet non produit (pdflatex) : %s", pdf_carnet)
+        # Figures matplotlib du carnet (cf. PermPSDRF4py template/carnet/context.py).
+        figures_dir = camp / "carnet" / "figures"
+        if figures_dir.is_dir():
+            figures = sorted(f for f in figures_dir.rglob("*.png") if f.is_file())
 
     if is_plan:
         plan_pdfs = psdrf_edit_plans_arbres(
@@ -141,6 +149,8 @@ def run_psdrf_pipeline(
     logger.info("[PSDRF] Pipeline terminé : %d PDF(s) — %s", len(pdfs), [p.name for p in pdfs])
     return {
         "pdfs": pdfs,
+        "figures": figures,
+        "figures_dir": figures_dir,
         "campagne_dir": camp,
         "work_dir": work_dir,
         "avertissements": refs.avertissements,
