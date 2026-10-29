@@ -115,7 +115,7 @@ Excel utilisateur ──► /validation (data_verification.py)
   - `insert_or_update_functions/` : un fichier par entité, contient la logique de merge staging → prod.
     Dendro3 ne saisit pas l'année d'un relevé : `insert_or_update_cor_cycle_placette` la déduit de `date_releve` (sinon la placette n'est comptée nulle part comme relevée).
 - **`staging_schemas/`** — Marshmallow schemas pour les modèles staging.
-- **`dendro3_exports.py`** — Journal des exports Dendro3 (`pr_psdrf_staging.t_dendro3_exports`, une ligne par export : statut, compteurs, placettes/cycles touchés, appareil). Ouvert par la route `/export_dispositif_from_dendro3`, clos par la tâche `insert_or_update_data` ; lu par `/dendro3/exports` (page admin). Ne fait jamais échouer un export.
+- **`dendro3_exports.py`** — Journal des exports Dendro3 (`pr_psdrf_staging.t_dendro3_exports`, une ligne par export : statut, compteurs, placettes/cycles touchés, appareil). Ouvert par la route `/export_dispositif_from_dendro3`, clos par la tâche `insert_or_update_data` ; lu par `/dendro3/exports` (page admin) et `/dispositif/<id>/dendro3` (fiche dispositif : derniers exports + relevés terrain en staging placette par placette, `en_production` ou non — indépendant du journal, donc valable aussi pour les exports antérieurs). Ne fait jamais échouer un export.
 - **`data_verification.py`** (≈146 KB) — Validation des fichiers Excel en entrée, détection d'erreurs cellule par cellule. Sortie consommée par le frontend pour affichage des erreurs.
 - **`data_integration.py`** — Insertion validée vers les tables staging.
 - **`data_analysis.py`** — Point d'entrée appelé par Celery : délègue au pont `psdrf_py.run_pipeline` (plus aucun R/rpy2).

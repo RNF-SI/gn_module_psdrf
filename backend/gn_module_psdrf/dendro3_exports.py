@@ -130,3 +130,80 @@ def derniers_exports(limit: int = 50, id_dispositif: int | None = None) -> list[
         }
         for r in rows
     ]
+
+
+_RELEVES_STAGING_SQL = """
+    SELECT c.num_cycle, p.id_placette_orig AS num_placette, cp.annee, cp.date_releve,
+           GREATEST(
+               cp.created_at, cp.updated_at,
+               (SELECT max(GREATEST(am.created_at, am.updated_at))
+                  FROM pr_psdrf_staging.t_arbres a
+                  JOIN pr_psdrf_staging.t_arbres_mesures am ON am.id_arbre = a.id_arbre
+                 WHERE a.id_placette = p.id_placette AND am.id_cycle = c.id_cycle),
+               (SELECT max(GREATEST(bm.created_at, bm.updated_at))
+                  FROM pr_psdrf_staging.t_bm_sup_30 b
+                  JOIN pr_psdrf_staging.t_bm_sup_30_mesures bm ON bm.id_bm_sup_30 = b.id_bm_sup_30
+                 WHERE b.id_placette = p.id_placette AND bm.id_cycle = c.id_cycle)
+           ) AS derniere_modif,
+           (SELECT count(*)
+              FROM pr_psdrf_staging.t_arbres a
+              JOIN pr_psdrf_staging.t_arbres_mesures am ON am.id_arbre = a.id_arbre
+             WHERE a.id_placette = p.id_placette AND am.id_cycle = c.id_cycle) AS nb_arbres,
+           EXISTS (
+               SELECT 1
+                 FROM pr_psdrf.cor_cycles_placettes pcp
+                 JOIN pr_psdrf.t_cycles pc ON pc.id_cycle = pcp.id_cycle
+                 JOIN pr_psdrf.t_placettes pp ON pp.id_placette = pcp.id_placette
+                WHERE pp.id_dispositif = p.id_dispositif
+                  AND pp.id_placette_orig = p.id_placette_orig
+                  AND pc.num_cycle = c.num_cycle
+                  AND pcp.annee IS NOT NULL
+           ) AS en_production
+      FROM pr_psdrf_staging.cor_cycles_placettes cp
+      JOIN pr_psdrf_staging.t_cycles c ON c.id_cycle = cp.id_cycle
+      JOIN pr_psdrf_staging.t_placettes p ON p.id_placette = cp.id_placette
+     WHERE p.id_dispositif = :id_dispositif
+     ORDER BY derniere_modif DESC NULLS LAST, c.num_cycle DESC, p.id_placette_orig
+"""
+
+
+def _iso(valeur):
+    return valeur.isoformat() if valeur is not None else None
+
+
+def suivi_dispositif(id_dispositif: int, nb_exports: int = 10) -> dict:
+    """Suivi Dendro3 d'un dispositif (fiche dispositif) : derniers exports
+    journalisés et relevés terrain en staging, placette par placette, du plus
+    récemment modifié au plus ancien, avec ``en_production`` (même placette et
+    même cycle déjà relevés en production).
+
+    Les relevés staging ne dépendent pas du journal : ils couvrent aussi les
+    exports antérieurs à sa mise en place. Les horodatages sont ceux de la
+    tablette."""
+    try:
+        rows = DB.session.execute(
+            text(_RELEVES_STAGING_SQL), {"id_dispositif": id_dispositif}
+        ).mappings().all()
+    except Exception:
+        DB.session.rollback()
+        logger.exception("[DENDRO3] Relevés staging illisibles (dispositif %s)", id_dispositif)
+        rows = []
+    placettes = [
+        {
+            "num_cycle": r["num_cycle"],
+            "num_placette": r["num_placette"],
+            "annee": r["annee"],
+            "date_releve": _iso(r["date_releve"]),
+            "derniere_modif": _iso(r["derniere_modif"]),
+            "nb_arbres": r["nb_arbres"],
+            "en_production": r["en_production"],
+        }
+        for r in rows
+    ]
+    exports = derniers_exports(nb_exports, id_dispositif=id_dispositif)
+    dates = [p["derniere_modif"] for p in placettes if p["derniere_modif"]]
+    return {
+        "exports": exports,
+        "placettes": placettes,
+        "derniere_activite": max(dates) if dates else None,
+    }

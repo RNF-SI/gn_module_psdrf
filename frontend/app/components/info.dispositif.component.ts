@@ -8,6 +8,7 @@ import { ToastrService } from "ngx-toastr";
 import { ExcelImportService } from "../services/excel.import.service";
 import { interval, EMPTY } from "rxjs";
 import { switchMap, catchError, takeWhile, tap, timeout } from "rxjs/operators";
+import { libelleStatutExport, resumePlacettes } from "./dendro3-exports.utils";
 
 export interface Document {
   name: string;
@@ -29,6 +30,13 @@ export class InfoDispositifComponent implements OnInit {
   // avertissements pour le cycle choisi, cf. route /etat_cycles.
   public etatCycles: any;
   public cycleChoisi: number = null;
+  // Remontées Dendro3 : derniers exports et relevés terrain en staging,
+  // cf. route /dispositif/<id>/dendro3.
+  public suiviDendro3: any;
+  public afficherTousReleves = false;
+  public readonly nbRelevesAffiches = 10;
+  public libelleStatutExport = libelleStatutExport;
+  public resumePlacettes = resumePlacettes;
   public id: number;
   public apiEndPoint: string;
   public placettesEndPoint: string;
@@ -106,6 +114,7 @@ export class InfoDispositifComponent implements OnInit {
         });
 
       this.chargerEtatCycles();
+      this.chargerSuiviDendro3();
     });
   }
 
@@ -138,6 +147,31 @@ export class InfoDispositifComponent implements OnInit {
         this.cycleChoisi = etat.cycle_defaut;
       }
     });
+  }
+
+  chargerSuiviDendro3(): void {
+    this.dataSrv.getSuiviDendro3(this.id).subscribe((suivi) => {
+      this.suiviDendro3 = suivi;
+    });
+  }
+
+  relevesAImporter(): any[] {
+    return this.suiviDendro3
+      ? this.suiviDendro3.placettes.filter((p) => !p.en_production)
+      : [];
+  }
+
+  relevesAImporterAffiches(): any[] {
+    const releves = this.relevesAImporter();
+    return this.afficherTousReleves
+      ? releves
+      : releves.slice(0, this.nbRelevesAffiches);
+  }
+
+  nbRelevesDejaEnProduction(): number {
+    return this.suiviDendro3
+      ? this.suiviDendro3.placettes.filter((p) => p.en_production).length
+      : 0;
   }
 
   aDesDonneesEnStaging(): boolean {

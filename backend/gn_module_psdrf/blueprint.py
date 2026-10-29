@@ -34,7 +34,7 @@ from .disp_placette_liste import disp_placette_liste_add
 # from .pr_psdrf_staging_functions.insert_or_update_disp_to_staging import insert_or_update_data
 from .bddToExcel import bddToExcel
 from .psdrf_py.etat_cycles import avertissements, etat_cycles
-from .dendro3_exports import ouvrir_export, derniers_exports
+from .dendro3_exports import ouvrir_export, derniers_exports, suivi_dispositif
 from .schemas.cycles import ConciseCycleSchema
 from .schemas.essences import EssenceSchema
 from .tasks import test_celery, insert_or_update_data, fetch_dispositif_data, fetch_updated_data
@@ -358,6 +358,14 @@ def dispositif_etat_cycles(id_dispositif):
     cycle = request.args.get('cycle', type=int) or etat['cycle_defaut']
     etat['avertissements'] = avertissements(etat, cycle)
     return etat
+
+
+@blueprint.route('/dispositif/<int:id_dispositif>/dendro3', methods=['GET'])
+@json_resp
+def dispositif_dendro3(id_dispositif):
+    """Suivi des remontées Dendro3 d'un dispositif : derniers exports et
+    relevés terrain en staging, cf. dendro3_exports.suivi_dispositif."""
+    return suivi_dispositif(id_dispositif)
 
 
 @blueprint.route('/global_stats', methods=['GET'])

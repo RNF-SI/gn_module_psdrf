@@ -282,6 +282,13 @@ export class PsdrfDataService {
     );
   }
 
+  /** Suivi Dendro3 d'un dispositif : derniers exports et relevés staging. */
+  getSuiviDendro3(dispId: number): Observable<any> {
+    return this._http.get<any>(
+      `${this.config.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/dispositif/${dispId}/dendro3`
+    );
+  }
+
   getComparaisonStaging(dispId: number): Observable<any> {
     return this._http.get<any>(
       `${this.config.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/dispositif/${dispId}/comparaison`

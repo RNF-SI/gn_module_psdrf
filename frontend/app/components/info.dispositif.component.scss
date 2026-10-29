@@ -117,6 +117,45 @@ table.cycles {
     }
 }
 
+// Remontées Dendro3
+.statut-succes {
+    color: var(--blue);
+    font-weight: 600;
+}
+
+.statut-echec {
+    color: #b3261e;
+    font-weight: 600;
+}
+
+.statut-en_cours {
+    color: var(--brown);
+    font-weight: 600;
+}
+
+.message-export {
+    color: #b3261e;
+    font-size: 0.85rem;
+}
+
+.lien-tout {
+    align-self: flex-start;
+}
+
+.historique {
+    font-size: 0.9rem;
+
+    summary {
+        cursor: pointer;
+        color: var(--blue);
+    }
+
+    ul {
+        margin: 8px 0 0;
+        padding-left: 18px;
+    }
+}
+
 // Choix des documents et du cycle
 .documents {
     display: flex;

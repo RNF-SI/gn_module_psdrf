@@ -78,6 +78,91 @@
         </p>
       </section>
 
+      <section class="bloc" *ngIf="suiviDendro3">
+        <h3>Remontées Dendro3</h3>
+        <p class="aide" *ngIf="suiviDendro3.exports.length">
+          Dernier export reçu le
+          {{ suiviDendro3.exports[0].recu_le | date: "dd/MM/yyyy à HH:mm" }} :
+          <span [ngClass]="'statut-' + suiviDendro3.exports[0].statut">{{
+            libelleStatutExport(suiviDendro3.exports[0].statut)
+          }}</span
+          >, placettes {{ resumePlacettes(suiviDendro3.exports[0]) }}.
+        </p>
+        <p
+          class="aide"
+          *ngIf="!suiviDendro3.exports.length && suiviDendro3.derniere_activite"
+        >
+          Dernière saisie terrain reçue : modifiée sur la tablette le
+          {{ suiviDendro3.derniere_activite | date: "dd/MM/yyyy à HH:mm" }}.
+        </p>
+        <p
+          class="aide"
+          *ngIf="!suiviDendro3.exports.length && !suiviDendro3.derniere_activite"
+        >
+          Aucune donnée reçue de Dendro3 pour ce dispositif.
+        </p>
+
+        <ng-container *ngIf="relevesAImporter().length">
+          <p class="aide">
+            {{ relevesAImporter().length }} relevé(s) terrain pas encore
+            importé(s) en production, du plus récent au plus ancien :
+          </p>
+          <div class="table-scroll">
+            <table class="cycles">
+              <thead>
+                <tr>
+                  <th>Cycle</th>
+                  <th>Placette</th>
+                  <th>Relevée le</th>
+                  <th>Modifiée le</th>
+                  <th>Arbres</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let r of relevesAImporterAffiches()">
+                  <td>{{ r.num_cycle }}</td>
+                  <td>{{ r.num_placette }}</td>
+                  <td>{{ r.date_releve ? (r.date_releve | date: "dd/MM/yyyy") : "—" }}</td>
+                  <td>
+                    {{ r.derniere_modif ? (r.derniere_modif | date: "dd/MM/yyyy HH:mm") : "—" }}
+                  </td>
+                  <td>{{ r.nb_arbres }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <button
+            *ngIf="relevesAImporter().length > nbRelevesAffiches"
+            mat-button
+            class="bouton-secondaire lien-tout"
+            (click)="afficherTousReleves = !afficherTousReleves"
+          >
+            {{
+              afficherTousReleves
+                ? "Réduire la liste"
+                : "Voir les " + relevesAImporter().length + " relevés"
+            }}
+          </button>
+        </ng-container>
+        <p class="aide" *ngIf="nbRelevesDejaEnProduction()">
+          {{ nbRelevesDejaEnProduction() }} autre(s) relevé(s) du staging-terrain
+          existent déjà en production (même placette, même cycle) : voir
+          « Comparer avec le staging-terrain » pour les différences.
+        </p>
+
+        <details *ngIf="suiviDendro3.exports.length > 1" class="historique">
+          <summary>Historique des exports ({{ suiviDendro3.exports.length }} derniers)</summary>
+          <ul>
+            <li *ngFor="let e of suiviDendro3.exports">
+              {{ e.recu_le | date: "dd/MM/yyyy HH:mm" }} —
+              <span [ngClass]="'statut-' + e.statut">{{ libelleStatutExport(e.statut) }}</span>
+              — {{ resumePlacettes(e) }}
+              <span *ngIf="e.message" class="message-export">({{ e.message }})</span>
+            </li>
+          </ul>
+        </details>
+      </section>
+
       <section class="bloc bloc-principal">
         <h3>Générer les documents</h3>
 
