@@ -113,6 +113,7 @@ Excel utilisateur ──► /validation (data_verification.py)
 - **`pr_psdrf_staging_functions/`** — Schéma SQL séparé (`pr_psdrf_staging`) pour l'import en deux temps :
   - `models_staging.py` : modèles SQLAlchemy miroirs des modèles de prod.
   - `insert_or_update_functions/` : un fichier par entité, contient la logique de merge staging → prod.
+    Dendro3 ne saisit pas l'année d'un relevé : `insert_or_update_cor_cycle_placette` la déduit de `date_releve` (sinon la placette n'est comptée nulle part comme relevée).
 - **`staging_schemas/`** — Marshmallow schemas pour les modèles staging.
 - **`data_verification.py`** (≈146 KB) — Validation des fichiers Excel en entrée, détection d'erreurs cellule par cellule. Sortie consommée par le frontend pour affichage des erreurs.
 - **`data_integration.py`** — Insertion validée vers les tables staging.

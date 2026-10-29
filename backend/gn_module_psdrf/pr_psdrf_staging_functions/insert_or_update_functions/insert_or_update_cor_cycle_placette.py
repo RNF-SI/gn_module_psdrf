@@ -2,6 +2,25 @@ from ..models_staging import CorCyclesPlacettesStaging
 from .insert_or_update_regeneration import insert_or_update_regeneration
 from .insert_or_update_transect import insert_or_update_transect
 
+
+def annee_du_releve(data, annee_actuelle=None):
+    """Année du relevé : celle du payload, sinon l'année de ``date_releve``
+    (``yyyy-MM-dd``), sinon celle déjà en base.
+
+    Dendro3 ne saisit pas l'année (seule la date de relevé est obligatoire) ;
+    sans elle, la placette n'est comptée nulle part comme relevée (#68).
+    """
+    if data.get('annee') is not None:
+        return data['annee']
+    date_releve = data.get('date_releve')
+    if date_releve:
+        try:
+            return int(str(date_releve)[:4])
+        except ValueError:
+            pass
+    return annee_actuelle
+
+
 def insert_or_update_cor_cycle_placette(placette_data, session):
     counts_cor_cycle_placette = {
         'created': 0,
@@ -40,7 +59,7 @@ def insert_or_update_cor_cycle_placette(placette_data, session):
                                     id_placette=cor_cycle_placette_item_data.get('id_placette'),
                                     date_releve=cor_cycle_placette_item_data.get('date_releve'),
                                     date_intervention=cor_cycle_placette_item_data.get('date_intervention'),
-                                    annee=cor_cycle_placette_item_data.get('annee'),
+                                    annee=annee_du_releve(cor_cycle_placette_item_data),
                                     nature_intervention=cor_cycle_placette_item_data.get('nature_intervention'),
                                     gestion_placette=cor_cycle_placette_item_data.get('gestion_placette'),
                                     id_nomenclature_castor=cor_cycle_placette_item_data.get('id_nomenclature_castor'),
@@ -69,7 +88,7 @@ def insert_or_update_cor_cycle_placette(placette_data, session):
                                 existing_cor_cycle_placette.id_placette = cor_cycle_placette_item_data.get('id_placette', existing_cor_cycle_placette.id_placette)
                                 existing_cor_cycle_placette.date_releve = cor_cycle_placette_item_data.get('date_releve', existing_cor_cycle_placette.date_releve)
                                 existing_cor_cycle_placette.date_intervention = cor_cycle_placette_item_data.get('date_intervention', existing_cor_cycle_placette.date_intervention)
-                                existing_cor_cycle_placette.annee = cor_cycle_placette_item_data.get('annee', existing_cor_cycle_placette.annee)
+                                existing_cor_cycle_placette.annee = annee_du_releve(cor_cycle_placette_item_data, existing_cor_cycle_placette.annee)
                                 existing_cor_cycle_placette.nature_intervention = cor_cycle_placette_item_data.get('nature_intervention', existing_cor_cycle_placette.nature_intervention)
                                 existing_cor_cycle_placette.gestion_placette = cor_cycle_placette_item_data.get('gestion_placette', existing_cor_cycle_placette.gestion_placette)
                                 existing_cor_cycle_placette.id_nomenclature_castor = cor_cycle_placette_item_data.get('id_nomenclature_castor', existing_cor_cycle_placette.id_nomenclature_castor)
