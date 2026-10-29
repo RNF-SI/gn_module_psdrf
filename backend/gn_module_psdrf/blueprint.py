@@ -8,6 +8,7 @@ from geoalchemy2.shape import to_shape, from_shape
 from shapely.geometry import MultiPoint, Point
 from shapely.geometry import shape as to_shape
 from shapely.geometry import mapping as from_shape
+import click
 import json
 import time
 import uuid
@@ -34,7 +35,7 @@ from .disp_placette_liste import disp_placette_liste_add
 # from .pr_psdrf_staging_functions.insert_or_update_disp_to_staging import insert_or_update_data
 from .bddToExcel import bddToExcel
 from .psdrf_py.etat_cycles import avertissements, etat_cycles
-from .dendro3_exports import ouvrir_export, derniers_exports, suivi_dispositif
+from .dendro3_exports import ouvrir_export, derniers_exports, suivi_dispositif, reprendre_archives
 from .schemas.cycles import ConciseCycleSchema
 from .schemas.essences import EssenceSchema
 from .tasks import test_celery, insert_or_update_data, fetch_dispositif_data, fetch_updated_data
@@ -980,6 +981,20 @@ def save_json_data_for_debugging(data):
 
     except Exception as e:
         print(f"Failed to save JSON data for debugging: {e}")
+
+@blueprint.cli.command('reprendre-archives-dendro3')
+@click.option('--dossier', type=click.Path(exists=True, file_okay=False, path_type=Path),
+              default=Path(__file__).parent / 'debug_data', show_default=True,
+              help="Dossier des envois archivés par save_json_data_for_debugging.")
+@click.option('--simulation', is_flag=True, help="Compte sans rien écrire.")
+def reprendre_archives_dendro3(dossier, simulation):
+    """Journalise les envois Dendro3 archivés (statut « archive »). Relançable."""
+    bilan = reprendre_archives(dossier, simulation=simulation)
+    verbe = "à ajouter" if simulation else "ajoutés"
+    click.echo(f"{bilan['ajoutes']} envois {verbe}, {bilan['deja_journalises']} déjà journalisés.")
+    for ignore in bilan['ignores']:
+        click.echo(f"Ignoré : {ignore}")
+
 
 @blueprint.route('/dendro3/exports', methods=['GET'])
 @json_resp

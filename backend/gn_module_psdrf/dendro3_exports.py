@@ -15,6 +15,9 @@ from __future__ import annotations
 
 import json
 import logging
+from collections import Counter
+from datetime import datetime
+from pathlib import Path
 
 from geonature.utils.env import DB
 from sqlalchemy import text
@@ -66,6 +69,29 @@ def resume_placettes(data: dict) -> list[dict]:
     return resume
 
 
+def appareil_du_payload(data: dict) -> str | None:
+    """Tablette la plus fréquente dans les lignes créées ou modifiées du
+    payload (``updated_on``, sinon ``created_on``) : Dendro3 renseigne ces
+    champs à chaque saisie, y compris dans les anciennes APK."""
+    frequences = Counter()
+
+    def compter(item):
+        appareil = item.get("updated_on") or item.get("created_on")
+        if appareil and appareil != "Unknown":
+            frequences[appareil] += 1
+
+    for placette in data.get("placettes") or []:
+        for cle, sous_cles in _ENTITES_PLACETTE.items():
+            bloc = placette.get(cle) or {}
+            for item in (bloc.get("created") or []) + (bloc.get("updated") or []):
+                compter(item)
+                for sous_cle in sous_cles:
+                    sous_bloc = item.get(sous_cle) or {}
+                    for sous_item in (sous_bloc.get("created") or []) + (sous_bloc.get("updated") or []):
+                        compter(sous_item)
+    return frequences.most_common(1)[0][0] if frequences else None
+
+
 def ouvrir_export(data: dict, task_id: str) -> None:
     """Trace la réception d'un export (statut ``en_cours``)."""
     try:
@@ -101,6 +127,58 @@ def clore_export(task_id: str, statut: str, compteurs: dict | None = None, messa
             })
     except Exception:
         logger.exception("[DENDRO3] Journal : fin de l'export %s non tracée", task_id)
+
+
+def reprendre_archives(dossier: Path, simulation: bool = False) -> dict:
+    """Journalise les envois archivés par la route d'export
+    (``debug_data/<id_dispositif>/<AAAAMMJJ_HHMMSS>.json``), statut ``archive``
+    puisque le résultat du traitement n'est pas connu.
+
+    Relançable : la ligne est identifiée par ``archive:<dispositif>/<fichier>``,
+    et un envoi déjà journalisé en direct (même dispositif, reçu à moins de
+    2 minutes) est ignoré. L'horodatage du nom de fichier est l'heure locale du
+    serveur, convertie comme ``now()`` pour rester comparable aux lignes
+    directes. Contrairement au journal direct, les erreurs remontent."""
+    bilan = {"ajoutes": 0, "deja_journalises": 0, "ignores": []}
+    for fichier in sorted(Path(dossier).glob("*/*.json")):
+        try:
+            recu_le = datetime.strptime(fichier.stem, "%Y%m%d_%H%M%S").astimezone()
+            data = json.loads(fichier.read_text(encoding="utf-8"))
+        except ValueError as e:
+            bilan["ignores"].append(f"{fichier.parent.name}/{fichier.name} : {e}")
+            continue
+        id_dispositif = data.get("id_dispositif")
+        if id_dispositif is None and fichier.parent.name.isdigit():
+            id_dispositif = int(fichier.parent.name)
+        params = {
+            "task_id": f"archive:{fichier.parent.name}/{fichier.name}",
+            "id_dispositif": id_dispositif,
+            "recu_le": recu_le,
+            "device": data.get("device") or appareil_du_payload(data),
+            "id_role": data.get("id_role"),
+            "placettes": json.dumps(resume_placettes(data)),
+        }
+        with DB.engine.begin() as cx:
+            deja = cx.execute(text(f"""
+                SELECT 1 FROM {TABLE}
+                 WHERE task_id = :task_id
+                    OR (task_id NOT LIKE 'archive:%'
+                        AND id_dispositif IS NOT DISTINCT FROM :id_dispositif
+                        AND recu_le BETWEEN CAST(:recu_le AS timestamptz) - interval '2 minutes'
+                                        AND CAST(:recu_le AS timestamptz) + interval '2 minutes')
+                 LIMIT 1
+            """), params).first()
+            if deja:
+                bilan["deja_journalises"] += 1
+                continue
+            if not simulation:
+                cx.execute(text(f"""
+                    INSERT INTO {TABLE} (task_id, id_dispositif, recu_le, statut, device, id_role, placettes)
+                    VALUES (:task_id, :id_dispositif, CAST(:recu_le AS timestamptz), 'archive',
+                            :device, :id_role, CAST(:placettes AS jsonb))
+                """), params)
+            bilan["ajoutes"] += 1
+    return bilan
 
 
 def derniers_exports(limit: int = 50, id_dispositif: int | None = None) -> list[dict]:
@@ -171,7 +249,7 @@ def _iso(valeur):
     return valeur.isoformat() if valeur is not None else None
 
 
-def suivi_dispositif(id_dispositif: int, nb_exports: int = 10) -> dict:
+def suivi_dispositif(id_dispositif: int, nb_exports: int = 500) -> dict:
     """Suivi Dendro3 d'un dispositif (fiche dispositif) : derniers exports
     journalisés et relevés terrain en staging, placette par placette, du plus
     récemment modifié au plus ancien, avec ``en_production`` (même placette et

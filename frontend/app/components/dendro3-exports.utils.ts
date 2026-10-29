@@ -5,15 +5,21 @@ const LIBELLES_STATUT: { [statut: string]: string } = {
   succes: "Réussi",
   echec: "Échec",
   en_cours: "En cours",
+  // Reconstitué depuis debug_data : résultat du traitement inconnu (#73).
+  archive: "Archive",
 };
 
 export function libelleStatutExport(statut: string): string {
   return LIBELLES_STATUT[statut] || statut;
 }
 
-/** Total des créations / modifications / suppressions d'un export réussi. */
+/** Total des créations / modifications / suppressions d'un export réussi ;
+ * pour une archive (sans compteurs), total envoyé d'après les placettes. */
 export function totalModifications(exportDendro3: any): number {
-  const compteurs = exportDendro3.compteurs || {};
+  if (!exportDendro3.compteurs) {
+    return (exportDendro3.placettes || []).reduce((n, p) => n + (p.nb_modifications || 0), 0);
+  }
+  const compteurs = exportDendro3.compteurs;
   let total = 0;
   Object.keys(compteurs).forEach((entite) => {
     ["created", "updated", "deleted"].forEach((cat) => {

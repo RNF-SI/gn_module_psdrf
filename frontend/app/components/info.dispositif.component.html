@@ -151,7 +151,7 @@
         </p>
 
         <details *ngIf="suiviDendro3.exports.length > 1" class="historique">
-          <summary>Historique des exports ({{ suiviDendro3.exports.length }} derniers)</summary>
+          <summary>Historique des exports ({{ suiviDendro3.exports.length }})</summary>
           <ul>
             <li *ngFor="let e of suiviDendro3.exports">
               {{ e.recu_le | date: "dd/MM/yyyy HH:mm" }} —

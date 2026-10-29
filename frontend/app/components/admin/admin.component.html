@@ -55,7 +55,7 @@
               <div *ngIf="e.message" class="message-export">{{ e.message }}</div>
             </td>
             <td>{{ resumePlacettes(e) }}</td>
-            <td>{{ e.statut === "succes" ? totalModifications(e) : "—" }}</td>
+            <td>{{ e.statut === "succes" || e.statut === "archive" ? totalModifications(e) : "—" }}</td>
             <td>{{ e.device || "—" }}</td>
           </tr>
         </tbody>
