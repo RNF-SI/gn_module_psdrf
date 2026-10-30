@@ -283,6 +283,13 @@ export class PsdrfDataService {
   }
 
   /** Suivi Dendro3 d'un dispositif : derniers exports et relevés staging. */
+  /** Complétion des dispositifs entre cycles (onglet admin, #77). */
+  getCompletionDispositifs(): Observable<any[]> {
+    return this._http.get<any[]>(
+      `${this.config.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/dispositifs/completion`
+    );
+  }
+
   /** Agrégats du journal Dendro3 (graphiques de suivi), tous dispositifs
    * ou un seul. */
   getStatistiquesDendro3(dispId?: number): Observable<any> {

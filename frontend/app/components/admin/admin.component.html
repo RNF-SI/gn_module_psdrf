@@ -921,6 +921,12 @@
   </mat-card>
 </div>
 </mat-tab>
+<mat-tab label="Complétion">
+  <!-- Créé à l'ouverture : le calcul porte sur tous les dispositifs (#77). -->
+  <ng-template matTabContent>
+    <psdrf-completion-dispositifs></psdrf-completion-dispositifs>
+  </ng-template>
+</mat-tab>
 <mat-tab label="Remontées Dendro3">
   <!-- Créé à l'ouverture de l'onglet : graphiques dimensionnés sur un
        conteneur visible, et pas de requêtes tant qu'on ne le regarde pas. -->

@@ -30,6 +30,7 @@ import { MatSortModule } from '@angular/material/sort';
 import { NgChartsModule } from 'ng2-charts';
 import { Dendro3GraphiquesComponent } from "./components/dendro3-graphiques/dendro3-graphiques.component";
 import { RemonteesDendro3Component } from "./components/remontees-dendro3/remontees-dendro3.component";
+import { CompletionDispositifsComponent } from "./components/completion-dispositifs/completion-dispositifs.component";
 
 // my module routing
 const routes: Routes = [
@@ -58,7 +59,8 @@ const routes: Routes = [
     DendroDownloadComponent,
     ComparaisonStagingComponent,
     Dendro3GraphiquesComponent,
-    RemonteesDendro3Component
+    RemonteesDendro3Component,
+    CompletionDispositifsComponent
   ],
   imports: [
     GN2CommonModule,

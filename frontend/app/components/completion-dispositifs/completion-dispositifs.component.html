@@ -1,0 +1,140 @@
+<div class="completion">
+  <header class="entete">
+    <div>
+      <h2>Complétion des dispositifs</h2>
+      <p class="aide">
+        Pour chaque dispositif : les placettes relevées au cycle précédent
+        l'ont-elles été au dernier cycle ? En production (données importées)
+        et, en plus, dans le staging-terrain (envoyées par Dendro3, pas encore
+        importées). Les arbres retrouvés sont comptés en production.
+      </p>
+    </div>
+    <button mat-stroked-button matTooltip="Recalculer" [disabled]="chargement" (click)="charger()">
+      <mat-icon>refresh</mat-icon>
+      Actualiser
+    </button>
+  </header>
+
+  <p class="aide" *ngIf="chargement">Calcul en cours…</p>
+
+  <ng-container *ngIf="!chargement && lignes.length">
+    <!-- Chiffres clés : un clic filtre le tableau sur ce statut. -->
+    <div class="chiffres">
+      <div class="chiffre neutre">
+        <span class="valeur">{{ nbCompares }}</span>
+        <span class="libelle">dispositifs avec au moins deux cycles</span>
+      </div>
+      <button
+        *ngFor="let s of ['complet', 'a_importer', 'en_cours', 'incomplet']"
+        class="chiffre"
+        [ngClass]="'statut-' + s"
+        [class.actif]="statut === s"
+        [matTooltip]="STATUTS[s].aide"
+        (click)="filtrerStatut(s)"
+      >
+        <span class="valeur">{{ nbStatut(s) }}</span>
+        <span class="libelle"><span class="pastille"></span>{{ STATUTS[s].libelle }}</span>
+      </button>
+    </div>
+
+    <div class="filtres">
+      <mat-form-field appearance="outline" class="recherche">
+        <mat-label>Rechercher un dispositif</mat-label>
+        <mat-icon matPrefix>search</mat-icon>
+        <input matInput [(ngModel)]="recherche" placeholder="Nom ou n°" />
+        <button *ngIf="recherche" matSuffix mat-icon-button aria-label="Effacer" (click)="recherche = ''">
+          <mat-icon>close</mat-icon>
+        </button>
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="statut">
+        <mat-label>Statut</mat-label>
+        <mat-select [(ngModel)]="statut">
+          <mat-option value="">Tous</mat-option>
+          <mat-option *ngFor="let s of ORDRE" [value]="s">
+            <span class="pastille" [ngClass]="'statut-' + s"></span>{{ STATUTS[s].libelle }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-checkbox [(ngModel)]="avecSansReleve">
+        Afficher les dispositifs sans relevé ({{ nbStatut("aucun_releve") }})
+      </mat-checkbox>
+      <button *ngIf="recherche || statut" mat-button (click)="reinitialiser()">Réinitialiser</button>
+    </div>
+
+    <section class="tableau">
+      <p class="aide" *ngIf="!filtrees.length">Aucun dispositif ne correspond.</p>
+      <div class="table-defilante" *ngIf="filtrees.length">
+        <table>
+          <thead>
+            <tr>
+              <th>Dispositif</th>
+              <th>Statut</th>
+              <th class="col-completion">Placettes retrouvées au dernier cycle</th>
+              <th>Relevés par cycle</th>
+              <th class="nombre">Arbres retrouvés</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let l of filtrees">
+              <td>
+                <a href="javascript:void(0)" (click)="ouvrirDispositif(l.id_dispositif)">{{ l.nom }}</a>
+                <span class="numero">n° {{ l.id_dispositif }} · {{ l.nb_placettes }} placettes</span>
+              </td>
+              <td>
+                <span class="badge" [ngClass]="'statut-' + l.statut" [matTooltip]="STATUTS[l.statut].aide">
+                  <span class="pastille"></span>{{ STATUTS[l.statut].libelle }}
+                </span>
+              </td>
+              <td class="col-completion">
+                <ng-container *ngIf="l.cycle_precedent != null">
+                  <div
+                    class="barre"
+                    role="img"
+                    [attr.aria-label]="taux(l).toFixed(0) + ' % en production, ' + tauxStaging(l).toFixed(0) + ' % en plus dans le staging-terrain'"
+                  >
+                    <span class="segment production" [style.width.%]="taux(l)"></span>
+                    <span class="segment staging" [style.width.%]="tauxStaging(l)"></span>
+                  </div>
+                  <span class="detail">
+                    <strong>{{ l.placettes_production }} / {{ l.placettes_attendues }}</strong>
+                    ({{ taux(l) | number: "1.0-0":"fr" }} %) au cycle {{ l.dernier_cycle }}
+                    <span *ngIf="l.placettes_staging" class="en-staging">
+                      + {{ l.placettes_staging }} dans le staging
+                    </span>
+                  </span>
+                </ng-container>
+                <span *ngIf="l.cycle_precedent == null" class="vide">—</span>
+              </td>
+              <td>
+                <span class="cycle" *ngFor="let c of l.cycles">
+                  C{{ c.num_cycle }} : {{ c.production }}<span *ngIf="c.staging" class="en-staging"> +{{ c.staging }}</span>
+                </span>
+                <span *ngIf="!l.cycles.length" class="vide">—</span>
+              </td>
+              <td class="nombre">
+                <ng-container *ngIf="l.arbres_cycle_precedent">
+                  <strong>{{ tauxArbres(l) | number: "1.0-0":"fr" }} %</strong>
+                  <span class="detail-arbres">
+                    {{ l.arbres_retrouves | number: "1.0-0":"fr" }} / {{ l.arbres_cycle_precedent | number: "1.0-0":"fr" }}
+                    (C{{ l.arbres_cycles[0] }} → C{{ l.arbres_cycles[1] }})
+                  </span>
+                </ng-container>
+                <span *ngIf="!l.arbres_cycle_precedent" class="vide">—</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="legende" *ngIf="filtrees.length">
+        <span><span class="carre production"></span>relevées en production</span>
+        <span><span class="carre staging"></span>en plus dans le staging-terrain</span>
+        <span class="aide">
+          Une placette compte dès que son relevé porte une année. Arbres :
+          mesurés au cycle précédent sur les placettes relevées aux deux
+          cycles, retrouvés par leur numéro ; un arbre abattu ou disparu compte
+          comme non retrouvé.
+        </span>
+      </div>
+    </section>
+  </ng-container>
+</div>

@@ -36,6 +36,7 @@ from .disp_placette_liste import disp_placette_liste_add
 from .bddToExcel import bddToExcel
 from .psdrf_py.etat_cycles import avertissements, etat_cycles
 from .dendro3_exports import ouvrir_export, derniers_exports, suivi_dispositif, reprendre_archives, statistiques_exports, activite_terrain
+from .completion import completion_dispositifs
 from .schemas.cycles import ConciseCycleSchema
 from .schemas.essences import EssenceSchema
 from .tasks import test_celery, insert_or_update_data, fetch_dispositif_data, fetch_updated_data
@@ -998,6 +999,14 @@ def reprendre_archives_dendro3(dossier, simulation, fuseau):
                f"{bilan['deja_journalises']} déjà journalisés en direct{suffixe}.")
     for ignore in bilan['ignores']:
         click.echo(f"Ignoré : {ignore}")
+
+
+@blueprint.route('/dispositifs/completion', methods=['GET'])
+@json_resp
+def get_completion_dispositifs():
+    """Complétion des dispositifs entre cycles : placettes du cycle précédent
+    relevées au dernier (production, staging à part), arbres retrouvés."""
+    return completion_dispositifs()
 
 
 @blueprint.route('/dendro3/exports', methods=['GET'])

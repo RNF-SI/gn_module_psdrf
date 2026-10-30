@@ -110,7 +110,7 @@ export interface Orga {
     updateCodeEcologie: boolean = false;
 
     // Onglets de la page, dans l'ordre du template ; clé reprise de ?onglet=
-    public readonly ONGLETS = ['utilisateurs', 'dispositifs', 'organismes', 'imports', 'dendro3'];
+    public readonly ONGLETS = ['utilisateurs', 'dispositifs', 'organismes', 'imports', 'completion', 'dendro3'];
 
     public disableSubmit = false;
     public disableSubmitUserDisp = false;

@@ -1,0 +1,295 @@
+// Palette du module PSDRF (cf. fiche dispositif et onglet Remontées Dendro3).
+:host {
+    --vert: #598979;
+    --noir: #1a1a18;
+    --gris: #5d6660;
+    --beige: #F4F1E4;
+    --trait: #e2ddc9;
+    --brun: #8B5500;
+    --sapin: #178F6A;
+    --ocre: #BE7600;
+    --brique: #A8322A;
+    --vert-clair: #8AAC3E;
+    display: block;
+}
+
+.completion {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 12px 8px 24px;
+    color: var(--noir);
+}
+
+.entete {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+
+    h2 {
+        margin: 0 0 4px;
+        font-size: 1.4rem;
+    }
+}
+
+.aide {
+    margin: 0;
+    color: var(--gris);
+    font-size: 0.9rem;
+}
+
+// Chiffres clés (les statuts sont cliquables : filtre).
+.chiffres {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 12px;
+}
+
+.chiffre {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    padding: 12px 16px;
+    background: var(--beige);
+    border: 1px solid var(--trait);
+    border-left: 4px solid var(--pastille, var(--vert));
+    border-radius: 8px;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+
+    &:not(.neutre) {
+        cursor: pointer;
+
+        &:hover {
+            border-color: var(--pastille);
+        }
+    }
+
+    &.actif {
+        background: #fff;
+        box-shadow: 0 0 0 2px var(--pastille);
+    }
+
+    .valeur {
+        font-size: 1.8rem;
+        font-weight: 600;
+        line-height: 1.1;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .libelle {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--gris);
+        font-size: 0.85rem;
+    }
+}
+
+.filtres {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 16px;
+
+    .recherche {
+        flex: 1 1 280px;
+    }
+
+    .statut {
+        flex: 0 0 220px;
+    }
+}
+
+.tableau {
+    background: #fff;
+    border: 1px solid var(--trait);
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.table-defilante {
+    overflow-x: auto;
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+    }
+
+    th,
+    td {
+        padding: 8px 10px;
+        text-align: left;
+        vertical-align: middle;
+        border-bottom: 1px solid var(--trait);
+    }
+
+    th {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        color: var(--gris);
+        background: var(--beige);
+    }
+
+    tbody tr:hover {
+        background: rgba(89, 137, 121, 0.06);
+    }
+
+    a {
+        color: var(--vert);
+        font-weight: 600;
+    }
+
+    .numero {
+        display: block;
+        color: var(--gris);
+        font-size: 0.8rem;
+    }
+
+    .nombre {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .col-completion {
+        min-width: 240px;
+    }
+}
+
+// Barre de complétion : production (sapin) puis staging (ocre).
+.barre {
+    display: flex;
+    height: 10px;
+    border-radius: 5px;
+    background: var(--beige);
+    border: 1px solid var(--trait);
+    overflow: hidden;
+    margin-bottom: 4px;
+}
+
+.segment {
+    height: 100%;
+
+    &.production {
+        background: var(--sapin);
+    }
+
+    &.staging {
+        background: var(--ocre);
+        border-left: 2px solid #fff;
+    }
+}
+
+.detail,
+.detail-arbres {
+    font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.detail-arbres {
+    display: block;
+    color: var(--gris);
+}
+
+.en-staging {
+    color: var(--ocre);
+    font-weight: 600;
+}
+
+.cycle {
+    display: inline-block;
+    margin: 2px 6px 2px 0;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: var(--beige);
+    border: 1px solid var(--trait);
+    font-size: 0.8rem;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.vide {
+    color: var(--gris);
+}
+
+// Statut : pastille de couleur + libellé.
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: var(--beige);
+    border: 1px solid var(--trait);
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.pastille {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--pastille, var(--gris));
+    flex: none;
+}
+
+.statut-complet { --pastille: var(--sapin); }
+.statut-a_importer { --pastille: var(--vert-clair); }
+.statut-en_cours { --pastille: var(--ocre); }
+.statut-incomplet { --pastille: var(--brique); }
+.statut-premier_cycle { --pastille: var(--vert); }
+.statut-aucun_releve { --pastille: #b9b4a3; }
+
+// Options du menu (hors :host, rendues dans un overlay).
+::ng-deep .mat-option .pastille {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 6px;
+}
+::ng-deep .mat-option .pastille.statut-complet { background: #178F6A; }
+::ng-deep .mat-option .pastille.statut-a_importer { background: #8AAC3E; }
+::ng-deep .mat-option .pastille.statut-en_cours { background: #BE7600; }
+::ng-deep .mat-option .pastille.statut-incomplet { background: #A8322A; }
+::ng-deep .mat-option .pastille.statut-premier_cycle { background: #598979; }
+::ng-deep .mat-option .pastille.statut-aucun_releve { background: #b9b4a3; }
+
+.legende {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 16px;
+    margin-top: 12px;
+    font-size: 0.85rem;
+
+    .carre {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 3px;
+        margin-right: 6px;
+        vertical-align: -1px;
+
+        &.production {
+            background: var(--sapin);
+        }
+
+        &.staging {
+            background: var(--ocre);
+        }
+    }
+
+    .aide {
+        flex-basis: 100%;
+        font-size: 0.8rem;
+    }
+}
