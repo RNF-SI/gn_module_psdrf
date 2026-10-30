@@ -23,8 +23,13 @@ h3 {
 
 .grille {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr));
     gap: 12px;
+}
+
+// Sur la fiche dispositif (fond beige), cartes sans marge intérieure superflue.
+:host(:not(.vue-globale)) .carte {
+    padding: 8px 12px;
 }
 
 .carte {

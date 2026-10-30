@@ -1,5 +1,6 @@
-<!-- Envois reçus par le serveur (journal, depuis juin 2026). -->
-<section class="groupe">
+<!-- Envois reçus par le serveur (journal, depuis juin 2026). Vue globale
+     seulement : sur la fiche, les envois du dispositif sont listés. -->
+<section class="groupe" *ngIf="vueGlobale">
   <h3>Envois au serveur</h3>
   <p class="aide" *ngIf="chargement">Chargement des graphiques…</p>
   <ng-container *ngIf="!chargement && stats">
@@ -55,7 +56,7 @@
 
 <!-- Saisies datées par les tablettes (staging, depuis 2024). -->
 <section class="groupe">
-  <h3>Saisies sur tablette</h3>
+  <h3 *ngIf="vueGlobale">Saisies sur tablette</h3>
   <ng-container *ngIf="activite">
     <p class="aide" *ngIf="!activite.par_mois.length">Aucune saisie Dendro3 en staging.</p>
 

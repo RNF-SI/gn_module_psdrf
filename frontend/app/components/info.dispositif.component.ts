@@ -168,6 +168,38 @@ export class InfoDispositifComponent implements OnInit {
       : releves.slice(0, this.nbRelevesAffiches);
   }
 
+  /** « du 22/10/2026 au 29/10/2026 », ou « le 22/10/2026 » (envois du plus récent au plus ancien). */
+  periodeEnvois(): string {
+    const exports = (this.suiviDendro3 && this.suiviDendro3.exports) || [];
+    if (!exports.length) {
+      return "";
+    }
+    const jour = (iso: string) => new Date(iso).toLocaleDateString("fr-FR");
+    const premier = jour(exports[exports.length - 1].recu_le);
+    const dernier = jour(exports[0].recu_le);
+    return premier === dernier ? `le ${dernier}` : `du ${premier} au ${dernier}`;
+  }
+
+  /** Placettes et cycles des relevés reçus déjà présents en production. */
+  relevesEnProduction(): { placettes: number; cycles: number[] } {
+    const releves = this.suiviDendro3
+      ? this.suiviDendro3.placettes.filter((p) => p.en_production)
+      : [];
+    return {
+      placettes: new Set(releves.map((r) => r.num_placette)).size,
+      cycles: Array.from(new Set<number>(releves.map((r) => r.num_cycle))).sort((a, b) => a - b),
+    };
+  }
+
+  aideStatut(statut: string): string {
+    return {
+      succes: "Envoi bien arrivé dans le staging-terrain",
+      echec: "L'envoi n'a pas pu être intégré : à relancer depuis la tablette",
+      en_cours: "Envoi en cours de traitement sur le serveur",
+      archive: "Envoi reçu avant la mise en place du journal, reconstitué depuis les archives du serveur : résultat du traitement inconnu",
+    }[statut] || "";
+  }
+
   nbRelevesDejaEnProduction(): number {
     return this.suiviDendro3
       ? this.suiviDendro3.placettes.filter((p) => p.en_production).length

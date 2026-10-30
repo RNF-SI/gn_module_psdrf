@@ -118,24 +118,78 @@ table.cycles {
 }
 
 // Remontées Dendro3
-.statut-succes {
-    color: var(--blue);
-    font-weight: 600;
+// Constats de la section Remontées Dendro3.
+.constat {
+    margin: 0;
+    color: var(--black);
+
+    &.ok,
+    &.a-faire {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 6px;
+        background: #fff;
+        border: 1px solid var(--line);
+
+        p {
+            margin: 0;
+        }
+
+        mat-icon {
+            flex: none;
+        }
+    }
+
+    &.ok mat-icon {
+        color: #178F6A;
+    }
+
+    &.a-faire {
+        border-left: 4px solid #BE7600;
+
+        mat-icon {
+            color: #BE7600;
+        }
+    }
 }
 
-.statut-echec {
-    color: #b3261e;
+h4 {
+    margin: 4px 0 0;
+    font-size: 1rem;
     font-weight: 600;
+    color: var(--black);
 }
 
-.statut-en_cours {
-    color: var(--brown);
+// Statut d'un envoi : pastille de couleur + libellé (palette des graphiques).
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: #fff;
+    border: 1px solid var(--line);
+    font-size: 0.8rem;
     font-weight: 600;
+    white-space: nowrap;
 }
 
-.statut-archive {
-    color: var(--muted);
-    font-weight: 600;
+.pastille {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--pastille, var(--muted));
+}
+
+.statut-succes { --pastille: #178F6A; }
+.statut-echec { --pastille: #A8322A; }
+.statut-en_cours { --pastille: #BE7600; }
+.statut-archive { --pastille: #8AAC3E; }
+
+td.date {
+    white-space: nowrap;
 }
 
 .message-export {

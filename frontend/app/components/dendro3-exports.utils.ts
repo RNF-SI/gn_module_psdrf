@@ -33,7 +33,7 @@ export function totalModifications(exportDendro3: any): number {
 export function resumePlacettes(exportDendro3: any): string {
   const placettes: any[] = exportDendro3.placettes || [];
   if (!placettes.length) {
-    return "aucune modification";
+    return "aucune nouvelle saisie";
   }
   const cycles = new Set<number>();
   placettes.forEach((p) => (p.cycles || []).forEach((c) => cycles.add(c)));

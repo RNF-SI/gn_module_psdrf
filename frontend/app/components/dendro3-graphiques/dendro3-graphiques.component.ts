@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, OnInit, SimpleChanges } from "@angular/core";
+import { Component, HostBinding, Input, OnChanges, OnInit, SimpleChanges } from "@angular/core";
 import { ChartConfiguration } from "chart.js";
 import { PsdrfDataService } from "../../services/route.service";
 import { libelleStatutExport } from "../dendro3-exports.utils";
@@ -67,6 +67,21 @@ export class Dendro3GraphiquesComponent implements OnInit, OnChanges {
   }
 
   charger(): void {
+    // Agrégats d'envois : vue globale seulement (la fiche liste ses envois).
+    if (this.vueGlobale) {
+      this.chargerEnvois();
+    }
+    this.dataSrv.getActiviteTerrainDendro3(this.idDispositif).subscribe(
+      (activite) => {
+        this.activite = activite;
+        this.construireSaisies();
+        this.construireClassements();
+      },
+      () => (this.activite = null)
+    );
+  }
+
+  private chargerEnvois(): void {
     this.chargement = true;
     this.dataSrv.getStatistiquesDendro3(this.idDispositif).subscribe(
       (stats) => {
@@ -80,16 +95,9 @@ export class Dendro3GraphiquesComponent implements OnInit, OnChanges {
         this.chargement = false;
       }
     );
-    this.dataSrv.getActiviteTerrainDendro3(this.idDispositif).subscribe(
-      (activite) => {
-        this.activite = activite;
-        this.construireSaisies();
-        this.construireClassements();
-      },
-      () => (this.activite = null)
-    );
   }
 
+  @HostBinding("class.vue-globale")
   get vueGlobale(): boolean {
     return this.idDispositif == null;
   }
