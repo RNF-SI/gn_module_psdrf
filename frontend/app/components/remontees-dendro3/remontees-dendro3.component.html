@@ -1,0 +1,119 @@
+<div class="remontees">
+  <header class="entete">
+    <div>
+      <h2>Remontées Dendro3</h2>
+      <p class="aide">
+        Chaque envoi lancé depuis l'application arrive dans le staging-terrain.
+        Un envoi « Réussi » est bien arrivé : ses placettes restent à importer
+        en production depuis la fiche du dispositif.
+      </p>
+    </div>
+    <button mat-stroked-button matTooltip="Recharger le journal" [disabled]="chargement" (click)="charger()">
+      <mat-icon>refresh</mat-icon>
+      Actualiser
+    </button>
+  </header>
+
+  <!-- Recherche : filtre les chiffres clés, les classements et le journal. -->
+  <div class="filtres">
+    <mat-form-field appearance="outline" class="recherche">
+      <mat-label>Rechercher</mat-label>
+      <mat-icon matPrefix>search</mat-icon>
+      <input
+        matInput
+        [(ngModel)]="recherche"
+        (ngModelChange)="nbAffiches = 25"
+        placeholder="Dispositif, n°, appareil, placette…"
+      />
+      <button *ngIf="recherche" matSuffix mat-icon-button aria-label="Effacer" (click)="recherche = ''">
+        <mat-icon>close</mat-icon>
+      </button>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="statut">
+      <mat-label>Statut</mat-label>
+      <mat-select [(ngModel)]="statut" (ngModelChange)="nbAffiches = 25">
+        <mat-option value="">Tous</mat-option>
+        <mat-option *ngFor="let s of STATUTS" [value]="s">
+          <span class="pastille" [ngClass]="'statut-' + s"></span>
+          {{ libelleStatutExport(s) }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+    <button *ngIf="filtreActif" mat-button (click)="reinitialiser()">Réinitialiser</button>
+  </div>
+
+  <div class="chiffres" *ngIf="exports.length">
+    <div class="chiffre">
+      <span class="valeur">{{ filtres.length }}</span>
+      <span class="libelle">envois{{ filtreActif ? " trouvés" : " journalisés" }}</span>
+    </div>
+    <div class="chiffre">
+      <span class="valeur">{{ nbDispositifs }}</span>
+      <span class="libelle">dispositif{{ nbDispositifs > 1 ? "s" : "" }}</span>
+    </div>
+    <div class="chiffre" [class.alerte]="nbEchecs">
+      <span class="valeur">{{ nbEchecs }}</span>
+      <span class="libelle">échec{{ nbEchecs > 1 ? "s" : "" }}</span>
+    </div>
+    <div class="chiffre" *ngIf="dernier">
+      <span class="valeur petite">{{ dernier.recu_le | date: "dd/MM/yyyy HH:mm" }}</span>
+      <span class="libelle">dernier envoi · {{ dernier.nom_dispositif || "n° " + dernier.id_dispositif }}</span>
+    </div>
+  </div>
+
+  <psdrf-dendro3-graphiques [recherche]="recherche"></psdrf-dendro3-graphiques>
+
+  <section class="journal">
+    <h3>Journal des envois</h3>
+    <p class="aide" *ngIf="chargement">Chargement…</p>
+    <p class="aide" *ngIf="!chargement && !exports.length">
+      Aucun envoi Dendro3 reçu depuis la mise en place du journal.
+    </p>
+    <p class="aide" *ngIf="!chargement && exports.length && !filtres.length">
+      Aucun envoi ne correspond à la recherche.
+    </p>
+
+    <div class="table-defilante" *ngIf="filtres.length">
+      <table>
+        <thead>
+          <tr>
+            <th>Reçu le</th>
+            <th>Dispositif</th>
+            <th>Statut</th>
+            <th>Placettes modifiées</th>
+            <th class="nombre">Lignes</th>
+            <th>Appareil</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let e of affiches">
+            <td class="date">{{ e.recu_le | date: "dd/MM/yyyy HH:mm" }}</td>
+            <td>
+              <a href="javascript:void(0)" (click)="ouvrirDispositif(e.id_dispositif)">
+                {{ e.nom_dispositif || "Dispositif" }}
+              </a>
+              <span class="numero">n° {{ e.id_dispositif }}</span>
+            </td>
+            <td>
+              <span class="badge" [ngClass]="'statut-' + e.statut">
+                <span class="pastille"></span>{{ libelleStatutExport(e.statut) }}
+              </span>
+              <div *ngIf="e.message" class="message-export">{{ e.message }}</div>
+            </td>
+            <td>{{ resumePlacettes(e) }}</td>
+            <td class="nombre">
+              {{ e.statut === "succes" || e.statut === "archive" ? (totalModifications(e) | number: "1.0-0":"fr") : "—" }}
+            </td>
+            <td class="appareil">{{ e.device || "—" }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="pied" *ngIf="filtres.length">
+      <span class="aide">{{ affiches.length }} sur {{ filtres.length }}</span>
+      <button *ngIf="affiches.length < filtres.length" mat-stroked-button (click)="afficherPlus()">
+        Afficher plus
+      </button>
+    </div>
+  </section>
+</div>

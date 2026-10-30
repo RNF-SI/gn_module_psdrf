@@ -52,49 +52,6 @@
     }
 }
 
-.titre-remontees {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 1rem;
-}
-
-.aide-remontees {
-    color: #5f6b73;
-    margin: 0.25rem 0 0.75rem;
-}
-
-.table-remontees {
-    overflow-x: auto;
-    table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-    th, td {
-        padding: 0.4rem 0.6rem;
-        border-bottom: 1px solid #e0e0e0;
-        text-align: left;
-        vertical-align: top;
-    }
-    th {
-        font-size: 0.8rem;
-        text-transform: uppercase;
-        color: #5f6b73;
-    }
-}
-
-.statut-succes { color: #2e7d32; font-weight: 600; }
-.statut-echec { color: #c62828; font-weight: 600; }
-.statut-en_cours { color: #ef6c00; font-weight: 600; }
-.statut-archive { color: #616161; font-weight: 600; }
-
-.message-export {
-    font-size: 0.8rem;
-    color: #c62828;
-    max-width: 30rem;
-    word-break: break-word;
-}
-
 // Onglets de la page (#74)
 .onglets-admin {
     margin: 0 0.5rem;

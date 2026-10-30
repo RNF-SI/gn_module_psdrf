@@ -29,6 +29,7 @@ import { ComparaisonStagingComponent } from "./components/comparaison.staging.co
 import { MatSortModule } from '@angular/material/sort';
 import { NgChartsModule } from 'ng2-charts';
 import { Dendro3GraphiquesComponent } from "./components/dendro3-graphiques/dendro3-graphiques.component";
+import { RemonteesDendro3Component } from "./components/remontees-dendro3/remontees-dendro3.component";
 
 // my module routing
 const routes: Routes = [
@@ -56,7 +57,8 @@ const routes: Routes = [
     CustomToastComponent,
     DendroDownloadComponent,
     ComparaisonStagingComponent,
-    Dendro3GraphiquesComponent
+    Dendro3GraphiquesComponent,
+    RemonteesDendro3Component
   ],
   imports: [
     GN2CommonModule,

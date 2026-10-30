@@ -1,0 +1,230 @@
+// Palette du module PSDRF (cf. fiche dispositif), déclarée sur :host.
+:host {
+    --vert: #598979;
+    --noir: #1a1a18;
+    --gris: #5d6660;
+    --beige: #F4F1E4;
+    --trait: #e2ddc9;
+    --brun: #8B5500;
+    // Statuts : mêmes teintes que les graphiques (palette validée daltonismes).
+    --st-succes: #178F6A;
+    --st-echec: #A8322A;
+    --st-en_cours: #BE7600;
+    --st-archive: #8AAC3E;
+    display: block;
+}
+
+.remontees {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 12px 8px 24px;
+    color: var(--noir);
+}
+
+.entete {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+
+    h2 {
+        margin: 0 0 4px;
+        font-size: 1.4rem;
+        color: var(--noir);
+    }
+}
+
+h3 {
+    margin: 0 0 8px;
+    font-size: 1.15rem;
+    color: var(--brun);
+}
+
+.aide {
+    margin: 0;
+    color: var(--gris);
+    font-size: 0.9rem;
+}
+
+// Recherche + statut sur une ligne.
+.filtres {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 12px;
+
+    .recherche {
+        flex: 1 1 320px;
+    }
+
+    .statut {
+        flex: 0 0 200px;
+    }
+}
+
+// Chiffres clés.
+.chiffres {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 12px;
+}
+
+.chiffre {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 12px 16px;
+    background: var(--beige);
+    border: 1px solid var(--trait);
+    border-left: 4px solid var(--vert);
+    border-radius: 8px;
+
+    .valeur {
+        font-size: 1.8rem;
+        font-weight: 600;
+        line-height: 1.1;
+        font-variant-numeric: tabular-nums;
+
+        &.petite {
+            font-size: 1.15rem;
+            line-height: 1.6;
+        }
+    }
+
+    .libelle {
+        color: var(--gris);
+        font-size: 0.85rem;
+    }
+
+    &.alerte {
+        border-left-color: var(--st-echec);
+    }
+}
+
+// Journal.
+.journal {
+    background: #fff;
+    border: 1px solid var(--trait);
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.table-defilante {
+    overflow-x: auto;
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+    }
+
+    th,
+    td {
+        padding: 8px 10px;
+        text-align: left;
+        vertical-align: top;
+        border-bottom: 1px solid var(--trait);
+    }
+
+    th {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        color: var(--gris);
+        background: var(--beige);
+        position: sticky;
+        top: 0;
+    }
+
+    tbody tr:hover {
+        background: rgba(89, 137, 121, 0.06);
+    }
+
+    .date {
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .nombre {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+    }
+
+    a {
+        color: var(--vert);
+        font-weight: 600;
+    }
+
+    .numero,
+    .appareil {
+        color: var(--gris);
+    }
+
+    .numero {
+        margin-left: 6px;
+        font-size: 0.8rem;
+    }
+}
+
+// Statut : pastille de couleur + libellé (jamais la couleur seule).
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: var(--beige);
+    border: 1px solid var(--trait);
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.pastille {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: currentColor;
+    flex: none;
+}
+
+.badge .pastille,
+mat-option .pastille {
+    background: var(--pastille, var(--gris));
+}
+
+.statut-succes { --pastille: var(--st-succes); }
+.statut-echec { --pastille: var(--st-echec); }
+.statut-en_cours { --pastille: var(--st-en_cours); }
+.statut-archive { --pastille: var(--st-archive); }
+
+// La pastille d'une option du menu est hors de :host (overlay) : couleur en dur.
+::ng-deep .mat-option .pastille {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 6px;
+}
+::ng-deep .mat-option .pastille.statut-succes { background: #178F6A; }
+::ng-deep .mat-option .pastille.statut-echec { background: #A8322A; }
+::ng-deep .mat-option .pastille.statut-en_cours { background: #BE7600; }
+::ng-deep .mat-option .pastille.statut-archive { background: #8AAC3E; }
+
+.message-export {
+    margin-top: 4px;
+    font-size: 0.8rem;
+    color: var(--st-echec);
+    max-width: 30rem;
+    word-break: break-word;
+}
+
+.pied {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 12px;
+}

@@ -1,78 +1,88 @@
-<h4 class="sous-titre">Envois au serveur</h4>
-<p class="aide" *ngIf="chargement">Chargement des graphiques…</p>
+<!-- Envois reçus par le serveur (journal, depuis juin 2026). -->
+<section class="groupe">
+  <h3>Envois au serveur</h3>
+  <p class="aide" *ngIf="chargement">Chargement des graphiques…</p>
+  <ng-container *ngIf="!chargement && stats">
+    <p class="aide" *ngIf="!stats.par_mois.length">
+      Aucun envoi Dendro3 journalisé (le journal commence en juin 2026).
+    </p>
 
-<ng-container *ngIf="!chargement && stats">
-  <p class="aide" *ngIf="!stats.par_mois.length">
-    Aucun envoi Dendro3 journalisé (le journal commence en juin 2026).
-  </p>
-
-  <div class="graphiques" *ngIf="stats.par_mois.length">
-    <figure class="graphique">
-      <figcaption>Envois par mois</figcaption>
-      <div class="zone" style="height: 240px">
-        <canvas baseChart [type]="'bar'" [data]="envoisParMois" [options]="optionsEmpilees"></canvas>
-      </div>
-    </figure>
-
-    <figure class="graphique">
-      <figcaption>Lignes envoyées par mois</figcaption>
-      <div class="zone" style="height: 240px">
-        <canvas baseChart [type]="'bar'" [data]="modificationsParMois" [options]="optionsVerticales"></canvas>
-      </div>
-    </figure>
-
-    <ng-container *ngIf="idDispositif == null">
-      <figure class="graphique">
-        <figcaption>Envois par dispositif</figcaption>
-        <div class="zone" [style.height.px]="hauteurHorizontale(stats.par_dispositif.length)">
-          <canvas baseChart [type]="'bar'" [data]="envoisParDispositif" [options]="optionsHorizontales"></canvas>
+    <div class="grille" *ngIf="stats.par_mois.length">
+      <figure class="carte">
+        <figcaption>Envois par mois</figcaption>
+        <div class="zone" style="height: 240px">
+          <canvas baseChart [type]="'bar'" [data]="envoisParMois" [options]="optionsEmpilees"></canvas>
         </div>
       </figure>
 
-      <figure class="graphique">
-        <figcaption>Envois par modèle d'appareil</figcaption>
-        <div class="zone" [style.height.px]="hauteurHorizontale(stats.par_appareil.length)">
-          <canvas baseChart [type]="'bar'" [data]="envoisParAppareil" [options]="optionsHorizontales"></canvas>
+      <figure class="carte">
+        <figcaption>Lignes envoyées par mois</figcaption>
+        <div class="zone" style="height: 240px">
+          <canvas baseChart [type]="'bar'" [data]="modificationsParMois" [options]="optionsVerticales"></canvas>
         </div>
       </figure>
-    </ng-container>
-  </div>
 
-  <p class="aide" *ngIf="stats.par_mois.length">
-    « Lignes envoyées » compte les lignes créées, modifiées ou supprimées
-    contenues dans chaque envoi (un envoi répété compte à chaque fois).
-    « Archive » : envoi reconstitué depuis les archives du serveur, résultat
-    du traitement inconnu. Le détail est dans le tableau des envois.
-  </p>
-</ng-container>
+      <ng-container *ngIf="vueGlobale">
+        <figure class="carte">
+          <figcaption>Envois par dispositif</figcaption>
+          <div class="defilement" *ngIf="nbBarres(envoisParDispositif)">
+            <div class="zone" [style.height.px]="hauteurHorizontale(envoisParDispositif)">
+              <canvas baseChart [type]="'bar'" [data]="envoisParDispositif" [options]="optionsHorizontales"></canvas>
+            </div>
+          </div>
+          <p class="aide" *ngIf="!nbBarres(envoisParDispositif)">Aucun dispositif ne correspond.</p>
+        </figure>
 
-<h4 class="sous-titre">Saisies sur tablette</h4>
-<ng-container *ngIf="activite">
-  <p class="aide" *ngIf="!activite.par_mois.length">Aucune saisie Dendro3 en staging.</p>
+        <figure class="carte">
+          <figcaption>Envois par modèle d'appareil</figcaption>
+          <div class="defilement" *ngIf="nbBarres(envoisParAppareil)">
+            <div class="zone" [style.height.px]="hauteurHorizontale(envoisParAppareil)">
+              <canvas baseChart [type]="'bar'" [data]="envoisParAppareil" [options]="optionsHorizontales"></canvas>
+            </div>
+          </div>
+          <p class="aide" *ngIf="!nbBarres(envoisParAppareil)">Aucun appareil ne correspond.</p>
+        </figure>
+      </ng-container>
+    </div>
 
-  <div class="graphiques" *ngIf="activite.par_mois.length">
-    <figure class="graphique" [class.pleine-largeur]="idDispositif == null">
-      <figcaption>Saisies terrain par mois</figcaption>
-      <div class="zone" style="height: 240px">
-        <canvas baseChart [type]="'bar'" [data]="saisiesParMois" [options]="optionsVerticales"></canvas>
-      </div>
-    </figure>
+    <p class="note" *ngIf="stats.par_mois.length">
+      « Lignes envoyées » compte les lignes créées, modifiées ou supprimées de
+      chaque envoi (un envoi répété compte à chaque fois). « Archive » : envoi
+      reconstitué depuis les archives du serveur, résultat inconnu.
+    </p>
+  </ng-container>
+</section>
 
-    <figure class="graphique pleine-largeur" *ngIf="idDispositif == null">
-      <figcaption>Saisies terrain par dispositif</figcaption>
-      <div class="defilement">
-        <div class="zone" [style.height.px]="hauteurHorizontale(activite.par_dispositif.length)">
-          <canvas baseChart [type]="'bar'" [data]="saisiesParDispositif" [options]="optionsSaisiesParDispositif"></canvas>
+<!-- Saisies datées par les tablettes (staging, depuis 2024). -->
+<section class="groupe">
+  <h3>Saisies sur tablette</h3>
+  <ng-container *ngIf="activite">
+    <p class="aide" *ngIf="!activite.par_mois.length">Aucune saisie Dendro3 en staging.</p>
+
+    <div class="grille" *ngIf="activite.par_mois.length">
+      <figure class="carte" [class.large]="vueGlobale">
+        <figcaption>Saisies terrain par mois</figcaption>
+        <div class="zone" style="height: 240px">
+          <canvas baseChart [type]="'bar'" [data]="saisiesParMois" [options]="optionsVerticales"></canvas>
         </div>
-      </div>
-    </figure>
-  </div>
+      </figure>
 
-  <p class="aide" *ngIf="activite.par_mois.length">
-    Mesures d'arbres, de bois morts et relevés de placette saisis dans
-    Dendro3, datés par la tablette (dernière modification, sinon création) :
-    couvre aussi les campagnes antérieures au journal des envois. Une ligne
-    modifiée compte au mois de sa dernière modification ; les imports Excel
-    n'y figurent pas.
-  </p>
-</ng-container>
+      <figure class="carte large" *ngIf="vueGlobale">
+        <figcaption>Saisies terrain par dispositif</figcaption>
+        <div class="defilement" *ngIf="nbBarres(saisiesParDispositif)">
+          <div class="zone" [style.height.px]="hauteurHorizontale(saisiesParDispositif)">
+            <canvas baseChart [type]="'bar'" [data]="saisiesParDispositif" [options]="optionsSaisiesParDispositif"></canvas>
+          </div>
+        </div>
+        <p class="aide" *ngIf="!nbBarres(saisiesParDispositif)">Aucun dispositif ne correspond.</p>
+      </figure>
+    </div>
+
+    <p class="note" *ngIf="activite.par_mois.length">
+      Mesures d'arbres, de bois morts et relevés de placette saisis dans
+      Dendro3, datés par la tablette : couvre aussi les campagnes antérieures
+      au journal. Une ligne modifiée compte au mois de sa dernière
+      modification ; les imports Excel n'y figurent pas.
+    </p>
+  </ng-container>
+</section>
