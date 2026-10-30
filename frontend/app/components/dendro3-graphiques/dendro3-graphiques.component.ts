@@ -134,7 +134,7 @@ export class Dendro3GraphiquesComponent implements OnInit, OnChanges {
     const mois = this.activite.par_mois || [];
     this.saisiesParMois = {
       labels: mois.map((m) => this.libelleMois(m.mois)),
-      datasets: [{ ...this.barres(COULEUR_SAISIES), label: "Saisies", data: mois.map((m) => m.total) }],
+      datasets: [{ ...this.barres(COULEUR_SAISIES), label: "Mesures et relevés", data: mois.map((m) => m.total) }],
     };
   }
 
@@ -160,7 +160,7 @@ export class Dendro3GraphiquesComponent implements OnInit, OnChanges {
       );
       this.saisiesParDispositif = {
         labels: dispositifs.map((d) => d.nom_dispositif || `Dispositif ${d.id_dispositif}`),
-        datasets: [{ ...this.barres(COULEUR_SAISIES), label: "Saisies", data: dispositifs.map((d) => d.saisies) }],
+        datasets: [{ ...this.barres(COULEUR_SAISIES), label: "Mesures et relevés", data: dispositifs.map((d) => d.saisies) }],
       };
       // Infobulle : période d'activité du dispositif.
       const options: any = this.options({ horizontal: true });

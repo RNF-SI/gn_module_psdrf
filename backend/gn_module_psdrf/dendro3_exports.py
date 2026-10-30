@@ -300,21 +300,26 @@ def statistiques_exports(id_dispositif: int | None = None) -> dict:
     }
 
 
-# Saisies Dendro3 conservées en staging, datées par la tablette (dernière
+# Lignes Dendro3 conservées en staging, datées par la tablette (dernière
 # modification, sinon création) : mesures d'arbres, de bois morts et relevés
-# de placette.
+# de placette. `tablette` est vide pour les copies de la production
+# téléchargées puis renvoyées par l'appli (RNF-SI/dendro3#82) : ce ne sont
+# pas des saisies.
 _SAISIES_STAGING_SQL = """
-    SELECT p.id_dispositif, 'arbres' AS type, coalesce(m.updated_at, m.created_at) AS saisi_le
+    SELECT p.id_dispositif, 'arbres' AS type, coalesce(m.updated_at, m.created_at) AS saisi_le,
+           NULLIF(coalesce(m.updated_on, m.created_on), '') AS tablette
       FROM pr_psdrf_staging.t_arbres_mesures m
       JOIN pr_psdrf_staging.t_arbres a ON a.id_arbre = m.id_arbre
       JOIN pr_psdrf_staging.t_placettes p ON p.id_placette = a.id_placette
     UNION ALL
-    SELECT p.id_dispositif, 'bois_morts', coalesce(m.updated_at, m.created_at)
+    SELECT p.id_dispositif, 'bois_morts', coalesce(m.updated_at, m.created_at),
+           NULLIF(coalesce(m.updated_on, m.created_on), '')
       FROM pr_psdrf_staging.t_bm_sup_30_mesures m
       JOIN pr_psdrf_staging.t_bm_sup_30 b ON b.id_bm_sup_30 = m.id_bm_sup_30
       JOIN pr_psdrf_staging.t_placettes p ON p.id_placette = b.id_placette
     UNION ALL
-    SELECT p.id_dispositif, 'releves', coalesce(cp.updated_at, cp.created_at)
+    SELECT p.id_dispositif, 'releves', coalesce(cp.updated_at, cp.created_at),
+           NULLIF(coalesce(cp.updated_on, cp.created_on), '')
       FROM pr_psdrf_staging.cor_cycles_placettes cp
       JOIN pr_psdrf_staging.t_placettes p ON p.id_placette = cp.id_placette
 """
@@ -326,9 +331,11 @@ def activite_terrain(id_dispositif: int | None = None) -> dict:
     staging (#76) : saisies par mois et par type, et par dispositif (premier /
     dernier mois). Indépendant du journal des envois, donc couvre aussi les
     campagnes antérieures à sa mise en place. Une ligne modifiée compte au
-    mois de sa dernière modification ; les imports Excel n'y figurent pas."""
+    mois de sa dernière modification ; les imports Excel n'y figurent pas.
+    Les lignes sans tablette (copies téléchargées renvoyées) sont écartées et
+    seulement dénombrées (``sans_tablette``)."""
     filtre = "AND s.id_dispositif = :id_dispositif" if id_dispositif is not None else ""
-    vide = {"par_mois": [], "par_dispositif": []}
+    vide = {"par_mois": [], "par_dispositif": [], "sans_tablette": 0}
     try:
         rows = DB.session.execute(text(f"""
             WITH s AS ({_SAISIES_STAGING_SQL})
@@ -337,9 +344,13 @@ def activite_terrain(id_dispositif: int | None = None) -> dict:
               FROM s
               LEFT JOIN pr_psdrf.t_dispositifs d ON d.id_dispositif = s.id_dispositif
               LEFT JOIN pr_psdrf_staging.t_dispositifs ds ON ds.id_dispositif = s.id_dispositif
-             WHERE s.saisi_le IS NOT NULL {filtre}
+             WHERE s.saisi_le IS NOT NULL AND s.tablette IS NOT NULL {filtre}
              GROUP BY 1, 2, 3, 4
         """), {"id_dispositif": id_dispositif}).mappings().all()
+        sans_tablette = DB.session.execute(text(f"""
+            WITH s AS ({_SAISIES_STAGING_SQL})
+            SELECT count(*) FROM s WHERE s.tablette IS NULL {filtre}
+        """), {"id_dispositif": id_dispositif}).scalar()
     except Exception:
         DB.session.rollback()
         logger.exception("[DENDRO3] Activité de terrain illisible")
@@ -361,6 +372,7 @@ def activite_terrain(id_dispositif: int | None = None) -> dict:
         "par_mois": [par_mois[k] for k in sorted(par_mois)],
         "par_dispositif": sorted(par_dispositif.values(),
                                  key=lambda d: (-d["saisies"], d["nom_dispositif"] or "")),
+        "sans_tablette": sans_tablette,
     }
 
 

@@ -57,19 +57,24 @@
 <!-- Saisies datées par les tablettes (staging, depuis 2024). -->
 <section class="groupe">
   <h3 *ngIf="vueGlobale">Saisies sur tablette</h3>
+  <p class="aide" *ngIf="activite && activite.par_mois.length">
+    Chaque barre compte les arbres, bois morts et placettes enregistrés ou
+    modifiés sur une tablette ce mois-là, qu'ils aient été envoyés au serveur
+    tout de suite ou plus tard.
+  </p>
   <ng-container *ngIf="activite">
     <p class="aide" *ngIf="!activite.par_mois.length">Aucune saisie Dendro3 en staging.</p>
 
     <div class="grille" *ngIf="activite.par_mois.length">
       <figure class="carte" [class.large]="vueGlobale">
-        <figcaption>Saisies terrain par mois</figcaption>
+        <figcaption>Mesures et relevés saisis sur tablette, par mois</figcaption>
         <div class="zone" style="height: 240px">
           <canvas baseChart [type]="'bar'" [data]="saisiesParMois" [options]="optionsVerticales"></canvas>
         </div>
       </figure>
 
       <figure class="carte large" *ngIf="vueGlobale">
-        <figcaption>Saisies terrain par dispositif</figcaption>
+        <figcaption>Mesures et relevés saisis sur tablette, par dispositif</figcaption>
         <div class="defilement" *ngIf="nbBarres(saisiesParDispositif)">
           <div class="zone" [style.height.px]="hauteurHorizontale(saisiesParDispositif)">
             <canvas baseChart [type]="'bar'" [data]="saisiesParDispositif" [options]="optionsSaisiesParDispositif"></canvas>
@@ -80,10 +85,13 @@
     </div>
 
     <p class="note" *ngIf="activite.par_mois.length">
-      Mesures d'arbres, de bois morts et relevés de placette saisis dans
-      Dendro3, datés par la tablette : couvre aussi les campagnes antérieures
-      au journal. Une ligne modifiée compte au mois de sa dernière
-      modification ; les imports Excel n'y figurent pas.
+      Date donnée par la tablette ; une ligne modifiée plusieurs fois compte au
+      mois de sa dernière modification. Les imports Excel n'y figurent pas.
+      <ng-container *ngIf="activite.sans_tablette">
+        {{ activite.sans_tablette | number: "1.0-0":"fr" }} ligne{{ activite.sans_tablette > 1 ? "s" : "" }}
+        sans tablette ne sont pas comptées : ce sont des copies de la production
+        téléchargées puis renvoyées par l'appli, pas des saisies.
+      </ng-container>
     </p>
   </ng-container>
 </section>
