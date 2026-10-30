@@ -125,6 +125,9 @@ doublon) ::
     geonature psdrf reprendre-archives-dendro3
 
 ``--dossier <chemin>`` permet de reprendre les archives d'un ancien serveur.
+Les noms de fichiers sont horodatés dans le fuseau du processus gunicorn (UTC
+en prod) : ``--fuseau`` (défaut ``UTC``) si ce n'est pas le cas. Relancer la
+commande met à jour les lignes « Archive » déjà créées.
 
 Tests
 -----

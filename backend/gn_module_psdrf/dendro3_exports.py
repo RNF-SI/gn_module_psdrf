@@ -17,6 +17,7 @@ import json
 import logging
 from collections import Counter
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from pathlib import Path
 
 from geonature.utils.env import DB
@@ -129,20 +130,26 @@ def clore_export(task_id: str, statut: str, compteurs: dict | None = None, messa
         logger.exception("[DENDRO3] Journal : fin de l'export %s non tracée", task_id)
 
 
-def reprendre_archives(dossier: Path, simulation: bool = False) -> dict:
+def reprendre_archives(dossier: Path, simulation: bool = False, fuseau: str = "UTC") -> dict:
     """Journalise les envois archivés par la route d'export
     (``debug_data/<id_dispositif>/<AAAAMMJJ_HHMMSS>.json``), statut ``archive``
     puisque le résultat du traitement n'est pas connu.
 
-    Relançable : la ligne est identifiée par ``archive:<dispositif>/<fichier>``,
-    et un envoi déjà journalisé en direct (même dispositif, reçu à moins de
-    2 minutes) est ignoré. L'horodatage du nom de fichier est l'heure locale du
-    serveur, convertie comme ``now()`` pour rester comparable aux lignes
-    directes. Contrairement au journal direct, les erreurs remontent."""
-    bilan = {"ajoutes": 0, "deja_journalises": 0, "ignores": []}
+    Le nom de fichier vient de ``datetime.now()`` dans le processus gunicorn,
+    qui tourne en UTC en prod (fichier ``…_170733`` écrit à 19:07 heure de
+    Paris) : il est lu dans ``fuseau`` puis stocké comme ``now()``, pour rester
+    comparable aux lignes directes.
+
+    Relançable : la ligne est identifiée par ``archive:<dispositif>/<fichier>``
+    et mise à jour si elle existe déjà (corrige une reprise antérieure) ; un
+    envoi déjà journalisé en direct (même dispositif, reçu à moins de
+    2 minutes) est ignoré. Contrairement au journal direct, les erreurs
+    remontent."""
+    zone = ZoneInfo(fuseau)
+    bilan = {"ajoutes": 0, "mis_a_jour": 0, "deja_journalises": 0, "ignores": []}
     for fichier in sorted(Path(dossier).glob("*/*.json")):
         try:
-            recu_le = datetime.strptime(fichier.stem, "%Y%m%d_%H%M%S").astimezone()
+            recu_le = datetime.strptime(fichier.stem, "%Y%m%d_%H%M%S").replace(tzinfo=zone)
             data = json.loads(fichier.read_text(encoding="utf-8"))
         except ValueError as e:
             bilan["ignores"].append(f"{fichier.parent.name}/{fichier.name} : {e}")
@@ -159,25 +166,30 @@ def reprendre_archives(dossier: Path, simulation: bool = False) -> dict:
             "placettes": json.dumps(resume_placettes(data)),
         }
         with DB.engine.begin() as cx:
-            deja = cx.execute(text(f"""
+            direct = cx.execute(text(f"""
                 SELECT 1 FROM {TABLE}
-                 WHERE task_id = :task_id
-                    OR (task_id NOT LIKE 'archive:%'
-                        AND id_dispositif IS NOT DISTINCT FROM :id_dispositif
-                        AND recu_le BETWEEN CAST(:recu_le AS timestamptz) - interval '2 minutes'
-                                        AND CAST(:recu_le AS timestamptz) + interval '2 minutes')
+                 WHERE task_id NOT LIKE 'archive:%'
+                   AND id_dispositif IS NOT DISTINCT FROM :id_dispositif
+                   AND recu_le BETWEEN CAST(:recu_le AS timestamptz) - interval '2 minutes'
+                                   AND CAST(:recu_le AS timestamptz) + interval '2 minutes'
                  LIMIT 1
             """), params).first()
-            if deja:
+            if direct:
                 bilan["deja_journalises"] += 1
                 continue
+            existe = cx.execute(text(f"SELECT 1 FROM {TABLE} WHERE task_id = :task_id"), params).first()
             if not simulation:
                 cx.execute(text(f"""
                     INSERT INTO {TABLE} (task_id, id_dispositif, recu_le, statut, device, id_role, placettes)
                     VALUES (:task_id, :id_dispositif, CAST(:recu_le AS timestamptz), 'archive',
                             :device, :id_role, CAST(:placettes AS jsonb))
+                    ON CONFLICT (task_id) DO UPDATE
+                       SET id_dispositif = EXCLUDED.id_dispositif, recu_le = EXCLUDED.recu_le,
+                           device = EXCLUDED.device, id_role = EXCLUDED.id_role,
+                           placettes = EXCLUDED.placettes
+                     WHERE {TABLE}.statut = 'archive'
                 """), params)
-            bilan["ajoutes"] += 1
+            bilan["mis_a_jour" if existe else "ajoutes"] += 1
     return bilan
 
 

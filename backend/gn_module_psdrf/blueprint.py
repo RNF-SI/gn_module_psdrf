@@ -987,11 +987,15 @@ def save_json_data_for_debugging(data):
               default=Path(__file__).parent / 'debug_data', show_default=True,
               help="Dossier des envois archivés par save_json_data_for_debugging.")
 @click.option('--simulation', is_flag=True, help="Compte sans rien écrire.")
-def reprendre_archives_dendro3(dossier, simulation):
-    """Journalise les envois Dendro3 archivés (statut « archive »). Relançable."""
-    bilan = reprendre_archives(dossier, simulation=simulation)
-    verbe = "à ajouter" if simulation else "ajoutés"
-    click.echo(f"{bilan['ajoutes']} envois {verbe}, {bilan['deja_journalises']} déjà journalisés.")
+@click.option('--fuseau', default='UTC', show_default=True,
+              help="Fuseau des horodatages des noms de fichiers (celui du processus gunicorn).")
+def reprendre_archives_dendro3(dossier, simulation, fuseau):
+    """Journalise les envois Dendro3 archivés (statut « archive »). Relançable :
+    met à jour les lignes d'archive déjà créées."""
+    bilan = reprendre_archives(dossier, simulation=simulation, fuseau=fuseau)
+    suffixe = " (simulation : rien n'est écrit)" if simulation else ""
+    click.echo(f"{bilan['ajoutes']} envois ajoutés, {bilan['mis_a_jour']} mis à jour, "
+               f"{bilan['deja_journalises']} déjà journalisés en direct{suffixe}.")
     for ignore in bilan['ignores']:
         click.echo(f"Ignoré : {ignore}")
 
