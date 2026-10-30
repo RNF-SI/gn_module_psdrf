@@ -35,7 +35,7 @@ from .disp_placette_liste import disp_placette_liste_add
 # from .pr_psdrf_staging_functions.insert_or_update_disp_to_staging import insert_or_update_data
 from .bddToExcel import bddToExcel
 from .psdrf_py.etat_cycles import avertissements, etat_cycles
-from .dendro3_exports import ouvrir_export, derniers_exports, suivi_dispositif, reprendre_archives
+from .dendro3_exports import ouvrir_export, derniers_exports, suivi_dispositif, reprendre_archives, statistiques_exports
 from .schemas.cycles import ConciseCycleSchema
 from .schemas.essences import EssenceSchema
 from .tasks import test_celery, insert_or_update_data, fetch_dispositif_data, fetch_updated_data
@@ -1003,6 +1003,14 @@ def get_dendro3_exports():
     (page admin). ``?limit=`` (défaut 50, max 500)."""
     limit = min(request.args.get('limit', 50, type=int), 500)
     return derniers_exports(limit)
+
+
+@blueprint.route('/dendro3/statistiques', methods=['GET'])
+@json_resp
+def get_dendro3_statistiques():
+    """Agrégats du journal Dendro3 pour les graphiques de suivi (page admin ;
+    fiche dispositif avec ``?id_dispositif=``)."""
+    return statistiques_exports(request.args.get('id_dispositif', type=int))
 
 
 @blueprint.route('/export_dispositif_from_dendro3/status/<task_id>', methods=['GET'])

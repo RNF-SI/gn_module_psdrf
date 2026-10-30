@@ -1,0 +1,44 @@
+<p class="aide" *ngIf="chargement">Chargement des graphiques…</p>
+
+<ng-container *ngIf="!chargement && stats">
+  <p class="aide" *ngIf="!stats.par_mois.length">Aucun envoi Dendro3 journalisé.</p>
+
+  <div class="graphiques" *ngIf="stats.par_mois.length">
+    <figure class="graphique">
+      <figcaption>Envois par mois</figcaption>
+      <div class="zone" style="height: 240px">
+        <canvas baseChart [type]="'bar'" [data]="envoisParMois" [options]="optionsEmpilees"></canvas>
+      </div>
+    </figure>
+
+    <figure class="graphique">
+      <figcaption>Lignes envoyées par mois</figcaption>
+      <div class="zone" style="height: 240px">
+        <canvas baseChart [type]="'bar'" [data]="modificationsParMois" [options]="optionsVerticales"></canvas>
+      </div>
+    </figure>
+
+    <ng-container *ngIf="idDispositif == null">
+      <figure class="graphique">
+        <figcaption>Envois par dispositif</figcaption>
+        <div class="zone" [style.height.px]="hauteurHorizontale(stats.par_dispositif.length)">
+          <canvas baseChart [type]="'bar'" [data]="envoisParDispositif" [options]="optionsHorizontales"></canvas>
+        </div>
+      </figure>
+
+      <figure class="graphique">
+        <figcaption>Envois par modèle d'appareil</figcaption>
+        <div class="zone" [style.height.px]="hauteurHorizontale(stats.par_appareil.length)">
+          <canvas baseChart [type]="'bar'" [data]="envoisParAppareil" [options]="optionsHorizontales"></canvas>
+        </div>
+      </figure>
+    </ng-container>
+  </div>
+
+  <p class="aide" *ngIf="stats.par_mois.length">
+    « Lignes envoyées » compte les lignes créées, modifiées ou supprimées
+    contenues dans chaque envoi (un envoi répété compte à chaque fois).
+    « Archive » : envoi reconstitué depuis les archives du serveur, résultat
+    du traitement inconnu. Le détail est dans le tableau des envois.
+  </p>
+</ng-container>

@@ -27,6 +27,8 @@ import { ToastrModule } from 'ngx-toastr';
 import { DendroDownloadComponent } from "./components/dendro-download.component";
 import { ComparaisonStagingComponent } from "./components/comparaison.staging.component";
 import { MatSortModule } from '@angular/material/sort';
+import { NgChartsModule } from 'ng2-charts';
+import { Dendro3GraphiquesComponent } from "./components/dendro3-graphiques/dendro3-graphiques.component";
 
 // my module routing
 const routes: Routes = [
@@ -53,7 +55,8 @@ const routes: Routes = [
     AdminTableComponent, 
     CustomToastComponent,
     DendroDownloadComponent,
-    ComparaisonStagingComponent
+    ComparaisonStagingComponent,
+    Dendro3GraphiquesComponent
   ],
   imports: [
     GN2CommonModule,
@@ -73,6 +76,7 @@ const routes: Routes = [
       preventDuplicates: true, 
     }),
     MatSortModule,
+    NgChartsModule,
   ],
   providers: [
     ExcelImportService,

@@ -150,6 +150,11 @@
           « Comparer avec le staging-terrain » pour les différences.
         </p>
 
+        <psdrf-dendro3-graphiques
+          *ngIf="suiviDendro3.exports.length"
+          [idDispositif]="id"
+        ></psdrf-dendro3-graphiques>
+
         <details *ngIf="suiviDendro3.exports.length > 1" class="historique">
           <summary>Historique des exports ({{ suiviDendro3.exports.length }})</summary>
           <ul>

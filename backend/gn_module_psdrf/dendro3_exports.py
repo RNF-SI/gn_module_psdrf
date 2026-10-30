@@ -210,6 +210,76 @@ def derniers_exports(limit: int = 50, id_dispositif: int | None = None) -> list[
     ]
 
 
+_STATUTS = ("succes", "echec", "en_cours", "archive")
+
+# Nombre de lignes envoyées, d'après le résumé par placette : même mesure pour
+# les exports directs et les archives (qui n'ont pas de compteurs).
+_NB_MODIFICATIONS_SQL = """
+    COALESCE((SELECT sum((p->>'nb_modifications')::int)
+                FROM jsonb_array_elements(COALESCE(e.placettes, '[]'::jsonb)) p), 0)
+"""
+
+
+def statistiques_exports(id_dispositif: int | None = None) -> dict:
+    """Agrégats du journal pour les graphiques de suivi : envois par mois
+    (par statut, mois sans envoi compris), par dispositif et par modèle
+    d'appareil (sans la version d'Android, que Dendro3 accole au modèle)."""
+    filtre = "WHERE e.id_dispositif = :id_dispositif" if id_dispositif is not None else ""
+    params = {"id_dispositif": id_dispositif}
+    vide = {"par_mois": [], "par_dispositif": [], "par_appareil": []}
+    try:
+        mois = DB.session.execute(text(f"""
+            SELECT to_char(date_trunc('month', e.recu_le), 'YYYY-MM') AS mois, e.statut,
+                   count(*) AS envois, sum({_NB_MODIFICATIONS_SQL}) AS modifications
+              FROM {TABLE} e {filtre}
+             GROUP BY 1, 2
+        """), params).mappings().all()
+        dispositifs = DB.session.execute(text(f"""
+            SELECT e.id_dispositif, d.name AS nom_dispositif, count(*) AS envois,
+                   sum({_NB_MODIFICATIONS_SQL}) AS modifications
+              FROM {TABLE} e
+              LEFT JOIN pr_psdrf.t_dispositifs d ON d.id_dispositif = e.id_dispositif
+              {filtre}
+             GROUP BY 1, 2
+             ORDER BY envois DESC, nom_dispositif
+        """), params).mappings().all()
+        appareils = DB.session.execute(text(f"""
+            SELECT COALESCE(NULLIF(regexp_replace(e.device, '\\s*-\\s*Android.*$', ''), ''), '(inconnu)') AS appareil,
+                   count(*) AS envois
+              FROM {TABLE} e {filtre}
+             GROUP BY 1
+             ORDER BY envois DESC, appareil
+        """), params).mappings().all()
+    except Exception:
+        DB.session.rollback()
+        logger.exception("[DENDRO3] Statistiques du journal illisibles")
+        return vide
+
+    par_mois = {}
+    for r in mois:
+        m = par_mois.setdefault(r["mois"], {"mois": r["mois"], "envois": 0, "modifications": 0,
+                                            **{s: 0 for s in _STATUTS}})
+        m["envois"] += r["envois"]
+        m["modifications"] += int(r["modifications"] or 0)
+        if r["statut"] in _STATUTS:
+            m[r["statut"]] += r["envois"]
+    # Série continue du premier au dernier mois : un trou reste visible.
+    if par_mois:
+        annee, num = map(int, min(par_mois).split("-"))
+        fin = max(par_mois)
+        while f"{annee:04d}-{num:02d}" <= fin:
+            cle = f"{annee:04d}-{num:02d}"
+            par_mois.setdefault(cle, {"mois": cle, "envois": 0, "modifications": 0,
+                                      **{s: 0 for s in _STATUTS}})
+            annee, num = (annee + 1, 1) if num == 12 else (annee, num + 1)
+
+    return {
+        "par_mois": [par_mois[k] for k in sorted(par_mois)],
+        "par_dispositif": [{**dict(r), "modifications": int(r["modifications"] or 0)} for r in dispositifs],
+        "par_appareil": [dict(r) for r in appareils],
+    }
+
+
 _RELEVES_STAGING_SQL = """
     SELECT c.num_cycle, p.id_placette_orig AS num_placette, cp.annee, cp.date_releve,
            GREATEST(
