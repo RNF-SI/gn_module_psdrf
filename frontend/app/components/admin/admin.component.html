@@ -9,6 +9,9 @@
         {{ currentUser?.user_login }}
     </span> -->
 </button>
+<!-- Onglets : l'onglet ouvert est repris de ?onglet= (#74) -->
+<mat-tab-group class="onglets-admin" animationDuration="0ms" [selectedIndex]="indexOnglet()" (selectedIndexChange)="changerOnglet($event)">
+<mat-tab label="Remontées Dendro3">
 <div class="container-fluid p-2">
   <mat-card>
     <div class="titre-remontees">
@@ -67,6 +70,8 @@
   </mat-card>
 </div>
 
+</mat-tab>
+<mat-tab label="Utilisateurs">
 <div class="container-fluid p-2">
   <mat-card>
     <mat-card-title>Table des Utilisateurs</mat-card-title>
@@ -404,6 +409,8 @@
   </mat-card>
 </div>
 
+</mat-tab>
+<mat-tab label="Dispositifs">
 <div class="container-fluid p-2">
   <mat-card>
     <mat-card-title>Table des dispositifs</mat-card-title>
@@ -565,6 +572,8 @@
   </mat-card>
 </div>
 
+</mat-tab>
+<mat-tab label="Organismes">
 <div class="container-fluid p-2">
   <mat-card>
     <mat-card-title>Table des Organismes</mat-card-title>
@@ -768,6 +777,8 @@
   </mat-card>
 </div>
 
+</mat-tab>
+<mat-tab label="Imports">
 <div class="container-fluid p-2">
   <mat-card>
     <mat-card-title>Import de PSDRF Listes</mat-card-title>
@@ -969,3 +980,5 @@
     </mat-card-content>
   </mat-card>
 </div>
+</mat-tab>
+</mat-tab-group>

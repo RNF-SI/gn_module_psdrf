@@ -1,6 +1,6 @@
 import {Component, Input, Output, EventEmitter, OnInit} from '@angular/core';
 import { FormGroup, FormBuilder, Validators, FormControl } from '@angular/forms';
-import { Router } from "@angular/router";
+import { ActivatedRoute, Router } from "@angular/router";
 import { PsdrfDataService } from "../../services/route.service";
 import { ConfigService } from '@geonature/services/config.service';
 import { ToastrService } from 'ngx-toastr';
@@ -117,6 +117,9 @@ export interface Orga {
     public totalModifications = totalModifications;
     public resumePlacettes = resumePlacettes;
 
+    // Onglets de la page, dans l'ordre du template ; clé reprise de ?onglet=
+    public readonly ONGLETS = ['dendro3', 'utilisateurs', 'dispositifs', 'organismes', 'imports'];
+
     public disableSubmit = false;
     public disableSubmitUserDisp = false;
     public disableSubmitOrganisme = false;
@@ -131,6 +134,7 @@ export interface Orga {
         private fbOrganisme: FormBuilder,
         private _authService: AuthService,
         private _router: Router,
+        private _route: ActivatedRoute,
         private _toasterService: ToastrService,
         private dataSrv: PsdrfDataService,
         public dialog: MatDialog,
@@ -153,6 +157,20 @@ export interface Orga {
 
         this.initFilter();
 
+    }
+
+    indexOnglet(): number {
+        const onglet = this._route.snapshot.queryParamMap.get('onglet');
+        return Math.max(this.ONGLETS.indexOf(onglet), 0);
+    }
+
+    changerOnglet(index: number): void {
+        this._router.navigate([], {
+            relativeTo: this._route,
+            queryParams: { onglet: this.ONGLETS[index] },
+            queryParamsHandling: 'merge',
+            replaceUrl: true,
+        });
     }
 
     /**
