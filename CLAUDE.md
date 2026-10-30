@@ -67,7 +67,7 @@ sudo systemctl restart geonature
 > séquences/vues + `ALTER SCHEMA … OWNER TO`). La migration DDL étant
 > transactionnelle, un échec fait un rollback propre : relancer après correction.
 
-**Pas de suite de tests pytest** : `backend/tests/` n'existe pas. Le `package.json` du frontend n'a pas non plus de tests configurés. La validation se fait manuellement via l'UI ou via les scripts ci-dessous.
+**Tests** : `backend/tests/` ne couvre que le pont vers le pipeline (`test_transforms.py`, `test_carnet_tables.py`, `python -m pytest` depuis la racine dans le venv GeoNature) ; routes, journal Dendro3 et staging n'ont pas encore de tests (cf. #72). Le `package.json` du frontend n'a pas de tests configurés. Le reste se valide via l'UI ou les scripts ci-dessous. Déploiement en prod et suivi Dendro3 : `README.rst`.
 
 ### Test rapide de la génération de carnet
 

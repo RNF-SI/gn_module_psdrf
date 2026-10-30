@@ -80,6 +80,52 @@ Mises à jour
       cd - && git add backend/gn_module_psdrf/PermPSDRF4py
       git commit -m "Maj sous-module PermPSDRF4py"
 
+Déployer une nouvelle version du module
+---------------------------------------
+
+Sur le serveur, avec l'utilisateur propriétaire de GeoNature et le venv activé ::
+
+    cd <chemin>/gn_module_psdrf
+    git pull --no-recurse-submodules        # le sous-module privé ferait échouer un pull nu
+    cd <chemin>/geonature
+    geonature db upgrade psdrf@head         # si le commit apporte une migration
+    cd frontend && nvm use
+    nohup npm run build > ~/build.log 2>&1 &    # si le frontend du module a changé
+    tail -f ~/build.log                         # attendre « Build at: … »
+    sudo systemctl restart geonature geonature-worker
+
+* **Build du frontend** : il recompile tout GeoNature et demande **2 à 3 Go de
+  RAM libre**. Avec 4 Go au total, le serveur sature (ssh qui ne répond plus,
+  build tué sans message, dossier ``frontend/dist`` absent → interface web
+  cassée). Prévoir au moins 6 Go, ou arrêter ``geonature-worker`` pendant le
+  build. Le lancer avec ``nohup`` (ou ``tmux``) : une coupure ssh ne l'interrompt
+  pas. Un build qui aboutit affiche « Build at: … » et recrée ``frontend/dist``.
+* **Worker Celery** : à redémarrer dès que ``tasks.py`` ou ce qu'il appelle
+  change (exports Dendro3, génération du carnet).
+* **Migrations** : les tables ``pr_psdrf*`` doivent appartenir au rôle de
+  GeoNature (cf. ``CLAUDE.md``).
+
+Suivi des remontées Dendro3
+---------------------------
+
+Chaque export reçu de Dendro3 est :
+
+* **archivé tel quel** dans
+  ``backend/gn_module_psdrf/debug_data/<id_dispositif>/<AAAAMMJJ_HHMMSS>.json``
+  (hors git ; **ne pas purger** : c'est l'historique brut des envois) ;
+* **journalisé** dans ``pr_psdrf_staging.t_dendro3_exports`` (statut,
+  placettes et cycles touchés, appareil), affiché dans la page admin (onglet
+  « Remontées Dendro3 », avec graphiques) et sur la fiche de chaque dispositif.
+
+Le journal ne couvre que les envois reçus depuis sa mise en place. Pour y
+reprendre les envois archivés auparavant (statut « Archive », relançable sans
+doublon) ::
+
+    geonature psdrf reprendre-archives-dendro3 --simulation   # compte sans écrire
+    geonature psdrf reprendre-archives-dendro3
+
+``--dossier <chemin>`` permet de reprendre les archives d'un ancien serveur.
+
 Tests
 -----
 
