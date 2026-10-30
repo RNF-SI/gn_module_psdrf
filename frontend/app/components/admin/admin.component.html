@@ -11,13 +11,6 @@
 </button>
 <!-- Onglets : l'onglet ouvert est repris de ?onglet= (#74) -->
 <mat-tab-group class="onglets-admin" animationDuration="0ms" [selectedIndex]="indexOnglet()" (selectedIndexChange)="changerOnglet($event)">
-<mat-tab label="Remontées Dendro3">
-  <!-- Créé à l'ouverture de l'onglet : graphiques dimensionnés sur un
-       conteneur visible, et pas de requêtes tant qu'on ne le regarde pas. -->
-  <ng-template matTabContent>
-    <psdrf-remontees-dendro3></psdrf-remontees-dendro3>
-  </ng-template>
-</mat-tab>
 <mat-tab label="Utilisateurs">
 <div class="container-fluid p-2">
   <mat-card>
@@ -927,5 +920,12 @@
     </mat-card-content>
   </mat-card>
 </div>
+</mat-tab>
+<mat-tab label="Remontées Dendro3">
+  <!-- Créé à l'ouverture de l'onglet : graphiques dimensionnés sur un
+       conteneur visible, et pas de requêtes tant qu'on ne le regarde pas. -->
+  <ng-template matTabContent>
+    <psdrf-remontees-dendro3></psdrf-remontees-dendro3>
+  </ng-template>
 </mat-tab>
 </mat-tab-group>
