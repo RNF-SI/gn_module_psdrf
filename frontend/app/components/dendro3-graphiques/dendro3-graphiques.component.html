@@ -1,7 +1,10 @@
+<h4 class="sous-titre">Envois au serveur</h4>
 <p class="aide" *ngIf="chargement">Chargement des graphiques…</p>
 
 <ng-container *ngIf="!chargement && stats">
-  <p class="aide" *ngIf="!stats.par_mois.length">Aucun envoi Dendro3 journalisé.</p>
+  <p class="aide" *ngIf="!stats.par_mois.length">
+    Aucun envoi Dendro3 journalisé (le journal commence en juin 2026).
+  </p>
 
   <div class="graphiques" *ngIf="stats.par_mois.length">
     <figure class="graphique">
@@ -40,5 +43,36 @@
     contenues dans chaque envoi (un envoi répété compte à chaque fois).
     « Archive » : envoi reconstitué depuis les archives du serveur, résultat
     du traitement inconnu. Le détail est dans le tableau des envois.
+  </p>
+</ng-container>
+
+<h4 class="sous-titre">Saisies sur tablette</h4>
+<ng-container *ngIf="activite">
+  <p class="aide" *ngIf="!activite.par_mois.length">Aucune saisie Dendro3 en staging.</p>
+
+  <div class="graphiques" *ngIf="activite.par_mois.length">
+    <figure class="graphique" [class.pleine-largeur]="idDispositif == null">
+      <figcaption>Saisies terrain par mois</figcaption>
+      <div class="zone" style="height: 240px">
+        <canvas baseChart [type]="'bar'" [data]="saisiesParMois" [options]="optionsVerticales"></canvas>
+      </div>
+    </figure>
+
+    <figure class="graphique pleine-largeur" *ngIf="idDispositif == null">
+      <figcaption>Saisies terrain par dispositif</figcaption>
+      <div class="defilement">
+        <div class="zone" [style.height.px]="hauteurHorizontale(activite.par_dispositif.length)">
+          <canvas baseChart [type]="'bar'" [data]="saisiesParDispositif" [options]="optionsSaisiesParDispositif"></canvas>
+        </div>
+      </div>
+    </figure>
+  </div>
+
+  <p class="aide" *ngIf="activite.par_mois.length">
+    Mesures d'arbres, de bois morts et relevés de placette saisis dans
+    Dendro3, datés par la tablette (dernière modification, sinon création) :
+    couvre aussi les campagnes antérieures au journal des envois. Une ligne
+    modifiée compte au mois de sa dernière modification ; les imports Excel
+    n'y figurent pas.
   </p>
 </ng-container>

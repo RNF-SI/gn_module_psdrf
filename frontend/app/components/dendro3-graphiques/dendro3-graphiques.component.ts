@@ -38,6 +38,12 @@ export class Dendro3GraphiquesComponent implements OnChanges {
   public envoisParDispositif: ChartConfiguration<"bar">["data"] = null;
   public envoisParAppareil: ChartConfiguration<"bar">["data"] = null;
 
+  // Activité de terrain (#76) : horodatages des saisies en staging.
+  public activite: any = null;
+  public saisiesParMois: ChartConfiguration<"bar">["data"] = null;
+  public saisiesParDispositif: ChartConfiguration<"bar">["data"] = null;
+  public optionsSaisiesParDispositif = this.options({ horizontal: true });
+
   public optionsEmpilees = this.options({ empile: true, legende: true });
   public optionsVerticales = this.options({});
   public optionsHorizontales = this.options({ horizontal: true });
@@ -49,6 +55,13 @@ export class Dendro3GraphiquesComponent implements OnChanges {
   }
 
   charger(): void {
+    this.dataSrv.getActiviteTerrainDendro3(this.idDispositif).subscribe(
+      (activite) => {
+        this.activite = activite;
+        this.construireActivite(activite);
+      },
+      () => (this.activite = null)
+    );
     this.chargement = true;
     this.dataSrv.getStatistiquesDendro3(this.idDispositif).subscribe(
       (stats) => {
@@ -95,6 +108,30 @@ export class Dendro3GraphiquesComponent implements OnChanges {
       labels: appareils.map((a) => a.appareil),
       datasets: [{ ...this.barres(COULEUR_SERIE), label: "Envois", data: appareils.map((a) => a.envois) }],
     };
+  }
+
+  private construireActivite(activite: any): void {
+    const mois = activite.par_mois || [];
+    this.saisiesParMois = {
+      labels: mois.map((m) => this.libelleMois(m.mois)),
+      datasets: [{ ...this.barres(COULEUR_SERIE), label: "Saisies", data: mois.map((m) => m.total) }],
+    };
+    const dispositifs = activite.par_dispositif || [];
+    this.saisiesParDispositif = {
+      labels: dispositifs.map((d) => d.nom_dispositif || `Dispositif ${d.id_dispositif}`),
+      datasets: [{ ...this.barres(COULEUR_SERIE), label: "Saisies", data: dispositifs.map((d) => d.saisies) }],
+    };
+    // Infobulle : période d'activité du dispositif.
+    const options: any = this.options({ horizontal: true });
+    options.plugins.tooltip.callbacks = {
+      afterLabel: (ctx) => {
+        const d = dispositifs[ctx.dataIndex];
+        return d.premier === d.dernier
+          ? this.libelleMois(d.premier)
+          : `${this.libelleMois(d.premier)} → ${this.libelleMois(d.dernier)}`;
+      },
+    };
+    this.optionsSaisiesParDispositif = options;
   }
 
   private barres(couleur: string) {

@@ -124,6 +124,11 @@ doublon) ::
     geonature psdrf reprendre-archives-dendro3 --simulation   # compte sans écrire
     geonature psdrf reprendre-archives-dendro3
 
+Avant le journal (et pour les campagnes terminées avant le changement de
+serveur de juin 2026, dont les archives sont perdues), l'onglet et les fiches
+montrent aussi les **saisies sur tablette** : horodatages conservés dans les
+tables staging (depuis 2024), indépendants des envois.
+
 ``--dossier <chemin>`` permet de reprendre les archives d'un ancien serveur.
 Les noms de fichiers sont horodatés dans le fuseau du processus gunicorn (UTC
 en prod) : ``--fuseau`` (défaut ``UTC``) si ce n'est pas le cas. Relancer la

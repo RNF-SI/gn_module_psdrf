@@ -296,6 +296,19 @@ export class PsdrfDataService {
     );
   }
 
+  /** Saisies Dendro3 par mois / dispositif, d'après les horodatages des
+   * tablettes en staging (#76). */
+  getActiviteTerrainDendro3(dispId?: number): Observable<any> {
+    let params = new HttpParams();
+    if (dispId != null) {
+      params = params.set("id_dispositif", dispId.toString());
+    }
+    return this._http.get<any>(
+      `${this.config.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/dendro3/activite-terrain`,
+      { params: params }
+    );
+  }
+
   getSuiviDendro3(dispId: number): Observable<any> {
     return this._http.get<any>(
       `${this.config.API_ENDPOINT}/${ModuleConfig.MODULE_URL}/dispositif/${dispId}/dendro3`

@@ -232,6 +232,21 @@ _NB_MODIFICATIONS_SQL = """
 """
 
 
+def _mois_manquants(mois_presents) -> list[str]:
+    """Mois ``AAAA-MM`` absents entre le premier et le dernier présent : une
+    série continue garde visibles les mois sans activité."""
+    if not mois_presents:
+        return []
+    annee, num = map(int, min(mois_presents).split("-"))
+    fin, manquants = max(mois_presents), []
+    while f"{annee:04d}-{num:02d}" <= fin:
+        cle = f"{annee:04d}-{num:02d}"
+        if cle not in mois_presents:
+            manquants.append(cle)
+        annee, num = (annee + 1, 1) if num == 12 else (annee, num + 1)
+    return manquants
+
+
 def statistiques_exports(id_dispositif: int | None = None) -> dict:
     """Agrégats du journal pour les graphiques de suivi : envois par mois
     (par statut, mois sans envoi compris), par dispositif et par modèle
@@ -275,20 +290,77 @@ def statistiques_exports(id_dispositif: int | None = None) -> dict:
         m["modifications"] += int(r["modifications"] or 0)
         if r["statut"] in _STATUTS:
             m[r["statut"]] += r["envois"]
-    # Série continue du premier au dernier mois : un trou reste visible.
-    if par_mois:
-        annee, num = map(int, min(par_mois).split("-"))
-        fin = max(par_mois)
-        while f"{annee:04d}-{num:02d}" <= fin:
-            cle = f"{annee:04d}-{num:02d}"
-            par_mois.setdefault(cle, {"mois": cle, "envois": 0, "modifications": 0,
-                                      **{s: 0 for s in _STATUTS}})
-            annee, num = (annee + 1, 1) if num == 12 else (annee, num + 1)
+    for cle in _mois_manquants(par_mois):
+        par_mois[cle] = {"mois": cle, "envois": 0, "modifications": 0, **{s: 0 for s in _STATUTS}}
 
     return {
         "par_mois": [par_mois[k] for k in sorted(par_mois)],
         "par_dispositif": [{**dict(r), "modifications": int(r["modifications"] or 0)} for r in dispositifs],
         "par_appareil": [dict(r) for r in appareils],
+    }
+
+
+# Saisies Dendro3 conservées en staging, datées par la tablette (dernière
+# modification, sinon création) : mesures d'arbres, de bois morts et relevés
+# de placette.
+_SAISIES_STAGING_SQL = """
+    SELECT p.id_dispositif, 'arbres' AS type, coalesce(m.updated_at, m.created_at) AS saisi_le
+      FROM pr_psdrf_staging.t_arbres_mesures m
+      JOIN pr_psdrf_staging.t_arbres a ON a.id_arbre = m.id_arbre
+      JOIN pr_psdrf_staging.t_placettes p ON p.id_placette = a.id_placette
+    UNION ALL
+    SELECT p.id_dispositif, 'bois_morts', coalesce(m.updated_at, m.created_at)
+      FROM pr_psdrf_staging.t_bm_sup_30_mesures m
+      JOIN pr_psdrf_staging.t_bm_sup_30 b ON b.id_bm_sup_30 = m.id_bm_sup_30
+      JOIN pr_psdrf_staging.t_placettes p ON p.id_placette = b.id_placette
+    UNION ALL
+    SELECT p.id_dispositif, 'releves', coalesce(cp.updated_at, cp.created_at)
+      FROM pr_psdrf_staging.cor_cycles_placettes cp
+      JOIN pr_psdrf_staging.t_placettes p ON p.id_placette = cp.id_placette
+"""
+_TYPES_SAISIE = ("arbres", "bois_morts", "releves")
+
+
+def activite_terrain(id_dispositif: int | None = None) -> dict:
+    """Activité de terrain d'après les horodatages des saisies Dendro3 en
+    staging (#76) : saisies par mois et par type, et par dispositif (premier /
+    dernier mois). Indépendant du journal des envois, donc couvre aussi les
+    campagnes antérieures à sa mise en place. Une ligne modifiée compte au
+    mois de sa dernière modification ; les imports Excel n'y figurent pas."""
+    filtre = "AND s.id_dispositif = :id_dispositif" if id_dispositif is not None else ""
+    vide = {"par_mois": [], "par_dispositif": []}
+    try:
+        rows = DB.session.execute(text(f"""
+            WITH s AS ({_SAISIES_STAGING_SQL})
+            SELECT s.id_dispositif, coalesce(d.name, ds.name) AS nom_dispositif, s.type,
+                   to_char(date_trunc('month', s.saisi_le), 'YYYY-MM') AS mois, count(*) AS nb
+              FROM s
+              LEFT JOIN pr_psdrf.t_dispositifs d ON d.id_dispositif = s.id_dispositif
+              LEFT JOIN pr_psdrf_staging.t_dispositifs ds ON ds.id_dispositif = s.id_dispositif
+             WHERE s.saisi_le IS NOT NULL {filtre}
+             GROUP BY 1, 2, 3, 4
+        """), {"id_dispositif": id_dispositif}).mappings().all()
+    except Exception:
+        DB.session.rollback()
+        logger.exception("[DENDRO3] Activité de terrain illisible")
+        return vide
+
+    par_mois, par_dispositif = {}, {}
+    for r in rows:
+        m = par_mois.setdefault(r["mois"], {"mois": r["mois"], **{t: 0 for t in _TYPES_SAISIE}, "total": 0})
+        m[r["type"]] += r["nb"]
+        m["total"] += r["nb"]
+        d = par_dispositif.setdefault(r["id_dispositif"], {
+            "id_dispositif": r["id_dispositif"], "nom_dispositif": r["nom_dispositif"],
+            "saisies": 0, "premier": r["mois"], "dernier": r["mois"]})
+        d["saisies"] += r["nb"]
+        d["premier"], d["dernier"] = min(d["premier"], r["mois"]), max(d["dernier"], r["mois"])
+    for cle in _mois_manquants(par_mois):
+        par_mois[cle] = {"mois": cle, **{t: 0 for t in _TYPES_SAISIE}, "total": 0}
+    return {
+        "par_mois": [par_mois[k] for k in sorted(par_mois)],
+        "par_dispositif": sorted(par_dispositif.values(),
+                                 key=lambda d: (-d["saisies"], d["nom_dispositif"] or "")),
     }
 
 

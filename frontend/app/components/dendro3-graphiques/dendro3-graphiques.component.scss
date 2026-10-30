@@ -25,3 +25,19 @@
     color: #52514e;
     font-size: 0.85rem;
 }
+
+.sous-titre {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0.75rem 0 0.25rem;
+}
+
+.pleine-largeur {
+    grid-column: 1 / -1;
+}
+
+// Liste longue (une barre par dispositif) : défilement plutôt qu'une page sans fin.
+.defilement {
+    max-height: 480px;
+    overflow-y: auto;
+}

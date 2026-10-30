@@ -150,10 +150,9 @@
           « Comparer avec le staging-terrain » pour les différences.
         </p>
 
-        <psdrf-dendro3-graphiques
-          *ngIf="suiviDendro3.exports.length"
-          [idDispositif]="id"
-        ></psdrf-dendro3-graphiques>
+        <!-- Toujours affiché : les saisies terrain couvrent aussi les
+             campagnes antérieures au journal des envois (#76). -->
+        <psdrf-dendro3-graphiques [idDispositif]="id"></psdrf-dendro3-graphiques>
 
         <details *ngIf="suiviDendro3.exports.length > 1" class="historique">
           <summary>Historique des exports ({{ suiviDendro3.exports.length }})</summary>
